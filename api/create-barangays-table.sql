@@ -1,0 +1,13 @@
+-- Create barangays table for E-LIGTASMO
+CREATE TABLE IF NOT EXISTS barangays (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    lat DECIMAL(10, 8) NOT NULL,
+    lng DECIMAL(11, 8) NOT NULL,
+    address TEXT NOT NULL,
+    contact VARCHAR(50),
+    type VARCHAR(50) DEFAULT 'Hall',
+    added_by VARCHAR(100),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

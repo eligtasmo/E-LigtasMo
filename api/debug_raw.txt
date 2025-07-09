@@ -1,0 +1,1 @@
+{"username":"tala","password":"aaaaa","full_name":"Krystal Maristela","brgy_name":"Santa Ana","city":"Cabuyao","province":"Laguna","email":"tala@gmail.com","contact_number":"87682637878"}
