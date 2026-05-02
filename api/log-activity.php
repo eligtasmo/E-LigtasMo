@@ -1,6 +1,7 @@
 <?php
 require_once 'cors.php';
 header('Content-Type: application/json');
+header('Allow: GET, POST, OPTIONS');
 require_once 'db.php';
 require_once 'rbac.php';
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
