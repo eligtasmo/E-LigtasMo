@@ -56,7 +56,7 @@ const CustomSidebar = (props) => {
 
           <View style={styles.brandContainer}>
             <RNImage
-              source={require('../../../assets/rescue_ph_logo.png')}
+              source={require('../../../assets/eligtasmo_logo.png')}
               style={styles.brandLogo}
               resizeMode="contain"
             />

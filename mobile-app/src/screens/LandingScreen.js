@@ -45,7 +45,7 @@ const LandingScreen = ({ navigation }) => {
           style={styles.logoContainer}
         >
           <View style={styles.logoHex}>
-            <RNImage source={require('../../assets/rescue_ph_logo.png')} style={styles.logo} resizeMode="contain" />
+            <RNImage source={require('../../assets/eligtasmo_logo.png')} style={styles.logo} resizeMode="contain" />
           </View>
           <View style={styles.logoPulse} />
         </MotiView>
