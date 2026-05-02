@@ -819,7 +819,8 @@ const MMDRMODashboard: React.FC = () => {
       const data = await response.json();
       
       // Transform shelter data to include coordinates and enhanced properties
-      const enhancedShelters: EnhancedShelter[] = data.map((shelter: any) => ({
+      const shelterList = Array.isArray(data) ? data : [];
+      const enhancedShelters: EnhancedShelter[] = shelterList.map((shelter: any) => ({
         id: shelter.id,
         name: shelter.name,
         status: shelter.status,
