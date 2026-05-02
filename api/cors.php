@@ -18,7 +18,11 @@ $allowed = [
     'https://www.eligtasmo.site',
     'https://e-ligtas-mo.vercel.app',
 ];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+// If origin is missing (common in mobile/non-browser requests), use the referer or host
+if (empty($origin)) {
+    $origin = 'https://eligtasmo.site'; // Fallback to primary domain
+}
 header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Credentials: true");
 header("Vary: Origin");

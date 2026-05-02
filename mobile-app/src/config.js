@@ -35,34 +35,22 @@ const isPrivateIp = (host) => {
 };
 
 const getApiUrl = () => {
-    // 1. Web Platform (Immediate priority for dashboard/local dev)
+    // 1. Force Production URL for mobile builds (APK/Expo Go)
+    if (Platform.OS !== 'web') {
+        return 'https://api.eligtasmo.site';
+    }
+
+    // 2. Web Platform (Immediate priority for dashboard/local dev)
     if (Platform.OS === 'web') {
+        // If we are on the production site, use the production API
+        if (typeof window !== 'undefined' && window.location.hostname === 'eligtasmo.site') {
+            return 'https://api.eligtasmo.site';
+        }
         const webHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-        // If we are on localhost web, we want the API on the SAME host (usually port 80/Apache)
         return `http://${webHost}${BASE_PATH}`;
     }
 
-    // 2. Dynamic Host Resolution (Tunnel/Dev priority for Mobile)
-    const host = resolveHost();
-    if (host && isPrivateIp(host)) {
-        return `http://${host}${BASE_PATH}`;
-    }
-
-    // 3. Manual IP Override (Primary fallback for Physical Devices)
-    if (MANUAL_API_HOST) {
-        return `http://${MANUAL_API_HOST}${BASE_PATH}`;
-    }
-
-    // 4. Environment Variable fallback
-    if (process.env.EXPO_PUBLIC_API_URL) {
-        return process.env.EXPO_PUBLIC_API_URL;
-    }
-
-    // Default Fallbacks
-    if (Platform.OS === 'android') {
-        return `http://10.0.2.2${BASE_PATH}`;
-    }
-    return `http://localhost${BASE_PATH}`;
+    return 'https://api.eligtasmo.site';
 };
 
 const finalApiUrl = getApiUrl();

@@ -6,6 +6,7 @@ import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '../context/ThemeContext';
 import { AuthService } from '../services/AuthService';
+import { API_URL } from '../config';
 import { Container, DS_FONT_UI, DS_FONT_INPUT } from '../components/DesignSystem';
 import { TacticalHeader } from '../components/Home/TacticalComponents';
 
@@ -71,7 +72,7 @@ const EditProfileScreen = ({ navigation }) => {
     }
 
     try {
-      const res = await fetch(`${AuthService.API_URL || 'http://localhost/eligtasmo%20latest/api'}/update-user.php`, {
+      const res = await fetch(`${API_URL}/update-user.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
