@@ -47,7 +47,28 @@ export const NavigationOverlay = ({
   const safeTop = Math.max(insets?.top || 0, 16);
   const safeBottom = Math.max(insets?.bottom || 0, 16);
   
-  const nextInstruction = currentStep?.instruction || 'Continue on the selected safe route';
+  const getDetailedInstruction = () => {
+    const base = currentStep?.instruction || 'Continue on the selected safe route';
+    const street = currentStep?.name && currentStep.name !== '-' ? currentStep.name : '';
+    
+    // If the base instruction is too short or generic, and we have a street name, combine them.
+    // Mapbox instructions often include the street name, but we ensure it here for Waze-style fidelity.
+    if (street && !base.toLowerCase().includes(street.toLowerCase())) {
+      // Clean up common generic phrases
+      if (base.toLowerCase() === 'turn left') return `Turn left onto ${street}`;
+      if (base.toLowerCase() === 'turn right') return `Turn right onto ${street}`;
+      if (base.toLowerCase() === 'continue') return `Continue on ${street}`;
+      if (base.toLowerCase() === 'head') return `Head onto ${street}`;
+      
+      // If it doesn't already have 'onto' or 'on', and we have a street, append it smartly
+      if (!base.includes(' onto ') && !base.includes(' on ')) {
+         return `${base} onto ${street}`;
+      }
+    }
+    return base;
+  };
+
+  const nextInstruction = getDetailedInstruction();
   const ManeuverIcon = getManeuverIcon(nextInstruction);
   const nextDistance = currentStep?.distanceMeters != null ? Math.max(1, Math.round(currentStep.distanceMeters)) : 500;
   const liveSpeed = Number.isFinite(speed) ? Math.max(0, Math.round(speed)) : 0;
@@ -92,20 +113,9 @@ export const NavigationOverlay = ({
                   <Text style={{ fontSize: 14, fontWeight: '800', color: 'rgba(255,255,255,0.3)', marginLeft: 6, marginTop: 4, fontFamily: DS_FONT_UI }}>M</Text>
                 </Row>
                 <Col style={{ marginTop: 2 }}>
-                  {currentStep?.name && currentStep.name !== '-' ? (
-                    <>
-                      <Text style={{ fontSize: 11, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: DS_FONT_UI }} numberOfLines={1}>
-                        {nextInstruction}
-                      </Text>
-                      <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF', marginTop: -2, fontFamily: DS_FONT_UI }} numberOfLines={1}>
-                        {currentStep.name}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', lineHeight: 20, fontFamily: DS_FONT_UI }} numberOfLines={1}>
-                      {nextInstruction}
-                    </Text>
-                  )}
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', lineHeight: 20, fontFamily: DS_FONT_UI }} numberOfLines={2}>
+                    {nextInstruction}
+                  </Text>
                 </Col>
               </Col>
               {isExpanded && (
@@ -293,20 +303,9 @@ export const NavigationOverlay = ({
               <Text style={{ fontSize: 15, fontWeight: '800', color: 'rgba(255,255,255,0.3)', marginLeft: 6, marginTop: 4 }}>M</Text>
             </Row>
             <Col style={{ marginTop: 2 }}>
-              {currentStep?.name && currentStep.name !== '-' ? (
-                <>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 1 }} numberOfLines={1}>
-                    {nextInstruction}
-                  </Text>
-                  <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF', marginTop: -2 }} numberOfLines={1}>
-                    {currentStep.name}
-                  </Text>
-                </>
-              ) : (
-                <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF', lineHeight: 22 }} numberOfLines={2}>
-                  {nextInstruction}
-                </Text>
-              )}
+              <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF', lineHeight: 22 }} numberOfLines={2}>
+                {nextInstruction}
+              </Text>
             </Col>
           </Col>
           <View style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
