@@ -14,6 +14,9 @@ $allowed = [
     'http://localhost:3000',
     'capacitor://localhost',
     'http://localhost',
+    'https://eligtasmo.site',
+    'https://www.eligtasmo.site',
+    'https://e-ligtas-mo.vercel.app',
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowed)) {
