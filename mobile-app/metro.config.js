@@ -1,9 +1,15 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// If the issue with @motionone/dom persists, we can add a resolver alias here.
-// But for now, let's stick with the default and see if the clean install fixed it.
+// Redirect 'moti' imports to our lightweight shim
+// This avoids the Reanimated v4 incompatibility that crashes Expo Go SDK 54
+config.resolver = config.resolver || {};
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'moti': path.resolve(__dirname, 'src/lib/moti-shim.js'),
+};
 
 module.exports = config;
