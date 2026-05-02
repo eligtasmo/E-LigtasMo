@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { IoWarningOutline as WarningIcon } from "react-icons/io5";
-import { FiAlertCircle, FiBell, FiUser } from "react-icons/fi";
-import { FaPhone, FaUser, FaMapMarkerAlt } from "react-icons/fa";
+import { FiAlertCircle, FiBell, FiUser, FiActivity, FiShield, FiUsers } from "react-icons/fi";
+import { FaPhone, FaUser, FaMapMarkerAlt, FaRoute } from "react-icons/fa";
+import { BsShieldShaded as ShelterIcon } from "react-icons/bs";
+import { GoLocation as RouteIcon } from "react-icons/go";
+import { TiWeatherPartlySunny as WeatherIcon } from "react-icons/ti";
 
 // Assume these icons are imported from an icon library
 import {
@@ -20,42 +23,74 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const generalNav: NavItem[] = [
+// Local Command Center
+const localCommandItems: NavItem[] = [
   {
-    icon: <GridIcon />,
-    name: "Home",
+    icon: <GridIcon className="w-5 h-5" />,
+    name: "Barangay Dashboard",
     path: "/barangay",
+  },
+  {
+    icon: <FaMapMarkerAlt size={20} />,
+    name: "Local Area Map",
+    path: "/barangay/barangay-map",
   },
 ];
 
-const disasterNav: NavItem[] = [
+// SafeRoute & Emergency Response
+const safeRouteItems: NavItem[] = [
   {
-    icon: <WarningIcon />,
-    name: "Report Incident",
+    icon: <RouteIcon size={20} />,
+    name: "Safe Routes Map",
+    path: "/barangay/safe-routes",
+  },
+  {
+    icon: <FiAlertCircle size={20} />,
+    name: "Environmental Intel",
+    path: "/barangay/flood-reports",
+  },
+  {
+    icon: <WarningIcon size={20} />,
+    name: "Hazard Management",
     path: "/barangay/report-incident",
   },
   {
-    icon: <CalenderIcon />,
+    icon: <ShelterIcon size={20} />,
     name: "Shelter Management",
     path: "/barangay/shelters",
   },
 ];
 
-const brgyNav: NavItem[] = [
+// Community Management
+const communityItems: NavItem[] = [
   {
-    icon: <FaMapMarkerAlt size={22} />, name: "Barangay Map", path: "/barangay-map",
+    icon: <FiUsers size={20} />,
+    name: "Resident Directory",
+    path: "/barangay/residents",
   },
   {
-    icon: <FaPhone size={22} />, name: "Emergency Contacts", path: "/barangay/emergency-contacts",
+    icon: <FiBell size={20} />,
+    name: "Community Alerts",
+    path: "/barangay/announcements",
   },
   {
-    icon: <FaUser size={22} />, name: "Barangay Coordinators", path: "/barangay/coordinators",
+    icon: <FaPhone size={18} />,
+    name: "Contact Directory",
+    path: "/barangay/contacts",
+  },
+];
+
+// Monitoring & Support
+const monitoringItems: NavItem[] = [
+  {
+    icon: <FaPhone size={20} />,
+    name: "Emergency Guides",
+    path: "/brgy/resources",
   },
   {
-    icon: <FiBell size={22} />, name: "Announcements", path: "/announcements",
-  },
-  {
-    icon: <FiUser size={22} />, name: "Profile & Settings", path: "/profile",
+    icon: <FiUser size={20} />,
+    name: "Profile & Settings",
+    path: "/profile",
   },
 ];
 
@@ -81,7 +116,7 @@ const BrgySidebar: React.FC = () => {
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? [...generalNav, ...disasterNav, ...brgyNav] : [];
+      const items = menuType === "main" ? [...localCommandItems, ...safeRouteItems, ...communityItems, ...monitoringItems] : [];
       items.forEach((nav: NavItem, index: number) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem: { name: string; path: string; pro?: boolean; new?: boolean }) => {
@@ -128,33 +163,34 @@ const BrgySidebar: React.FC = () => {
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main") => (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-col gap-1">
       {items.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
+              data-slot="button"
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
+              className={`group transition-all duration-200 ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
+                  ? "is-active"
+                  : ""
+              } ${
+                !isExpanded && !isHovered && !isMobileOpen
                   ? "lg:justify-center"
                   : "lg:justify-start"
               }`}
             >
               <span
-                className={`menu-item-icon-size  ${
+                className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
+                    ? "sentinelx-glow"
+                    : ""
                 }`}
               >
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
+                <span className="font-medium text-sm flex-1 text-left truncate">{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
@@ -171,21 +207,24 @@ const BrgySidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                data-slot="button"
+                className={`group transition-all duration-200 ${
+                  isActive(nav.path) ? "is-active" : ""
+                } ${
+                  !isExpanded && !isHovered && !isMobileOpen
+                    ? "lg:justify-center"
+                    : "lg:justify-start"
                 }`}
               >
                 <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
+                  className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
+                    isActive(nav.path) ? "sentinelx-glow" : ""
                   }`}
                 >
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
+                  <span className="font-medium text-sm flex-1 text-left truncate">{nav.name}</span>
                 )}
               </Link>
             )
@@ -260,43 +299,59 @@ const BrgySidebar: React.FC = () => {
         />
       )}
       <aside
-        className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-transform duration-300 ease-in-out z-[1200] border-r border-gray-200 w-[290px] lg:translate-x-0`}
+        className={`sx-sidebar sentinelx-glass border-r border-sentinelx-glass-border fixed flex flex-col top-[72px] left-0 h-[calc(100vh-72px)] transition-transform duration-300 ease-in-out z-[1200] ${
+          isExpanded || isHovered || isMobileOpen ? "w-[278px]" : "w-[80px]"
+        } ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="py-8 flex justify-start">
-          <Link to="/barangay">
-            <img
-              className="dark:hidden"
-              src="/images/logo/logo.png"
-              alt="Logo"
-              width={150}
-              height={40}
-            />
-            <img
-              className="hidden dark:block"
-              src="/images/logo/logo-dark.svg"
-              alt="Logo"
-              width={150}
-              height={40}
-            />
-          </Link>
-        </div>
-        <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+        <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar mt-4 px-3">
           <nav className="mb-6">
-            <div className="flex flex-col gap-4">
-              <ul className="flex flex-col gap-4 mb-2">
-                <li>
-                  {renderMenuItems(generalNav, "main")}
-                </li>
-              </ul>
+            <div className="flex flex-col gap-6">
+              {/* Local Command Center */}
               <div>
-                <h2 className="mb-4 text-xs uppercase flex leading-[20px] text-gray-400 justify-start">Disaster Management</h2>
-                {renderMenuItems(disasterNav, "main")}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                    <FiActivity size={12} className="mr-2" />
+                    Local Command
+                  </div>
+                )}
+                {renderMenuItems(localCommandItems, "main")}
               </div>
+              
+              {/* SafeRoute & Emergency Response */}
               <div>
-                <h2 className="mb-4 text-xs uppercase flex leading-[20px] text-gray-400 justify-start">Barangay Management</h2>
-                {renderMenuItems(brgyNav, "main")}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <div className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-3 px-1 flex items-center">
+                    <FiShield size={12} className="mr-2" />
+                    SafeRoute & Emergency
+                  </div>
+                )}
+                {renderMenuItems(safeRouteItems, "main")}
+              </div>
+              
+              {/* Community Management */}
+              <div>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                    <FiUsers size={12} className="mr-2" />
+                    Community Management
+                  </div>
+                )}
+                {renderMenuItems(communityItems, "main")}
+              </div>
+              
+              {/* Monitoring & Support */}
+              <div>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                    <WeatherIcon size={12} className="mr-2" />
+                    Monitoring & Support
+                  </div>
+                )}
+                {renderMenuItems(monitoringItems, "main")}
               </div>
             </div>
           </nav>

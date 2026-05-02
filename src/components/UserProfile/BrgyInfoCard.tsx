@@ -1,10 +1,11 @@
 import { useModal } from "../../hooks/useModal";
 import { useAuth } from "../../context/AuthContext";
-import Button from "../ui/button/Button";
+import EditProfileModal from "./EditProfileModal";
 
 export default function BrgyInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const { user } = useAuth();
+  
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -61,6 +62,8 @@ export default function BrgyInfoCard() {
           Edit
         </button>
       </div>
+
+      <EditProfileModal isOpen={isOpen} onClose={closeModal} />
     </div>
   );
-} 
+}

@@ -24,7 +24,7 @@ const EmergencyFloatingButton: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-red-800 flex items-center">
               <FaExclamationTriangle className="mr-2" />
-              Emergency Contacts
+              Emergency Guides
             </h3>
             <button
               onClick={() => setIsExpanded(false)}
@@ -75,4 +75,4 @@ const EmergencyFloatingButton: React.FC = () => {
   );
 };
 
-export default EmergencyFloatingButton; 
+export default EmergencyFloatingButton;

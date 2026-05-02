@@ -4,7 +4,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
-import Button from "../ui/button/Button";
+import { CustomButton } from "../common";
 import { useAuth } from "../../context/AuthContext"; // <-- Make sure this path is correct
 
 export default function SignInForm() {
@@ -12,6 +12,7 @@ export default function SignInForm() {
   const [isChecked, setIsChecked] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { login } = useAuth(); // Call login from context
   const navigate = useNavigate();
@@ -24,48 +25,11 @@ export default function SignInForm() {
       alert("Username and password are required!");
       return;
     }
-
+    setLoading(true);
     try {
-      const response = await fetch("http://localhost/eligtasmo/api/login.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
-
-      // Check if response is in JSON format
-      const contentType = response.headers.get("Content-Type");
-
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-
-        if (data.success) {
-          // Use the role returned by the backend
-          login(username, password, data.role); // Pass the detected role
-          // Redirect based on role
-          if (data.role === "admin") {
-            navigate("/");
-          } else if (data.role === "brgy") {
-            navigate("/barangay");
-          } else {
-            // fallback for unknown roles
-            alert("Unknown role: " + data.role);
-          }
-        } else {
-          alert(data.message || "Login failed");
-        }
-      } else {
-        const text = await response.text();
-        console.error("Unexpected response format:", text);
-        alert("Server returned an unexpected response format. Please check the server.");
-      }
-    } catch (err) {
-      alert("Server error. Please check your connection or API.");
-      console.error(err);
+      await login(username.trim(), password);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,16 +97,16 @@ export default function SignInForm() {
                   </span>
                 </div>
                 <Link
-                  to="/forgot-password"
+                  to="/auth/forgot-password"
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div>
-                <Button className="w-full" size="sm" type="submit">
-                  Sign in
-                </Button>
+                <CustomButton className="w-full" size="sm" type="submit" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign in"}
+                </CustomButton>
               </div>
             </div>
           </form>

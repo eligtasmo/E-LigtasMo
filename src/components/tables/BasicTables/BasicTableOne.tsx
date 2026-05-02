@@ -1,12 +1,12 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../../ui/table";
+  CustomTable as Table,
+  CustomTableBody as TableBody,
+  CustomTableCell as TableCell,
+  CustomTableHeader as TableHeader,
+  CustomTableRow as TableRow,
+} from "../../common";
 
-import Badge from "../../ui/badge/Badge";
+import { CustomBadge as Badge } from "../../common";
 
 interface Order {
   id: number;

@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { apiFetch } from "../../utils/api";
+import { useAuth } from "../../context/AuthContext";
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -13,14 +16,21 @@ L.Icon.Default.mergeOptions({
 
 // Custom shelter icon
 const shelterIcon = new L.Icon({
-  iconUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3VjIwSDIyVjdMMTIgMloiIHN0cm9rZT0iIzA2NkZGRiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSIjMDY2RkZGIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8cGF0aCBkPSJNMTIgMTJIMjJWMjBIMTJWMjBaIiBzdHJva2U9IiMwNjZGRkYiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iIzA2NkZGRiIgZmlsbC1vcGFjaXR5PSIwLjIiLz4KPHBhdGggZD0iTTIgMTJIMTJWMjBIMlYxMloiIHN0cm9rZT0iIzA2NkZGRiIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSIjMDY2RkZGIiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4K",
+  iconUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3VjIwSDIyVjdMMTIgMloiIHN0cm9rZT0iIzI4YTc0NSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSIjMjhhNzQ1IiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8cGF0aCBkPSJNMTIgMTJIMjJWMjBIMTJWMjBaIiBzdHJva2U9IiMyOGE3NDUiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iIzI4YTc0NSIgZmlsbC1vcGFjaXR5PSIwLjIiLz4KPHBhdGggZD0iTTIgMTJIMTJWMjBIMlYxMloiIHN0cm9rZT0iIzI4YTc0NSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSIjMjhhNzQ1IiBmaWxsLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4K",
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -32],
 });
 
-function MapController({ panTo }: { panTo: [number, number] | null }) {
+function MapController({ panTo, bounds }: { panTo: [number, number] | null, bounds: [[number, number],[number, number]] | null }) {
   const map = useMap();
+  useEffect(() => { 
+    if (bounds) {
+      const b = L.latLngBounds(bounds[0], bounds[1]);
+      map.setMaxBounds(b);
+      map.fitBounds(b, { animate: false, padding: [20,20] });
+    }
+  }, [bounds, map]);
   useEffect(() => { if (panTo) map.setView(panTo, 15); }, [panTo, map]);
   return null;
 }
@@ -33,21 +43,29 @@ interface Shelter {
   occupancy: number;
   lat: number;
   lng: number;
-  type: string;
-  contact: string;
   status: string;
+  contact_person: string;
+  contact_number: string;
+  category: string;
+  created_by: string;
+  created_brgy: string;
+  created_at: string;
 }
 
 export default function ShelterMapView() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [selectedShelter, setSelectedShelter] = useState<Shelter | null>(null);
   const [loading, setLoading] = useState(true);
   const [panTo, setPanTo] = useState<[number, number] | null>(null);
+  const [center, setCenter] = useState<[number, number] | null>(null);
+  const [bounds, setBounds] = useState<[[number, number],[number, number]] | null>(null);
 
   useEffect(() => {
     const fetchShelters = async () => {
       try {
-        const response = await fetch('http://localhost:3001/shelters');
+        const response = await apiFetch('shelters-list.php');
         const data = await response.json();
         setShelters(data);
       } catch (error) {
@@ -56,7 +74,22 @@ export default function ShelterMapView() {
         setLoading(false);
       }
     };
+    const fetchBounds = async () => {
+      try {
+        const res = await apiFetch('map_bounds_laguna.php');
+        const b = await res.json();
+        if (b?.center && b?.bounds) {
+          setCenter([b.center.lat, b.center.lon]);
+          setBounds([[b.bounds.minLat, b.bounds.minLon],[b.bounds.maxLat, b.bounds.maxLon]]);
+        }
+      } catch (e) {
+        // fallback to Santa Cruz, Laguna approximate center
+        setCenter([14.275, 121.410]);
+        setBounds([[13.90,121.10],[14.45,121.70]]);
+      }
+    };
     fetchShelters();
+    fetchBounds();
   }, []);
 
   const getAvailabilityColor = (occupancy: number, capacity: number) => {
@@ -127,7 +160,7 @@ export default function ShelterMapView() {
                 </div>
                 <p className="text-gray-600 text-sm mb-2">{shelter.address}</p>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Type: {shelter.type}</span>
+                  <span className="text-gray-500">Type: {shelter.category}</span>
                   <span className="text-gray-500">
                     {shelter.occupancy}/{shelter.capacity} occupied
                   </span>
@@ -165,11 +198,11 @@ export default function ShelterMapView() {
               </div>
               <div>
                 <span className="font-medium text-gray-600">Type:</span>
-                <span className="ml-2 text-gray-800">{selectedShelter.type}</span>
+                <span className="ml-2 text-gray-800">{selectedShelter.category}</span>
               </div>
               <div>
                 <span className="font-medium text-gray-600">Contact:</span>
-                <span className="ml-2 text-gray-800">{selectedShelter.contact}</span>
+                <span className="ml-2 text-gray-800">{selectedShelter.contact_person}</span>
               </div>
               <div>
                 <span className="font-medium text-gray-600">Status:</span>
@@ -188,7 +221,7 @@ export default function ShelterMapView() {
       {/* Right Panel - Map */}
       <div className="flex-grow h-full w-full">
         <MapContainer
-          center={panTo || [14.6091, 121.0223]}
+          center={panTo || center || [14.275, 121.410]}
           zoom={13}
           style={{ height: "100%", width: "100%" }}
         >
@@ -196,7 +229,7 @@ export default function ShelterMapView() {
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           />
-          <MapController panTo={panTo} />
+          <MapController panTo={panTo} bounds={bounds} />
           {shelters.map((shelter) => (
             <Marker
               key={shelter.id}
@@ -219,6 +252,18 @@ export default function ShelterMapView() {
                   <p className={`text-sm font-medium ${getAvailabilityColor(shelter.occupancy, shelter.capacity)}`}>
                     {getAvailabilityText(shelter.occupancy, shelter.capacity)}
                   </p>
+                  <div className="mt-3">
+                    <button
+                      onClick={() => {
+                        const role = (user?.role || '').toLowerCase();
+                        const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/barangay/safe-routes' : '/route-planner';
+                        navigate(`${base}?end=${shelter.lat},${shelter.lng}`);
+                      }}
+                      className="bg-[#10B981] hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded"
+                    >
+                      Follow Safe Routes
+                    </button>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -227,4 +272,4 @@ export default function ShelterMapView() {
       </div>
     </div>
   );
-} 
+}

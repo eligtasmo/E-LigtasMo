@@ -1,36 +1,41 @@
 // context/AuthContext.tsx
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";  // Import useNavigate and useLocation
 import { logActivity, LogActions, ResourceTypes } from "../utils/logger";
 
 interface User {
+  id?: number;
   username: string;
   role: string;  // Add role to distinguish between admin and brgy
   email: string;
   full_name: string;
   brgy_name: string;
+  barangay?: string;
   city: string;
   province: string;
   contact_number: string;
+  gender?: string;
+  preferred_vehicle?: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string, role: string) => void;
+  login: (username: string, password: string) => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  updatePreferredVehicle: (mode: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = `${window.location.protocol}//${window.location.hostname}/eligtasmo/api`;
-const PUBLIC_ROUTES = ["/signin", "/brgy-signup", "/forgot-password", "/residents"];
+const API_BASE = `/api`;
+const PUBLIC_ROUTES = ["/signin", "/register", "/forgot-password", "/residents"];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
-    // Initialize user state from localStorage if available
     const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    if (savedUser) return JSON.parse(savedUser);
+    return null;
   });
   const navigate = useNavigate();
   const [role, setRole] = useState("admin");
@@ -52,20 +57,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await res.json();
       if (data.authenticated) {
         setUser({
+          id: data.user_id,
           username: data.username,
           role: data.role,
           email: data.email,
           full_name: data.full_name,
           brgy_name: data.brgy_name,
+          barangay: data.barangay ?? data.brgy_name,
           city: data.city,
           province: data.province,
-          contact_number: data.contact_number
+          contact_number: data.contact_number,
+          gender: data.gender,
+          preferred_vehicle: data.preferred_vehicle ?? null
         });
       } else {
-        setUser(null);
-        if (!PUBLIC_ROUTES.some(route => location.pathname === route || location.pathname.startsWith(route + "/"))) {
-          navigate("/signin");
+        const path = location.pathname;
+        
+        // Skip redirect logic for public routes
+        if (PUBLIC_ROUTES.includes(path)) {
+          setUser(null);
+          return;
         }
+
+        const adminRestricted =
+          path.startsWith("/admin") ||
+          path.startsWith("/brgy") ||
+          path.startsWith("/barangay");
+        const residentRestricted =
+          path === "/" ||
+          path.startsWith("/resident") ||
+          path.startsWith("/residents");
+        setUser(null);
+        if (adminRestricted) {
+          navigate('/signin');
+        }
+        // For residentRestricted, do not navigate; ResidentProtectedRoute will render AccessRequired
       }
     };
     checkSession();
@@ -77,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, [navigate, location]);
 
-  const login = async (username: string, password: string, role: string) => {
+  const login = async (username: string, password: string) => {
     try {
       const response = await fetch(`${API_BASE}/login.php`, {
         method: "POST",
@@ -88,18 +114,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      // Read as text first to guard against non-JSON responses (e.g., PHP warnings)
+      const raw = await response.text();
+      let data: any;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        // Not JSON; surface server response to help diagnose
+        throw new Error(`Login failed: ${response.status} ${response.statusText}. Server said: ${raw.slice(0, 200)}`);
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.message || `Login failed with status ${response.status}`);
+      }
 
       if (data.success) {
         setUser({
+          id: data.user_id,
           username,
-          role,
+          role: data.role,
           email: data.email,
           full_name: data.full_name,
           brgy_name: data.brgy_name,
+          barangay: data.barangay ?? data.brgy_name,
           city: data.city,
           province: data.province,
-          contact_number: data.contact_number
+          contact_number: data.contact_number,
+          gender: data.gender,
+          preferred_vehicle: data.preferred_vehicle ?? null
         });
         
         // Log successful login
@@ -110,10 +152,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data.user_id?.toString()
         );
         
-        if (role === "admin") {
-          navigate("/");
-        } else if (role === "brgy") {
+        if (data.role === "admin") {
+          navigate("/admin");
+        } else if (data.role === "brgy") {
           navigate("/barangay");
+        } else if (String(data.role || '').toLowerCase() === 'resident') {
+          alert("Residents must use the mobile application.");
+          setUser(null);
+          await fetch(`${API_BASE}/logout.php`, { credentials: "include" });
+          return;
         }
       } else {
         // Log failed login attempt
@@ -127,13 +174,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         );
         alert(data.message || "Login failed");
       }
-    } catch (error) {
-      alert("Error logging in. Please try again.");
+    } catch (error: any) {
+      alert(error?.message || "Error logging in. Please try again.");
     }
   };
 
   const logout = async () => {
     // Log logout before clearing user data
+    const prevRole = user?.role?.toLowerCase();
     if (user) {
       logActivity(
         LogActions.LOGOUT,
@@ -141,11 +189,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ResourceTypes.USER
       );
     }
-    
-    await fetch(`${API_BASE}/logout.php`, { credentials: "include" });
+
+    try {
+      await fetch(`${API_BASE}/logout.php`, { credentials: "include" });
+    } catch {}
+
+    // Clear local auth and redirect based on previous role
     setUser(null);
     localStorage.removeItem('user');
-    window.location.href = "/signin"; // Force a full reload to bust bfcache
+
+    if (prevRole === 'admin') {
+      window.location.assign('/signin');
+      return;
+    }
+    if (prevRole === 'brgy') {
+      window.location.assign('/signin');
+      return;
+    }
+    window.location.assign('/');
   };
 
   const updateUser = (userData: Partial<User>) => {
@@ -155,8 +216,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updatePreferredVehicle = async (mode: string) => {
+    try {
+      await fetch(`${API_BASE}/update-preferred-vehicle.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ preferred_vehicle: mode })
+      });
+      if (user) {
+        const updatedUser = { ...user, preferred_vehicle: mode };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (e) {
+      // Non-blocking: keep UI responsive even if persistence fails
+      console.warn('Failed to update preferred vehicle', e);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, updatePreferredVehicle }}>
       {children}
     </AuthContext.Provider>
   );

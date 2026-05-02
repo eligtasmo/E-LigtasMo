@@ -7,19 +7,29 @@ export default function BrgyProfile() {
   return (
     <>
       <PageMeta
-        title="Barangay Profile | E-LigtasMo"
-        description="Barangay user profile page for E-LigtasMo"
+        title="Barangay Profile | E-LIGTASMO"
+        description="Manage your barangay profile information and settings"
       />
-      <PageBreadcrumb pageTitle="Profile" />
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
-          Profile
-        </h3>
-        <div className="space-y-6">
+      
+      <div className="w-full">
+        {/* Header */}
+        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4 sm:p-6 mb-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Barangay Profile
+            </h1>
+            <p className="text-sm text-gray-600">
+              Manage your barangay information and account settings
+            </p>
+          </div>
+        </div>
+
+        {/* Profile Cards */}
+        <div className="space-y-4">
           <BrgyMetaCard />
           <BrgyInfoCard />
         </div>
       </div>
     </>
   );
-} 
+}

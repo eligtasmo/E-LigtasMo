@@ -17,7 +17,7 @@ const SignIn = () => {
             <SignInForm />
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{' '}
-              <Link to="/brgy-signup" className="text-blue-600 hover:underline">Register Barangay</Link>
+              <Link to="/brgy-signin" className="text-blue-600 hover:underline">Register Barangay</Link>
             </div>
           </div>
         </div>

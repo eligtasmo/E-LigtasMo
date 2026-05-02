@@ -1,217 +1,176 @@
 <?php
-if (isset($_SERVER['HTTP_ORIGIN'])) {
-    $allowed_origins = [
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'http://192.168.1.2:5173', // Add more if needed
-    ];
-    if (in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {
-        header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
-        header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    }
-}
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+require_once 'cors.php';
+header('Content-Type: application/json');
+require_once 'db.php';
+require_once 'rbac.php';
+if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 
-header("Content-Type: application/json");
-session_start();
-
-// Function to log activity
-function logActivity($action_type, $action_description, $resource_type = null, $resource_id = null, $status = 'success', $error_message = null) {
-    $host = "localhost";
-    $dbuser = "root";
-    $dbpass = "";
-    $dbname = "eligtasmo";
-    
-    try {
-        $conn = new mysqli($host, $dbuser, $dbpass, $dbname);
-        
-        if ($conn->connect_error) {
-            error_log("Database connection failed: " . $conn->connect_error);
-            return false;
-        }
-        
-        // Get user info from session
-        $user_id = $_SESSION['user_id'] ?? null;
-        $username = $_SESSION['username'] ?? null;
-        $user_role = $_SESSION['role'] ?? null;
-        
-        // Get client info
-        $ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        
-        $stmt = $conn->prepare("INSERT INTO system_logs (user_id, username, user_role, action_type, action_description, resource_type, resource_id, ip_address, user_agent, status, error_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        
-        $stmt->bind_param("issssssssss", 
-            $user_id,
-            $username,
-            $user_role,
-            $action_type,
-            $action_description,
-            $resource_type,
-            $resource_id,
-            $ip_address,
-            $user_agent,
-            $status,
-            $error_message
-        );
-        
-        $result = $stmt->execute();
-        $stmt->close();
-        $conn->close();
-        
-        return $result;
-    } catch (Exception $e) {
-        error_log("Error logging activity: " . $e->getMessage());
-        return false;
+function current_user_id_from_context() {
+  $headers = function_exists('getallheaders') ? getallheaders() : [];
+  $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? '');
+  if (stripos($auth, 'Bearer ') === 0) {
+    $token = substr($auth, 7);
+    $payload = jwt_decode($token);
+    if ($payload && isset($payload['sub'])) {
+      return (int)$payload['sub'];
     }
+  }
+  if (isset($_SESSION['user_id'])) {
+    return (int)$_SESSION['user_id'];
+  }
+  return null;
 }
 
-// Handle POST requests to log activity
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    
-    $action_type = $data['action_type'] ?? '';
-    $action_description = $data['action_description'] ?? '';
-    $resource_type = $data['resource_type'] ?? null;
-    $resource_id = $data['resource_id'] ?? null;
-    $status = $data['status'] ?? 'success';
-    $error_message = $data['error_message'] ?? null;
-    
-    if (empty($action_type) || empty($action_description)) {
-        echo json_encode(['success' => false, 'message' => 'Action type and description are required']);
-        exit;
-    }
-    
-    $result = logActivity($action_type, $action_description, $resource_type, $resource_id, $status, $error_message);
-    
-    if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Activity logged successfully']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to log activity']);
-    }
+try {
+  $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+  if ($method === 'GET') {
+    // Only restrict listing logs to authorized roles
+    require_permission('activity.log');
+    $pdo->exec("CREATE TABLE IF NOT EXISTS system_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      username VARCHAR(255),
+      user_role VARCHAR(50),
+      action_type VARCHAR(100) NOT NULL,
+      action_description TEXT NOT NULL,
+      resource_type VARCHAR(100),
+      resource_id VARCHAR(255),
+      ip_address VARCHAR(45),
+      user_agent TEXT,
+      status VARCHAR(50) DEFAULT 'success',
+      error_message TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user_id (user_id),
+      INDEX idx_action_type (action_type),
+      INDEX idx_created_at (created_at),
+      INDEX idx_user_role (user_role),
+      INDEX idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $action_type = isset($_GET['action_type']) ? trim($_GET['action_type']) : '';
+    $user_role = isset($_GET['user_role']) ? trim($_GET['user_role']) : '';
+    $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+    $date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
+    $date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(200, intval($_GET['limit']))) : 50;
+    $offset = ($page - 1) * $limit;
+
+    $where = [];
+    $params = [];
+    if ($action_type !== '') { $where[] = "action_type = :action_type"; $params[':action_type'] = $action_type; }
+    if ($user_role !== '') { $where[] = "LOWER(user_role) = LOWER(:user_role)"; $params[':user_role'] = $user_role; }
+    if ($status !== '') { $where[] = "status = :status"; $params[':status'] = $status; }
+    if ($date_from !== '') { $where[] = "created_at >= :date_from"; $params[':date_from'] = $date_from . ' 00:00:00'; }
+    if ($date_to !== '') { $where[] = "created_at <= :date_to"; $params[':date_to'] = $date_to . ' 23:59:59'; }
+
+    $whereClause = !empty($where) ? (' WHERE ' . implode(' AND ', $where)) : '';
+
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM system_logs" . $whereClause);
+    $countStmt->execute($params);
+    $totalRecords = (int)$countStmt->fetchColumn();
+
+    $sql = "SELECT * FROM system_logs" . $whereClause . " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $k => $v) { $stmt->bindValue($k, $v); }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+      'success' => true,
+      'logs' => $logs,
+      'pagination' => [
+        'current_page' => $page,
+        'total_records' => $totalRecords,
+        'total_pages' => ($limit > 0 ? (int)ceil($totalRecords / $limit) : 0),
+        'limit' => $limit,
+      ],
+    ]);
     exit;
-}
+  }
 
-// Handle GET requests to retrieve logs (for admin only)
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-        exit;
-    }
-    
-    $host = "localhost";
-    $dbuser = "root";
-    $dbpass = "";
-    $dbname = "eligtasmo";
-    
-    try {
-        $conn = new mysqli($host, $dbuser, $dbpass, $dbname);
-        
-        if ($conn->connect_error) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            exit;
-        }
-        
-        // Get query parameters
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
-        $offset = ($page - 1) * $limit;
-        
-        $action_type = $_GET['action_type'] ?? '';
-        $user_role = $_GET['user_role'] ?? '';
-        $status = $_GET['status'] ?? '';
-        $date_from = $_GET['date_from'] ?? '';
-        $date_to = $_GET['date_to'] ?? '';
-        
-        // Build WHERE clause
-        $where_conditions = [];
-        $params = [];
-        $types = '';
-        
-        if (!empty($action_type)) {
-            $where_conditions[] = "action_type = ?";
-            $params[] = $action_type;
-            $types .= 's';
-        }
-        
-        if (!empty($user_role)) {
-            $where_conditions[] = "user_role = ?";
-            $params[] = $user_role;
-            $types .= 's';
-        }
-        
-        if (!empty($status)) {
-            $where_conditions[] = "status = ?";
-            $params[] = $status;
-            $types .= 's';
-        }
-        
-        if (!empty($date_from)) {
-            $where_conditions[] = "created_at >= ?";
-            $params[] = $date_from . ' 00:00:00';
-            $types .= 's';
-        }
-        
-        if (!empty($date_to)) {
-            $where_conditions[] = "created_at <= ?";
-            $params[] = $date_to . ' 23:59:59';
-            $types .= 's';
-        }
-        
-        $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
-        
-        // Get total count
-        $count_query = "SELECT COUNT(*) as total FROM system_logs $where_clause";
-        $count_stmt = $conn->prepare($count_query);
-        
-        if (!empty($params)) {
-            $count_stmt->bind_param($types, ...$params);
-        }
-        
-        $count_stmt->execute();
-        $count_result = $count_stmt->get_result();
-        $total_records = $count_result->fetch_assoc()['total'];
-        $count_stmt->close();
-        
-        // Get logs
-        $query = "SELECT * FROM system_logs $where_clause ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($query);
-        
-        $params[] = $limit;
-        $params[] = $offset;
-        $types .= 'ii';
-        
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        $logs = [];
-        while ($row = $result->fetch_assoc()) {
-            $logs[] = $row;
-        }
-        
-        $stmt->close();
-        $conn->close();
-        
-        echo json_encode([
-            'success' => true,
-            'logs' => $logs,
-            'pagination' => [
-                'current_page' => $page,
-                'total_records' => $total_records,
-                'total_pages' => ceil($total_records / $limit),
-                'limit' => $limit
-            ]
-        ]);
-        
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Error retrieving logs: ' . $e->getMessage()]);
-    }
+  $data = json_decode(file_get_contents('php://input'), true);
+  if (!is_array($data)) { $data = []; }
+
+  // Branch 1: Generic system activity logs (from frontend logger.ts)
+  if (isset($data['action_type']) && isset($data['action_description'])) {
+    // Ensure table exists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS system_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      username VARCHAR(255),
+      user_role VARCHAR(50),
+      action_type VARCHAR(100) NOT NULL,
+      action_description TEXT NOT NULL,
+      resource_type VARCHAR(100),
+      resource_id VARCHAR(255),
+      ip_address VARCHAR(45),
+      user_agent TEXT,
+      status VARCHAR(50) DEFAULT 'success',
+      error_message TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user_id (user_id),
+      INDEX idx_action_type (action_type),
+      INDEX idx_created_at (created_at),
+      INDEX idx_user_role (user_role),
+      INDEX idx_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $user_id = current_user_id_from_context();
+    $username = isset($_SESSION['username']) ? (string)$_SESSION['username'] : null;
+    $user_role = isset($_SESSION['role']) ? (string)$_SESSION['role'] : (isset($_SERVER['HTTP_X_ROLE']) ? (string)$_SERVER['HTTP_X_ROLE'] : 'guest');
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+    $stmt = $pdo->prepare('INSERT INTO system_logs (user_id, username, user_role, action_type, action_description, resource_type, resource_id, ip_address, user_agent, status, error_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([
+      $user_id,
+      $username,
+      $user_role,
+      trim((string)$data['action_type']),
+      trim((string)$data['action_description']),
+      isset($data['resource_type']) ? (string)$data['resource_type'] : null,
+      isset($data['resource_id']) ? (string)$data['resource_id'] : null,
+      $ip,
+      $ua,
+      isset($data['status']) ? (string)$data['status'] : 'success',
+      isset($data['error_message']) ? (string)$data['error_message'] : null,
+    ]);
+
+    echo json_encode(['success' => true]);
     exit;
+  }
+
+  // Branch 2: SOP run activity logs (dispatch/response tracking)
+  $sop_run_id = isset($data['sop_run_id']) ? intval($data['sop_run_id']) : 0;
+  $action = isset($data['action']) ? trim($data['action']) : '';
+  $details = isset($data['details']) ? $data['details'] : [];
+  if ($sop_run_id <= 0 || $action === '') {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Missing sop_run_id or action']);
+    exit;
+  }
+
+  $pdo->exec("CREATE TABLE IF NOT EXISTS sop_run_activity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sop_run_id INT NOT NULL,
+    action VARCHAR(64) NOT NULL,
+    details JSON NULL,
+    user_id INT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_run (sop_run_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+  $user_id = current_user_id_from_context();
+  $stmt = $pdo->prepare('INSERT INTO sop_run_activity (sop_run_id, action, details, user_id) VALUES (?, ?, ?, ?)');
+  $stmt->execute([$sop_run_id, $action, json_encode($details), $user_id]);
+
+  echo json_encode(['success' => true]);
+} catch (Exception $e) {
+  http_response_code(500);
+  echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-?> 
+?>

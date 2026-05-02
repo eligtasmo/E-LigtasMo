@@ -7,13 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+require_once 'rbac.php';
 session_start();
-
-// Check if user is admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
+require_permission('logs.export');
 
 $host = "localhost";
 $dbuser = "root";
@@ -136,4 +132,4 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error exporting logs: ' . $e->getMessage()]);
 }
-?> 
+?>

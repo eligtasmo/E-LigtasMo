@@ -9,19 +9,23 @@ export default function UserProfiles() {
   return (
     <>
       <PageMeta
-        title="React.js Profile Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Profile Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="User Profile | E-LIGTASMO"
+        description="Manage your user profile information and settings"
       />
-      <PageBreadcrumb pageTitle="Profile" />
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
-          Profile
-        </h3>
-        <div className="space-y-6">
-          <UserMetaCard />
-          <UserInfoCard />
-          <UserAddressCard />
-          <ChangePasswordCard />
+      
+      <div className="w-full">
+        <div className="w-full">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 mb-5">
+            <h1 className="text-2xl font-semibold text-gray-900">User Profile</h1>
+            <p className="mt-1 text-sm text-gray-600">Manage your personal information and account settings</p>
+          </div>
+
+          <div className="space-y-5">
+            <UserMetaCard />
+            <UserInfoCard />
+            <UserAddressCard />
+            <ChangePasswordCard />
+          </div>
         </div>
       </div>
     </>

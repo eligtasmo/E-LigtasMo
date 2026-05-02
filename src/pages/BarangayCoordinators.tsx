@@ -2,212 +2,231 @@ import React, { useState, useEffect } from 'react';
 import PageMeta from "../components/common/PageMeta";
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaUser, FaSearch, FaFilter, FaExclamationTriangle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
-interface BarangayCoordinator {
+interface BarangayAccount {
+  barangay_id: number;
+  barangay_name: string;
+  lat: number;
+  lng: number;
+  address: string;
+  contact: string;
+  user_id: number | null;
+  username: string | null;
+  email: string | null;
+  role: string | null;
+  status: string | null;
+}
+
+// Mapped interface for display
+interface DisplayCoordinator {
   id: number;
   barangay_name: string;
-  city: string;
-  province: string;
   coordinator_name: string;
   coordinator_position: string;
   phone: string;
   email: string;
   address: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'pending' | 'rejected';
   emergency_contact: string;
   responsibilities: string[];
   last_updated: string;
 }
 
-// Mock data - in real app, this would come from API
-const barangayCoordinators: BarangayCoordinator[] = [
-  {
-    id: 1,
-    barangay_name: "Bagumbayan",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Juan Dela Cruz",
-    coordinator_position: "Barangay Captain",
-    phone: "0917-123-4567",
-    email: "juan.delacruz@bagumbayan.gov.ph",
-    address: "123 Bagumbayan St., Taguig City",
-    status: "active",
-    emergency_contact: "0917-123-4568",
-    responsibilities: ["Disaster Response", "Community Safety", "Emergency Coordination"],
-    last_updated: "2024-01-15"
-  },
-  {
-    id: 2,
-    barangay_name: "Bambang",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Maria Santos",
-    coordinator_position: "Barangay Councilor",
-    phone: "0917-987-6543",
-    email: "maria.santos@bambang.gov.ph",
-    address: "456 Bambang Ave., Taguig City",
-    status: "active",
-    emergency_contact: "0917-987-6544",
-    responsibilities: ["Flood Monitoring", "Evacuation Planning", "Shelter Management"],
-    last_updated: "2024-01-10"
-  },
-  {
-    id: 3,
-    barangay_name: "Calzada",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Pedro Reyes",
-    coordinator_position: "Barangay Captain",
-    phone: "0918-555-1234",
-    email: "pedro.reyes@calzada.gov.ph",
-    address: "789 Calzada Road, Taguig City",
-    status: "active",
-    emergency_contact: "0918-555-1235",
-    responsibilities: ["Traffic Management", "Road Safety", "Incident Response"],
-    last_updated: "2024-01-12"
-  },
-  {
-    id: 4,
-    barangay_name: "Hagonoy",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Ana Garcia",
-    coordinator_position: "Barangay Secretary",
-    phone: "0919-777-8888",
-    email: "ana.garcia@hagonoy.gov.ph",
-    address: "321 Hagonoy Blvd., Taguig City",
-    status: "inactive",
-    emergency_contact: "0919-777-8889",
-    responsibilities: ["Documentation", "Communication", "Resource Management"],
-    last_updated: "2023-12-20"
-  },
-  {
-    id: 5,
-    barangay_name: "Ibayo-Tipas",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Roberto Mendoza",
-    coordinator_position: "Barangay Captain",
-    phone: "0920-111-2222",
-    email: "roberto.mendoza@ibayotipas.gov.ph",
-    address: "654 Ibayo St., Taguig City",
-    status: "active",
-    emergency_contact: "0920-111-2223",
-    responsibilities: ["Community Outreach", "Emergency Training", "Coordination"],
-    last_updated: "2024-01-08"
-  },
-  {
-    id: 6,
-    barangay_name: "Ligid-Tipas",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Carmen Lopez",
-    coordinator_position: "Barangay Councilor",
-    phone: "0921-333-4444",
-    email: "carmen.lopez@ligidtipas.gov.ph",
-    address: "987 Ligid Road, Taguig City",
-    status: "active",
-    emergency_contact: "0921-333-4445",
-    responsibilities: ["Health Services", "Sanitation", "Medical Emergency"],
-    last_updated: "2024-01-14"
-  },
-  {
-    id: 7,
-    barangay_name: "Lower Bicutan",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Fernando Torres",
-    coordinator_position: "Barangay Captain",
-    phone: "0922-555-6666",
-    email: "fernando.torres@lowerbicutan.gov.ph",
-    address: "147 Lower Bicutan St., Taguig City",
-    status: "active",
-    emergency_contact: "0922-555-6667",
-    responsibilities: ["Security", "Peace and Order", "Emergency Response"],
-    last_updated: "2024-01-11"
-  },
-  {
-    id: 8,
-    barangay_name: "New Lower Bicutan",
-    city: "Taguig",
-    province: "Metro Manila",
-    coordinator_name: "Isabel Rodriguez",
-    coordinator_position: "Barangay Councilor",
-    phone: "0923-777-8888",
-    email: "isabel.rodriguez@newlowerbicutan.gov.ph",
-    address: "258 New Lower Bicutan Ave., Taguig City",
-    status: "active",
-    emergency_contact: "0923-777-8889",
-    responsibilities: ["Youth Programs", "Education", "Community Development"],
-    last_updated: "2024-01-09"
-  }
-];
-
-const statusColors = {
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-red-100 text-red-700',
-};
-
 const BarangayCoordinators: React.FC = () => {
   const { user } = useAuth();
-  if (!user) return <div className="p-8 text-center text-gray-400">Loading...</div>;
-  const userBarangay = user.brgy_name;
-  // Only show coordinators for the user's barangay
-  const coordinators = barangayCoordinators.filter(c => c.barangay_name === userBarangay);
+  const [coordinators, setCoordinators] = useState<DisplayCoordinator[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const response = await apiFetch('list-brgy-accounts.php');
+      const data = await response.json();
+      if (data.success && Array.isArray(data.barangays)) {
+        // Filter only those with valid users if we only want "registered accounts"
+        // User said "visible all the account of the registered barangay accounts".
+        // So we filter where user_id is not null.
+        const accounts = data.barangays
+          .filter((b: BarangayAccount) => b.user_id !== null)
+          .map((b: BarangayAccount) => ({
+            id: b.user_id!,
+            barangay_name: b.barangay_name,
+            coordinator_name: b.username || 'Unknown',
+            coordinator_position: 'Barangay Official', // Default
+            phone: b.contact || 'N/A',
+            email: b.email || 'N/A',
+            address: b.address || `Lat: ${b.lat}, Lng: ${b.lng}`,
+            status: (b.status || 'inactive').toLowerCase() as any,
+            emergency_contact: b.contact || '911',
+            responsibilities: ['Emergency Response', 'Community Coordination'],
+            last_updated: new Date().toISOString()
+          }));
+        setCoordinators(accounts);
+      }
+    } catch (error) {
+      console.error("Failed to fetch barangay accounts", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleStatusUpdate = async (userId: number, action: 'approve' | 'reject') => {
+    if (!confirm(`Are you sure you want to ${action} this account?`)) return;
+    try {
+      const res = await apiFetch('approve-brgy-account.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        fetchData(); // Refresh list
+      } else {
+        alert(data.message || 'Action failed');
+      }
+    } catch (e) {
+      alert('Error connecting to server');
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-400">Loading...</div>;
 
   const handleCall = (phone: string) => {
-    window.open(`tel:${phone}`, '_self');
+    if (phone && phone !== 'N/A') window.open(`tel:${phone}`, '_self');
   };
 
   const handleEmail = (email: string) => {
-    window.open(`mailto:${email}`, '_self');
+    if (email && email !== 'N/A') window.open(`mailto:${email}`, '_self');
   };
 
   return (
     <>
       <PageMeta
-        title={`Barangay Coordinators for ${userBarangay} | E-LigtasMo`}
-        description={`Directory of coordinators for ${userBarangay}.`}
+        title="Barangay Coordinators | E-LigtasMo"
+        description="Directory of registered barangay coordinators."
       />
       <div className="px-4 py-6 md:px-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Barangay Coordinators for {userBarangay}</h1>
-          <p className="text-gray-500">Directory of coordinators and emergency contacts for your barangay.</p>
+          <h1 className="text-2xl font-bold mb-1">Registered Barangay Coordinators</h1>
+          <p className="text-gray-500">Directory of all registered barangay accounts and their locations.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coordinators.length === 0 && (
-            <div className="col-span-full text-gray-400 text-center py-12 text-lg">No coordinators found for your barangay.</div>
+            <div className="col-span-full text-gray-400 text-center py-12 text-lg">No registered barangay coordinators found.</div>
           )}
           {coordinators.map(coordinator => (
-            <div key={coordinator.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-3 border-t-4 border-blue-600">
-              <div className="flex items-center gap-3 mb-2">
-                <FaUser className="text-blue-600 text-2xl" />
-                <div>
-                  <div className="font-bold text-lg">{coordinator.coordinator_name}</div>
-                  <div className="text-sm text-gray-500">{coordinator.coordinator_position}</div>
+            <div key={coordinator.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 h-full flex flex-col">
+              <div className="p-6 flex flex-col h-full">
+                {/* Header with status badge */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-3 rounded-full">
+                      <FaUser className="text-blue-600 text-xl" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-lg text-gray-900">{coordinator.coordinator_name}</div>
+                      <div className="text-sm text-gray-500">{coordinator.barangay_name} - {coordinator.coordinator_position}</div>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
+                    coordinator.status === 'active' ? 'bg-green-100 text-green-700' :
+                    coordinator.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {coordinator.status}
+                  </span>
                 </div>
-                <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${coordinator.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{coordinator.status.toUpperCase()}</span>
-              </div>
-              <div className="flex flex-col gap-1 text-sm text-gray-700">
-                <div className="flex items-center gap-2"><FaPhone className="text-gray-400" /> {coordinator.phone}</div>
-                <div className="flex items-center gap-2"><FaEnvelope className="text-gray-400" /> {coordinator.email}</div>
-                <div className="flex items-center gap-2"><FaMapMarkerAlt className="text-gray-400" /> {coordinator.address}</div>
-              </div>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
-                <div className="flex items-center gap-2 text-red-700 font-semibold">
-                  <FaExclamationTriangle className="text-red-500" /> Emergency Contact:
-                  <span className="font-bold text-lg">{coordinator.emergency_contact}</span>
+
+                {/* Contact Information */}
+                <div className="space-y-3 mb-4 flex-grow">
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <FaPhone className="text-gray-400 flex-shrink-0" />
+                    <span className="line-clamp-1">{coordinator.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <FaEnvelope className="text-gray-400 flex-shrink-0" />
+                    <span className="line-clamp-1">{coordinator.email}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <FaMapMarkerAlt className="text-gray-400 flex-shrink-0" />
+                    <span className="line-clamp-2">{coordinator.address}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-2">
-                <div className="font-semibold text-xs text-gray-500 mb-1">Responsibilities:</div>
-                <div className="flex flex-wrap gap-2">
-                  {coordinator.responsibilities.map((resp, idx) => (
-                    <span key={idx} className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-xs font-medium">{resp}</span>
-                  ))}
+
+                {/* Emergency Contact Section - Redesigned */}
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-red-100 p-2 rounded-full">
+                      <FaExclamationTriangle className="text-red-500 text-sm" />
+                    </div>
+                    <span className="text-red-700 font-semibold text-sm">Emergency Contact</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-lg text-red-800">{coordinator.emergency_contact}</span>
+                    <button
+                      onClick={() => handleCall(coordinator.emergency_contact)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-colors duration-200 flex items-center gap-1"
+                    >
+                      <FaPhone className="text-xs" /> Call
+                    </button>
+                  </div>
                 </div>
+
+                {/* Responsibilities */}
+                <div className="mb-4">
+                  <div className="font-semibold text-sm text-gray-700 mb-2">Responsibilities:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {coordinator.responsibilities.map((resp, idx) => (
+                      <span key={idx} className="bg-blue-50 text-blue-700 rounded-lg px-3 py-1 text-xs font-medium border border-blue-200">
+                        {resp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {coordinator.status === 'pending' ? (
+                  <div className="grid grid-cols-2 gap-3 mt-auto">
+                    <button
+                      onClick={() => handleStatusUpdate(coordinator.id, 'approve')}
+                      className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                    >
+                      <span className="relative">Approve</span>
+                    </button>
+                    <button
+                      onClick={() => handleStatusUpdate(coordinator.id, 'reject')}
+                      className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                    >
+                      <span className="relative">Reject</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 mt-auto">
+                    <button
+                      onClick={() => handleCall(coordinator.phone)}
+                      className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
+                      <FaPhone className="text-sm relative" />
+                      <span className="relative">Call</span>
+                    </button>
+                    <button
+                      onClick={() => handleEmail(coordinator.email)}
+                      className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform hover:scale-[1.02]"
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
+                      <FaEnvelope className="text-sm relative" />
+                      <span className="relative">Email</span>
+                    </button>
+                  </div>
+                )}
+                
               </div>
-              <div className="text-xs text-gray-400 mt-2">Last updated: {new Date(coordinator.last_updated).toLocaleDateString()}</div>
             </div>
           ))}
         </div>
@@ -216,4 +235,4 @@ const BarangayCoordinators: React.FC = () => {
   );
 };
 
-export default BarangayCoordinators; 
+export default BarangayCoordinators;

@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { FaCheck, FaTimes, FaMapMarkerAlt, FaUser, FaClock, FaInfoCircle, FaPhone } from 'react-icons/fa';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { FaCheck, FaTimes, FaMapMarkerAlt, FaUser, FaClock, FaInfoCircle, FaPhone, FaExclamationTriangle } from 'react-icons/fa';
+import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import DuplicateIncidentManager from './DuplicateIncidentManager';
 
 interface Incident {
   id: number;
   type: string;
   lat: number;
   lng: number;
+  start_lat?: number;
+  start_lng?: number;
+  end_lat?: number;
+  end_lng?: number;
   address: string;
   datetime: string;
   description: string;
@@ -18,16 +23,20 @@ interface Incident {
   status: 'Pending' | 'Approved' | 'Rejected' | 'Resolved';
   rejection_reason?: string;
   created_at: string;
+  flood_level_cm?: number;
+  allowed_vehicles?: string;
 }
 
 const TABS = [
   { key: 'Pending', label: 'Pending' },
   { key: 'Approved', label: 'Approved' },
+  { key: 'Resolved', label: 'Resolved' },
   { key: 'Rejected', label: 'Rejected' },
+  { key: 'Duplicates', label: 'Manage Duplicates' }
 ];
 
 export default function IncidentModerationView() {
-  const [tab, setTab] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
+  const [tab, setTab] = useState<'Pending' | 'Approved' | 'Resolved' | 'Rejected' | 'Duplicates'>('Approved');
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [rejectModal, setRejectModal] = useState<{ open: boolean; incidentId: number | null }>({ open: false, incidentId: null });
@@ -35,9 +44,13 @@ export default function IncidentModerationView() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchIncidents = async () => {
+    if (tab === 'Duplicates') {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost/eligtasmo/api/list-incidents.php?status=${tab}`);
+      const res = await fetch(`/api/list-incidents.php?status=${tab}`);
       const data = await res.json();
       if (data.success) {
         setIncidents(data.incidents || []);
@@ -55,34 +68,91 @@ export default function IncidentModerationView() {
     // eslint-disable-next-line
   }, [tab]);
 
+  // Separate status management functions for each incident state
   const handleApprove = async (id: number) => {
     setActionLoading(true);
     try {
-      const res = await fetch('http://localhost/eligtasmo/api/update-incident-status.php', {
+      const res = await fetch('/api/update-incident-status.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'Approved' })
       });
       const data = await res.json();
-      if (data.success) fetchIncidents();
-    } catch {}
+      if (data.success) {
+        fetchIncidents();
+        alert('Incident approved successfully!');
+      } else {
+        alert('Failed to approve incident: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Network error while approving incident');
+    }
+    setActionLoading(false);
+  };
+
+  const handleMarkAsResolved = async (id: number) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/update-incident-status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Resolved' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchIncidents();
+        alert('Incident marked as resolved successfully!');
+      } else {
+        alert('Failed to resolve incident: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Network error while resolving incident');
+    }
     setActionLoading(false);
   };
 
   const handleReject = async (id: number, reason: string) => {
     setActionLoading(true);
     try {
-      const res = await fetch('http://localhost/eligtasmo/api/update-incident-status.php', {
+      const res = await fetch('/api/update-incident-status.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'Rejected', rejectionReason: reason })
       });
       const data = await res.json();
-      if (data.success) fetchIncidents();
-    } catch {}
+      if (data.success) {
+        fetchIncidents();
+        alert('Incident rejected successfully!');
+      } else {
+        alert('Failed to reject incident: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Network error while rejecting incident');
+    }
     setActionLoading(false);
     setRejectModal({ open: false, incidentId: null });
     setRejectionReason('');
+  };
+
+  const handleReopen = async (id: number) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/update-incident-status.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'Pending' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchIncidents();
+        alert('Incident reopened successfully!');
+      } else {
+        alert('Failed to reopen incident: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Network error while reopening incident');
+    }
+    setActionLoading(false);
   };
 
   return (
@@ -92,15 +162,18 @@ export default function IncidentModerationView() {
         {TABS.map(t => (
           <button
             key={t.key}
-            className={`px-4 py-1.5 rounded font-semibold transition text-base ${tab === t.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-100'}`}
-            onClick={() => setTab(t.key as 'Pending' | 'Approved' | 'Rejected')}
+            className={`px-4 py-1.5 rounded font-semibold transition text-base flex items-center gap-2 ${tab === t.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-100'}`}
+            onClick={() => setTab(t.key as 'Pending' | 'Approved' | 'Resolved' | 'Rejected' | 'Duplicates')}
             disabled={actionLoading}
           >
+            {t.key === 'Duplicates' && <FaExclamationTriangle />}
             {t.label}
           </button>
         ))}
       </div>
-      {loading ? (
+      {tab === 'Duplicates' ? (
+        <DuplicateIncidentManager />
+      ) : loading ? (
         <div className="text-center text-gray-500">Loading...</div>
       ) : incidents.length === 0 ? (
         <div className="text-center text-gray-400">No incidents in this category.</div>
@@ -118,7 +191,20 @@ export default function IncidentModerationView() {
                 <span className="text-xs text-gray-500 font-medium">{new Date(incident.datetime).toLocaleString()}</span>
               </div>
               {/* Description */}
-              <div className="text-gray-700 text-base mb-2">{incident.description}</div>
+              <div className="text-gray-700 text-base mb-2">
+                {incident.description}
+                {/* Flood level & allowed vehicles */}
+                {incident.type && incident.type.toLowerCase() === 'flood' && (
+                  <div className="text-sm text-gray-700">
+                    {typeof incident.flood_level_cm === 'number' && (
+                      <p>Flood level: {incident.flood_level_cm} cm</p>
+                    )}
+                    {incident.allowed_vehicles && (
+                      <p>Passable vehicles: {incident.allowed_vehicles}</p>
+                    )}
+                  </div>
+                )}
+              </div>
               {/* Info Bar */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 bg-gray-50 rounded px-3 py-1 mb-2">
                 <span className="flex items-center gap-1"><FaUser /> {incident.reporter}</span>
@@ -135,18 +221,75 @@ export default function IncidentModerationView() {
               <div className="mb-2 rounded-lg overflow-hidden border border-gray-200" style={{ height: 180 }}>
                 <MapContainer center={[incident.lat, incident.lng]} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} attributionControl={false}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[incident.lat, incident.lng]} />
+                  {
+                    (() => {
+                      const hasStartEnd = !!incident.start_lat && !!incident.start_lng && !!incident.end_lat && !!incident.end_lng;
+                      const positions: [number, number][] = hasStartEnd
+                        ? [
+                            [incident.start_lat as number, incident.start_lng as number],
+                            [incident.end_lat as number, incident.end_lng as number]
+                          ]
+                        : [
+                            [incident.lat - 0.0001, incident.lng - 0.0001],
+                            [incident.lat + 0.0001, incident.lng + 0.0001]
+                          ];
+                      return (
+                        <Polyline positions={positions} color="#3b82f6" weight={4} opacity={0.9} />
+                      );
+                    })()
+                  }
                 </MapContainer>
               </div>
               {/* Rejection Reason */}
               {incident.status === 'Rejected' && incident.rejection_reason && (
                 <div className="text-sm text-red-700 bg-red-50 rounded p-2 mb-2">Reason: {incident.rejection_reason}</div>
               )}
-              {/* Button Bar */}
+              {/* Button Bar - Different actions based on status */}
               {incident.status === 'Pending' && (
                 <div className="flex gap-2 justify-end mt-2">
-                  <button className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition" onClick={() => handleApprove(incident.id)} disabled={actionLoading}><FaCheck /> Approve</button>
-                  <button className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition" onClick={() => setRejectModal({ open: true, incidentId: incident.id })} disabled={actionLoading}><FaTimes /> Reject</button>
+                  <button 
+                    className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition" 
+                    onClick={() => handleApprove(incident.id)} 
+                    disabled={actionLoading}
+                  >
+                    <FaCheck /> Approve
+                  </button>
+                  <button 
+                    className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition" 
+                    onClick={() => setRejectModal({ open: true, incidentId: incident.id })} 
+                    disabled={actionLoading}
+                  >
+                    <FaTimes /> Reject
+                  </button>
+                </div>
+              )}
+              {incident.status === 'Approved' && (
+                <div className="flex gap-2 justify-end mt-2">
+                  <button 
+                    className="flex-1 max-w-[160px] flex items-center justify-center gap-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition" 
+                    onClick={() => handleMarkAsResolved(incident.id)} 
+                    disabled={actionLoading}
+                  >
+                    <FaCheck /> Mark as Done
+                  </button>
+                  <button 
+                    className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded transition" 
+                    onClick={() => handleReopen(incident.id)} 
+                    disabled={actionLoading}
+                  >
+                    <FaClock /> Reopen
+                  </button>
+                </div>
+              )}
+              {(incident.status === 'Resolved' || incident.status === 'Rejected') && (
+                <div className="flex gap-2 justify-end mt-2">
+                  <button 
+                    className="flex-1 max-w-[140px] flex items-center justify-center gap-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded transition" 
+                    onClick={() => handleReopen(incident.id)} 
+                    disabled={actionLoading}
+                  >
+                    <FaClock /> Reopen
+                  </button>
                 </div>
               )}
             </div>
@@ -170,4 +313,4 @@ export default function IncidentModerationView() {
       )}
     </div>
   );
-} 
+}

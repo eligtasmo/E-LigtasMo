@@ -8,7 +8,7 @@ export const logActivity = async (
   error_message?: string
 ) => {
   try {
-    const response = await fetch('http://localhost/eligtasmo/api/log-activity.php', {
+    const response = await fetch('/api/log-activity.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

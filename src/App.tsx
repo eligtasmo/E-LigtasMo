@@ -1,171 +1,754 @@
-// App.tsx
-// Triggering a re-check of imports
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import SignIn from "./pages/AuthPages/SignIn";
-import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
-import ManageSheltersView from "./components/saferoutes/ManageSheltersView";
-import RoutesView from './components/saferoutes/RoutesView';
-import ShelterMapView from './components/saferoutes/ShelterMapView';
-import Blank from "./pages/Blank";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
+import { MapProvider } from "./context/MapContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+
+// Layouts
+import RootLayout from "./layout/RootLayout";
 import AppLayout from "./layout/AppLayout";
-import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import ProtectedRoute from "./components/common/ProtectedRoute";
-import ResidentLayout from "./layout/ResidentLayout";
-import ResidentHome from "./pages/Dashboard/ResidentHome";
-import BrgyHome from "./pages/Dashboard/BrgyHome";
 import BrgyLayout from "./layout/BrgyLayout";
-import WeatherFloodTrackingView from './components/saferoutes/WeatherFloodTrackingView';
-import ResidentSafeRoutePlanner from './pages/Resident/ResidentSafeRoutePlanner';
-import ResidentReportIncident from './pages/Resident/ResidentReportIncident';
-import ResidentHazardMap from './pages/Resident/ResidentHazardMap';
-import ResidentWeather from './pages/Resident/ResidentWeather';
-import ResidentHelp from './pages/Resident/ResidentHelp';
-import ResidentShelterView from "./pages/Resident/ResidentShelterView";
-import IncidentDashboardView from "./components/saferoutes/IncidentDashboardView";
-import { MapContainer, TileLayer } from "react-leaflet";
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import useSessionGuard from "./hooks/useSessionGuard";
+import ResidentLayout from "./layout/ResidentLayout";
+import AuthPageLayout from "./pages/AuthPages/AuthPageLayout";
+
+// Pages
+import Home from "./pages/Dashboard/Home";
+import BrgyHome from "./pages/Dashboard/BrgyHome";
+import ResidentHome from "./pages/Dashboard/ResidentHome";
+import SafeRoutes from "./pages/SafeRoutes";
+import ManageShelters from "./pages/ManageShelters";
+import IncidentReports from "./pages/IncidentReports";
+import WeatherFloods from "./pages/WeatherFloods";
+import Weather from "./pages/Weather";
 import UserManagement from "./pages/UserManagement";
-import BrgySignUp from "./pages/AuthPages/BrgySignIn";
-import ForgotPassword from "./pages/AuthPages/ForgotPassword";
-import BrgyProfile from "./pages/BrgyProfile";
-import EmergencyContacts from "./pages/EmergencyContacts";
+import Resources from "./pages/Resources";
 import BarangayCoordinators from "./pages/BarangayCoordinators";
-import IncidentModerationView from "./components/saferoutes/IncidentModerationView";
+import UserProfiles from "./pages/UserProfiles";
+import SystemLogs from "./pages/SystemLogs";
+import HelpSupport from "./pages/HelpSupport";
+import IncidentReportingWrapper from "./pages/IncidentReportingWrapper";
 import BarangayMapView from "./components/saferoutes/BarangayMapView";
 import Announcements from "./pages/Dashboard/Announcements";
-import SystemLogs from "./pages/SystemLogs";
-import IncidentReportingWrapper from './pages/IncidentReportingWrapper';
+import TacticalApprovalDashboard from "./pages/TacticalApprovalDashboard";
 
-const PUBLIC_ROUTES = ["/signin", "/brgy-signup", "/forgot-password"];
+// Resident Pages
+import React, { Suspense } from "react";
+import ResidentSafeRoutes from "@/pages/Resident/ResidentSafeRoutes";
+const ResidentSafeRoutePlanner = React.lazy(() => import("./pages/Resident/ResidentSafeRoutePlanner"));
+const ResidentShelterView = React.lazy(() => import("./pages/Resident/ResidentShelterView"));
+const ResidentWeather = React.lazy(() => import("./pages/Resident/ResidentWeather"));
+const ResidentHazardMap = React.lazy(() => import("./pages/Resident/ResidentHazardMap"));
+const ResidentReportIncident = React.lazy(() => import("./pages/Resident/ResidentReportIncident"));
+const ResidentHelp = React.lazy(() => import("./pages/Resident/ResidentHelp"));
+const ResidentSettings = React.lazy(() => import("./pages/Resident/ResidentSettings"));
+const ResidentReports = React.lazy(() => import("./pages/Resident/ResidentReports"));
 
-function AuthGuard() {
-  const { user } = useAuth();
-  const location = useLocation();
+// Auth Pages
+import SignIn from "./pages/AuthPages/SignIn";
+import Register from "./pages/AuthPages/Register";
+import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 
-  useEffect(() => {
-    console.log("AuthGuard", location.pathname);
-    // Only run for protected routes (admin and brgy)
-    if (
-      !user &&
-      !PUBLIC_ROUTES.includes(location.pathname) &&
-      (
-        location.pathname === "/" ||
-        location.pathname.startsWith("/admin") ||
-        location.pathname.startsWith("/manage") ||
-        location.pathname.startsWith("/incident") ||
-        location.pathname.startsWith("/weather") ||
-        location.pathname.startsWith("/profile") ||
-        location.pathname.startsWith("/user") ||
-        location.pathname.startsWith("/system") ||
-        location.pathname.startsWith("/barangay")
-      )
-    ) {
-      window.location.href = "/signin";
-    }
-  }, [user, location]);
+// Analytics Dashboard (keeping the new analytics)
+import AnalyticsDashboard from "./components/dashboard/AnalyticsDashboard";
 
-  return null;
-}
+// MMDRMO Emergency Operations Center
+import MMDRMODashboard from "./components/dashboard/MMDRMODashboard";
 
-function BfcacheGuard() {
-  const { user } = useAuth();
-  const location = useLocation();
+// Unified Emergency Dashboard
+import UnifiedEmergencyDashboard from "./components/dashboard/UnifiedEmergencyDashboard";
+import EmergencyRequestManagement from "./pages/Admin/EmergencyRequestManagement";
+import AdminDispatchResponse from "./pages/Admin/DispatchResponse";
+import BrgyDispatchBoard from "./pages/Brgy/DispatchBoard";
+import IncidentReport from "./pages/Admin/IncidentReport";
+import FloodReport from "./pages/Admin/FloodReport";
+import HotlineManagement from "./pages/Admin/HotlineManagement";
+import PublicRouteShare from "./pages/PublicRouteShare";
 
-  useEffect(() => {
-    console.log("BfcacheGuard", location.pathname);
-    function handlePageShow(event: PageTransitionEvent) {
-      if (
-        event.persisted &&
-        !user &&
-        !PUBLIC_ROUTES.includes(location.pathname)
-      ) {
-        window.location.href = "/signin";
-      }
-    }
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, [user, location]);
+// Protected Routes
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import ResidentProtectedRoute from "./components/common/ResidentProtectedRoute";
 
-  return null;
-}
+// Other
+import NotFound from "./pages/OtherPage/NotFound";
+import Blank from "./pages/Blank";
+import BrgyProfile from "./pages/BrgyProfile";
+import NavigationDemo from "./pages/NavigationDemo";
+const TacticalContactManager = React.lazy(() => import("./pages/TacticalContactManager"));
+const WebAccessRestricted = React.lazy(() => import("./pages/WebAccessRestricted"));
 
-function SessionGuardWrapper({ children }: { children: React.ReactNode }) {
-  useSessionGuard();
-  return <>{children}</>;
-}
-
-export default function App() {
-  return (
-    <Router>
-      <AuthProvider>
-        {/* <BfcacheGuard /> */}
-        <ScrollToTop />
-        <Routes>
-          <Route
-            element={
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        path: "access-restricted",
+        element: <WebAccessRestricted />,
+      },
+      {
+        path: "share-route",
+        element: <PublicRouteShare />,
+      },
+      {
+        path: "/",
+        element: <ResidentLayout />,
+        children: [
+          {
+            index: true,
+            element: (
+              <ResidentProtectedRoute>
+                <ResidentHome />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "safe-routes",
+            element: (
+              <ResidentProtectedRoute>
+                <ResidentSafeRoutes />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "route-planner",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading planner…</div>}>
+                  <ResidentSafeRoutePlanner />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "shelters",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading shelters…</div>}>
+                  <ResidentShelterView />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "weather",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading weather…</div>}>
+                  <ResidentWeather />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "settings",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading settings…</div>}>
+                  <ResidentSettings />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "hazard-map",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading hazard map…</div>}>
+                  <ResidentHazardMap />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "report-incident",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading report form…</div>}>
+                  <ResidentReportIncident />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "reports",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading reports…</div>}>
+                  <ResidentReports />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "help",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading help…</div>}>
+                  <ResidentHelp />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "announcements",
+            element: (
+              <ResidentProtectedRoute>
+                <Announcements />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "resources",
+            element: (
+              <ResidentProtectedRoute>
+                <Resources />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "coordinators",
+            element: (
+              <ResidentProtectedRoute>
+                <BarangayCoordinators />
+              </ResidentProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: "/admin",
+        element: <AppLayout />,
+        children: [
+          {
+            index: true,
+            element: (
               <ProtectedRoute requiredRole="admin">
-                <AppLayout />
+                <MMDRMODashboard />
               </ProtectedRoute>
-            }
-          >
-            <Route index path="/" element={<Home />} />
-            <Route path="/admin-routes" element={<RoutesView />} />
-            <Route path="/shelters" element={<ManageSheltersView />} />
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/blank" element={<Blank />} />
-            <Route path="/incident-report" element={<IncidentReportingWrapper />} />
-            <Route path="/incident-dashboard" element={<IncidentDashboardView />} />
-            <Route path="/incidents" element={<IncidentDashboardView />} />
-            <Route path="/admin/incidents" element={<IncidentDashboardView />} />
-            <Route path="/weather-flood-tracking" element={<WeatherFloodTrackingView />} />
-            <Route path="/user-management" element={<UserManagement />} />
-            <Route path="/emergency-contacts" element={<EmergencyContacts />} />
-            <Route path="/barangay-coordinators" element={<BarangayCoordinators />} />
-            <Route path="/incident-moderation" element={<IncidentModerationView />} />
-            <Route path="/system-logs" element={<SystemLogs />} />
-            <Route path="/announcements" element={<Announcements />} />
-          </Route>
-          <Route
-            element={
-              <ProtectedRoute requiredRole="brgy">
-                <BrgyLayout />
+            ),
+          },
+          {
+            path: "admin-routes",
+            element: (
+              <ProtectedRoute requiredRole="admin" requiredPermission="routes.suggest">
+                <SafeRoutes />
               </ProtectedRoute>
-            }
-          >
-            <Route index path="/barangay" element={<BrgyHome />} />
-            <Route path="/barangay/report-incident" element={<IncidentReportingWrapper />} />
-            <Route path="/barangay/profile" element={<BrgyProfile />} />
-            <Route path="/barangay/shelters" element={<ManageSheltersView />} />
-            <Route path="/barangay/emergency-contacts" element={<EmergencyContacts />} />
-            <Route path="/barangay/coordinators" element={<BarangayCoordinators />} />
-            <Route path="/barangay-map" element={<BarangayMapView />} />
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/announcements" element={<Announcements />} />
-          </Route>
+            ),
+          },
+          {
+            path: "shelters",
+            element: (
+              <ProtectedRoute requiredRole="admin" requiredPermission="shelter.manage">
+                <ManageShelters />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "contacts",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <Suspense fallback={<div className="p-6">Loading contacts…</div>}>
+                  <TacticalContactManager />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "incident-reports",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <TacticalApprovalDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "flood-report",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <TacticalApprovalDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "weather",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <Weather />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "announcements",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <Announcements />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "user-management",
+            element: (
+              <ProtectedRoute requiredRole="admin" requiredPermission="users.manage">
+                <UserManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "resources",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <Resources />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "barangay-coordinators",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <BarangayCoordinators />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <UserProfiles />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "system-logs",
+            element: (
+              <ProtectedRoute requiredRole="admin" requiredPermission="logs.export">
+                <SystemLogs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "help-support-on-progress",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <HelpSupport />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "analytics",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <AnalyticsDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "emergency-operations",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <MMDRMODashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "unified-command",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <UnifiedEmergencyDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "emergency-requests",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <EmergencyRequestManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "dispatch-response",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <AdminDispatchResponse />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "incident-report/:runId",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <IncidentReport />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "hotlines",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <HotlineManagement />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: "/brgy",
+        element: <BrgyLayout />,
+        children: [
+      {
+        index: true,
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyHome />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "safe-routes",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <SafeRoutes />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "report-incident",
+        element: (
+          <ProtectedRoute requiredRole="brgy" requiredPermission="incident.create">
+            <IncidentReportingWrapper />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "shelters",
+        element: (
+          <ProtectedRoute requiredRole="brgy" requiredPermission="shelter.manage">
+            <ManageShelters />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "flood-reports",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <FloodReport />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "residents",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <UserManagement />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "coordinators",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BarangayCoordinators />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "resources",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Resources />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "barangay-map",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BarangayMapView />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "weather",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Weather />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "flood-tracking",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <WeatherFloods />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyProfile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "analytics",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <AnalyticsDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dispatch-board",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyDispatchBoard />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+      {
+        path: "/barangay",
+        element: <BrgyLayout />,
+        children: [
+      {
+        index: true,
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyHome />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "safe-routes",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <SafeRoutes />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "report-incident",
+        element: (
+          <ProtectedRoute requiredRole="brgy" requiredPermission="incident.create">
+            <IncidentReportingWrapper />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "shelters",
+        element: (
+          <ProtectedRoute requiredRole="brgy" requiredPermission="shelter.manage">
+            <ManageShelters />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "flood-reports",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <TacticalApprovalDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "residents",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <UserManagement />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "coordinators",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BarangayCoordinators />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "resources",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Resources />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "barangay-map",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BarangayMapView />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "weather",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Weather />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyProfile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "analytics",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <AnalyticsDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "dispatch-board",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <BrgyDispatchBoard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "contacts",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Suspense fallback={<div className="p-6">Loading directory…</div>}>
+              <TacticalContactManager />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "announcements",
+        element: (
+          <ProtectedRoute requiredRole="brgy">
+            <Announcements />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
 
-          <Route path="/residents" element={<ResidentLayout />}>
-            <Route index element={<ResidentHome />} />
-            <Route path="planner" element={<ResidentSafeRoutePlanner />} />
-            <Route path="shelters" element={<ResidentShelterView />} />
-            <Route path="report" element={<IncidentReportingWrapper />} />
-            <Route path="hazards" element={<ResidentHazardMap />} />
-            <Route path="weather" element={<ResidentWeather />} />
-            <Route path="help" element={<ResidentHelp />} />
-            <Route path="emergency-contacts" element={<EmergencyContacts />} />
-            <Route path="coordinators" element={<BarangayCoordinators />} />
-            <Route path="announcements" element={<Announcements />} />
-          </Route>
-          <Route path="/brgy-signup" element={<BrgySignUp />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+      {
+        path: "/auth",
+        element: <AuthPageLayout />,
+        children: [
+          {
+            path: "signin",
+            element: <SignIn />,
+          },
+          {
+            path: "register",
+            element: <Register />,
+          },
+          {
+            path: "forgot-password",
+            element: <ForgotPassword />,
+          },
+        ],
+      },
+      {
+        path: "/residents",
+        element: <ResidentLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/residents/app" replace />,
+          },
+          {
+            path: "app",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading residents app…</div>}>
+                  <ResidentHome />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "report-incident",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading report form…</div>}>
+                  <ResidentReportIncident />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: "/resident",
+        element: <ResidentLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/resident/home" replace />,
+          },
+          {
+            path: "home",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading residents home…</div>}>
+                  <ResidentHome />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "report-incident",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading report form…</div>}>
+                  <ResidentReportIncident />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: "/auth/signin",
+        element: <SignIn />,
+      },
+      {
+        path: "/signin",
+        element: <SignIn />,
+      },
+      {
+        path: "/register",
+        element: <Register />,
+      },
+      {
+        path: "/navigation-demo",
+        element: <NavigationDemo />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
+      },
+    ],
+  },
+]);
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider>
+        <MapProvider>
+          <RouterProvider router={router} />
+        </MapProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
+
+export default App;

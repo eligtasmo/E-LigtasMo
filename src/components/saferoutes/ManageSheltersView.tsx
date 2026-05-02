@@ -1,26 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { FaCheckCircle, FaTimesCircle, FaPhone, FaPencilAlt, FaTrash } from 'react-icons/fa';
+import MapboxMap, { Popup, NavigationControl, FullscreenControl } from "../maps/MapboxMap";
+import TacticalMarker from "../maps/TacticalMarker";
+import { FaCheckCircle, FaTimesCircle, FaPhone, FaPencilAlt, FaTrash, FaHome, FaTimes, FaCamera, FaPlus } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
+import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../../utils/api";
 
-// Using a new, cleaner house icon that matches the requested style
-const greenHouseIcon = new L.Icon({
-    iconUrl: 'https://img.icons8.com/material-rounded/48/28a745/home.png',
-    iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
-});
-
-const yellowHouseIcon = new L.Icon({
-    iconUrl: 'https://img.icons8.com/material-rounded/48/ffc107/home.png',
-    iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
-});
-
-const redHouseIcon = new L.Icon({
-    iconUrl: 'https://img.icons8.com/material-rounded/48/dc3545/home.png',
-    iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
-});
+const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 
 
 type ShelterForm = {
@@ -35,29 +22,21 @@ type ShelterForm = {
   contact_number: string;
   address: string;
   category?: string;
-  photo?: string;
-  photoName?: string;
-  photoType?: string;
+  photos?: string[]; // Up to 3
   created_by?: string;
   created_brgy?: string;
 };
 
-function AddShelterOnMap({ onAdd, enabled }: { onAdd: (latlng: { lat: number; lng: number }) => void, enabled: boolean }) {
-  useMapEvents({
-    click(e) {
-      if (enabled) onAdd(e.latlng);
-    }
-  });
-  return null;
-}
+
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}`;
   try {
-    const response = await fetch(url, { headers: { 'User-Agent': 'E-LigtasMo/1.0' } });
+    const response = await fetch(url);
     const data = await response.json();
-    return data?.display_name || '';
+    return data?.features?.[0]?.place_name || '';
   } catch (error) {
+    console.error("Geocoding failed:", error);
     return '';
   }
 }
@@ -78,13 +57,15 @@ export default function ManageSheltersView() {
   const [editId, setEditId] = useState<number | null>(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedShelterId, setSelectedShelterId] = useState<number | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const [selectedShelter, setSelectedShelter] = useState<ShelterForm | null>(null);
+  const navigate = useNavigate();
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [isViewingDetails, setIsViewingDetails] = useState(false);
 
   useEffect(() => {
     const fetchShelters = async () => {
       try {
-        const response = await fetch('/api/shelters-list.php');
+        const response = await apiFetch('shelters-list.php');
         const data = await response.json();
         setShelters(data);
       } catch (error) {
@@ -118,33 +99,64 @@ export default function ManageSheltersView() {
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!form) return;
     const { name, value } = e.target;
+    if (!form) return;
+
+    let updatedValue: any = value;
+    let extraUpdates: any = {};
+
+    if (name === "capacity") {
+      updatedValue = Number(value);
+      if (form.occupancy > updatedValue) {
+        extraUpdates.occupancy = updatedValue;
+      }
+      // Auto status
+      extraUpdates.status = (extraUpdates.occupancy ?? form.occupancy) >= updatedValue ? 'full' : 'available';
+    } else if (name === "occupancy") {
+      updatedValue = Math.min(Number(value), form.capacity);
+      // Auto status
+      extraUpdates.status = updatedValue >= form.capacity ? 'full' : 'available';
+    }
+
     setForm({
       ...form,
-      [name]: name === "capacity" || name === "occupancy" ? Number(value) : value
+      [name]: updatedValue,
+      ...extraUpdates
     });
   };
 
   const handleSave = async () => {
     if (!form) return;
+    if (!form.name.trim()) {
+      alert("Please enter shelter name.");
+      return;
+    }
+    if (form.capacity <= 0) {
+      alert("Please enter a valid capacity.");
+      return;
+    }
+    if (!form.address) {
+      alert("Please select a location on the map.");
+      return;
+    }
     try {
       if (editId !== null && editId !== undefined) {
         // Update existing shelter
-        const response = await fetch('/api/shelters-update.php', {
+        const response = await apiFetch('shelters-update.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...form, id: editId })
         });
         const updatedShelter = await response.json();
+        if (updatedShelter.error) throw new Error(updatedShelter.error);
         setShelters(shelters.map(s => (s.id !== undefined && s.id === editId) ? updatedShelter : s));
         setEditId(null);
       } else {
         // Add new shelter
-        const response = await fetch('/api/shelters-add.php', {
+        const response = await apiFetch('shelters-add.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form)
         });
         const newShelter = await response.json();
+        if (newShelter.error) throw new Error(newShelter.error);
         setShelters([...shelters, newShelter]);
       }
       setForm(null);
@@ -161,11 +173,12 @@ export default function ManageSheltersView() {
   const handleDelete = async (id: number) => {
     if (id !== undefined) {
       try {
-        await fetch('/api/shelters-delete.php', {
+        const res = await apiFetch('shelters-delete.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
         setShelters(shelters.filter(s => s.id !== id));
       } catch (error) {
         console.error("Failed to delete shelter:", error);
@@ -175,29 +188,101 @@ export default function ManageSheltersView() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 h-full md:h-[calc(100vh-100px)]">
-      {/* Sidebar */}
-      <div className="w-full md:w-1/3 flex flex-col p-4 bg-white dark:bg-boxdark rounded-none md:rounded-lg shadow-none md:shadow-md md:min-h-[400px]">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Shelter Management</h2>
+    <div className="flex h-full w-full overflow-hidden bg-[#0a0a0a] font-mono">
+      {/* Map Section */}
+      <div className="flex-1 relative h-full z-0 overflow-hidden">
+        <MapboxMap
+          initialViewState={{
+            latitude: 14.28,
+            longitude: 121.42,
+            zoom: 12
+          }}
+          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapboxAccessToken={MAPBOX_TOKEN}
+          onClick={(e: any) => {
+            if (adding && e.lngLat) {
+              handleMapClick({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+            }
+          }}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <NavigationControl position="top-right" />
+          <FullscreenControl position="top-right" />
+          
+          {shelters.map((shelter) => (
+            <TacticalMarker 
+              key={shelter.id} 
+              latitude={Number(shelter.lat)} 
+              longitude={Number(shelter.lng)}
+              type="shelter"
+              status={shelter.status}
+              onClick={(e: any) => {
+                e.originalEvent.stopPropagation();
+                setSelectedShelter(shelter);
+              }}
+            />
+          ))}
+
+          {selectedShelter && (
+            <Popup
+              latitude={Number(selectedShelter.lat)}
+              longitude={Number(selectedShelter.lng)}
+              onClose={() => setSelectedShelter(null)}
+              anchor="bottom"
+              closeOnClick={false}
+            >
+              <div className="p-2 min-w-[150px]">
+                <strong className="block text-gray-800 text-base mb-1">{selectedShelter.name}</strong>
+                <div className="text-sm text-gray-600">
+                  <p>Capacity: {selectedShelter.occupancy}/{selectedShelter.capacity}</p>
+                  <p>Status: {selectedShelter.status}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const role = (user?.role || '').toLowerCase();
+                    const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/barangay/safe-routes' : '/route-planner';
+                    navigate(`${base}?end=${selectedShelter.lat},${selectedShelter.lng}`);
+                  }}
+                  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                >
+                  Follow Safe Route
+                </button>
+              </div>
+            </Popup>
+          )}
+        </MapboxMap>
+      </div>
+
+      {/* Floating Dark Panel Section */}
+      <div className="w-[420px] h-full bg-[#1c1c1e] p-6 border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-y-auto custom-scrollbar font-mono shrink-0 animate-in slide-in-from-right duration-500">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-[#f59e0b] font-bold text-xl tracking-wider">SHELTER_OPS</h2>
+            <p className="text-white text-[13px] mt-1 tracking-widest">Active Status</p>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center cursor-pointer hover:bg-[#3a3a3c] transition-colors">
+            <FaTimes className="text-[#8e8e93] text-sm" />
+          </div>
+        </div>
+
         {!form ? (
           <>
             {adding && (
-              <div className="mb-4 text-blue-600 font-semibold">Choose a location on the map to add a shelter.</div>
+              <div className="mb-4 text-[#f59e0b] font-semibold text-[13px]">Awaiting map selection...</div>
             )}
-            <div className="mb-4 text-gray-600 dark:text-gray-400">Click 'Add Shelter' then click on the map to add a new shelter location.</div>
             <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg text-base md:text-lg mb-4 transition"
+              className="w-full font-bold py-4 px-6 rounded-xl text-[12px] tracking-[0.2em] mb-4 transition-all flex items-center justify-center gap-3 shadow-lg bg-[#f59e0b] text-black shadow-[#f59e0b]/10 hover:bg-[#f59e0b]/90"
               onClick={() => { setAdding(!adding); setEditId(null); setForm(null); }}
             >
-              {adding ? "Cancel Add" : "Add New Shelter"}
+              {adding ? <FaTimes className="text-sm" /> : <FaPlus className="text-sm" />}
+              {adding ? "CANCEL_ADD" : "NEW_SHELTER"}
             </button>
-            <div className="border-t pt-4 flex-grow overflow-y-auto">
-              <div className="mb-2 text-xs text-gray-500">You can export shelter data for compliance, reporting, or archiving.</div>
-              <div className="flex flex-row flex-wrap gap-2 mb-2 justify-between items-center">
-                <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">Existing Shelters ({shelters.length})</h3>
+            <div className="border-t border-[#3a3a3c] pt-4 flex-grow">
+              <div className="mb-3 text-[11px] text-[#8e8e93] uppercase tracking-wider font-bold">Export Data</div>
+              <div className="flex flex-col gap-3 mb-4">
                 <div className="flex gap-2">
                   <button
-                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-2 rounded shadow text-xs"
+                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-black font-bold px-3 py-3 rounded-xl text-[11px] tracking-widest transition-colors shadow-sm"
                     onClick={() => {
                       if (shelters.length === 0) { setShowToast('No shelters to export.'); return; }
                       const csvRows = [];
@@ -227,7 +312,7 @@ export default function ManageSheltersView() {
                     CSV
                   </button>
                   <button
-                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded shadow text-xs"
+                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-black font-bold px-3 py-3 rounded-xl text-[11px] tracking-widest transition-colors shadow-sm"
                     onClick={() => {
                       if (shelters.length === 0) { setShowToast('No shelters to export.'); return; }
                       const ws = XLSX.utils.json_to_sheet(shelters.map(shelter => ({
@@ -257,58 +342,58 @@ export default function ManageSheltersView() {
               {showToast && (
                 <div className="mb-2 text-xs text-green-700 bg-green-100 rounded px-2 py-1 shadow">{showToast}</div>
               )}
-              <div className="flex flex-col gap-4 mt-4">
+              <div className="flex flex-col gap-3 mt-4">
                 {shelters.map((shelter, idx) => {
                   const isFull = shelter.occupancy >= shelter.capacity;
                   const percent = Math.min(100, Math.round((shelter.occupancy / shelter.capacity) * 100));
                   return (
                     <div
                       key={shelter.id}
-                      className={`shadow-md rounded-xl p-4 flex flex-col gap-2 bg-white border transition cursor-pointer ${selectedShelterId === shelter.id ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'}`}
+                      className={`rounded-lg flex flex-col bg-[#2c2c2e] border transition-all cursor-pointer overflow-hidden ${selectedShelter?.id === shelter.id ? 'border-[#f59e0b]' : 'border-transparent hover:border-[#3a3a3c]'}`}
                       onClick={() => {
-                        if (typeof shelter.id === 'number') setSelectedShelterId(shelter.id);
-                        if (mapRef.current) {
-                          mapRef.current.flyTo([shelter.lat, shelter.lng], 16, { animate: true, duration: 1.5 });
-                        }
+                        setSelectedShelter(shelter);
+                        setIsViewingDetails(true);
                       }}
                     >
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-1 gap-2">
-                        <div>
-                          <h3 className="font-bold text-base md:text-lg text-gray-800">{shelter.name}</h3>
-                          <p className="text-gray-600 text-xs md:text-sm mt-0.5">{shelter.address}</p>
+                      <div className="p-2">
+                        <div className="flex items-center gap-2 w-full">
+                          <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0">
+                            <FaHome className="text-black text-[12px]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-[13px] text-white tracking-wide truncate">{shelter.name}</h3>
+                            <p className="text-[#8e8e93] text-[10px] mt-0.5 truncate">{shelter.address}</p>
+                          </div>
+                          <span className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${isFull ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                            {isFull ? 'FULL' : 'AVAIL'}
+                          </span>
                         </div>
-                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}
-                          >
-                          {isFull ? <FaTimesCircle className="text-red-500" /> : <FaCheckCircle className="text-green-500" />}
-                          {isFull ? 'Full' : 'Available'}
-                        </span>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-gray-700">
-                        <FaPhone className="text-gray-400" />
-                        <span className="font-semibold">{shelter.contact_person}</span>
-                        <span>({shelter.contact_number})</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs md:text-sm">
-                        <span>Capacity:</span>
-                        <span className="font-bold">{shelter.occupancy}/{shelter.capacity}</span>
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden mx-2">
-                          <div className={`h-2 rounded-full ${isFull ? 'bg-red-400' : 'bg-green-400'}`} style={{ width: `${percent}%` }}></div>
+                      
+                      <div className="px-3 py-1.5 bg-[#2c2c2e] flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center text-[10px] text-[#8e8e93]">
+                          <div className="truncate pr-2">Capacity: <span className="text-white ml-1 font-mono">{shelter.occupancy}/{shelter.capacity}</span></div>
+                          <div className="truncate">Contact: <span className="text-white ml-1">{shelter.contact_person || 'N/A'}</span></div>
                         </div>
-                        <span className="text-xs text-gray-500">{percent}%</span>
-                      </div>
-                      {shelter.created_by && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Created by: <span className="font-semibold">{shelter.created_by}</span> {shelter.created_brgy && (<span>({shelter.created_brgy})</span>)}
+                        <div className="w-full h-1 bg-[#3a3a3c] rounded-full overflow-hidden mb-1">
+                           <div className={`h-full ${isFull ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${percent}%` }}></div>
                         </div>
-                      )}
-                      <div className="flex gap-2 justify-end mt-2">
-                        <button className="flex items-center gap-1 px-3 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold rounded shadow-sm transition text-xs md:text-sm" onClick={() => handleEdit(shelter)}>
-                          <FaPencilAlt /> Edit
-                        </button>
-                        {(user?.role === 'admin' || (user?.role === 'brgy' && shelter.created_by === user?.username)) && (
-                          <button className="flex items-center gap-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded shadow-sm transition text-xs md:text-sm" onClick={() => handleDelete(shelter.id)}>
-                            <FaTrash /> Delete
-                          </button>
+                      </div>
+
+                      <div className="flex">
+                        {(user?.role === 'admin' || (user?.role === 'brgy' && shelter.created_brgy === user?.brgy_name)) ? (
+                          <>
+                            <button className="flex-1 py-2 flex items-center justify-center gap-1.5 bg-[#e5e5ea] hover:bg-white text-black transition-colors text-[11px] font-bold" onClick={(e) => { e.stopPropagation(); handleEdit(shelter); }}>
+                              <FaPencilAlt /> Edit
+                            </button>
+                            <button className="flex-1 py-2 flex items-center justify-center gap-1.5 hover:bg-red-500/20 text-red-500 transition-colors text-[11px] font-bold" onClick={(e) => { e.stopPropagation(); if(window.confirm('Decommission this facility?')) handleDelete(shelter.id!); }}>
+                              <FaTrash /> Delete
+                            </button>
+                          </>
+                        ) : (
+                           <div className="flex-1 py-2 text-center text-[10px] text-[#8e8e93] font-bold uppercase tracking-widest italic bg-[#2c2c2e]">
+                              Read Only Access
+                           </div>
                         )}
                       </div>
                     </div>
@@ -318,13 +403,12 @@ export default function ManageSheltersView() {
             </div>
           </>
         ) : (
-          <form className="flex flex-col gap-4 mt-2 h-full bg-gray-50 dark:bg-boxdark-2 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-6 max-w-xl mx-auto" onSubmit={e => e.preventDefault()}>
-            <h3 className="text-2xl font-bold text-blue-700 mb-2">{editId !== null ? "Edit Shelter" : "Add New Shelter"}</h3>
-            <div className="flex-grow overflow-y-auto pr-2 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-1">Shelter Type/Category</label>
+          <form className="flex flex-col gap-4 mt-2 bg-[#1c1c1e] text-white" onSubmit={e => e.preventDefault()}>
+            <div className="space-y-4">
+              <div className="bg-[#2c2c2e] rounded-xl overflow-hidden p-3 border border-[#3a3a3c]">
+                <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-2">Shelter Category</label>
                 <select
-                  className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-200"
+                  className="w-full bg-[#3a3a3c] text-white border-none rounded-lg px-3 py-2 text-[13px] outline-none"
                   name="category"
                   value={form.category || ''}
                   onChange={handleFormChange}
@@ -339,120 +423,232 @@ export default function ManageSheltersView() {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1">Photo</label>
-                {!form.photo ? (
-                  <div>
-                    <input
-                      id="shelter-photo-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setForm(f => f ? { ...f, photo: reader.result as string, photoName: file.name, photoType: file.type } : f);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
+
+              <div className="bg-[#2c2c2e] rounded-xl overflow-hidden p-3 border border-[#3a3a3c]">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93]">Evidence_Photos (MAX 3)</label>
+                  <span className="text-[#f59e0b] text-[10px] uppercase">{(form.photos || []).length}/3</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {(form.photos || []).map((p, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-[#3a3a3c] bg-[#1c1c1e]">
+                      <img src={p.startsWith('data:') ? p : `/${p}`} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => f ? { ...f, photos: f.photos?.filter((_, i) => i !== idx) } : f)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-red-500 transition-colors"
+                      >
+                        <FaTimes size={10} />
+                      </button>
+                    </div>
+                  ))}
+                  {(form.photos || []).length < 3 && (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition cursor-pointer"
                       onClick={() => document.getElementById('shelter-photo-upload')?.click()}
+                      className="aspect-square rounded-lg border-2 border-dashed border-[#3a3a3c] hover:border-[#f59e0b] hover:bg-[#3a3a3c]/50 transition-all flex flex-col items-center justify-center gap-1 text-[#8e8e93] hover:text-white"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="17"/></svg>
-                      Upload Photo
+                      <FaCamera size={18} />
+                      <span className="text-[9px] font-bold uppercase">Add</span>
                     </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 mt-2 bg-gray-100 border rounded px-2 py-1">
-                    <span className="text-sm font-medium text-gray-700">{form.photoName || 'Photo selected'}</span>
-                    <span className="text-xs text-gray-500">{form.photoType || ''}</span>
-                    <button
-                      type="button"
-                      className="ml-auto text-gray-400 hover:text-red-500 text-lg px-2"
-                      onClick={() => setForm(f => f ? { ...f, photo: undefined, photoName: undefined, photoType: undefined } : f)}
-                      aria-label="Remove photo"
-                    >
-                      &times;
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1">Shelter Name</label>
-                <InputField label="" name="name" value={form.name} onChange={handleFormChange} required/>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Capacity</label>
-                  <InputField label="" name="capacity" type="number" value={String(form.capacity)} onChange={handleFormChange} required />
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Occupancy</label>
-                  <InputField label="" name="occupancy" type="number" value={String(form.occupancy)} onChange={handleFormChange} required />
+                <input
+                  id="shelter-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const base64 = reader.result as string;
+                        setForm(f => f ? { ...f, photos: [...(f.photos || []), base64].slice(0, 3) } : f);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+
+              <div className="bg-[#2c2c2e] rounded-xl overflow-hidden border border-[#3a3a3c]">
+                <div className="p-3 border-b border-[#3a3a3c]">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Shelter Name</label>
+                  <InputField label="" name="name" value={form.name} onChange={handleFormChange} required/>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-[#3a3a3c]">
+                  <div className="p-3">
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Capacity</label>
+                    <InputField label="" name="capacity" type="number" value={String(form.capacity)} onChange={handleFormChange} required />
+                  </div>
+                  <div className="p-3">
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Occupancy</label>
+                    <InputField label="" name="occupancy" type="number" value={String(form.occupancy)} onChange={handleFormChange} required />
+                  </div>
                 </div>
               </div>
-              <hr className="my-2 border-gray-200" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Contact Person</label>
+
+              <div className="bg-[#2c2c2e] rounded-xl overflow-hidden border border-[#3a3a3c] grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#3a3a3c]">
+                <div className="p-3">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Contact Person</label>
                   <InputField label="" name="contact_person" value={form.contact_person} onChange={handleFormChange} />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1">Contact Number</label>
+                <div className="p-3">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Contact Number</label>
                   <InputField label="" name="contact_number" value={form.contact_number} onChange={handleFormChange} />
                 </div>
               </div>
-              <hr className="my-2 border-gray-200" />
-              <div>
-                <label className="block text-sm font-semibold mb-1">Status</label>
-                <select className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-200" name="status" value={form.status} onChange={handleFormChange} required>
-                  <option value="available">Available</option>
-                  <option value="full">Full</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1">Address</label>
-                <InputField label="" name="address" value={loadingAddress ? "Loading address..." : form.address} onChange={() => {}} readOnly />
+
+              <div className="bg-[#2c2c2e] rounded-xl overflow-hidden border border-[#3a3a3c]">
+                <div className="p-3 border-b border-[#3a3a3c]">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-2">Status</label>
+                  <div className="flex divide-x divide-[#3a3a3c] rounded-lg overflow-hidden border border-[#3a3a3c]">
+                    <button
+                      type="button"
+                      className={`flex-1 py-2 text-[13px] font-bold transition-all ${form.status === 'available' ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/20' : 'bg-[#2c2c2e] text-[#8e8e93] hover:bg-[#3a3a3c]'}`}
+                      onClick={() => handleFormChange({ target: { name: 'status', value: 'available' } } as any)}
+                    >
+                      Available
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex-1 py-2 text-[13px] font-bold transition-all ${form.status === 'full' ? 'bg-[#ef4444] text-white shadow-lg shadow-[#ef4444]/20' : 'bg-[#2c2c2e] text-[#8e8e93] hover:bg-[#3a3a3c]'}`}
+                      onClick={() => handleFormChange({ target: { name: 'status', value: 'full' } } as any)}
+                    >
+                      Full
+                    </button>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93] mb-1">Address</label>
+                  <InputField label="" name="address" value={loadingAddress ? "Loading address..." : form.address} onChange={() => {}} readOnly />
+                </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-2 mt-6 pt-4 border-t">
-              <button type="button" onClick={handleSave} className="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 text-lg font-semibold flex items-center justify-center gap-2 shadow transition-all">
-                <FaCheckCircle className="inline-block" /> Save
+
+            <div className="flex bg-[#f59e0b] rounded-xl overflow-hidden divide-x divide-black/10 mt-2 border border-[#f59e0b] shadow-lg shadow-[#f59e0b]/5">
+              <button type="button" onClick={handleSave} className="flex-1 py-4 flex flex-col items-center justify-center hover:bg-black/5 transition-colors group">
+                <FaCheckCircle className="text-black text-xl mb-1 transition-colors" />
+                <span className="text-black font-bold text-[11px] tracking-widest uppercase">SUBMIT</span>
               </button>
-              <button type="button" className="flex-1 bg-gray-400 text-white px-4 py-3 rounded-lg hover:bg-gray-500 text-lg font-semibold flex items-center justify-center gap-2 shadow transition-all" onClick={handleCancel}>
-                <FaTimesCircle className="inline-block" /> Cancel
+              <button type="button" onClick={handleCancel} className="flex-1 py-4 flex flex-col items-center justify-center hover:bg-black/5 transition-colors group">
+                <FaTimesCircle className="text-black text-xl mb-1 transition-colors" />
+                <span className="text-black font-bold text-[11px] tracking-widest uppercase">CANCEL</span>
               </button>
             </div>
           </form>
         )}
       </div>
-      {/* Map */}
-      <div className="w-full md:w-2/3 h-[300px] md:h-full rounded-lg shadow-md overflow-hidden mt-4 md:mt-0">
-        <MapContainer center={[14.28, 121.42]} zoom={9} style={{ height: "100%", width: "100%" }} ref={mapRef}>
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
-          />
-          <AddShelterOnMap onAdd={handleMapClick} enabled={adding} />
-          {shelters.map((shelter) => (
-            <Marker key={shelter.id} position={[shelter.lat, shelter.lng]} icon={getShelterIcon(shelter)}>
-              <Popup>
-                <div>
-                  <strong>{shelter.name}</strong><br />
-                  Capacity: {shelter.occupancy}/{shelter.capacity}<br />
-                  Status: {shelter.status}
+
+      {/* Full Details Overlay (Instead of Map/Panel) */}
+      {isViewingDetails && selectedShelter && (
+        <div className="absolute inset-0 z-50 bg-[#0a0a0a] flex flex-col md:flex-row animate-in fade-in duration-300">
+          {/* Close Button */}
+          <button 
+            onClick={() => setIsViewingDetails(false)}
+            className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-[60] transition-all"
+          >
+            <FaTimes className="text-xl" />
+          </button>
+
+          {/* Left Side: Photo/Visuals */}
+          <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-[#1c1c1e]">
+            {(() => {
+              let media = selectedShelter.photos;
+              if (typeof media === 'string') {
+                try { media = JSON.parse(media); } catch (e) { media = []; }
+              }
+              const urls = Array.isArray(media) ? media : [];
+              return urls.length > 0 ? (
+                <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar">
+                  {urls.map((p: string, i: number) => (
+                     <img key={i} src={p.startsWith('data:') ? p : `/${p}`} alt={selectedShelter.name} className="w-full h-full object-cover snap-center shrink-0" />
+                  ))}
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-[#3a3a3c]">
+                  <FaHome className="text-[120px] mb-4 opacity-20" />
+                  <span className="text-lg font-mono tracking-widest uppercase opacity-50">NO_VISUAL_DATA</span>
+                </div>
+              );
+            })()}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
+            <div className="absolute bottom-12 left-12">
+              <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest ${selectedShelter.status === 'available' ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 'bg-red-500/20 text-red-500 border border-red-500/30'}`}>
+                {selectedShelter.status}
+              </span>
+              <h1 className="text-white text-5xl font-bold mt-4 tracking-tight leading-tight">{selectedShelter.name}</h1>
+              <p className="text-[#8e8e93] text-lg mt-2 max-w-md font-mono">{selectedShelter.address}</p>
+            </div>
+          </div>
+
+          {/* Right Side: Data/Ops */}
+          <div className="w-full md:w-1/2 h-1/2 md:h-full bg-[#0a0a0a] p-12 overflow-y-auto custom-scrollbar flex flex-col">
+            <div className="mb-12">
+              <h3 className="text-[#f59e0b] font-bold text-sm tracking-[0.3em] uppercase mb-8">Operational_Data</h3>
+              
+              <div className="grid grid-cols-2 gap-8">
+                <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-[#2c2c2e]">
+                  <p className="text-[#8e8e93] text-[11px] font-bold uppercase tracking-widest mb-2">Occupancy_Rate</p>
+                  <p className="text-white text-3xl font-mono">{Math.min(100, Math.round((selectedShelter.occupancy / selectedShelter.capacity) * 100))}%</p>
+                  <div className="w-full h-1.5 bg-[#2c2c2e] rounded-full mt-4 overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{ width: `${(selectedShelter.occupancy / selectedShelter.capacity) * 100}%` }} />
+                  </div>
+                </div>
+                <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-[#2c2c2e]">
+                  <p className="text-[#8e8e93] text-[11px] font-bold uppercase tracking-widest mb-2">Net_Capacity</p>
+                  <p className="text-white text-3xl font-mono">{selectedShelter.occupancy} / {selectedShelter.capacity}</p>
+                  <p className="text-[#8e8e93] text-[12px] mt-2 italic">{selectedShelter.capacity - selectedShelter.occupancy} slots remaining</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6 flex-grow">
+              <div className="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-[#2c2c2e]">
+                <div className="p-4 bg-[#2c2c2e]/50 border-b border-[#2c2c2e]">
+                  <span className="text-white text-[12px] font-bold tracking-widest uppercase">Contact_Protocol</span>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Personnel_In_Charge</p>
+                    <p className="text-white text-lg">{selectedShelter.contact_person || 'System Administrator'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Direct_Hotline</p>
+                    <p className="text-[#f59e0b] text-2xl font-mono font-bold">{selectedShelter.contact_number || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-[#1c1c1e] rounded-2xl p-6 border border-[#2c2c2e]">
+                   <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Deployed_By</p>
+                   <p className="text-white text-[14px]">{selectedShelter.created_by || 'ARCHIVAL'} / {selectedShelter.created_brgy || 'UNKNOWN'}</p>
+                </div>
+                {(selectedShelter as any).updated_by && (
+                  <div className="bg-[#1c1c1e] rounded-2xl p-6 border border-[#2c2c2e]">
+                    <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Last_Update_By</p>
+                    <p className="text-amber-500 text-[14px] font-bold">{(selectedShelter as any).updated_by} / {(selectedShelter as any).updated_brgy}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const role = (user?.role || '').toLowerCase();
+                const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/barangay/safe-routes' : '/route-planner';
+                navigate(`${base}?end=${selectedShelter.lat},${selectedShelter.lng}`);
+              }}
+              className="mt-12 w-full py-5 bg-[#f59e0b] text-black font-black text-[14px] tracking-[0.3em] rounded-2xl hover:bg-[#f59e0b]/90 transition-all shadow-lg shadow-[#f59e0b]/20"
+            >
+              INITIATE_ROUTING_SEQUENCE
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -462,9 +658,9 @@ const InputField = ({ label, name, value, onChange, readOnly = false, required =
   { label: string, name: string, value: string, onChange: (e: any) => void, readOnly?: boolean, required?: boolean, type?: string }
 ) => (
   <div>
-    <label className="block text-xs font-semibold mb-1 dark:text-gray-300">{label}</label>
+    {label && <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">{label}</label>}
     <input
-      className={`w-full border rounded px-2 py-1 ${readOnly ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : 'dark:bg-gray-800 dark:border-gray-600 dark:text-white'}`}
+      className={`w-full bg-[#3a3a3c] text-white border-none rounded-lg px-3 py-2 text-[13px] outline-none ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
       name={name} value={value} onChange={onChange} readOnly={readOnly} required={required} type={type}
     />
   </div>

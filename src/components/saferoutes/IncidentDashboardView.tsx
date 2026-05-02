@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +11,10 @@ interface Incident {
   type: string;
   lat: number;
   lng: number;
+  start_lat?: number;
+  start_lng?: number;
+  end_lat?: number;
+  end_lng?: number;
   address: string;
   datetime: string;
   description: string;
@@ -19,6 +23,8 @@ interface Incident {
   status: 'Pending' | 'Approved' | 'Rejected' | 'Resolved';
   reporter: string;
   contact: string;
+  flood_level_cm?: number;
+  allowed_vehicles?: string;
 }
 
 interface Barangay {
@@ -96,7 +102,7 @@ export default function IncidentDashboardView() {
   const fetchIncidents = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost/eligtasmo/api/list-incidents.php?status=Approved');
+      const response = await fetch('/api/list-incidents.php?status=Approved');
       const data = await response.json();
       if (data.success) {
         setIncidents(data.incidents || []);
@@ -111,7 +117,7 @@ export default function IncidentDashboardView() {
 
   const fetchBarangays = async () => {
     try {
-      const res = await fetch('http://localhost/eligtasmo/api/list-barangays.php');
+      const res = await fetch('/api/list-barangays.php');
       const data = await res.json();
       if (data.success) setBarangays(data.barangays || []);
       else setBarangays([]);
@@ -134,7 +140,7 @@ export default function IncidentDashboardView() {
     if (!selectedIncident) return;
     setActionLoading(true);
     try {
-      const response = await fetch('http://localhost/eligtasmo/api/update-incident-status.php', {
+      const response = await fetch('/api/update-incident-status.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: incidentId, status: newStatus })
@@ -163,7 +169,7 @@ export default function IncidentDashboardView() {
     e.preventDefault();
     if (!newBrgy) return;
     try {
-      const res = await fetch('http://localhost/eligtasmo/api/add-barangay.php', {
+      const res = await fetch('/api/add-barangay.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...brgyForm, ...newBrgy, added_by: user?.full_name || user?.username || 'unknown' })
@@ -385,22 +391,52 @@ export default function IncidentDashboardView() {
             attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           />
           {/* Incident Markers */}
-          {incidents.map((incident) => (
-            <Marker 
-              key={incident.id} 
-              position={[incident.lat, incident.lng]} 
-              icon={getIncidentIcon(incident.status)}
-              eventHandlers={{
-                click: () => handleIncidentSelect(incident),
-              }}
-            >
-              <Popup>
-                <strong>{incident.type}</strong><br />
-                Status: {incident.status}<br/>
-                Click to see details
-              </Popup>
-            </Marker>
-          ))}
+          {incidents.map((incident) => {
+            const hasStartEnd = (incident as any).start_lat && (incident as any).start_lng && (incident as any).end_lat && (incident as any).end_lng;
+            if (hasStartEnd) {
+              const positions = [
+                [(incident as any).start_lat, (incident as any).start_lng],
+                [(incident as any).end_lat, (incident as any).end_lng]
+              ];
+              return (
+                <Polyline key={`incident-${incident.id}`} positions={positions} color="#f97316" weight={5} opacity={0.95}>
+                  <Popup>
+                    <strong>{incident.type}</strong><br />
+                    Status: {incident.status}<br/>
+                    {incident.type && incident.type.toLowerCase() === 'flood' && typeof incident.flood_level_cm !== 'undefined' && (
+                      <><strong>Flood level:</strong> {incident.flood_level_cm} cm<br/></>
+                    )}
+                    {incident.allowed_vehicles && (
+                      <><strong>Passable vehicles:</strong> {incident.allowed_vehicles}<br/></>
+                    )}
+                    Click any point on the line to see details
+                  </Popup>
+                </Polyline>
+              );
+            }
+            return (
+              <Marker 
+                key={incident.id} 
+                position={[incident.lat, incident.lng]} 
+                icon={getIncidentIcon(incident.status)}
+                eventHandlers={{
+                  click: () => handleIncidentSelect(incident),
+                }}
+              >
+                <Popup>
+                  <strong>{incident.type}</strong><br />
+                  Status: {incident.status}<br/>
+                  {incident.type && incident.type.toLowerCase() === 'flood' && typeof incident.flood_level_cm !== 'undefined' && (
+                    <><strong>Flood level:</strong> {incident.flood_level_cm} cm<br/></>
+                  )}
+                  {incident.allowed_vehicles && (
+                    <><strong>Passable vehicles:</strong> {incident.allowed_vehicles}<br/></>
+                  )}
+                  Click to see details
+                </Popup>
+              </Marker>
+            );
+          })}
           {/* Barangay Markers */}
           {barangays.map((brgy) => (
             <Marker key={brgy.id} position={[brgy.lat, brgy.lng]} icon={barangayIcon}>
@@ -455,4 +491,4 @@ export default function IncidentDashboardView() {
       </div>
     </div>
   );
-} 
+}

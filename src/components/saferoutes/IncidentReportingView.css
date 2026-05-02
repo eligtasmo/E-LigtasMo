@@ -1,31 +1,426 @@
+/* Modern Professional Incident Reporting Styles */
+
 .breathing-dot {
   position: absolute;
   width: 24px;
   height: 24px;
   left: calc(50% - 12px);
   top: calc(50% - 12px);
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   border-radius: 50%;
-  box-shadow: 0 0 0 0 #2563eb44;
+  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
   animation: breathing 1.5s infinite;
   z-index: 20;
 }
 
 @keyframes breathing {
   0% {
-    box-shadow: 0 0 0 0 #2563eb44;
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
     opacity: 1;
+    transform: scale(1);
   }
   70% {
-    box-shadow: 0 0 0 16px #2563eb00;
+    box-shadow: 0 0 0 16px rgba(37, 99, 235, 0);
     opacity: 0.7;
+    transform: scale(1.1);
   }
   100% {
-    box-shadow: 0 0 0 0 #2563eb00;
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
     opacity: 1;
+    transform: scale(1);
   }
 }
 
 .pin-preview {
   pointer-events: none;
-} 
+}
+
+/* Custom scrollbar for better UX */
+.incident-form-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.incident-form-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.incident-form-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 4px;
+}
+
+.incident-form-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* Enhanced form input focus states */
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+}
+
+.form-input.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Gradient button hover effects */
+.gradient-button {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transition: all 0.3s ease;
+}
+
+.gradient-button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.gradient-button:active {
+  transform: translateY(0);
+}
+
+/* Step indicator animations */
+.step-indicator {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-indicator.active {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.step-indicator.completed {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Progress bar animation */
+.progress-bar {
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card hover effects */
+.info-card {
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Map container styling */
+.map-container {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e5e7eb;
+}
+
+/* Severity selection styling */
+.severity-option {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.severity-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.severity-option.selected {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* File upload styling */
+.file-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+  border-color: #3b82f6;
+  background-color: #f8fafc;
+}
+
+.file-upload-area.dragover {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+/* Photo preview styling */
+.photo-preview {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.photo-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal styling */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content {
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success message animation */
+.success-message {
+  animation: successSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes successSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Error message animation */
+.error-message {
+  animation: errorShake 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+  .incident-form-container {
+    padding: 1rem;
+  }
+  
+  .step-indicator {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.75rem;
+  }
+  
+  .gradient-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Accessibility improvements */
+.form-input:focus-visible,
+.gradient-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .gradient-button {
+    background: #000;
+    color: #fff;
+    border: 2px solid #000;
+  }
+  
+  .form-input {
+    border-width: 2px;
+  }
+}
+
+/* Desktop layout fixes for vehicle guidance */
+@media (min-width: 1024px) {
+  .vehicle-guidance-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .vehicle-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.25;
+    min-height: 110px; /* fixed visual height to avoid overlap */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    box-shadow: 0 0 0 0 rgba(0,0,0,0.0);
+  }
+  .vehicle-card .title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .vehicle-card .status {
+    margin-top: 6px;
+    font-weight: 700;
+  }
+  .vehicle-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ffffffcc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #374151;
+  }
+  .info-banner-desktop {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #374151;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px;
+  }
+}
+
+/* Mobile/tablet retains current responsive layout */
+.vehicle-guidance-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .vehicle-guidance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .vehicle-guidance-grid {
+    gap: 16px; /* more spacing since desktop has more room */
+    margin-bottom: 8px; /* ensure separation from subsequent fields */
+  }
+  .vehicle-card {
+    padding: 14px; /* larger padding for readability */
+    min-height: 130px; /* fixed visual height to avoid overlap */
+    line-height: 1.35;
+  }
+  .vehicle-card .title { font-size: 13px; }
+  .vehicle-card .status { font-size: 12px; }
+  .info-banner-desktop {
+    padding: 12px; /* slightly larger */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+@media (min-width: 1024px) {
+.vehicle-guidance-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Tactical Dropdown Styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238e8e93'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem !important;
+}
+
+select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Tactical Upload Grid */
+.upload-slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1px solid #3a3a3c;
+  background: #1c1c1e;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.upload-slot:hover {
+  border-color: #f59e0b;
+  background: #2c2c2e;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: #8e8e93;
+  cursor: pointer;
+}
+
+.upload-placeholder:hover {
+  color: #fff;
+}
+
+/* Custom Scrollbar for form */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

@@ -1,13 +1,16 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 import GridShape from "../../components/common/GridShape";
 import { Link } from "react-router-dom";
 
-const AuthPageLayout = ({ children }: { children: React.ReactNode }) => {
+const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
       {/* Left: Full form area, no card */}
       <div className="flex flex-col justify-center items-center w-full md:w-1/2 min-h-screen bg-white px-4 md:px-16">
-        <div className="w-full max-w-lg">{children}</div>
+        <div className="w-full max-w-lg">
+          {children ?? <Outlet />}
+        </div>
       </div>
       {/* Right: Branding/graphic (full height, centered) */}
       <div className="hidden md:flex w-1/2 h-screen items-center justify-center bg-brand-950 relative">

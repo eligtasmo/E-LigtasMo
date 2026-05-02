@@ -1,7 +1,6 @@
 import { useModal } from "../../hooks/useModal";
 import { useAuth } from "../../context/AuthContext";
-import { Modal } from "../ui/modal";
-import Button from "../ui/button/Button";
+import EditProfileModal from "./EditProfileModal";
 
 export default function BrgyMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
@@ -52,7 +51,7 @@ export default function BrgyMetaCard() {
           </div>
         </div>
       </div>
-      {/* Modal for editing can be implemented here if needed */}
+      <EditProfileModal isOpen={isOpen} onClose={closeModal} />
     </div>
   );
-} 
+}

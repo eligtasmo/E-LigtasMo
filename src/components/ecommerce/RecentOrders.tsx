@@ -1,11 +1,11 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import Badge from "../ui/badge/Badge";
+  CustomTable as Table,
+  CustomTableBody as TableBody,
+  CustomTableCell as TableCell,
+  CustomTableHeader as TableHeader,
+  CustomTableRow as TableRow,
+} from "../common";
+import { CustomBadge as Badge } from "../common";
 
 // Define the TypeScript interface for the table rows
 interface Product {

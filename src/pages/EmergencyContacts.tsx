@@ -1,6 +1,6 @@
 import React from 'react';
 import PageMeta from "../components/common/PageMeta";
-import { FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle, FaUser, FaEnvelope } from 'react-icons/fa';
+import { FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 
 interface EmergencyContact {
   id: number;
@@ -96,8 +96,9 @@ const emergencyContacts: EmergencyContact[] = [
   }
 ];
 
-// --- Barangay Coordinators Data (migrated from BarangayCoordinators.tsx) ---
-interface BarangayCoordinator {
+// --- Barangay Coordinators Data (migrated from BarangayCoordinators.tsx)
+// Interface is kept for reference but wrapped in comments to avoid linter warnings.
+/* interface BarangayCoordinator {
   id: number;
   barangay_name: string;
   city: string;
@@ -111,9 +112,11 @@ interface BarangayCoordinator {
   emergency_contact: string;
   responsibilities: string[];
   last_updated: string;
-}
+} */
 
-const barangayCoordinators: BarangayCoordinator[] = [
+// NOTE: Barangay coordinators are displayed in their dedicated page/sidebar now.
+// Keeping the type for potential future imports, but removing the unused dataset.
+/* const barangayCoordinators: BarangayCoordinator[] = [
   {
     id: 1,
     barangay_name: "Bagumbayan",
@@ -234,7 +237,7 @@ const barangayCoordinators: BarangayCoordinator[] = [
     responsibilities: ["Youth Programs", "Education", "Community Development"],
     last_updated: "2024-01-09"
   }
-];
+]; */
 
 const getTypeColor = (type: EmergencyContact['type']) => {
   switch (type) {
@@ -258,162 +261,284 @@ const getPriorityColor = (priority: EmergencyContact['priority']) => {
 };
 
 const EmergencyContacts: React.FC = () => {
-  const [tab, setTab] = React.useState<'all' | 'coordinators' | 'contacts'>('all');
+  const [selectedContact, setSelectedContact] = React.useState<any | null>(null);
+  const [hotlines, setHotlines] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetchHotlines();
+  }, []);
+
+  const fetchHotlines = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/hotlines-list.php`);
+      const data = await res.json();
+      if (data.success) setHotlines(data.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCall = (phone: string) => {
     window.open(`tel:${phone}`, '_self');
   };
 
-  // Filtering logic
-  const filteredContacts = tab === 'all'
-    ? emergencyContacts
-    : tab === 'contacts'
-      ? emergencyContacts
-      : [];
-  const filteredCoordinators = tab === 'all'
-    ? barangayCoordinators
-    : tab === 'coordinators'
-      ? barangayCoordinators
-      : [];
-
   return (
     <>
       <PageMeta
-        title="Emergency Contacts | E-LigtasMo"
-        description="Emergency contact numbers for police, fire, ambulance, and other emergency services."
+        title="Emergency Hotlines | E-LigtasMo"
+        description="Emergency contact numbers for police, fire, medical, and rescue services."
       />
-      <div className="min-h-screen w-full bg-[#fafbfc] space-y-6 px-2 py-4 md:px-8">
-        {/* Tabs for filtering */}
-        <div className="flex gap-2 mb-4">
-          <button onClick={() => setTab('all')} className={`px-4 py-2 rounded-lg font-semibold ${tab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>All</button>
-          <button onClick={() => setTab('contacts')} className={`px-4 py-2 rounded-lg font-semibold ${tab === 'contacts' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Emergency Contacts</button>
-          <button onClick={() => setTab('coordinators')} className={`px-4 py-2 rounded-lg font-semibold ${tab === 'coordinators' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}>Barangay Coordinators</button>
-        </div>
-
-        {/* Compact Header Widget */}
-        <div className="flex items-center gap-3 bg-red-50 border-l-4 border-red-200 rounded-lg px-4 py-2 mb-2">
-          <FaExclamationTriangle className="text-red-500 text-lg" />
-          <div>
-            <div className="font-bold text-base text-red-800">Emergency Contacts</div>
-            <div className="text-xs text-red-700">Important emergency numbers for immediate assistance</div>
+      <div className="w-full">
+        {/* Header Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 bg-red-50 border-l-4 border-red-200 rounded-lg px-6 py-4 mb-4">
+            <FaExclamationTriangle className="text-red-500 text-xl" />
+            <div>
+              <div className="font-bold text-xl text-red-800">Emergency Contacts</div>
+              <div className="text-sm text-red-700">Important emergency numbers for immediate assistance</div>
+            </div>
           </div>
-        </div>
 
-        {/* Compact Quick Call Buttons */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <button
-            onClick={() => handleCall('911')}
-            className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors min-h-[48px]"
-          >
-            <FaPhone className="text-base" /> Call 911
-          </button>
-          <button
-            onClick={() => handleCall('143')}
-            className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors min-h-[48px]"
-          >
-            <FaPhone className="text-base" /> Red Cross 143
-          </button>
-          <button
-            onClick={() => handleCall('136')}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-sm transition-colors min-h-[48px]"
-          >
-            <FaPhone className="text-base" /> MMDA 136
-          </button>
-        </div>
-
-        {/* All Emergency Contacts List */}
-        {filteredContacts.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-          <div className="px-4 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">All Emergency Contacts</h2>
-            <p className="text-sm text-gray-500">Click on any contact to call immediately</p>
-          </div>
-          <div>
-            {filteredContacts.map((contact, idx) => (
-              <div key={contact.id} className={`flex flex-col sm:flex-row items-start sm:items-center px-4 py-4 ${idx !== 0 ? 'border-t border-gray-100' : ''}`}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="font-semibold text-gray-900 text-base">{contact.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${getTypeColor(contact.type)}`}>{contact.type}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${getPriorityColor(contact.priority)}`}>{contact.priority}</span>
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">{contact.description}</div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-2"><FaMapMarkerAlt className="text-xs" /> {contact.address}</div>
-                    <div className="flex items-center gap-2"><FaClock className="text-xs" /> {contact.hours}</div>
+          {/* Quick Call Buttons - Professional Design */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Quick Emergency Contacts</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <button
+                onClick={() => handleCall('911')}
+                className="group relative overflow-hidden bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">Emergency</div>
+                    <div className="text-xs opacity-90">911</div>
                   </div>
                 </div>
-                <div className="mt-3 sm:mt-0 sm:ml-4 w-full sm:w-auto">
-                  <button
-                    onClick={() => handleCall(contact.phone)}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-3 rounded-lg text-sm transition-colors min-h-[44px]"
-                  >
-                    <FaPhone className="text-sm" /> {contact.phone}
-                  </button>
+              </button>
+              
+              <button
+                onClick={() => handleCall('143')}
+                className="group relative overflow-hidden bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">Red Cross</div>
+                    <div className="text-xs opacity-90">143</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleCall('136')}
+                className="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">MMDA</div>
+                    <div className="text-xs opacity-90">136</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleCall('117')}
+                className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">Fire Dept</div>
+                    <div className="text-xs opacity-90">117</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleCall('527-8481')}
+                className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">Coast Guard</div>
+                    <div className="text-xs opacity-90">527-8481</div>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleCall('931-8101')}
+                className="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl p-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex flex-col items-center gap-2">
+                  <FaPhone className="text-xl" />
+                  <div className="text-center">
+                    <div className="font-bold text-sm">DSWD</div>
+                    <div className="text-xs opacity-90">931-8101</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Emergency Contacts Cards Grid */}
+          <div className="xl:col-span-3">
+            {loading ? (
+              <div className="flex justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+              </div>
+            ) : hotlines.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {hotlines.map((contact) => (
+                    <div
+                      key={contact.id}
+                      className={`bg-white rounded-xl shadow-sm border-2 transition-all duration-200 hover:shadow-md cursor-pointer h-full flex flex-col ${
+                        selectedContact?.id === contact.id 
+                          ? 'border-red-500 bg-red-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setSelectedContact(contact)}
+                    >
+                      <div className="p-5 flex flex-col h-full">
+                    {/* Header with badges */}
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-gray-100 text-gray-800`}>
+                          {contact.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contact Name */}
+                    <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{contact.name}</h3>
+                    
+                    {/* Contact Details */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FaPhone className="text-xs flex-shrink-0" />
+                        <span>{contact.number}</span>
+                      </div>
+                    </div>
+
+                    {/* Call Button - Always at bottom */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCall(contact.number); }}
+                      className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md transform hover:scale-[1.02] mt-auto"
+                    >
+                      <FaPhone className="text-sm" /> Call Now
+                    </button>
+                  </div>
+                     </div>
+                   ))}
+                 </div>
+            ) : (
+              <div className="text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                <p className="text-gray-500 italic">No emergency contacts found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="xl:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              {/* Selected Contact Details */}
+              {selectedContact && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Contact Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{selectedContact.name}</h4>
+                      <p className="text-sm text-gray-600">{selectedContact.description}</p>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <FaMapMarkerAlt className="text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{selectedContact.address}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FaClock className="text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-700">{selectedContact.hours}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCall(selectedContact.phone)}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 transition-colors mt-4"
+                    >
+                      <FaPhone className="text-sm" /> Call {selectedContact.phone}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Emergency Tips */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-blue-800 mb-3">Emergency Tips</h3>
+                <ul className="space-y-2 text-sm text-blue-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>Stay calm and speak clearly when calling emergency services</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>Provide your exact location and describe the emergency</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>Follow the dispatcher's instructions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>Keep emergency numbers saved in your phone</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-1">•</span>
+                    <span>Share your location with responders if possible</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3">Quick Stats</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Contacts</span>
+                    <span className="font-semibold text-gray-900">{filteredContacts.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">24/7 Services</span>
+                    <span className="font-semibold text-gray-900">
+                      {filteredContacts.filter(c => c.hours === '24/7').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">High Priority</span>
+                    <span className="font-semibold text-red-600">
+                      {filteredContacts.filter(c => c.priority === 'high').length}
+                    </span>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-        )}
-
-        {/* Barangay Coordinators List */}
-        {filteredCoordinators.length > 0 && (
-        <div className="bg-white rounded-xl shadow p-6 mb-6">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-blue-800 mb-1">Barangay Coordinators</h2>
-            <p className="text-sm text-gray-500">Directory of coordinators and emergency contacts for your barangay.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCoordinators.map(coordinator => (
-              <div key={coordinator.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-3 border-t-4 border-blue-600">
-                <div className="flex items-center gap-3 mb-2">
-                  <FaUser className="text-blue-600 text-2xl" />
-                  <div>
-                    <div className="font-bold text-lg">{coordinator.coordinator_name}</div>
-                    <div className="text-sm text-gray-500">{coordinator.coordinator_position}</div>
-                  </div>
-                  <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${coordinator.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{coordinator.status.toUpperCase()}</span>
-                </div>
-                <div className="flex flex-col gap-1 text-sm text-gray-700">
-                  <div className="flex items-center gap-2"><FaPhone className="text-gray-400" /> {coordinator.phone}</div>
-                  <div className="flex items-center gap-2"><FaEnvelope className="text-gray-400" /> {coordinator.email}</div>
-                  <div className="flex items-center gap-2"><FaMapMarkerAlt className="text-gray-400" /> {coordinator.address}</div>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
-                  <div className="flex items-center gap-2 text-red-700 font-semibold">
-                    <FaExclamationTriangle className="text-red-500" /> Emergency Contact:
-                    <span className="font-bold text-lg">{coordinator.emergency_contact}</span>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <div className="font-semibold text-xs text-gray-500 mb-1">Responsibilities:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {coordinator.responsibilities.map((resp, idx) => (
-                      <span key={idx} className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-xs font-medium">{resp}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="text-xs text-gray-400 mt-2">Last updated: {new Date(coordinator.last_updated).toLocaleDateString()}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        )}
-
-        {/* Emergency Tips */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-800 mb-3">Emergency Tips</h3>
-          <ul className="space-y-2 text-blue-700">
-            <li>• Stay calm and speak clearly when calling emergency services</li>
-            <li>• Provide your exact location and describe the emergency</li>
-            <li>• Follow the dispatcher's instructions</li>
-            <li>• Keep emergency numbers saved in your phone</li>
-            <li>• Share your location with emergency responders if possible</li>
-          </ul>
+            </div>
+          </aside>
         </div>
       </div>
     </>
   );
 };
 
-export default EmergencyContacts; 
+export default EmergencyContacts;

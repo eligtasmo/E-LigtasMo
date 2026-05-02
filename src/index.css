@@ -1,13 +1,186 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap")
 layer(base);
 
 @import "tailwindcss";
+
+/* Ensure dropdowns appear above map content */
+.dropdown-overlay {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Force dropdowns to be above Leaflet maps */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+/* Ensure our custom dropdowns are above everything */
+[class*="CustomDropdown"] {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Additional dropdown positioning fixes */
+.leaflet-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-control {
+  z-index: 2 !important;
+}
+
+/* Ensure header dropdowns are above all map content */
+header [class*="CustomDropdown"] {
+  z-index: 99999 !important;
+  position: absolute !important;
+}
+
+/* Force dropdowns to be above any map overlays */
+[class*="CustomDropdown"] {
+  z-index: 99999 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure dropdowns are above Leaflet map containers */
+.leaflet-container,
+.leaflet-pane,
+.leaflet-control,
+.leaflet-overlay-pane,
+.leaflet-marker-pane,
+.leaflet-tile-pane,
+.leaflet-shadow-pane {
+  z-index: 1 !important;
+}
+
+/* Force header dropdowns to be above everything */
+header [class*="CustomDropdown"],
+header [class*="CustomDropdown"] * {
+  z-index: 999999 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+/* Additional positioning fixes for dropdowns */
+.dropdown-container {
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* Ensure dropdowns don't get clipped by map containers */
+[class*="CustomDropdown"] {
+  overflow: visible !important;
+  clip-path: none !important;
+}
+
+/* Additional map container fixes */
+.leaflet-container {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Ensure map containers don't create stacking context issues */
+[class*="col-span-2"] {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Force dropdowns to be above all content */
+.dropdown-container [class*="CustomDropdown"] {
+  z-index: 999999 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+}
+
+/* Ensure map attribution doesn't interfere */
+.leaflet-control-attribution {
+  z-index: 2 !important;
+}
+
+/* Route glow effect on map preview */
+.leaflet-overlay-pane .route-glow {
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.4));
+}
+
+/* Heatmap-style red glow for route preview */
+.leaflet-overlay-pane .heat-route {
+  filter:
+    drop-shadow(0 0 18px rgba(239, 68, 68, 0.35))
+    drop-shadow(0 0 36px rgba(239, 68, 68, 0.25))
+    drop-shadow(0 0 60px rgba(239, 68, 68, 0.18));
+}
+
+/* Force all dropdowns to be above everything */
+[class*="CustomDropdown"] {
+  z-index: 999999 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+  clip-path: none !important;
+  transform: none !important;
+}
+
+/* Ensure all map controls are below dropdowns */
+.leaflet-control-zoom,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-layers,
+.leaflet-control-scale,
+.leaflet-control-fullscreen {
+  z-index: 2 !important;
+}
+
+/* Final dropdown positioning fix */
+.dropdown-container {
+  position: relative !important;
+  z-index: 999999 !important;
+  overflow: visible !important;
+}
+
+.dropdown-container * {
+  overflow: visible !important;
+}
+
+/* Interactive metric card styles */
+.metric-card {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Ensure metric cards are accessible */
+.metric-card:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover effects for clickable cards */
+[class*="hover:bg-gray-50"]:hover {
+  background-color: #f9fafb !important;
+}
+
+[class*="hover:shadow-md"]:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[class*="hover:shadow-lg"]:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;
+  --font-inter: Inter, sans-serif;
+  --font-jetbrains: 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'JetBrains Mono', monospace;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -18,6 +191,21 @@ layer(base);
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
+
+  --radius-*: initial;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --radius-sm-custom: 8px;
+  --radius-md-custom: 16px;
+  --radius-lg-custom: 24px;
+  --radius-xl-custom: 32px;
+  --radius-full-custom: 9999px;
 
   --text-title-2xl: 72px;
   --text-title-2xl--line-height: 90px;
@@ -39,7 +227,7 @@ layer(base);
   --color-current: currentColor;
   --color-transparent: transparent;
   --color-white: #ffffff;
-  --color-black: #101828;
+  --color-black: #000000;
 
   --color-brand-25: #f2f7ff;
   --color-brand-50: #ecf3ff;
@@ -47,114 +235,62 @@ layer(base);
   --color-brand-200: #c2d6ff;
   --color-brand-300: #9cb9ff;
   --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
-
-  --color-blue-light-25: #f5fbff;
-  --color-blue-light-50: #f0f9ff;
-  --color-blue-light-100: #e0f2fe;
-  --color-blue-light-200: #b9e6fe;
-  --color-blue-light-300: #7cd4fd;
-  --color-blue-light-400: #36bffa;
-  --color-blue-light-500: #0ba5ec;
-  --color-blue-light-600: #0086c9;
-  --color-blue-light-700: #026aa2;
-  --color-blue-light-800: #065986;
-  --color-blue-light-900: #0b4a6f;
-  --color-blue-light-950: #062c41;
+  --color-brand-500: #000000; /* Rebranded to Black for Premium look */
+  --color-brand-600: #1a1a1a;
+  --color-brand-700: #333333;
+  --color-brand-800: #4d4d4d;
+  --color-brand-900: #666666;
+  --color-brand-950: #000000;
 
   --color-gray-25: #fcfcfd;
   --color-gray-50: #f9fafb;
-  --color-gray-100: #f2f4f7;
-  --color-gray-200: #e4e7ec;
-  --color-gray-300: #d0d5dd;
-  --color-gray-400: #98a2b3;
-  --color-gray-500: #667085;
-  --color-gray-600: #475467;
-  --color-gray-700: #344054;
-  --color-gray-800: #1d2939;
-  --color-gray-900: #101828;
-  --color-gray-950: #0c111d;
-  --color-gray-dark: #1a2231;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
 
-  --color-orange-25: #fffaf5;
-  --color-orange-50: #fff6ed;
-  --color-orange-100: #ffead5;
-  --color-orange-200: #fddcab;
-  --color-orange-300: #feb273;
-  --color-orange-400: #fd853a;
-  --color-orange-500: #fb6514;
-  --color-orange-600: #ec4a0a;
-  --color-orange-700: #c4320a;
-  --color-orange-800: #9c2a10;
-  --color-orange-900: #7e2410;
-  --color-orange-950: #511c10;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
 
-  --color-success-25: #f6fef9;
-  --color-success-50: #ecfdf3;
-  --color-success-100: #d1fadf;
-  --color-success-200: #a6f4c5;
-  --color-success-300: #6ce9a6;
-  --color-success-400: #32d583;
-  --color-success-500: #12b76a;
-  --color-success-600: #039855;
-  --color-success-700: #027a48;
-  --color-success-800: #05603a;
-  --color-success-900: #054f31;
-  --color-success-950: #053321;
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
 
-  --color-error-25: #fffbfa;
-  --color-error-50: #fef3f2;
-  --color-error-100: #fee4e2;
-  --color-error-200: #fecdca;
-  --color-error-300: #fda29b;
-  --color-error-400: #f97066;
-  --color-error-500: #f04438;
-  --color-error-600: #d92d20;
-  --color-error-700: #b42318;
-  --color-error-800: #912018;
-  --color-error-900: #7a271a;
-  --color-error-950: #55160c;
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
 
-  --color-warning-25: #fffcf5;
-  --color-warning-50: #fffaeb;
-  --color-warning-100: #fef0c7;
-  --color-warning-200: #fedf89;
-  --color-warning-300: #fec84b;
-  --color-warning-400: #fdb022;
-  --color-warning-500: #f79009;
-  --color-warning-600: #dc6803;
-  --color-warning-700: #b54708;
-  --color-warning-800: #93370d;
-  --color-warning-900: #7a2e0e;
-  --color-warning-950: #4e1d09;
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
 
-  --color-theme-pink-500: #ee46bc;
+  --shadow-premium-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-premium-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  --shadow-premium-lg: 0 10px 15px -3px rgba(0,0,0,0.04), 0 4px 6px -2px rgba(0,0,0,0.02);
+  --shadow-premium-xl: 0 20px 25px -5px rgba(0,0,0,0.04), 0 10px 10px -5px rgba(0,0,0,0.02);
 
-  --color-theme-purple-500: #7a5af8;
+  --shadow-theme-xs: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-theme-sm: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-theme-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-theme-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --shadow-theme-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  --shadow-slider-navigation: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-datepicker: 0 10px 15px -3px rgba(0,0,0,0.1);
 
-  --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1),
-    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
-  --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08),
-    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
-  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
-  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08),
-    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
-  --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
-  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
-  --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1);
-  --shadow-tooltip: 0px 4px 6px -2px rgba(16, 24, 40, 0.05),
-    -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
+  --color-gray-dark: #1f2937;
 
-  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25),
-    0 45px 65px rgba(0, 0, 0, 0.15);
+  --spacing-6.5: 1.625rem;
 
   --z-index-1: 1;
   --z-index-9: 9;
@@ -186,20 +322,35 @@ layer(base);
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-jetbrains z-1 bg-gray-50;
   }
 }
 
+@utility bento-card {
+  @apply bg-white rounded-3xl border border-gray-200 shadow-premium-sm transition-all duration-300;
+  &:hover {
+    @apply shadow-premium-md;
+  }
+}
+
+@utility capsule-chip {
+  @apply px-4 py-1.5 rounded-full text-sm font-medium transition-all;
+}
+
+@utility premium-input {
+  @apply bg-gray-50 border border-gray-200 rounded-2xl px-6 py-3.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all;
+}
+
 @utility menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  @apply relative flex items-center w-full gap-3 px-4 py-3 font-medium rounded-xl text-sm transition-all duration-200;
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply bg-brand-500 text-white shadow-sm dark:bg-brand-500 dark:text-white;
 }
 
 @utility menu-item-inactive {
-  @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 group-hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
 }
 
 @utility menu-item-icon {
@@ -207,17 +358,17 @@ layer(base);
 }
 
 @utility menu-item-icon-active {
-  @apply text-brand-500 dark:text-brand-400;
+  @apply text-white dark:text-white;
 }
 
 @utility menu-item-icon-size {
   & svg {
-    @apply !size-6;
+    @apply !size-5;
   }
 }
 
 @utility menu-item-icon-inactive {
-  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-white;
 }
 
 @utility menu-item-arrow {
@@ -242,6 +393,40 @@ layer(base);
 
 @utility menu-dropdown-item-inactive {
   @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+}
+
+/* Button Utilities */
+@utility btn-primary {
+  @apply bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+}
+
+@utility btn-secondary {
+  @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-6 py-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-500 dark:focus:ring-offset-gray-800;
+}
+
+@utility btn-danger {
+  @apply bg-red-500 hover:bg-red-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+}
+
+@utility btn-success {
+  @apply bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
+}
+
+/* Form Input Utilities */
+@utility form-input {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-brand-400;
+}
+
+@utility form-label {
+  @apply block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-300;
+}
+
+@utility form-error {
+  @apply text-red-500 text-sm mt-1 dark:text-red-400;
+}
+
+@utility form-help {
+  @apply text-gray-500 text-sm mt-1 dark:text-gray-400;
 }
 
 @utility menu-dropdown-badge {
@@ -495,12 +680,6 @@ span.flatpickr-weekday,
 }
 .flatpickr-day.selected,
 .flatpickr-day.startRange,
-.flatpickr-day.selected,
-.flatpickr-day.endRange {
-  @apply !text-white dark:!text-white;
-}
-.flatpickr-day.selected,
-.flatpickr-day.startRange,
 .flatpickr-day.endRange,
 .flatpickr-day.selected.inRange,
 .flatpickr-day.startRange.inRange,
@@ -517,13 +696,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: var(--color-brand-500);
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-500 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 var(--color-brand-500);
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
@@ -840,4 +1019,240 @@ span.flatpickr-weekday,
   stroke: #2563eb;
   stroke-width: 12;
   opacity: 0.4;
+}
+
+/* ==============================
+   SentinelX Sidebar (Design Match)
+   ============================== */
+@layer components {
+  /* Sidebar container */
+  .sx-sidebar {
+    --sx-sidebar-bg: #ffffff;
+    --sx-sidebar-border: rgba(0, 0, 0, 0.08);
+    --sx-text: #000000;
+    --sx-text-muted: #475569;
+    --sx-glass: rgba(17, 24, 39, 0.02);
+    --sx-focus-blue: #3b82f6;
+    --sx-focus-blue-20: rgba(59, 130, 246, 0.15);
+    --sx-focus-blue-30: rgba(59, 130, 246, 0.30);
+
+    background: var(--sx-sidebar-bg);
+    color: var(--sx-text);
+    border-right: 1px solid var(--sx-sidebar-border);
+    box-shadow: 6px 0 18px rgba(2, 6, 23, 0.06);
+  }
+
+  .sx-sidebar .section-label {
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sx-text-muted);
+    margin: 0 8px 8px;
+    padding: 0 4px;
+  }
+
+  /* Menu button base (targets existing markup by data attribute) */
+  .sx-sidebar [data-slot="button"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 40px !important; /* slightly shorter to save space */
+    padding: 0 16px;
+    border-radius: 8px;
+    color: var(--sx-text);
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+    position: relative; /* enable active indicator pseudo-element */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+    font-weight: 500; /* font-medium */
+    will-change: transform;
+  }
+  .sx-sidebar [data-slot="button"]::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0px;
+    height: 60%;
+    border-radius: 6px;
+    background: var(--sx-focus-blue);
+    opacity: 0;
+    transition: width .2s ease, opacity .2s ease;
+  }
+  .sx-sidebar [data-slot="button"] svg {
+    width: 16px; height: 16px; /* h-4 w-4 */
+    flex-shrink: 0;
+    color: currentColor;
+  }
+
+  /* Hover */
+  .sx-sidebar [data-slot="button"]:hover {
+    background: #f8fafc !important;
+    color: var(--sx-focus-blue) !important;
+    transform: translateX(2px);
+  }
+  .sx-sidebar [data-slot="button"]:hover::before {
+    width: 3px;
+    opacity: .8;
+  }
+
+  /* Active */
+  .sx-sidebar [data-slot="button"].is-active {
+    background: var(--sx-focus-blue-20) !important; /* soft blue fill */
+    color: var(--sx-focus-blue) !important;
+    border-color: var(--sx-focus-blue-30) !important; /* thin luminous border */
+  }
+  .sx-sidebar [data-slot="button"].is-active::before {
+    width: 4px;
+    opacity: 1;
+  }
+  /* remove slim left bar indicator (not needed for image match) */
+
+  /* Truncate long labels */
+  .sx-sidebar [data-slot="button"] .flex-1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Badge styling (if used in markup) */
+  .sx-sidebar [data-slot="badge"] {
+    font-size: 11px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--sx-focus-blue-30);
+    color: var(--sx-focus-blue);
+    background: var(--sx-focus-blue-20);
+  }
+
+  /* Footer system status */
+  .sx-sidebar .system-status {
+    border-top: 1px solid var(--sx-sidebar-border);
+    padding: 12px;
+    font-size: 12px;
+    color: var(--sx-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+  }
+  .sx-sidebar .system-status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #10b981; /* emerald-500 */
+    margin-right: 8px;
+  }
+  .sx-sidebar .system-status .version {
+    color: var(--sx-text-muted);
+  }
+
+  /* ==============================
+     SentinelX helper classes (colors, glass, borders)
+     ============================== */
+  .sentinelx-glass {
+    background: var(--sx-glass);
+    backdrop-filter: saturate(1.1) blur(6px);
+  }
+  /* Utility to support hover:bg-sentinelx-glass-bg class in markup */
+  .bg-sentinelx-glass-bg {
+    background: var(--sx-glass);
+  }
+  .border-sentinelx-glass-border {
+    border-color: var(--sx-sidebar-border);
+  }
+  /* Map old yellow helpers to new blue focus for consistency */
+  .text-sentinelx-alert-yellow {
+    color: var(--sx-focus-blue);
+  }
+  .bg-sentinelx-alert-yellow-20 {
+    background-color: var(--sx-focus-blue-20);
+  }
+  .border-sentinelx-alert-yellow-30 {
+    border-color: var(--sx-focus-blue-30);
+  }
+
+  /* Exact custom classes requested */
+  .bg-sentinelx-glass-bg {
+    background-color: rgba(30, 41, 59, 0.3);
+  }
+  /* Use escaped slash to allow class name `bg-sentinelx-crimson-red/20` */
+  .bg-sentinelx-crimson-red\/20 {
+    background-color: rgba(220, 20, 60, 0.20);
+  }
+  /* Border helper to match Figma alert badge */
+  .border-sentinelx-crimson-red\/30 {
+    border-color: rgba(220, 20, 60, 0.30);
+  }
+  /* Text helper for crimson alert label */
+  .text-sentinelx-crimson-red {
+    color: #dc143c;
+  }
+
+  /* Icon glow on active */
+  .sentinelx-glow {
+    animation: sxIconGlow 1.8s ease-in-out infinite;
+  }
+}
+
+/* Pulsing and glow animations */
+@keyframes sxPulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45); }
+  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+.sentinelx-pulse {
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+  animation: sxPulse 2s infinite;
+  border-radius: 9999px;
+}
+
+@keyframes sxIconGlow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(59, 130, 246, 0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.35)); }
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.96) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop { animation: popIn 0.18s ease-out both; will-change: transform, opacity; }
+[class*="rounded-xl"][class*="border"],
+[class*="rounded-lg"][class*="border"],
+[class*="bg-white"][class*="rounded-"],
+.dark [class*="bg-gray-800"][class*="rounded-"] { animation: popIn 0.18s ease-out both; }
+[role="dialog"],
+[class*="modal"],
+[class*="CustomDropdown"],
+[class*="dropdown"],
+[class*="Dialog"],
+[class*="drawer"] { animation: popIn 0.18s ease-out both; }
+
+/* Tactical Bubble Popup Override */
+.tactical-bubble-popup .mapboxgl-popup-content {
+  border-radius: 20px !important;
+  padding: 14px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+.tactical-bubble-popup .mapboxgl-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  border-radius: 9999px !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  color: #666 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s !important;
+}
+.tactical-bubble-popup .mapboxgl-popup-close-button:hover {
+  background-color: rgba(0,0,0,0.08) !important;
+  color: #000 !important;
 }

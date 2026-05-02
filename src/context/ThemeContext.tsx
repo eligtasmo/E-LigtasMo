@@ -1,7 +1,4 @@
-"use client";
-
-import type React from "react";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useCallback, useMemo, ReactNode } from "react";
 
 type Theme = "light"; // Only light mode is supported
 
@@ -12,13 +9,13 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const theme: Theme = "light"; // Always light mode
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     // Dark mode toggle is no longer needed
     console.warn("Dark mode is disabled, this function does nothing.");
-  };
+  }, []);
 
   // Remove any dark class on initial load
   useEffect(() => {
@@ -27,8 +24,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  const contextValue = useMemo(() => ({
+    theme,
+    toggleTheme
+  }), [theme, toggleTheme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
