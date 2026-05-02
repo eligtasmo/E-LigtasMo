@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "com.mobileligtas.app",
+      "package": "com.kaizendotexe.eligtasmo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

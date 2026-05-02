@@ -18,19 +18,8 @@ $allowed = [
     'https://www.eligtasmo.site',
     'https://e-ligtas-mo.vercel.app',
 ];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-
-// THE ULTIMATE DEFENSE: Allow any Vercel URL, localhost, or your main domain
-if (
-    str_contains($origin, 'vercel.app') || 
-    str_contains($origin, 'eligtasmo.site') || 
-    str_contains($origin, 'localhost')
-) {
-    header("Access-Control-Allow-Origin: $origin");
-} else {
-    header("Access-Control-Allow-Origin: https://eligtasmo.site");
-}
-
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Credentials: true");
 header("Vary: Origin");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
