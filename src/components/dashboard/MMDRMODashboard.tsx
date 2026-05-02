@@ -371,7 +371,7 @@ const MMDRMODashboard: React.FC = () => {
   };
 
   const visibleIncidents = useMemo(() => {
-    return dashboardIncidents.filter(incidentMatchesDate);
+    return (dashboardIncidents || []).filter(incidentMatchesDate);
   }, [dashboardIncidents, dateFrom, dateTo, datePreset]);
 
   // Calculate All Affected Areas Data for Detail View
@@ -453,7 +453,7 @@ const MMDRMODashboard: React.FC = () => {
     }
 
     const values = Array(bucketCount).fill(0) as number[];
-    visibleIncidents.forEach((inc) => {
+    (visibleIncidents || []).forEach((inc) => {
       // Count all incidents for the trend
       // if (inc.type !== 'Flood') return; 
 
@@ -479,7 +479,7 @@ const MMDRMODashboard: React.FC = () => {
   // Calculate Most Affected Area and its Trend (Average Severity)
   const mostAffectedData = useMemo(() => {
     // 1. Find Most Affected Area
-    const floodIncidents = visibleIncidents; // Include all types in area analysis
+    const floodIncidents = visibleIncidents || []; // Include all types in area analysis
     const locationCounts: Record<string, number> = {};
     
     floodIncidents.forEach(i => {

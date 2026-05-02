@@ -843,7 +843,7 @@ export default function ResidentView() {
                     const minDist = sortedByDist[0].properties.summary.distance;
                     const maxDist = sortedByDist[sortedByDist.length - 1].properties.summary.distance;
 
-                    return route.features.map((f, index) => (
+                    return (route?.features || []).map((f: any, index: number) => (
                       <RouteDetails
                         key={index}
                         index={index}
