@@ -30,7 +30,6 @@
     "@react-google-maps/api": "^2.20.6",
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
-    "@rollup/rollup-darwin-arm64": "^4.60.2",
     "@turf/turf": "^7.2.0",
     "@types/mapbox-gl": "^3.4.1",
     "apexcharts": "^4.1.0",
