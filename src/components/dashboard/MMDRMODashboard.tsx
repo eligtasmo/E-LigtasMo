@@ -679,7 +679,7 @@ const MMDRMODashboard: React.FC = () => {
 
   const fetchDangerZones = async () => {
     try {
-      const response = await fetch('http://localhost:3001/danger_zones');
+      const response = await apiFetch('list-danger-zones.php');
       const data = await response.json();
       setDangerZones(data || []);
     } catch (error) {
@@ -697,7 +697,7 @@ const MMDRMODashboard: React.FC = () => {
       console.error('Error fetching shelters:', error);
       // Fallback to db.json
       try {
-        const fallbackResponse = await fetch('http://localhost:3001/shelters');
+        const fallbackResponse = await apiFetch('shelters-list.php');
         const fallbackData = await fallbackResponse.json();
         setEnhancedShelters(fallbackData || []);
       } catch (fallbackError) {

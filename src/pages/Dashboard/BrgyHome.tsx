@@ -629,7 +629,7 @@ const BrgyHome = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-3 custom-scrollbar">
-                  {filteredIncidents.map((incident) => {
+                  {(filteredIncidents || []).map((incident) => {
                     const uniqueKey = `${incident.source_table || 'inc'}-${incident.id}`;
                     return (
                       <div 

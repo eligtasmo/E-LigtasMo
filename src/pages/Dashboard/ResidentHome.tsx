@@ -43,7 +43,8 @@ const fetchRecentIncidents = async () => {
     const res = await apiFetch('unified-incidents.php?status=Approved&limit=5');
     const data = await res.json();
     if (!data.success || !Array.isArray(data.data)) return [];
-    return data.data.map((incident: any) => ({
+    const rows = Array.isArray(data.data) ? data.data : (Array.isArray(data.incidents) ? data.incidents : []);
+    return rows.map((incident: any) => ({
       id: incident.id,
       type: incident.type || 'Incident',
       location: incident.location_text || incident.address?.split(',')[0] || 'Unknown location',
@@ -204,7 +205,8 @@ export default function ResidentHome() {
       const data = await res.json();
       if ((data?.success && Array.isArray(data.announcements)) || Array.isArray(data)) {
         const arr = Array.isArray(data.announcements) ? data.announcements : data;
-        return arr.map((a: any) => ({
+        const rows = Array.isArray(arr) ? arr : [];
+        return rows.map((a: any) => ({
           id: a.id ?? Date.now(),
           title: a.title ?? a.event ?? 'Announcement',
           message: a.message ?? a.description ?? '',

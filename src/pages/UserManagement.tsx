@@ -252,7 +252,7 @@ const UserManagement: React.FC = () => {
                   onClick={() => {
                     const data = (activeTab === 'users' ? otherUsers : pendingUsers);
                     if (data.length === 0) { setShowToast('No users to export.'); return; }
-                    const ws = XLSX.utils.json_to_sheet(data.map(u => {
+                    const ws = XLSX.utils.json_to_sheet((data || []).map(u => {
                       const row: any = {
                         Username: u.username,
                         'Full Name': u.full_name,
@@ -292,7 +292,8 @@ const UserManagement: React.FC = () => {
                         });
                         const data = await res.json();
                         if (data.success) {
-                          const link = `http://localhost:5173/brgy-signin?mode=brgy&invite=${data.code}`;
+                          const origin = window.location.origin;
+                          const link = `${origin}/brgy-signin?mode=brgy&invite=${data.code}`;
                           navigator.clipboard.writeText(link);
                           setShowToast(`Invite link copied to clipboard!`);
                         } else {

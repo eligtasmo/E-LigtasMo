@@ -677,7 +677,7 @@ export default function ResidentView() {
 
   // Fetch full danger zone objects on load
   useEffect(() => {
-    fetch('http://localhost:3001/danger_zones')
+    apiFetch('list-danger-zones.php')
       .then(res => res.json())
       .then((data: any[]) => {
         if (data && Array.isArray(data)) {
