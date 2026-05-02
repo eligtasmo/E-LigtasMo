@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -45,9 +45,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "942ea00c-e82c-4c28-8320-93ac2308888c"
+        "projectId": "a4a413de-c1ec-4977-9335-246fba0c2b53"
       }
     },
-    "owner": "krystalm"
+    "owner": "kaizendotexe"
   }
 }

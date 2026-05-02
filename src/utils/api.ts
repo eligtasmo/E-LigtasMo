@@ -1,6 +1,6 @@
 // src/utils/api.ts
 // Prefer same-origin relative API path to leverage Vite dev proxy and avoid CORS.
-export const API_BASE = `/api`;
+export const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const cleanedPath = path.replace(/^\//, '');

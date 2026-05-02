@@ -28,7 +28,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = `/api`;
+export const API_BASE = import.meta.env.VITE_API_URL;
 const PUBLIC_ROUTES = ["/signin", "/register", "/forgot-password", "/residents"];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
