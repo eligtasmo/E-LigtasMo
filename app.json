@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "80006840-86d9-48c4-a792-50350501a55a"
+      }
+    },
+    "android": {
+      "package": "com.kaizendotexe.tailadminreact"
+    }
+  }
+}
