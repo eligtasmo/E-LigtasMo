@@ -23,7 +23,7 @@ header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Credentials: true");
 header("Vary: Origin");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-$reqHeaders = $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'] ?? 'Content-Type, Authorization, X-Role, X-Token';
+$reqHeaders = $_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'] ?? 'Content-Type, Authorization, X-Role, X-Token, x-role, x-token, origin, accept, x-requested-with';
 header("Access-Control-Allow-Headers: $reqHeaders");
 header("Access-Control-Max-Age: 86400");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
