@@ -133,7 +133,7 @@ export default function BarangayMapView() {
       <div className="flex-1 relative h-full z-0 overflow-hidden">
         <MapboxMap
           {...viewState}
-          onMove={(evt: any) => setViewport(evt.viewState)}
+          onMove={(evt: any) => setViewState(evt.viewState)}
           mapStyle="mapbox://styles/mapbox/dark-v11"
           mapboxAccessToken={MAPBOX_TOKEN}
           onClick={handleMapClick}

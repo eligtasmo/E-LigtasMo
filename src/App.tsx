@@ -261,6 +261,22 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "barangay-map",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <BarangayMapView />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "flood-reports",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <FloodReport />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "flood-report",
             element: (
               <ProtectedRoute requiredRole="admin">
@@ -385,6 +401,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRole="admin">
                 <HotlineManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "settings",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <UserProfiles />
               </ProtectedRoute>
             ),
           },

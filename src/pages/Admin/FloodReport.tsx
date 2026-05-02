@@ -166,6 +166,59 @@ const FloodReport: React.FC = () => {
       <PageMeta title="Tactical Flood Oversight" />
       <MapProvider>
         <div className="flex h-full w-full overflow-hidden">
+          {/* Map Section */}
+          <div className="flex-1 relative h-full z-0">
+            <MapboxMap
+              initialViewState={{
+                latitude: 14.28,
+                longitude: 121.41,
+                zoom: 13
+              }}
+              mapStyle="mapbox://styles/mapbox/dark-v11"
+              mapboxAccessToken={MAPBOX_TOKEN}
+              onLoad={(e: any) => setMapInstance(e.target)}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <NavigationControl position="top-right" />
+              <FullscreenControl position="top-right" />
+              
+              {reports.map((report) => (
+                <TacticalMarker
+                  key={report.id}
+                  latitude={Number(report.lat)}
+                  longitude={Number(report.lng)}
+                  type="hazard"
+                  severity={report.severity as any}
+                  onClick={(e) => {
+                    e.originalEvent.stopPropagation();
+                    setSelectedReport(report);
+                  }}
+                />
+              ))}
+            </MapboxMap>
+
+            {/* Map Legend/Overlay */}
+            <div className="absolute bottom-6 left-6 p-4 bg-black/60 backdrop-blur-md rounded-2xl border border-white/10 z-10 select-none">
+              <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                Live_Monitor
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'Critical_Zone', color: 'bg-red-500' },
+                  { label: 'High_Alert', color: 'bg-orange-500' },
+                  { label: 'Moderate_Flood', color: 'bg-yellow-500' },
+                  { label: 'Minor_Water', color: 'bg-green-500' }
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Unified Sidebar (Right) */}
           <div className="w-[400px] bg-[#1c1c1e] border-l border-white/5 flex flex-col h-full shrink-0 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] overflow-hidden">
             {selectedReport ? (

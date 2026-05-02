@@ -126,7 +126,7 @@ const systemItems: NavItem[] = [
     icon: <FiSettings size={20} />,
     name: "Settings",
     roles: ["admin", "brgy"],
-    path: "/settings",
+    pathByRole: { admin: "/admin/settings", brgy: "/brgy/settings" },
   },
 ];
 
