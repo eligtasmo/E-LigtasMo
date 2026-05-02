@@ -376,7 +376,7 @@ const MMDRMODashboard: React.FC = () => {
 
   // Calculate All Affected Areas Data for Detail View
   const allFloodData = useMemo(() => {
-    const floodIncidents = visibleIncidents.filter(i => i.type === 'Flood');
+    const floodIncidents = (visibleIncidents || []).filter(i => i.type === 'Flood');
     const locationData: Record<string, { count: number, severitySum: number, incidents: IncidentData[] }> = {};
     
     const severityMap: Record<string, number> = {
@@ -1172,7 +1172,8 @@ const MMDRMODashboard: React.FC = () => {
 
   const hazardAreasFc = useMemo(() => {
     const features: any[] = [];
-    for (const h of hazards as any[]) {
+    const hazardList = Array.isArray(hazards) ? hazards : [];
+    for (const h of hazardList as any[]) {
       const sevRaw = String(h?.severity || 'Medium').toLowerCase();
       const sev = sevRaw === 'critical' ? 'critical' : sevRaw === 'high' ? 'high' : sevRaw === 'moderate' || sevRaw === 'medium' ? 'medium' : sevRaw === 'low' ? 'low' : 'medium';
       const height = sev === 'critical' ? 120 : sev === 'high' ? 80 : sev === 'medium' ? 50 : 30;
@@ -1208,7 +1209,8 @@ const MMDRMODashboard: React.FC = () => {
 
   const floodAreasFc = useMemo(() => {
     const features: any[] = [];
-    for (const i of activeIncidents) {
+    const incidentList = Array.isArray(activeIncidents) ? activeIncidents : [];
+    for (const i of incidentList) {
       if (String(i.type || '').toLowerCase() !== 'flood') continue;
       if (i.status === 'Resolved') continue;
       const sevRaw = String(i.severity || 'Medium').toLowerCase();
