@@ -91,13 +91,19 @@ export const NavigationOverlay = ({
                   </Text>
                   <Text style={{ fontSize: 14, fontWeight: '800', color: 'rgba(255,255,255,0.3)', marginLeft: 6, marginTop: 4, fontFamily: DS_FONT_UI }}>M</Text>
                 </Row>
-                <Col style={{ marginTop: 0 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', lineHeight: 20, fontFamily: DS_FONT_UI }} numberOfLines={1}>
-                    {nextInstruction}
-                  </Text>
-                  {currentStep?.name && currentStep.name !== '-' && (
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginTop: 2, fontFamily: DS_FONT_UI }} numberOfLines={1}>
-                      onto {currentStep.name}
+                <Col style={{ marginTop: 2 }}>
+                  {currentStep?.name && currentStep.name !== '-' ? (
+                    <>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: DS_FONT_UI }} numberOfLines={1}>
+                        {nextInstruction}
+                      </Text>
+                      <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF', marginTop: -2, fontFamily: DS_FONT_UI }} numberOfLines={1}>
+                        {currentStep.name}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', lineHeight: 20, fontFamily: DS_FONT_UI }} numberOfLines={1}>
+                      {nextInstruction}
                     </Text>
                   )}
                 </Col>
@@ -286,13 +292,19 @@ export const NavigationOverlay = ({
               </Text>
               <Text style={{ fontSize: 15, fontWeight: '800', color: 'rgba(255,255,255,0.3)', marginLeft: 6, marginTop: 4 }}>M</Text>
             </Row>
-            <Col style={{ marginTop: 0 }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF', lineHeight: 20 }} numberOfLines={1}>
-                {nextInstruction}
-              </Text>
-              {currentStep?.name && currentStep.name !== '-' && (
-                <Text style={{ fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginTop: 2 }} numberOfLines={1}>
-                  onto {currentStep.name}
+            <Col style={{ marginTop: 2 }}>
+              {currentStep?.name && currentStep.name !== '-' ? (
+                <>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: BLUE, textTransform: 'uppercase', letterSpacing: 1 }} numberOfLines={1}>
+                    {nextInstruction}
+                  </Text>
+                  <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF', marginTop: -2 }} numberOfLines={1}>
+                    {currentStep.name}
+                  </Text>
+                </>
+              ) : (
+                <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF', lineHeight: 22 }} numberOfLines={2}>
+                  {nextInstruction}
                 </Text>
               )}
             </Col>
