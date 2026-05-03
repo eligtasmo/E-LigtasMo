@@ -508,8 +508,8 @@ const createMapHTML = (token) => `
                               else if (type.includes('shelter')) { icon = 'home-heart'; color = '#27AE60'; }
                               else if (type.includes('hall') || type.includes('barangay')) { icon = 'office-building'; color = '#9333EA'; }
                               
-                              el.innerHTML = '<div style="background: ' + color + '; width: 32px; height: 32px; border-radius: 16px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">' +
-                                '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 18px; line-height: 1; display: block;"></i>' +
+                              el.innerHTML = '<div style="background: ' + color + '; width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); box-sizing: border-box; overflow: hidden;">' +
+                                '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 18px; line-height: 1; display: block; width: 18px; height: 18px; text-align: center;"></i>' +
                                 '</div>';
 
                               el.addEventListener('click', () => {
@@ -521,11 +521,13 @@ const createMapHTML = (token) => `
                               window.activeMarkers[markerId].setLngLat([lng, lat]);
                           }
 
-                          // 3c. POLYGON / RADIUS RENDERING
+                          // 3c. POLYGON / RADIUS RENDERING (Exclude Shelters and Barangays from radius generation)
+                          const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay');
+                          
                           if (m.area_geojson && m.area_geojson.type) {
                               polyFeatures.push({ type: 'Feature', properties: { type: m.type }, geometry: m.area_geojson });
-                          } else {
-                              // Use the ORIGINAL coordinate for the radius center
+                          } else if (!isAsset) {
+                              // Only generate radius for Hazards and Incidents
                               const rLat = Number(m.lat);
                               const rLng = Number(m.lng || m.lon);
                               polyFeatures.push({ 
