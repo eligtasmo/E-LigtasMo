@@ -275,17 +275,17 @@ const createMapHTML = (token) => `
 
       // Circle generator helper
       function createCircle(center, radiusInKm, points = 64) {
-          const coords = { latitude: center[1], longitude: center[0] };
-          const km = radiusInKm;
+          const coords = { lat: center[1], lng: center[0] };
+          const earthR = 6378137;
+          const radiusM = radiusInKm * 1000;
           const ret = [];
-          const distanceX = km / (111.32 * Math.cos(coords.latitude * Math.PI / 180));
-          const distanceY = km / 110.574;
-          let theta, x, y;
+          
           for (let i = 0; i < points; i++) {
-              theta = (i / points) * (2 * Math.PI);
-              x = distanceX * Math.cos(theta);
-              y = distanceY * Math.sin(theta);
-              ret.push([coords.longitude + x, coords.latitude + y]);
+              const angle = (i * 360) / points;
+              const rad = (angle * Math.PI) / 180;
+              const dLat = (radiusM / earthR) * (180 / Math.PI) * Math.cos(rad);
+              const dLng = (radiusM / (earthR * Math.cos((coords.lat * Math.PI) / 180))) * (180 / Math.PI) * Math.sin(rad);
+              ret.push([coords.lng + dLng, coords.lat + dLat]);
           }
           ret.push(ret[0]);
           return [ret];
@@ -535,7 +535,7 @@ const createMapHTML = (token) => `
                                 properties: { type: type }, 
                                 geometry: {
                                     type: 'Polygon',
-                                    coordinates: createCircle([rLng, rLat], 0.4)
+                                    coordinates: createCircle([rLng, rLat], 0.1)
                                 } 
                               });
                           }
@@ -605,7 +605,7 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }
         from={{ translateY: 300, opacity: 0 }}
         animate={{ translateY: 0, opacity: 1 }}
         exit={{ translateY: 300, opacity: 0 }}
-        transition={{ type: 'spring', damping: 20 }}
+        transition={{ type: 'timing', duration: 300 }}
         style={{
           backgroundColor: '#1C1C1E',
           borderTopLeftRadius: 24,
@@ -614,6 +614,10 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }
           paddingBottom: (insets.bottom || 0) + 24,
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.1)',
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         }}
       >
         <Row align="center" justify="between" style={{ marginBottom: 20 }}>
@@ -672,9 +676,10 @@ const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets
       />
 
       <MotiView
-        from={{ translateY: 600 }}
-        animate={{ translateY: 0 }}
-        transition={{ type: 'spring', damping: 20 }}
+        from={{ translateY: 600, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        exit={{ translateY: 600, opacity: 0 }}
+        transition={{ type: 'timing', duration: 350 }}
         style={{
           backgroundColor: '#0A0A0A',
           borderTopLeftRadius: 32,
@@ -687,7 +692,11 @@ const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets
           shadowOffset: { width: 0, height: -10 },
           shadowOpacity: 0.5,
           shadowRadius: 20,
-          elevation: 20
+          elevation: 20,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         }}
       >
         <Col gap={24}>
@@ -1015,7 +1024,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           const lat = (geojson?.type === 'Feature' ? geojson.geometry?.coordinates?.[1] : geojson?.coordinates?.[1]) || fallbackLat;
           const lng = (geojson?.type === 'Feature' ? geojson.geometry?.coordinates?.[0] : geojson?.coordinates?.[0]) || fallbackLng;
           if (!lat || !lng) return null;
-          return createCircle(lat, lng, 0.4); // 400m radius
+          return createCircle(lat, lng, 0.1); // 100m radius
         }
         return geojson.type === 'Feature' ? geojson.geometry : geojson;
       };

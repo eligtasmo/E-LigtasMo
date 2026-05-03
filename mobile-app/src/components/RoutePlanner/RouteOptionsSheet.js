@@ -59,15 +59,15 @@ export const RouteOptionsSheet = ({
     >
       <MotiView
         animate={{ 
-          height: showExpanded ? MAX_HEIGHT + BOTTOM_MARGIN + 16 : currentHeight,
-          bottom: 0,
+          translateY: showExpanded ? 0 : (MAX_HEIGHT + BOTTOM_MARGIN + 16 - currentHeight)
         }}
+        transition={{ type: 'timing', duration: 350 }}
         style={{
           position: 'absolute',
           width: isLandscape ? panelWidth : '100%',
           right: isLandscape ? 0 : 'auto',
           alignSelf: isLandscape ? 'flex-end' : 'center',
-          height: showExpanded ? MAX_HEIGHT + BOTTOM_MARGIN + 16 : currentHeight,
+          height: MAX_HEIGHT + BOTTOM_MARGIN + 16,
           bottom: 0,
           pointerEvents: 'box-none'
         }}
