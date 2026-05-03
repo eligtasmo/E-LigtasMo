@@ -81,13 +81,14 @@ export const NavigationOverlay = ({
       <View style={[atomic.l.abs, atomic.l.fill, { zIndex: 3000, pointerEvents: 'box-none' }]}>
         {/* LANDSCAPE: Floating Turn Instruction (Top Left) */}
         <MotiView
-          animate={{ height: isExpanded ? 340 : 88 }}
+          animate={{ translateY: isExpanded ? 0 : -252 }}
           transition={{ type: 'timing', duration: 300 }}
           style={{
             position: 'absolute',
             top: 20,
             left: 20,
             width: 320,
+            height: 340,
             backgroundColor: 'rgba(15,16,20,0.98)',
             borderRadius: 24,
             padding: 20,
@@ -101,7 +102,7 @@ export const NavigationOverlay = ({
           }}
         >
           <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} activeOpacity={0.9} style={{ flex: 1 }}>
-            <Row align="center">
+            <Row align="center" style={{ marginTop: isExpanded ? 0 : 252 }}>
               <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' }}>
                 <ManeuverIcon size={28} color="#FFFFFF" strokeWidth={2.5} />
               </View>
@@ -268,13 +269,14 @@ export const NavigationOverlay = ({
       {/* PORTRAIT: Expandable Instruction Bar */}
       <MotiView
         key="instruction-bar-moti"
-        animate={{ height: isExpanded ? 320 : 92 }}
+        animate={{ translateY: isExpanded ? 0 : -228 }}
         transition={{ type: 'timing', duration: 300 }}
         style={{
           position: 'absolute',
           top: safeTop + 4,
           left: 20,
           right: 20,
+          height: 320,
           zIndex: 3500,
           backgroundColor: 'rgba(15,16,20,0.98)',
           borderRadius: 24,
@@ -290,7 +292,7 @@ export const NavigationOverlay = ({
         <TouchableOpacity 
           activeOpacity={0.8} 
           onPress={() => setIsExpanded(!isExpanded)}
-          style={{ padding: 20, flexDirection: 'row', alignItems: 'center', height: 92 }}
+          style={{ padding: 20, flexDirection: 'row', alignItems: 'center', height: 92, marginTop: isExpanded ? 0 : 228 }}
         >
           <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' }}>
             <ManeuverIcon size={30} color="#FFFFFF" strokeWidth={2.5} />

@@ -305,6 +305,11 @@ const createMapHTML = (token) => `
           map.addLayer({ id: 'route-alt1-casing', type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.4 } });
           map.addLayer({ id: 'route-alt1-line',   type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#9CA3AF', 'line-width': 7, 'line-opacity': 0.65 } });
           
+          map.addLayer({ id: 'route-casing', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 12, 'line-opacity': 0.8 } });
+          map.addLayer({ id: 'route-line', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2F7BFF', 'line-width': 7, 'line-opacity': 1.0 } });
+          map.addLayer({ id: 'route-traffic', type: 'line', source: 'route-traffic', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-width': 4.5, 'line-opacity': 1.0, 'line-color': ['match', ['get', 'level'], 'heavy', '#EF4444', 'moderate', '#F59E0B', '#2F7BFF'] } });
+
+          // Tactical Polygons (Added LAST to be on TOP of route)
           map.addSource('tactical-polygons', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
           map.addLayer({ 
             id: 'tactical-polygons-fill', 
@@ -343,10 +348,6 @@ const createMapHTML = (token) => `
               'line-dasharray': [2, 2] 
             } 
           });
-
-          map.addLayer({ id: 'route-casing', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 12, 'line-opacity': 0.8 } });
-          map.addLayer({ id: 'route-line', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2F7BFF', 'line-width': 7, 'line-opacity': 1.0 } });
-          map.addLayer({ id: 'route-traffic', type: 'line', source: 'route-traffic', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-width': 4.5, 'line-opacity': 1.0, 'line-color': ['match', ['get', 'level'], 'heavy', '#EF4444', 'moderate', '#F59E0B', '#2F7BFF'] } });
 
           const sendAppMsg = (data) => { try { const msg = JSON.stringify(data); if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) { window.ReactNativeWebView.postMessage(msg); } } catch (e) {} };
           map.on('movestart', (e) => { if (e.originalEvent) { window.manualMode = true; sendAppMsg({ type: 'MAP_INTERACTION', manual: true }); } });
