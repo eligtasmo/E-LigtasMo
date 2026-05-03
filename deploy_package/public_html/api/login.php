@@ -44,7 +44,7 @@ if (file_exists($limFile)) {
 $attempts = array_values(array_filter($attempts, function ($t) use ($now) { return ($now - (int)$t) < 300; }));
 if (count($attempts) >= 5) {
     header('Retry-After: 300');
-    http_response_code(429);
+    http_response_code(200);
     echo json_encode(["success" => false, "message" => "Too many login attempts. Try again later."]);
     exit();
 }
@@ -56,7 +56,7 @@ try {
     $connError = $e->getMessage();
 }
 if ($connError !== null) {
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode(["success" => false, "message" => "Database connection failed"]);
     exit();
 }
@@ -89,7 +89,7 @@ try {
     $stmt->execute([$username]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode(["success" => false, "message" => "Query execution failed"]);
     exit();
 }
@@ -162,19 +162,14 @@ if ($row) {
         }
     } else {
         $attempts[] = $now;
-        file_put_contents($limFile, json_encode($attempts));
-        if ($role === 'resident') {
-            http_response_code(401);
-            echo json_encode(["success" => false, "message" => "Incorrect password"]);
-        } else {
-            http_response_code(200);
-            echo json_encode(["success" => false, "message" => "Incorrect password"]);
-        }
+        @file_put_contents($limFile, json_encode($attempts));
+        http_response_code(200);
+        echo json_encode(["success" => false, "message" => "Incorrect password"]);
     }
 } else {
     $attempts[] = $now;
-    file_put_contents($limFile, json_encode($attempts));
-    http_response_code(401);
+    @file_put_contents($limFile, json_encode($attempts));
+    http_response_code(200);
     echo json_encode(["success" => false, "message" => "Invalid username"]);
 }
 ?>

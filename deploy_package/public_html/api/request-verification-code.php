@@ -14,7 +14,7 @@ try {
     $purpose = isset($input['purpose']) ? strtolower(trim((string)$input['purpose'])) : 'signup';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
+        http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'Invalid email address']);
         exit;
     }
@@ -23,7 +23,7 @@ try {
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
         if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-            http_response_code(404);
+            http_response_code(200);
             echo json_encode(['success' => false, 'error' => 'No account found for this email address']);
             exit;
         }
@@ -31,7 +31,7 @@ try {
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
         if ($stmt->fetch(PDO::FETCH_ASSOC)) {
-            http_response_code(409);
+            http_response_code(200);
             echo json_encode(['success' => false, 'error' => 'This email is already registered. Please sign in instead.']);
             exit;
         }

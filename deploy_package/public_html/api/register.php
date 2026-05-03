@@ -2,9 +2,9 @@
 require_once __DIR__ . '/cors.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/session_boot.php';
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ERROR | E_PARSE);
 
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
@@ -40,13 +40,13 @@ $emailRaw = $normalize($emailRaw);
 $rawPhone = $normalize($data['contact_number']);
 $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
 if (strlen($cleanPhone) !== 11 || substr($cleanPhone, 0, 2) !== '09') {
-    http_response_code(422);
+    http_response_code(200);
     echo json_encode(['success' => false, 'code' => 'VALIDATION_ERROR', 'message' => 'Please enter a valid 11-digit phone number starting with 09.']);
     exit;
 }
 $data['contact_number'] = $cleanPhone;
 if (!filter_var($emailRaw, FILTER_VALIDATE_EMAIL)) {
-    http_response_code(422);
+    http_response_code(200);
     echo json_encode(['success' => false, 'code' => 'VALIDATION_ERROR', 'details' => ['email' => ['Invalid email']]]);
     exit;
 }
@@ -62,7 +62,7 @@ foreach ($common_required as $field) {
     }
 }
 if (!empty($errors)) {
-    http_response_code(422);
+    http_response_code(200);
     echo json_encode(['success' => false, 'code' => 'VALIDATION_ERROR', 'message' => 'Please fill in all required fields.', 'details' => $errors]);
     exit;
 }
@@ -81,7 +81,7 @@ if (!preg_match('/[^a-zA-Z0-9]/', $pwd)) { $pwdErrors[] = 'Include at least one 
 $commonBad = ['password','123456','qwerty','111111','123123','letmein','iloveyou'];
 if (in_array(strtolower($pwd), $commonBad, true)) { $pwdErrors[] = 'Password is too common'; }
 if (!empty($pwdErrors)) {
-    http_response_code(422);
+    http_response_code(200);
     echo json_encode(['success' => false, 'code' => 'VALIDATION_ERROR', 'message' => 'Password does not meet requirements.', 'details' => ['password' => $pwdErrors]]);
     exit;
 }
@@ -93,12 +93,13 @@ try {
     $connError = $e->getMessage();
 }
 if ($connError !== null) {
+    http_response_code(200);
     echo json_encode(['success' => false, 'message' => 'Database connection failed']);
     exit;
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? OR contact_number = ?");
+    $stmt = $pdo->prepare("SELECT id, username, email, contact_number FROM users WHERE username = ? OR email = ? OR contact_number = ?");
     $stmt->execute([$data['username'], $data['email'], $data['contact_number']]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -108,7 +109,7 @@ try {
         elseif ($existing['email'] === $data['email']) $conflict = 'email address';
         elseif ($existing['contact_number'] === $data['contact_number']) $conflict = 'phone number';
 
-        http_response_code(409);
+        http_response_code(200);
         echo json_encode([
             'success' => false, 
             'message' => 'Account already exists', 
@@ -117,7 +118,7 @@ try {
         exit;
     }
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode(['success' => false, 'message' => 'Validation failed: ' . $e->getMessage()]);
     exit;
 }

@@ -13,13 +13,13 @@ try {
     $code = trim((string)($input['code'] ?? ''));
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $code === '') {
-        http_response_code(400);
+        http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'Missing email or code']);
         exit;
     }
 
     if (!isset($_SESSION['email_verification'][$email])) {
-        http_response_code(400);
+        http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'No verification request found for this email']);
         exit;
     }
@@ -32,14 +32,14 @@ try {
 
     if (time() > ($record['expires'] ?? 0)) {
         unset($_SESSION['email_verification'][$email]);
-        http_response_code(400);
+        http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'Verification code expired']);
         exit;
     }
 
     $_SESSION['email_verification'][$email]['attempts'] = ($record['attempts'] ?? 0) + 1;
     if ($code !== ($record['code'] ?? '')) {
-        http_response_code(400);
+        http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'Invalid code']);
         exit;
     }
@@ -52,7 +52,7 @@ try {
         'purpose' => $record['purpose'] ?? 'signup',
     ]);
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode(['success' => false, 'error' => 'Unable to verify code']);
 }
 ?>
