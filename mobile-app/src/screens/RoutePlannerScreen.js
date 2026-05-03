@@ -525,8 +525,15 @@ const createMapHTML = (token) => `
                           // 3c. POLYGON / RADIUS RENDERING (Exclude Shelters and Barangays from radius generation)
                           const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay');
                           
-                          if (m.area_geojson && m.area_geojson.type) {
-                              polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: m.area_geojson });
+                          // ROBUST PARSING: Handle cases where area_geojson might be a string
+                          let geom = m.area_geojson;
+                          if (typeof geom === 'string') {
+                              try { geom = JSON.parse(geom); } catch(e) { geom = null; }
+                          }
+
+                          if (geom && (geom.type || geom.geometry)) {
+                              const featureGeom = geom.type === 'Feature' ? geom.geometry : geom;
+                              polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: featureGeom });
                           } else if (!isAsset) {
                               // Only generate radius for Hazards and Incidents
                               const rLat = Number(m.lat);
