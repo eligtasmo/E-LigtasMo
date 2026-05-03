@@ -525,14 +525,14 @@ const createMapHTML = (token) => `
                           const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay');
                           
                           if (m.area_geojson && m.area_geojson.type) {
-                              polyFeatures.push({ type: 'Feature', properties: { type: m.type }, geometry: m.area_geojson });
+                              polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: m.area_geojson });
                           } else if (!isAsset) {
                               // Only generate radius for Hazards and Incidents
                               const rLat = Number(m.lat);
                               const rLng = Number(m.lng || m.lon);
                               polyFeatures.push({ 
                                 type: 'Feature', 
-                                properties: { type: m.type }, 
+                                properties: { type: type }, 
                                 geometry: {
                                     type: 'Polygon',
                                     coordinates: createCircle([rLng, rLat], 0.4)
@@ -861,7 +861,8 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
             sData.forEach(s => markers.push({
               id: `s${s.id}`, lat: parseFloat(s.lat), lng: parseFloat(s.lng),
               type: 'shelter', name: s.name, status: s.status,
-              capacity: s.capacity, occupancy: s.occupancy, contact: s.contact_number
+              capacity: s.capacity, occupancy: s.occupancy, contact: s.contact_number,
+              is_passable: true // Mission Assets are always passable
             }));
           }
         }
@@ -871,7 +872,8 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           if (bData?.success && bData.barangays) {
             bData.barangays.forEach(b => markers.push({
               id: `b${b.id}`, lat: parseFloat(b.lat), lng: parseFloat(b.lng),
-              type: b.type?.toLowerCase() || 'barangay', name: b.name, contact: b.contact
+              type: b.type?.toLowerCase() || 'barangay', name: b.name, contact: b.contact,
+              is_passable: true // Mission Assets are always passable
             }));
           }
         }
