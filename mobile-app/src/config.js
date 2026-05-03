@@ -46,13 +46,13 @@ const getApiUrl = () => {
         if (__DEV__ && host && isPrivateIp(host)) {
              const isTunnel = host.includes('exp.direct') || host.includes('ngrok');
              if (isTunnel) {
-                 return 'https://api.eligtasmo.site';
+                 return 'https://eligtasmo.site/api';
              }
              return `http://${host}${BASE_PATH}`;
         }
         
         // Fallback/Production: Use the actual live domain
-        return 'https://api.eligtasmo.site';
+        return 'https://eligtasmo.site/api';
     }
 
     // 3. Web Platform
@@ -60,7 +60,7 @@ const getApiUrl = () => {
         if (typeof window !== 'undefined') {
             const hostname = window.location.hostname;
             if (hostname === 'eligtasmo.site' || hostname === 'www.eligtasmo.site') {
-                return 'https://api.eligtasmo.site';
+                return 'https://eligtasmo.site/api';
             }
             return `http://${hostname}${BASE_PATH}`;
         }
