@@ -698,7 +698,13 @@ const ReportIncidentScreen = ({ navigation, route }) => {
           )}
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[
+          styles.footer, 
+          { 
+            bottom: Platform.OS === 'ios' ? insets.bottom + 100 : 90,
+            paddingBottom: Math.max(insets.bottom, 16) 
+          }
+        ]}>
           {stage === 'details' ? (
             <TouchableOpacity 
               onPress={handleSubmit} 
@@ -818,7 +824,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
 
                    <TouchableOpacity 
                     onPress={() => navigation.goBack()}
-                    style={styles.confCloseBtn}
+                     style={[styles.confCloseBtn, { marginBottom: Math.max(insets.bottom, 24) + 20 }]}
                   >
                     <Text style={styles.confCloseBtnText}>ACKNOWLEDGE MISSION</Text>
                   </TouchableOpacity>
@@ -881,7 +887,7 @@ const styles = {
   emptyText: { color: 'rgba(255,255,255,0.2)', fontSize: 13, fontWeight: '600', marginTop: 16, fontFamily: DS_FONT_UI },
   footer: { 
     position: 'absolute', 
-    bottom: Platform.OS === 'ios' ? 100 : 86, 
+    // Positioned dynamically in component
     left: 0, 
     right: 0, 
     paddingHorizontal: 24, 
@@ -912,7 +918,7 @@ const styles = {
   confObsText: { color: '#FFF', fontSize: 15, lineHeight: 24, fontWeight: '500' },
   confStatusCard: { marginHorizontal: 24, flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 4, marginTop: 16 },
   confStatusText: { flex: 1, color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 20, fontWeight: '500' },
-  confCloseBtn: { marginHorizontal: 24, height: 64, backgroundColor: '#F5B235', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 32, marginBottom: 40 },
+  confCloseBtn: { marginHorizontal: 24, height: 64, backgroundColor: '#F5B235', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 32 },
   confCloseBtnText: { color: '#000', fontSize: 15, fontWeight: '900', letterSpacing: 1, fontFamily: DS_FONT_UI }
 };
 
