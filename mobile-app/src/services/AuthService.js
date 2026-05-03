@@ -14,7 +14,16 @@ export const AuthService = {
         body: JSON.stringify({ username, password }),
       });
       
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log('[AuthService] Raw Response Received (First 100 chars):', responseText.substring(0, 100));
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('[AuthService] JSON Parse Error. Raw body:', responseText);
+        throw new Error('INVALID_JSON_RESPONSE');
+      }
       
       if (data.success) {
         const user = {
@@ -36,7 +45,7 @@ export const AuthService = {
         url: `${API_URL}/login.php`,
         type: error.constructor.name
       });
-      throw new Error('NETWORK_FAILURE');
+      throw error;
     }
   },
 
