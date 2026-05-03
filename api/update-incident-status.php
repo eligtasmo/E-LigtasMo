@@ -152,7 +152,6 @@ try {
                     curl_setopt($ch, CURLOPT_TIMEOUT, 15);
                     $responseRaw = curl_exec($ch);
                     $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    curl_close($ch);
                     $lineCoords = null;
                     if ($responseRaw && $statusCode >= 200 && $statusCode < 300) {
                         $json = json_decode($responseRaw, true);
@@ -167,7 +166,6 @@ try {
                         curl_setopt($och, CURLOPT_TIMEOUT, 10);
                         $oResp = curl_exec($och);
                         $oStat = curl_getinfo($och, CURLINFO_HTTP_CODE);
-                        curl_close($och);
                         if ($oResp && $oStat >= 200 && $oStat < 300) {
                             $oJson = json_decode($oResp, true);
                             if (isset($oJson['routes'][0]['geometry']['coordinates'])) {

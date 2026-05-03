@@ -203,10 +203,10 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
       allowedVehicles: ["Walking", "Motorcycle", "Car", "Truck"] as string[],
       description: "",
       medias: [] as string[],
-      reporter_name: user?.name || "",
-      reporter_contact: user?.phone || "",
+      reporter_name: user?.full_name || user?.username || "",
+      reporter_contact: user?.contact_number || "",
       reporter_email: user?.email || "",
-      barangay: user?.barangay || "",
+      barangay: user?.brgy_name || user?.barangay || "",
       role: (user?.role as any) || "brgy"
     });
     setLocationName("");
@@ -643,7 +643,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                 coordinates: polygonPoints.length < 3 
                   ? polygonPoints.map(p => [p[1], p[0]])
                   : [[...polygonPoints.map(p => [p[1], p[0]]), [polygonPoints[0][1], polygonPoints[0][0]]]]
-              }
+              } as any
             }}>
               {polygonPoints.length >= 3 && (
                 <Layer
@@ -669,7 +669,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
           {drawMode === 'pinpoint' && form.latitude && form.longitude && (() => {
             const circleFeat = circleGeoJSON(form.latitude!, form.longitude!, pinpointRadius);
             return (
-              <Source id="pinpoint-radius" type="geojson" data={circleFeat}>
+              <Source id="pinpoint-radius" type="geojson" data={circleFeat as any}>
                 <Layer id="pinpoint-radius-fill" type="fill" paint={{ 'fill-color': '#f59e0b', 'fill-opacity': 0.15 }} />
                 <Layer id="pinpoint-radius-line" type="line" paint={{ 'line-color': '#f59e0b', 'line-width': 2, 'line-dasharray': [4, 2] }} />
               </Source>
