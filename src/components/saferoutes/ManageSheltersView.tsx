@@ -41,11 +41,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 }
 
 const getShelterIcon = (shelter: { occupancy: number; capacity: number }) => {
-  if (shelter.capacity === 0) return yellowHouseIcon; // Default case for no capacity
-  const percentage = shelter.occupancy / shelter.capacity;
-  if (percentage >= 1) return redHouseIcon;
-  if (percentage >= 0.8) return yellowHouseIcon;
-  return greenHouseIcon;
+  return "shelter"; // Using the string type as defined in TacticalMarker
 };
 
 export default function ManageSheltersView() {
@@ -319,13 +315,15 @@ export default function ManageSheltersView() {
                 </div>
                 <button
                   onClick={() => {
-                    const role = (user?.role || '').toLowerCase();
-                    const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/barangay/safe-routes' : '/route-planner';
-                    navigate(`${base}?end=${selectedShelter.lat},${selectedShelter.lng}`);
+                    const shareUrl = `eligtasmo://route-planner?lat=${selectedShelter.lat}&lon=${selectedShelter.lng}&name=${encodeURIComponent(selectedShelter.name)}&autoStart=true`;
+                    navigator.clipboard.writeText(shareUrl);
+                    setShowToast('Mission link copied to clipboard.');
+                    setTimeout(() => setShowToast(null), 3000);
                   }}
-                  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                  className="mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
-                  Follow Safe Route
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9a3 3 0 100-2.684 3 3 0 000 2.684z" /></svg>
+                  Share Mission Link
                 </button>
               </div>
             </Popup>

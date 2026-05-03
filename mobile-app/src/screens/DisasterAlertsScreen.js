@@ -27,21 +27,33 @@ const DisasterAlertsScreen = ({ navigation }) => {
       const resNotif = await fetch(`${API_URL}/list-notifications.php?audience=all`, {
         headers: { 'X-Role': user.role || 'guest' },
       });
-      const dataNotif = await resNotif.json();
-      const systemAlerts = dataNotif?.success ? dataNotif.notifications : [];
+      const textNotif = await resNotif.text();
+      let systemAlerts = [];
+      try {
+        const dataNotif = JSON.parse(textNotif);
+        systemAlerts = dataNotif?.success ? dataNotif.notifications : [];
+      } catch (e) {
+        console.warn('[Alerts] Failed to parse notifications JSON. Body starts with:', textNotif.substring(0, 50));
+      }
 
       // 2. Fetch Social Pulse (PAGASA, PHILVOLCS, MDRRMO FB)
       const resSocial = await fetch(`${API_URL}/social-pulse.php`);
-      const dataSocial = await resSocial.json();
-      const socialAlerts = dataSocial?.status === 'success' ? dataSocial.data.map(post => ({
-        id: `social-${post.id}`,
-        title: post.source_name,
-        message: post.content,
-        type: post.risk_level === 'high' ? 'critical' : (post.risk_level === 'medium' ? 'warning' : 'info'),
-        created_at: post.posted_at,
-        url: post.url || post.post_url,
-        isSocial: true
-      })) : [];
+      const textSocial = await resSocial.text();
+      let socialAlerts = [];
+      try {
+        const dataSocial = JSON.parse(textSocial);
+        socialAlerts = dataSocial?.status === 'success' ? dataSocial.data.map(post => ({
+          id: `social-${post.id}`,
+          title: post.source_name,
+          message: post.content,
+          type: post.risk_level === 'high' ? 'critical' : (post.risk_level === 'medium' ? 'warning' : 'info'),
+          created_at: post.posted_at,
+          url: post.url || post.post_url,
+          isSocial: true
+        })) : [];
+      } catch (e) {
+        console.warn('[Alerts] Failed to parse social pulse JSON. Body starts with:', textSocial.substring(0, 50));
+      }
 
       // Combine and Sort by date
       const combined = [...systemAlerts, ...socialAlerts].sort((a, b) => 

@@ -10,7 +10,7 @@ import {
   Share,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Lucide from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
@@ -47,9 +47,24 @@ const QUICK_ACTIONS = [
   { id: 'hotlines', label: 'Emergency\nHotlines', icon: 'PhoneCall' },
 ];
 
+const formatRelativeTime = (dateString) => {
+  if (!dateString) return 'Just now';
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
 const HomeScreen = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const { isMobile } = useResponsive();
+  const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [weather, setWeather] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -261,6 +276,12 @@ const HomeScreen = ({ navigation }) => {
     if (id === 'more') navigation.navigate('Notifications');
   };
 
+  const floodReports = useMemo(() => {
+    return verifiedReports
+      .filter(r => (r.type || '').toLowerCase().includes('flood') || (r.description || '').toLowerCase().includes('baha'))
+      .slice(0, 6);
+  }, [verifiedReports]);
+
   return (
     <Screen withOrnament={false}>
       <StatusBar style="light" />
@@ -300,6 +321,84 @@ const HomeScreen = ({ navigation }) => {
               hourly={weatherDisplay.hourly}
               onPress={() => navigation.navigate('Weather')}
             />
+
+            {floodReports.length > 0 && (
+              <View style={styles.floodSection}>
+                <Row justify="space-between" align="center" style={{ marginBottom: 14 }}>
+                  <Text style={styles.communityHeading}>Recent Flood Reports</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('Reports', { filter: 'Flood' })} activeOpacity={0.85}>
+                    <Text style={styles.communityLink}>View All</Text>
+                  </TouchableOpacity>
+                </Row>
+                
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {floodReports.map((report, idx) => {
+                    const severity = String(report.severity || 'Moderate').toLowerCase();
+                    let color = '#3B82F6'; // Default Low/Blue
+                    if (severity === 'moderate' || severity === 'warning') color = '#F5B235'; // Moderate/Yellow
+                    if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444'; // High/Red
+
+                    return (
+                      <TouchableOpacity 
+                        key={report.id || idx}
+                        onPress={() => navigation.navigate('ReportDetails', { reportId: report.id })}
+                        activeOpacity={0.8}
+                        style={{ 
+                          width: (windowWidth - 32 - 20) / 3, // 3 per row
+                          backgroundColor: color + '15',
+                          borderRadius: 24,
+                          padding: 14,
+                          borderWidth: 1.5,
+                          borderColor: color + '30',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          minHeight: 125, 
+                        }}
+                      >
+                        <View style={{ alignItems: 'center', width: '100%' }}>
+                          <View style={{ 
+                            width: 38, 
+                            height: 38, 
+                            borderRadius: 14, 
+                            backgroundColor: color + '20', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            marginBottom: 8,
+                            borderWidth: 1,
+                            borderColor: color + '40'
+                          }}>
+                            <Lucide.Waves size={20} color={color} strokeWidth={2.5} />
+                          </View>
+                          <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '800', color: '#fff', textAlign: 'center', fontFamily: DS_FONT_UI, letterSpacing: -0.2 }}>
+                            {report.barangay || 'Sector'}
+                          </Text>
+                          <View style={{ 
+                            marginTop: 5, 
+                            paddingHorizontal: 8, 
+                            paddingVertical: 3, 
+                            borderRadius: 8, 
+                            backgroundColor: color + '25',
+                            borderWidth: 1,
+                            borderColor: color + '40'
+                          }}>
+                            <Text style={{ fontSize: 7, fontWeight: '900', color: color, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              {report.severity || 'Normal'}
+                            </Text>
+                          </View>
+                        </View>
+                        
+                        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', paddingTop: 8, marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <Lucide.Clock size={9} color="rgba(255,255,255,0.4)" />
+                          <Text style={{ fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.4)', fontFamily: DS_FONT_INPUT }}>
+                            {formatRelativeTime(report.created_at)}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             <View style={styles.communitySection}>
               <Row justify="space-between" align="center" style={{ marginBottom: 14 }}>
@@ -433,6 +532,10 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  floodSection: {
+    paddingTop: 4,
+    marginTop: 8
+  },
   communitySection: {
     paddingTop: 4,
     marginTop: 12

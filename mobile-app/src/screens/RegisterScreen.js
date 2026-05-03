@@ -15,61 +15,31 @@ import {
 const { ACCENT, TEXT_MAIN, TEXT_MUTED, BORDER } = AUTH_COLORS;
 const { FONT_HEADING, FONT_INPUT } = AUTH_FONTS;
 
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+
 const RegisterScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [agree, setAgree] = useState(false);
   const [errorText, setErrorText] = useState('');
-  const [formData, setFormData] = useState({
-    firstName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
 
-  const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleRegister = async () => {
-    const { firstName, email, password, confirmPassword } = formData;
-    
-    if (!firstName || !email || !password) {
-        setErrorText('Please complete all fields.');
-        return;
-    }
-    if (password !== confirmPassword) {
-        setErrorText('Passwords do not match.');
-        return;
-    }
-    if (!agree) {
-        setErrorText('You must agree to the Terms & Conditions.');
-        return;
+  const handleNext = async () => {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!isValidEmail(cleanEmail)) {
+      setErrorText('Please enter a valid email address.');
+      return;
     }
 
     setLoading(true);
     setErrorText('');
-    
     try {
-        const res = await fetch(`${AuthService.API_URL}/register.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                full_name: firstName,
-                email: email,
-                password: password,
-                role: 'resident'
-            })
-        });
-        const data = await res.json();
-        
-        if (data.success) {
-            navigation.replace('Login');
-        } else {
-            setErrorText(data.message || 'Registration failed.');
-        }
+      const result = await AuthService.sendOtp(cleanEmail, 'signup');
+      if (result?.success) {
+        navigation.navigate('VerifyOtp', { email: cleanEmail, mode: 'signup' });
+      } else {
+        setErrorText(result?.error || 'Unable to send verification code.');
+      }
     } catch (error) {
-        setErrorText('Network error. Please try again.');
+      setErrorText('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,75 +57,28 @@ const RegisterScreen = ({ navigation }) => {
         <Text style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 4, fontFamily: FONT_INPUT }}>Your Disaster Safety Companion</Text>
       </View>
 
-      <AuthField label="Name" icon={Lucide.User}>
-        <AuthTextInput
-          value={formData.firstName}
-          onChangeText={(text) => updateField('firstName', text)}
-          placeholder="Full Name"
-        />
-      </AuthField>
+      <View style={{ marginBottom: 30, paddingHorizontal: 10 }}>
+        <Text style={{ fontSize: 15, color: TEXT_MAIN, textAlign: 'center', lineHeight: 22, fontFamily: FONT_INPUT, fontWeight: '600' }}>
+            Start your registration
+        </Text>
+        <Text style={{ fontSize: 13, color: TEXT_MUTED, textAlign: 'center', lineHeight: 20, marginTop: 8, fontFamily: FONT_INPUT }}>
+            Enter your email address and we'll send you a verification code to get started.
+        </Text>
+      </View>
 
       <AuthField label="Email" icon={Lucide.Mail}>
         <AuthTextInput
-          value={formData.email}
-          onChangeText={(text) => updateField('email', text)}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
           autoCapitalize="none"
-          placeholder="Email or Phone Number"
+          placeholder="juan@example.com"
         />
       </AuthField>
 
-      <AuthField label="Password" icon={Lucide.Lock}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <AuthTextInput
-            value={formData.password}
-            onChangeText={(text) => updateField('password', text)}
-            secureTextEntry={!showPassword}
-            placeholder="••••••••••••"
-            style={{ flex: 1 }}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 8 }}>
-            {showPassword ? <Lucide.EyeOff size={20} color={TEXT_MUTED} /> : <Lucide.Eye size={20} color={TEXT_MUTED} />}
-          </TouchableOpacity>
-        </View>
-      </AuthField>
-
-      <AuthField label="Retype Password" icon={Lucide.Lock}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <AuthTextInput
-            value={formData.confirmPassword}
-            onChangeText={(text) => updateField('confirmPassword', text)}
-            secureTextEntry={!showPassword}
-            placeholder="••••••••••••"
-            style={{ flex: 1 }}
-          />
-        </View>
-      </AuthField>
-
-      <TouchableOpacity 
-        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25, marginTop: 10 }} 
-        onPress={() => setAgree(!agree)}
-      >
-          <View style={{ 
-              width: 18, 
-              height: 18, 
-              borderRadius: 4, 
-              borderWidth: 1, 
-              borderColor: BORDER, 
-              marginRight: 10, 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              backgroundColor: agree ? ACCENT : 'transparent' 
-          }}>
-              {agree && <Lucide.Check size={12} color="#000" strokeWidth={4} />}
-          </View>
-          <Text style={{ color: TEXT_MUTED, fontSize: 12, fontFamily: FONT_INPUT }}>
-            I agree to the <Text style={{ color: ACCENT }}>Terms & Conditions</Text>
-          </Text>
-      </TouchableOpacity>
-
       {errorText ? <Text style={{ color: '#FF4B4B', textAlign: 'center', marginBottom: 15, fontWeight: '600', fontFamily: FONT_INPUT }}>{errorText}</Text> : null}
 
-      <AuthPrimaryAction title="Sign Up" onPress={handleRegister} loading={loading} />
+      <AuthPrimaryAction title="Send Verification Code" onPress={handleNext} loading={loading} />
 
       <View style={{ alignItems: 'center', marginTop: 30, paddingBottom: 60 }}>
         <View style={{ flexDirection: 'row' }}>

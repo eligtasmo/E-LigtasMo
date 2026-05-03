@@ -255,7 +255,6 @@ const BrgyHomeScreen = ({ navigation, route }) => {
              <OperationalGrid 
                items={[
                  { label: 'WATER LEVEL', value: `${brgyData?.flood_depth_cm || '0.0'}cm` },
-                 { label: 'SAFE ROUTES', value: '2 ACTIVE' },
                  { label: 'SHELTER CAP', value: '42%' },
                  { label: 'EVAC PROTOCOL', value: 'ALPHA' }
                ]}
@@ -267,6 +266,7 @@ const BrgyHomeScreen = ({ navigation, route }) => {
              <Text style={[styles.sectionHeader, { marginLeft: 4 }]}>COMMAND CONSOLE</Text>
              {[
                 { title: 'Incident Ops', icon: 'ShieldCheck', color: '#F5B235', sub: 'Field verification console', route: 'BrgyOperations' },
+                { title: 'Pin Hub Location', icon: 'MapPin', color: '#EF4444', sub: 'Set barangay sector location', route: 'LocalMap' },
                 { title: 'Broadcast', icon: 'Radio', color: '#22C55E', sub: 'Citizen-wide alerts', route: 'Announcements' },
                 { title: 'Logistics', icon: 'Package', color: '#3B82F6', sub: 'Relief mission management', route: 'DonationDrives' }
              ].map((item, idx) => {

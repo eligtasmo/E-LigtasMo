@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../config';
 
@@ -21,7 +22,6 @@ export const AuthService = {
   login: async (username, password) => {
     try {
       const url = `${API_URL}/login.php`;
-      console.log('[AuthService] Attempting login at:', url);
       const response = await fetch(url, {
         method: 'POST',
         headers: { 
@@ -32,19 +32,15 @@ export const AuthService = {
       });
       
       const responseText = await response.text();
-      console.log('[AuthService] Raw Response Received (First 100 chars):', responseText.substring(0, 100));
-      
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (jsonError) {
-        console.error('[AuthService] JSON Parse Error. Raw body:', responseText);
-        await remoteLog('JSON_PARSE_ERROR', { url, body: responseText });
-        throw new Error('INVALID_JSON_RESPONSE');
+        console.error('[AuthService] JSON Parse Error:', responseText.substring(0, 100));
+        return { success: false, message: 'Invalid server response' };
       }
       
       if (data.success) {
-        // ... (rest of success logic remains same)
         const user = {
           id: data.id,
           username: data.username,
@@ -59,14 +55,7 @@ export const AuthService = {
       }
       return data;
     } catch (error) {
-      const errorPayload = {
-        message: error.message,
-        url: `${API_URL}/login.php`,
-        type: error.constructor.name
-      };
-      console.error('AuthService Login Error [Details]:', errorPayload);
-      await remoteLog('LOGIN_NETWORK_ERROR', errorPayload);
-      throw error;
+      return { success: false, message: 'Network connection failed' };
     }
   },
 
@@ -93,17 +82,27 @@ export const AuthService = {
       }
   },
 
-  sendOtp: async (email, purpose = 'signup') => {
+  sendOtp: async (email, type = 'signup') => {
     try {
       const response = await fetch(`${API_URL}/request-verification-code.php`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, purpose }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, purpose: type })
       });
-      return await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.warn('[AuthService] SendOTP failed to parse JSON:', responseText.substring(0, 100));
+        return { success: false, error: 'Server error: Invalid response format' };
+      }
+      return data;
     } catch (e) {
-      return { success: false, error: 'Unable to send verification code' };
+      return { success: false, error: 'Network error: Unable to reach server' };
     }
   },
 
@@ -111,13 +110,21 @@ export const AuthService = {
     try {
       const response = await fetch(`${API_URL}/verify-code.php`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, code })
       });
-      return await response.json();
-    } catch (e) {
-      return { success: false, error: 'Unable to verify code' };
+      const responseText = await response.text();
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.warn('[AuthService] verifyOtp failed to parse JSON:', responseText.substring(0, 100));
+        return { success: false, error: 'Server error: Invalid response format' };
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error: Unable to reach server' };
     }
   },
 
@@ -125,8 +132,10 @@ export const AuthService = {
     try {
       const response = await fetch(`${API_URL}/reset_password.php`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           email,
           code,

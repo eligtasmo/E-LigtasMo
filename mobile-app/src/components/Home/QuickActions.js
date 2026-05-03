@@ -13,7 +13,7 @@ export const QuickActions = ({ onAction }) => {
     { id: 'Map', label: 'Field Map', icon: 'Map', color: theme.primary, subtitle: 'LIVE SCAN' },
     { id: 'Weather', label: 'Weather', icon: 'CloudRain', color: theme.primary, subtitle: 'ATMOSPHERIC' },
     { id: 'Announcements', label: 'Intelligence', icon: 'Radio', color: theme.primary, subtitle: 'BROADCASTS' },
-    { id: 'RoutePlanner', label: 'Safe Routes', icon: 'Route', color: theme.primary, subtitle: 'LOGISTICS' },
+    { id: 'RoutePlanner', label: 'Route Planner', icon: 'Route', color: theme.primary, subtitle: 'LOGISTICS' },
   ];
 
   return (

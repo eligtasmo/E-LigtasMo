@@ -11,7 +11,8 @@ export const AnnouncementModal = ({
   setFormData, 
   onSave, 
   saving, 
-  isEditing 
+  isEditing,
+  barangays = []
 }) => {
   const { theme, atomic } = useTheme();
 
@@ -103,7 +104,7 @@ export const AnnouncementModal = ({
               </View>
 
               <Text style={[atomic.t.caption, atomic.t.bold, atomic.mb12, { color: theme.text }]}>Who can see this?</Text>
-              <View style={[atomic.row, { gap: 8, marginBottom: 24 }]}>
+              <View style={[atomic.row, { gap: 8, marginBottom: 16 }]}>
                 {audiences.map((aud) => (
                   <TouchableOpacity
                     key={aud}
@@ -128,6 +129,30 @@ export const AnnouncementModal = ({
                   </TouchableOpacity>
                 ))}
               </View>
+
+              {formData.audience === 'barangay' && (
+                <View style={atomic.mb24}>
+                  <Text style={[atomic.t.caption, atomic.t.bold, atomic.mb12, { color: theme.text }]}>Target Sector (e.g. Sumbrero Bato)</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                    {barangays.map((b) => (
+                      <TouchableOpacity
+                        key={b}
+                        onPress={() => setFormData({...formData, brgy_name: b})}
+                        style={{
+                          paddingHorizontal: 14,
+                          paddingVertical: 8,
+                          borderRadius: 10,
+                          backgroundColor: formData.brgy_name === b ? 'rgba(245,178,53,0.2)' : 'rgba(255,255,255,0.05)',
+                          borderWidth: 1,
+                          borderColor: formData.brgy_name === b ? '#F5B235' : 'rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: formData.brgy_name === b ? '#F5B235' : 'rgba(255,255,255,0.4)' }}>{b}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
               <TouchableOpacity 
                 style={[

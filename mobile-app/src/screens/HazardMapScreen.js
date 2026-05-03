@@ -118,10 +118,10 @@ const HazardMapScreen = ({ navigation, route }) => {
         }
       });
       const data = await response.json();
-      if (Array.isArray(data)) {
-        setHazards(data);
-        if (data.length > 0) {
-          const first = data[0];
+      if (data?.success && Array.isArray(data.hazards)) {
+        setHazards(data.hazards);
+        if (data.hazards.length > 0) {
+          const first = data.hazards[0];
           setSelectedHazardId(first.id);
           if (first.lat && first.lng) {
             setRegion({ lat: Number(first.lat), lng: Number(first.lng) });

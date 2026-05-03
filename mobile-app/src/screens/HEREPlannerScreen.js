@@ -351,13 +351,7 @@ const createMapHTML = (token) => `
           map.addSource('route-alt2', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
           map.addSource('route-alt3', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
 
-          map.addLayer({ id: 'route-alt3-casing', type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.3 } });
-          map.addLayer({ id: 'route-alt3-line',   type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#4B5563', 'line-width': 5, 'line-opacity': 0.45 } });
-          map.addLayer({ id: 'route-alt2-casing', type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.35 } });
-          map.addLayer({ id: 'route-alt2-line',   type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#6B7280', 'line-width': 6, 'line-opacity': 0.55 } });
-          map.addLayer({ id: 'route-alt1-casing', type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.4 } });
-          map.addLayer({ id: 'route-alt1-line',   type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#9CA3AF', 'line-width': 7, 'line-opacity': 0.65 } });
-          
+          // Tactical Polygons (Added BEFORE route layers to stay UNDER the path)
           map.addSource('tactical-polygons', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
           map.addLayer({ 
             id: 'tactical-polygons-fill', 
@@ -365,16 +359,12 @@ const createMapHTML = (token) => `
             source: 'tactical-polygons', 
             paint: { 
               'fill-color': [
-                'match', 
-                ['get', 'type'],
-                'flood', '#3B82F6',
-                'fire', '#FF4B4B',
-                'hazard', '#F59E0B',
-                'incident', '#EF4444',
-                'shelter', '#27AE60',
-                '#EF4444' 
+                'case',
+                ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
+                ['==', ['get', 'type'], 'flood'], '#3B82F6',
+                '#F59E0B'
               ], 
-              'fill-opacity': 0.25 
+              'fill-opacity': 0.18 
             } 
           });
           map.addLayer({ 
@@ -383,20 +373,23 @@ const createMapHTML = (token) => `
             source: 'tactical-polygons', 
             paint: { 
               'line-color': [
-                'match', 
-                ['get', 'type'],
-                'flood', '#3B82F6',
-                'fire', '#FF4B4B',
-                'hazard', '#F59E0B',
-                'incident', '#EF4444',
-                'shelter', '#27AE60',
-                '#EF4444' 
+                'case',
+                ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
+                ['==', ['get', 'type'], 'flood'], '#3B82F6',
+                '#F59E0B'
               ], 
               'line-width': 2, 
-              'line-dasharray': [2, 2] 
+              'line-dasharray': [3, 2] 
             } 
           });
 
+          map.addLayer({ id: 'route-alt3-casing', type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.3 } });
+          map.addLayer({ id: 'route-alt3-line',   type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#4B5563', 'line-width': 5, 'line-opacity': 0.45 } });
+          map.addLayer({ id: 'route-alt2-casing', type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.35 } });
+          map.addLayer({ id: 'route-alt2-line',   type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#6B7280', 'line-width': 6, 'line-opacity': 0.55 } });
+          map.addLayer({ id: 'route-alt1-casing', type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.4 } });
+          map.addLayer({ id: 'route-alt1-line',   type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#9CA3AF', 'line-width': 7, 'line-opacity': 0.65 } });
+          
           map.addLayer({ id: 'route-casing', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 12, 'line-opacity': 0.8 } });
           map.addLayer({ id: 'route-line', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2F7BFF', 'line-width': 7, 'line-opacity': 1.0 } });
           map.addLayer({ id: 'route-traffic', type: 'line', source: 'route-traffic', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-width': 4.5, 'line-opacity': 1.0, 'line-color': ['match', ['get', 'level'], 'heavy', '#EF4444', 'moderate', '#F59E0B', '#2F7BFF'] } });
@@ -537,16 +530,20 @@ const createMapHTML = (token) => `
                           let lat = Number(m.lat);
                           let lng = Number(m.lng || m.lon);
 
-                          // 3a. CENTROID CALCULATION (If Polygon)
-                          if (m.area_geojson && m.area_geojson.coordinates && m.area_geojson.type === 'Polygon') {
-                              const coords = m.area_geojson.coordinates[0];
+                          // 3a. AREA DATA RESOLUTION
+                          let geom = m.area_geojson;
+                          if (typeof geom === 'string') { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
+
+                          // 3b. CENTROID CALCULATION (For Pinpoint placement on Polygons)
+                          if (geom && geom.coordinates && geom.type === 'Polygon') {
+                              const coords = geom.coordinates[0];
                               let sumLat = 0, sumLng = 0;
                               coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
                               lng = sumLng / coords.length;
                               lat = sumLat / coords.length;
                           }
 
-                          // 3b. PINPOINT RENDERING
+                          // 3c. PINPOINT RENDERING (Three-Ring Style)
                           if (!window.activeMarkers[markerId]) {
                               var el = document.createElement('div');
                               el.className = 'tactical-marker';
@@ -554,39 +551,60 @@ const createMapHTML = (token) => `
                               let icon = 'alert';
                               let color = '#F59E0B';
                               const type = (m.type || '').toLowerCase();
-                              if (type.includes('fire')) { icon = 'fire'; color = '#FF4B4B'; }
-                              else if (type.includes('flood')) { icon = 'waves'; color = '#2F7BFF'; }
+                              if (type.includes('fire')) { icon = 'fire'; color = '#EF4444'; }
+                              else if (type.includes('flood')) { icon = 'waves'; color = '#3B82F6'; }
                               else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
-                              else if (type.includes('shelter')) { icon = 'home-heart'; color = '#27AE60'; }
+                              else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
+                              else if (type.includes('shelter')) { icon = 'shield-home'; color = '#059669'; }
+                              else if (type.includes('hall') || type.includes('barangay') || type.includes('brgy')) { icon = 'home'; color = '#3B82F6'; }
                               
-                              el.innerHTML = '<div style="background: ' + color + '; width: 32px; height: 32px; border-radius: 16px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">' +
-                                '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 18px; line-height: 1; display: block;"></i>' +
+                              el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
+                                  '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
+                                  '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + color + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
+                                  '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + color + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
+                                  '<div style="position: absolute; width: 14px; height: 14px; background: ' + color + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
+                                    '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                                  '</div>' +
                                 '</div>';
+
+                              el.addEventListener('click', () => {
+                                sendAppMsg({ type: 'MARKER_CLICK', marker: m });
+                              });
                               
                               window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
                           } else {
                               window.activeMarkers[markerId].setLngLat([lng, lat]);
                           }
 
-                          // 3c. POLYGON / RADIUS RENDERING
-                          if (m.area_geojson && m.area_geojson.type) {
-                              polyFeatures.push({ type: 'Feature', properties: { type: m.type }, geometry: m.area_geojson });
-                          } else {
-                              // Use the ORIGINAL coordinate for the radius center
-                              const rLat = Number(m.lat);
-                              const rLng = Number(m.lng || m.lon);
+                          // 3d. POLYGON / RADIUS RENDERING
+                          const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay') || type.includes('brgy');
+                          const severity = m.severity || 'Moderate';
+
+                          const addPoly = (g) => {
+                            if (!g) return;
+                            if (g.type === 'FeatureCollection') {
+                                (g.features || []).forEach(f => addPoly(f));
+                                return;
+                            }
+                            const finalGeom = g.type === 'Feature' ? g.geometry : g;
+                            if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type, severity: severity }, geometry: finalGeom });
+                          };
+
+                          if (geom) {
+                              addPoly(geom);
+                          } else if (!isAsset) {
                               polyFeatures.push({ 
                                 type: 'Feature', 
-                                properties: { type: m.type }, 
+                                properties: { type: type, severity: severity }, 
                                 geometry: {
                                     type: 'Polygon',
-                                    coordinates: createCircle([rLng, rLat], 0.4)
+                                    coordinates: createCircle([lng, lat], 0.4) 
                                 } 
                               });
                           }
                       });
 
-                      // 3c. CLEANUP REMOVED MARKERS
+                      // 3e. CLEANUP REMOVED MARKERS
                       Object.keys(window.activeMarkers).forEach(id => { 
                           if (!currentIds.includes(id)) { 
                               window.activeMarkers[id].remove(); 
@@ -594,9 +612,13 @@ const createMapHTML = (token) => `
                           } 
                       });
 
-                      // 3d. SYNC POLYGON SOURCE
+                      // 3f. SYNC POLYGON SOURCE & ORDERING
                       if (map.getSource('tactical-polygons')) {
                           map.getSource('tactical-polygons').setData({ type: 'FeatureCollection', features: polyFeatures });
+                          
+                          // Maintain layer order: Polygons stay BELOW route path
+                          if (map.getLayer('tactical-polygons-fill')) map.moveLayer('tactical-polygons-fill', 'route-casing');
+                          if (map.getLayer('tactical-polygons-line')) map.moveLayer('tactical-polygons-line', 'route-casing');
                       }
                   }
               }
@@ -791,42 +813,62 @@ const HEREPlannerScreen = ({ navigation, route: navRoute }) => {
   useEffect(() => {
     const fetchTactical = async () => {
       try {
-        const [hRes, iRes] = await Promise.all([
+        const [hRes, iRes, sRes, bRes] = await Promise.all([
           fetch(`${API_URL}/list-map-overlays.php`).catch(() => null),
-          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null)
+          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null),
+          fetch(`${API_URL}/shelters-list.php`).catch(() => null),
+          fetch(`${API_URL}/list-barangays.php`).catch(() => null)
         ]);
-        if (!hRes || !iRes) return;
-        const hData = await hRes.json();
-        const iData = await iRes.json();
+        
         const markers = [];
-        if (hData?.success) {
-          (hData.hazards || []).forEach(h => markers.push({ 
-            id: `h${h.id}`, 
-            lat: parseFloat(h.lat), 
-            lng: parseFloat(h.lng), 
-            type: 'hazard', 
-            area_geojson: h.area_geojson,
-            is_passable: h.is_passable === undefined ? true : !!h.is_passable
-          }));
-          (hData.reports || []).forEach(f => markers.push({ 
-            id: `f${f.id}`, 
-            lat: parseFloat(f.lat), 
-            lng: parseFloat(f.lng), 
-            type: 'flood', 
-            area_geojson: f.area_geojson,
-            is_passable: f.is_passable === undefined ? true : !!f.is_passable
-          }));
+
+        if (hRes) {
+          const hData = await hRes.json();
+          if (hData?.success) {
+            (hData.reports || []).forEach(h => markers.push({
+              id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
+              type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
+              severity: h.severity || 'Moderate',
+              is_passable: h.is_passable === undefined ? true : !!h.is_passable
+            }));
+          }
         }
-        if (iData?.success && iData.reports) {
-          iData.reports.forEach(r => markers.push({ 
-            id: `i${r.id}`, 
-            lat: parseFloat(r.lat), 
-            lng: parseFloat(r.lng), 
-            type: 'incident', 
-            area_geojson: r.area_geojson,
-            is_passable: r.is_passable === undefined ? true : !!r.is_passable
-          }));
+
+        if (iRes) {
+          const iData = await iRes.json();
+          if (iData?.success && iData.incidents) {
+            iData.incidents.forEach(r => markers.push({
+              id: `i${r.id}`, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
+              type: 'incident', area_geojson: r.area_geojson,
+              severity: r.severity || 'Moderate',
+              is_passable: r.is_passable === undefined ? true : !!r.is_passable
+            }));
+          }
         }
+
+        if (sRes) {
+          const sData = await sRes.json();
+          if (Array.isArray(sData)) {
+            sData.forEach(s => markers.push({
+              id: `s${s.id}`, lat: parseFloat(s.lat), lng: parseFloat(s.lng),
+              type: 'shelter', name: s.name, status: s.status,
+              capacity: s.capacity, occupancy: s.occupancy, contact: s.contact_number,
+              is_passable: true
+            }));
+          }
+        }
+
+        if (bRes) {
+          const bData = await bRes.json();
+          if (bData?.success && bData.barangays) {
+            bData.barangays.forEach(b => markers.push({
+              id: `b${b.id}`, lat: parseFloat(b.lat), lng: parseFloat(b.lng),
+              type: b.type?.toLowerCase() || 'barangay', name: b.name, contact: b.contact,
+              is_passable: true
+            }));
+          }
+        }
+
         setTacticalMarkers(markers);
       } catch (e) { console.warn("[Tactical] Marker fetch failed:", e); }
     };

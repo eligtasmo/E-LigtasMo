@@ -298,18 +298,7 @@ const createMapHTML = (token) => `
           map.addSource('route-alt2', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
           map.addSource('route-alt3', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
 
-          map.addLayer({ id: 'route-alt3-casing', type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.3 } });
-          map.addLayer({ id: 'route-alt3-line',   type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#4B5563', 'line-width': 5, 'line-opacity': 0.45 } });
-          map.addLayer({ id: 'route-alt2-casing', type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.35 } });
-          map.addLayer({ id: 'route-alt2-line',   type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#6B7280', 'line-width': 6, 'line-opacity': 0.55 } });
-          map.addLayer({ id: 'route-alt1-casing', type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.4 } });
-          map.addLayer({ id: 'route-alt1-line',   type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#9CA3AF', 'line-width': 7, 'line-opacity': 0.65 } });
-          
-          map.addLayer({ id: 'route-casing', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 12, 'line-opacity': 0.8 } });
-          map.addLayer({ id: 'route-line', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2F7BFF', 'line-width': 7, 'line-opacity': 1.0 } });
-          map.addLayer({ id: 'route-traffic', type: 'line', source: 'route-traffic', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-width': 4.5, 'line-opacity': 1.0, 'line-color': ['match', ['get', 'level'], 'heavy', '#EF4444', 'moderate', '#F59E0B', '#2F7BFF'] } });
-
-          // Tactical Polygons (Added LAST to be on TOP of route)
+          // Tactical Polygons (Added BEFORE route layers to stay UNDER the path)
           map.addSource('tactical-polygons', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
           map.addLayer({ 
             id: 'tactical-polygons-fill', 
@@ -340,6 +329,17 @@ const createMapHTML = (token) => `
               'line-dasharray': [3, 2] 
             } 
           });
+
+          map.addLayer({ id: 'route-alt3-casing', type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.3 } });
+          map.addLayer({ id: 'route-alt3-line',   type: 'line', source: 'route-alt3', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#4B5563', 'line-width': 5, 'line-opacity': 0.45 } });
+          map.addLayer({ id: 'route-alt2-casing', type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.35 } });
+          map.addLayer({ id: 'route-alt2-line',   type: 'line', source: 'route-alt2', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#6B7280', 'line-width': 6, 'line-opacity': 0.55 } });
+          map.addLayer({ id: 'route-alt1-casing', type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#111', 'line-width': 12, 'line-opacity': 0.4 } });
+          map.addLayer({ id: 'route-alt1-line',   type: 'line', source: 'route-alt1', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#9CA3AF', 'line-width': 7, 'line-opacity': 0.65 } });
+          
+          map.addLayer({ id: 'route-casing', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#FFFFFF', 'line-width': 12, 'line-opacity': 0.8 } });
+          map.addLayer({ id: 'route-line', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#2F7BFF', 'line-width': 7, 'line-opacity': 1.0 } });
+          map.addLayer({ id: 'route-traffic', type: 'line', source: 'route-traffic', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-width': 4.5, 'line-opacity': 1.0, 'line-color': ['match', ['get', 'level'], 'heavy', '#EF4444', 'moderate', '#F59E0B', '#2F7BFF'] } });
 
           const sendAppMsg = (data) => { try { const msg = JSON.stringify(data); if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) { window.ReactNativeWebView.postMessage(msg); } } catch (e) {} };
           map.on('movestart', (e) => { if (e.originalEvent) { window.manualMode = true; sendAppMsg({ type: 'MAP_INTERACTION', manual: true }); } });
@@ -436,7 +436,8 @@ const createMapHTML = (token) => `
                   }
 
                   if (data.forceZoom) {
-                      map.jumpTo({ center: userPos, zoom: data.forceZoom });
+                      const finalCenter = data.targetLoc ? [Number(data.targetLoc.lon), Number(data.targetLoc.lat)] : userPos;
+                      map.jumpTo({ center: finalCenter, zoom: data.forceZoom });
                       window.firstFixDone = true;
                   } else if (!window.manualMode) {
                       if (isNav) {
@@ -458,112 +459,112 @@ const createMapHTML = (token) => `
                   window.safeSetLayout('route-alt3-casing', 'visibility', isNav ? 'none' : 'visible');
                   window.safeSetLayout('route-traffic', 'visibility', isNav ? 'visible' : 'none');
 
-                  if (data.forceZoom) {
-                      map.flyTo({ center: userPos, zoom: data.forceZoom, pitch: isNav ? 65 : 0, bearing: 0, duration: 2000, essential: true });
+          if (data.forceZoom) {
+              const finalCenter = data.targetLoc ? [Number(data.targetLoc.lon), Number(data.targetLoc.lat)] : userPos;
+              map.flyTo({ center: finalCenter, zoom: data.forceZoom, pitch: isNav ? 65 : 0, bearing: 0, duration: 2000, essential: true });
+          }
+          
+          if (data.tacticalMarkers && Array.isArray(data.tacticalMarkers)) {
+              if (!window.activeMarkers) window.activeMarkers = {};
+              var polyFeatures = [];
+              var currentIds = data.tacticalMarkers.map(m => 'marker-' + m.id);
+
+              data.tacticalMarkers.forEach(m => {
+                  const markerId = 'marker-' + m.id;
+                  let lat = Number(m.lat);
+                  let lng = Number(m.lng || m.lon);
+
+                  // 3a. AREA DATA RESOLUTION
+                  let geom = m.area_geojson;
+                  if (typeof geom === 'string') { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
+
+                  // 3b. CENTROID CALCULATION (For Pinpoint placement on Polygons)
+                  if (geom && geom.coordinates && geom.type === 'Polygon') {
+                      const coords = geom.coordinates[0];
+                      let sumLat = 0, sumLng = 0;
+                      coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+                      lng = sumLng / coords.length;
+                      lat = sumLat / coords.length;
                   }
-                  if (window.lastNavState !== isNav) {
-                      window.lastNavState = isNav;
-                      if (isNav) { map.dragRotate.enable(); map.touchZoomRotate.enableRotation(); } 
-                      else { map.dragRotate.disable(); map.touchZoomRotate.disableRotation(); if (Math.abs(map.getPitch()) > 1) map.easeTo({ pitch: 0, bearing: 0, duration: 400 }); }
-                  }
-                  // 3. TACTICAL OVERLAYS (POLYGONS & POINTS)
-                  if (data.tacticalMarkers && Array.isArray(data.tacticalMarkers)) {
-                      if (!window.activeMarkers) window.activeMarkers = {};
-                      var polyFeatures = [];
-                      var currentIds = data.tacticalMarkers.map(m => 'marker-' + m.id);
 
-                      data.tacticalMarkers.forEach(m => {
-                          const markerId = 'marker-' + m.id;
-                          let lat = Number(m.lat);
-                          let lng = Number(m.lng || m.lon);
+                  // 3c. PINPOINT RENDERING (Three-Ring Style)
+                  if (!window.activeMarkers[markerId]) {
+                      var el = document.createElement('div');
+                      el.className = 'tactical-marker';
+                      
+                      let icon = 'alert';
+                      let color = '#F59E0B';
+                      const type = (m.type || '').toLowerCase();
+                      if (type.includes('fire')) { icon = 'fire'; color = '#EF4444'; }
+                      else if (type.includes('flood')) { icon = 'waves'; color = '#3B82F6'; }
+                      else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
+                      else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
+                      else if (type.includes('shelter')) { icon = 'shield-home'; color = '#059669'; }
+                      else if (type.includes('hall') || type.includes('barangay') || type.includes('brgy')) { icon = 'home'; color = '#3B82F6'; }
+                      
+                      el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
+                          '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
+                          '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + color + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
+                          '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + color + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
+                          '<div style="position: absolute; width: 14px; height: 14px; background: ' + color + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
+                            '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                          '</div>' +
+                        '</div>';
 
-                          // 3a. CENTROID CALCULATION (If Polygon)
-                          if (m.area_geojson && m.area_geojson.coordinates && m.area_geojson.type === 'Polygon') {
-                              const coords = m.area_geojson.coordinates[0];
-                              let sumLat = 0, sumLng = 0;
-                              coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-                              lng = sumLng / coords.length;
-                              lat = sumLat / coords.length;
-                          }
-
-                          // 3b. PINPOINT RENDERING
-                          if (!window.activeMarkers[markerId]) {
-                              var el = document.createElement('div');
-                              el.className = 'tactical-marker';
-                              
-                              let icon = 'alert';
-                              let color = '#F59E0B';
-                              const type = (m.type || '').toLowerCase();
-                              if (type.includes('fire')) { icon = 'fire'; color = '#FF4B4B'; }
-                              else if (type.includes('flood')) { icon = 'waves'; color = '#2F7BFF'; }
-                              else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
-                              else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
-                              else if (type.includes('shelter')) { icon = 'home-heart'; color = '#27AE60'; }
-                              else if (type.includes('hall') || type.includes('barangay')) { icon = 'office-building'; color = '#9333EA'; }
-                              
-                              el.innerHTML = '<div style="background: ' + color + '; width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); box-sizing: border-box; overflow: hidden;">' +
-                                '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 18px; line-height: 1; display: block; width: 18px; height: 18px; text-align: center;"></i>' +
-                                '</div>';
-
-                              el.addEventListener('click', () => {
-                                sendAppMsg({ type: 'MARKER_CLICK', marker: m });
-                              });
-                              
-                              window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
-                          } else {
-                              window.activeMarkers[markerId].setLngLat([lng, lat]);
-                          }
-
-                          // 3c. POLYGON / RADIUS RENDERING (Exclude Shelters and Barangays from radius generation)
-                          const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay');
-                          
-                          let geom = m.area_geojson;
-                          if (typeof geom === 'string') { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
-
-                          const addPoly = (g) => {
-                            if (!g) return;
-                            if (g.type === 'FeatureCollection') {
-                                (g.features || []).forEach(f => addPoly(f));
-                                return;
-                            }
-                            const finalGeom = g.type === 'Feature' ? g.geometry : g;
-                            if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type, severity: m.severity || 'Normal' }, geometry: finalGeom });
-                          };
-
-                          if (geom) {
-                              addPoly(geom);
-                          } else if (!isAsset) {
-                              const rLat = Number(m.lat);
-                              const rLng = Number(m.lng || m.lon);
-                              polyFeatures.push({ 
-                                type: 'Feature', 
-                                properties: { type: type, severity: m.severity || 'Normal' }, 
-                                geometry: {
-                                    type: 'Polygon',
-                                    coordinates: createCircle([rLng, rLat], 0.1)
-                                } 
-                              });
-                          }
+                      el.addEventListener('click', () => {
+                        sendAppMsg({ type: 'MARKER_CLICK', marker: m });
                       });
-
-                      // 3c. CLEANUP REMOVED MARKERS
-                      Object.keys(window.activeMarkers).forEach(id => { 
-                          if (!currentIds.includes(id)) { 
-                              window.activeMarkers[id].remove(); 
-                              delete window.activeMarkers[id]; 
-                          } 
-                      });
-
-                      // 3d. SYNC POLYGON SOURCE
-                      if (map.getSource('tactical-polygons')) {
-                          console.log("[Tactical] Syncing Polygons:", polyFeatures.length);
-                          map.getSource('tactical-polygons').setData({ type: 'FeatureCollection', features: polyFeatures });
-                          
-                          // Ensure polygons are above the route but below markers
-                          if (map.getLayer('tactical-polygons-fill')) map.moveLayer('tactical-polygons-fill');
-                          if (map.getLayer('tactical-polygons-line')) map.moveLayer('tactical-polygons-line');
-                      }
+                      
+                      window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+                  } else {
+                      window.activeMarkers[markerId].setLngLat([lng, lat]);
                   }
+
+                  // 3d. POLYGON / RADIUS RENDERING
+                  const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay') || type.includes('brgy');
+                  const severity = m.severity || 'Moderate';
+
+                  const addPoly = (g) => {
+                    if (!g) return;
+                    if (g.type === 'FeatureCollection') {
+                        (g.features || []).forEach(f => addPoly(f));
+                        return;
+                    }
+                    const finalGeom = g.type === 'Feature' ? g.geometry : g;
+                    if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type, severity: severity }, geometry: finalGeom });
+                  };
+
+                  if (geom) {
+                      addPoly(geom);
+                  } else if (!isAsset) {
+                      polyFeatures.push({ 
+                        type: 'Feature', 
+                        properties: { type: type, severity: severity }, 
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: createCircle([lng, lat], 0.4) 
+                        } 
+                      });
+                  }
+              });
+
+              // 3e. CLEANUP REMOVED MARKERS
+              Object.keys(window.activeMarkers).forEach(id => { 
+                  if (!currentIds.includes(id)) { 
+                      window.activeMarkers[id].remove(); 
+                      delete window.activeMarkers[id]; 
+                  } 
+              });
+
+              // 3f. SYNC POLYGON SOURCE & ORDERING
+              if (map.getSource('tactical-polygons')) {
+                  map.getSource('tactical-polygons').setData({ type: 'FeatureCollection', features: polyFeatures });
+                  
+                  // Maintain layer order: Polygons stay BELOW route path
+                  if (map.getLayer('tactical-polygons-fill')) map.moveLayer('tactical-polygons-fill', 'route-casing');
+                  if (map.getLayer('tactical-polygons-line')) map.moveLayer('tactical-polygons-line', 'route-casing');
+              }
+          }
               }
 
               if (data.destLoc) {
@@ -597,11 +598,13 @@ const createMapHTML = (token) => `
 </html>
 `;
 
-const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }) => {
+const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets, currentUser }) => {
   if (!marker) return null;
   const type = marker.type || 'Asset';
   const isShelter = type.includes('shelter');
   const isBrgy = type.includes('hall') || type.includes('barangay');
+  const isIncident = type.includes('incident') || type.includes('hazard');
+  const isMyReport = isIncident && currentUser && marker.user_id == currentUser.id;
 
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 8500, backgroundColor: 'rgba(0,0,0,0.4)' }]}>
@@ -629,10 +632,15 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }
           <View style={{ flex: 1 }}>
             <Row align="center" style={{ marginBottom: 6 }}>
               <View style={{ backgroundColor: isShelter ? 'rgba(39,174,96,0.15)' : (isBrgy ? 'rgba(147,51,234,0.15)' : 'rgba(245,158,11,0.15)'), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderSize: 1, borderColor: isShelter ? 'rgba(39,174,96,0.3)' : (isBrgy ? 'rgba(147,51,234,0.3)' : 'rgba(245,158,11,0.3)') }}>
-                <Text style={{ color: isShelter ? '#27AE60' : (isBrgy ? '#A855F7' : '#F59E0B'), fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>{type}</Text>
+                <Text style={{ color: isShelter ? '#27AE60' : (isBrgy ? '#A855F7' : '#F59E0B'), fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>{isMyReport ? 'MY REPORT' : type}</Text>
               </View>
+              {isIncident && (
+                <View style={{ marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}>
+                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: '800' }}>{marker.status?.toUpperCase() || 'ACTIVE'}</Text>
+                </View>
+              )}
             </Row>
-            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.5 }}>{marker.name || 'Tactical Asset'}</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.5 }}>{marker.name || marker.type?.toUpperCase() || 'Tactical Asset'}</Text>
           </View>
           <TouchableOpacity onPress={onCancel} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' }}>
             <Lucide.X size={18} color="rgba(255,255,255,0.4)" />
@@ -646,9 +654,15 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }
               <Text style={{ color: '#F3EEE6', fontSize: 14, fontWeight: '700' }}>{marker.occupancy} / {marker.capacity}</Text>
             </Row>
           )}
+          {isIncident && (
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Intelligence Detail</Text>
+              <Text style={{ color: '#F3EEE6', fontSize: 14, lineHeight: 20 }}>{marker.description || 'No detailed intel provided for this entry.'}</Text>
+            </View>
+          )}
           <Row align="center" justify="between">
-            <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600' }}>Hotline / Comms</Text>
-            <Text style={{ color: '#F3EEE6', fontSize: 14, fontWeight: '700' }}>{marker.contact || 'SECURE_LINE_ONLY'}</Text>
+            <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600' }}>{isIncident ? 'Sync Time' : 'Hotline / Comms'}</Text>
+            <Text style={{ color: '#F3EEE6', fontSize: 14, fontWeight: '700' }}>{isIncident ? (marker.time || 'RECENT') : (marker.contact || 'SECURE_LINE_ONLY')}</Text>
           </Row>
         </View>
 
@@ -823,6 +837,34 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           setStartCoords({ lat: parseFloat(params.sLat), lon: parseFloat(params.sLon) });
         }
 
+        // Handle specific report zoom/briefing
+        if (params.reportId || params.name) {
+            console.log('[RoutePlanner] Targeted asset/report zoom:', params.reportId || params.name);
+            const focusOnMarker = async () => {
+                // Wait a bit for tactical markers to load
+                let attempts = 0;
+                while (tacticalMarkers.length === 0 && attempts < 10) {
+                    await new Promise(r => setTimeout(r, 500));
+                    attempts++;
+                }
+                const target = tacticalMarkers.find(m => 
+                    (params.reportId && (m.id === `i${params.reportId}` || m.id === params.reportId)) ||
+                    (params.name && m.name === decodeURIComponent(params.name))
+                );
+                if (target) {
+                    setSelectedMarker(target);
+                    webviewRef.current?.postMessage(JSON.stringify({
+                        type: 'SYNC',
+                        userLoc: startCoords,
+                        forceZoom: 18,
+                        recenter: true,
+                        targetLoc: { lat: target.lat, lon: target.lng || target.lon }
+                    }));
+                }
+            };
+            focusOnMarker();
+        }
+
         if (params.autoStart === 'true' || params.autoStart === true) {
           console.log('[RoutePlanner] Auto-start triggered -> Triggering Background Calculation');
           setIsPlannerCollapsed(true);
@@ -831,7 +873,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         }
       }
     }
-  }, [navRoute.params]);
+  }, [navRoute.params, tacticalMarkers]);
 
   useEffect(() => {
     if (pendingRedirect && startCoords && destCoords && !isNavigating && !isCalculating) {
@@ -866,11 +908,16 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
         if (iRes) {
           const iData = await iRes.json();
-          if (iData?.success && iData.reports) {
-            iData.reports.forEach(r => markers.push({
+          if (iData?.success && iData.incidents) {
+            iData.incidents.forEach(r => markers.push({
               id: `i${r.id}`, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
               type: 'incident', area_geojson: r.area_geojson,
-              is_passable: r.is_passable === undefined ? true : !!r.is_passable
+              severity: r.severity || 'Moderate',
+              is_passable: r.is_passable === undefined ? true : !!r.is_passable,
+              status: r.status,
+              description: r.description,
+              time: r.time,
+              user_id: r.user_id
             }));
           }
         }
@@ -1030,7 +1077,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           const lat = (geojson?.type === 'Feature' ? geojson.geometry?.coordinates?.[1] : geojson?.coordinates?.[1]) || fallbackLat;
           const lng = (geojson?.type === 'Feature' ? geojson.geometry?.coordinates?.[0] : geojson?.coordinates?.[0]) || fallbackLng;
           if (!lat || !lng) return null;
-          return createCircle(lat, lng, 0.1); // 100m radius
+          return createCircle(lat, lng, 0.4); // Increased to 400m for better tactical avoidance
         }
         return geojson.type === 'Feature' ? geojson.geometry : geojson;
       };
@@ -1181,7 +1228,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
   const handleRedirect = (asset, name) => {
     setDestination(name);
-    setDestCoords({ lat: asset.lat, lng: asset.lng });
+    setDestCoords({ lat: asset.lat, lon: asset.lng });
     setIsNavigating(false);
   };
 
@@ -1256,6 +1303,12 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
                 setIsUserInteraction(d.manual);
               } else if (d.type === 'MARKER_CLICK') {
                 setSelectedMarker(d.marker);
+                webviewRef.current?.postMessage(JSON.stringify({
+                  type: 'SYNC',
+                  forceZoom: 18,
+                  recenter: true,
+                  targetLoc: { lat: d.marker.lat, lon: d.marker.lng || d.marker.lon }
+                }));
               }
             } catch (err) { }
           }}
@@ -1364,10 +1417,11 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               <TacticalMarkerBriefing
                 marker={selectedMarker}
                 insets={insets}
+                currentUser={user}
                 onCancel={() => setSelectedMarker(null)}
                 onSetAsDestination={(m) => {
                   setDestination(m.name || m.type);
-                  setDestCoords({ lat: m.lat, lng: m.lng });
+                  setDestCoords({ lat: m.lat, lon: m.lng });
                   setSelectedMarker(null);
                 }}
               />

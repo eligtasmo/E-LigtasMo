@@ -10,6 +10,8 @@ import { API_URL } from '../config';
 import { Screen, Container, Row, Col, Heading, DS_FONT_UI, DS_FONT_INPUT } from '../components/DesignSystem';
 import { NotificationActivityCard } from '../components/Notifications/NotificationActivityCard';
 
+import * as Linking from 'expo-linking';
+
 const NotificationsScreen = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const [notifications, setNotifications] = useState([]);
@@ -171,7 +173,14 @@ const NotificationsScreen = ({ navigation }) => {
           }
           renderItem={({ item }) => (
             <View style={{ paddingHorizontal: 16 }}>
-              <NotificationActivityCard item={item} onPress={() => {}} />
+              <NotificationActivityCard 
+                item={item} 
+                onPress={() => {
+                  if (item.external_link) {
+                    Linking.openURL(item.external_link);
+                  }
+                }} 
+              />
             </View>
           )}
           ListEmptyComponent={

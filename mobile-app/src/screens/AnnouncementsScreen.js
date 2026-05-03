@@ -37,10 +37,21 @@ const AnnouncementsScreen = ({ navigation }) => {
     audience: 'all'
   });
 
+  const [barangays, setBarangays] = useState([]);
+
   useEffect(() => {
     checkUserRole();
     fetchAnnouncements();
+    fetchBarangays();
   }, []);
+
+  const fetchBarangays = async () => {
+    try {
+      const res = await fetch(`${API_URL}/list-barangays.php`);
+      const data = await res.json();
+      if (data.success) setBarangays(data.barangays.map(b => b.name));
+    } catch (e) { }
+  };
 
   const checkUserRole = async () => {
     try {
@@ -314,15 +325,16 @@ const AnnouncementsScreen = ({ navigation }) => {
                 </MotiView>
               )}
 
-              <AnnouncementModal
-                visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-                formData={formData}
-                setFormData={setFormData}
-                onSave={handleSaveAnnouncement}
-                saving={saving}
-                isEditing={isEditing}
-              />
+              <AnnouncementModal 
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        formData={formData}
+        setFormData={setFormData}
+        onSave={handleSaveAnnouncement}
+        saving={saving}
+        isEditing={isEditing}
+        barangays={barangays}
+      />
             </Screen>
   );
 };

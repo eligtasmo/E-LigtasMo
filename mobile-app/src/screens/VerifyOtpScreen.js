@@ -59,7 +59,7 @@ const VerifyOtpScreen = ({ navigation, route }) => {
       if (mode === 'reset') {
         navigation.replace('ResetPassword', { email, code });
       } else {
-        navigation.replace('Login');
+        navigation.replace('RegisterDetails', { email, code });
       }
     } catch (error) {
       setErrorText('Unable to verify the code right now.');

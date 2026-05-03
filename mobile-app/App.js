@@ -20,6 +20,7 @@ import PlaceholderScreen from './src/screens/PlaceholderScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import RegisterDetailsScreen from './src/screens/RegisterDetailsScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import VerifyOtpScreen from './src/screens/VerifyOtpScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
@@ -184,7 +185,7 @@ function ResidentTabs() {
           },
         })}
         options={{
-          tabBarLabel: 'Safe Routes',
+          tabBarLabel: 'Planner',
         }}
       />
       <Tab.Screen 
@@ -403,6 +404,7 @@ const linking = {
       Landing: '',
       Login: 'login',
       Register: 'register',
+      RegisterDetails: 'register-details',
       ForgotPassword: 'forgot-password',
       VerifyOtp: 'verify-code',
       ResetPassword: 'reset-password',
@@ -434,12 +436,13 @@ const linking = {
       CoordinatorDashboard: 'coordinator',
       BrgyDashboard: 'brgy',
       RoutePlanner: {
-        path: 'route-planner/:lat?/:lon?/:name?/:mode?/:autoStart?/:sLat?/:sLon?',
+        path: 'route-planner/:lat?/:lon?/:name?/:mode?/:autoStart?/:sLat?/:sLon?/:reportId?',
         parse: {
           lat: (lat) => lat ? parseFloat(lat) : null,
           lon: (lon) => lon ? parseFloat(lon) : null,
           sLat: (sLat) => sLat ? parseFloat(sLat) : null,
           sLon: (sLon) => sLon ? parseFloat(sLon) : null,
+          reportId: (id) => id || null,
           name: (name) => name ? decodeURIComponent(name) : '',
           mode: (mode) => mode || 'driving-car',
           autoStart: (autoStart) => autoStart === 'true',
@@ -509,6 +512,7 @@ const NavigationContent = ({ initialNavState, linking }) => {
             <Stack.Screen name="Landing" component={LandingScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="RegisterDetails" component={RegisterDetailsScreen} />
           </>
         ) : (
           // --- APP STACK ---

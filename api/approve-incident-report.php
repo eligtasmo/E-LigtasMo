@@ -33,7 +33,7 @@ try {
 
 try {
     // 1. Get report details first
-    $stmtGet = $pdo->prepare("SELECT barangay, description, user_id FROM incident_reports WHERE id = ?");
+    $stmtGet = $pdo->prepare("SELECT barangay, description, user_id, latitude, longitude FROM incident_reports WHERE id = ?");
     $stmtGet->execute([$id]);
     $report = $stmtGet->fetch(PDO::FETCH_ASSOC);
 
@@ -53,12 +53,14 @@ try {
         $stmtNotif = $pdo->prepare($sqlNotif);
         $stmtNotif->execute([$notifTitle, $notifMsg, $notifType, $notifAudience, $report['barangay']]);
 
-        // Targeted notification for reporter
+        // Targeted notification for reporter with Deep Link
         if ($report['user_id'] > 0) {
-            $personalMsg = "Your report (ID: $id) has been verified by Tactical Command. Thank you for the field intel.";
-            $sqlPersonal = "INSERT INTO notifications (title, message, type, audience, user_id, created_at) VALUES (?, ?, ?, 'residents', ?, NOW())";
+            $personalMsg = "Your report (ID: $id) has been verified by Tactical Command. Tap to view on map.";
+            $deepLink = "eligtasmo://route-planner?lat=" . ($report['latitude'] ?? '14.28') . "&lon=" . ($report['longitude'] ?? '121.41') . "&name=Verified%20Report&reportId=$id";
+            
+            $sqlPersonal = "INSERT INTO notifications (title, message, type, audience, user_id, external_link, created_at) VALUES (?, ?, ?, 'residents', ?, ?, NOW())";
             $stmtPersonal = $pdo->prepare($sqlPersonal);
-            $stmtPersonal->execute(["Intelligence Verified", $personalMsg, "success", $report['user_id']]);
+            $stmtPersonal->execute(["Intelligence Verified", $personalMsg, "success", $report['user_id'], $deepLink]);
         }
     }
 

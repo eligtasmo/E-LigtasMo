@@ -4,8 +4,23 @@ import * as Lucide from 'lucide-react-native';
 import { Card, Row, Col, DS_FONT_UI, DS_FONT_INPUT } from '../DesignSystem';
 import { useTheme } from '../../context/ThemeContext';
 
+import { Share } from 'react-native';
+
 export const AlertCard = ({ item, onPress }) => {
   const { theme } = useTheme();
+
+  const handleShare = async () => {
+    try {
+      const shareUrl = item.url || item.post_url || 'https://eligtasmo.site';
+      await Share.share({
+        message: `${item.title}\n\n${item.message}\n\nView tactical details: ${shareUrl}`,
+        url: shareUrl,
+        title: item.title
+      });
+    } catch (error) {
+      console.error('Share error:', error);
+    }
+  };
 
   const getAlertConfig = (type) => {
     const t = String(type || 'info').toLowerCase();
@@ -82,23 +97,43 @@ export const AlertCard = ({ item, onPress }) => {
         </View>
       </View>
 
-      <TouchableOpacity 
-        onPress={onPress}
-        activeOpacity={0.86}
-        style={{ 
-          height: 38, 
-          borderRadius: 19, 
-          backgroundColor: '#FFFFFF', 
-          flexDirection: 'row', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.12)'
-        }}
-      >
-        <Lucide.ExternalLink size={12} color="#000" style={{ marginRight: 6 }} />
-        <Text style={{ color: '#000', fontSize: 11, fontWeight: '700', fontFamily: DS_FONT_UI }}>Show Full Advisory</Text>
-      </TouchableOpacity>
+      <Row gap={10} style={{ marginTop: 14 }}>
+        <TouchableOpacity 
+          onPress={onPress}
+          activeOpacity={0.86}
+          style={{ 
+            flex: 1,
+            height: 42, 
+            borderRadius: 14, 
+            backgroundColor: '#FFFFFF', 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.12)'
+          }}
+        >
+          <Lucide.ExternalLink size={14} color="#000" style={{ marginRight: 8 }} />
+          <Text style={{ color: '#000', fontSize: 12, fontWeight: '700', fontFamily: DS_FONT_UI }}>ANALYZE INTEL</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={handleShare}
+          activeOpacity={0.8}
+          style={{ 
+            width: 42, 
+            height: 42, 
+            borderRadius: 14, 
+            backgroundColor: 'rgba(255,255,255,0.06)', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.1)'
+          }}
+        >
+          <Lucide.Share2 size={18} color="#F4F0E8" />
+        </TouchableOpacity>
+      </Row>
       </View>
     </Card>
   );

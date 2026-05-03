@@ -1,26 +1,27 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Lucide from 'lucide-react-native';
-import { MotiView } from 'moti';
+import { MotiView, AnimatePresence } from 'moti';
 
 import { useTheme } from '../context/ThemeContext';
 import { AuthService } from '../services/AuthService';
 import { API_URL } from '../config';
-import { Screen, Row, Heading, Container, Section, PageHeader, Card } from '../components/DesignSystem';
+import { Screen, Row, Heading, Container, Section, PageHeader, Card, TextInput } from '../components/DesignSystem';
 
 // Sub-components
 import { ReportCard } from '../components/Reports/ReportCard';
 
-const ReportsScreen = ({ navigation }) => {
+const ReportsScreen = ({ navigation, route }) => {
   const { theme, isDark, atomic } = useTheme();
+  const insets = useSafeAreaInsets();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState(route.params?.filter || 'All');
 
   const checkUserSession = async () => {
     try {
@@ -120,23 +121,56 @@ const ReportsScreen = ({ navigation }) => {
       
       <SafeAreaView edges={['top']}>
         <PageHeader 
-          title="Field Intelligence" 
-          subtitle="Mission Log & Archive"
+          title="Mission Intelligence" 
+          subtitle="Field Reports & Verification"
           rightElement={
             <TouchableOpacity 
               onPress={onRefresh}
-              style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: theme.primary + '10', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: 'rgba(245, 178, 53, 0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(245, 178, 53, 0.2)' }}
             >
-               <Lucide.RefreshCw size={20} color={theme.primary} strokeWidth={2.5} />
+               <Lucide.RotateCw size={20} color="#F5B235" strokeWidth={2.5} />
             </TouchableOpacity>
           }
         />
         
         <Container>
+           <View style={{ marginBottom: 16 }}>
+             <View style={{ 
+               flexDirection: 'row', 
+               alignItems: 'center', 
+               backgroundColor: 'rgba(255,255,255,0.05)', 
+               borderRadius: 16, 
+               paddingHorizontal: 16,
+               height: 52,
+               borderWidth: 1,
+               borderColor: 'rgba(255,255,255,0.08)'
+             }}>
+               <Lucide.Search size={20} color="rgba(255,255,255,0.4)" />
+               <TextInput 
+                 placeholder="Search reports or locations..."
+                 placeholderTextColor="rgba(255,255,255,0.3)"
+                 value={searchQuery}
+                 onChangeText={setSearchQuery}
+                 style={{ 
+                   flex: 1, 
+                   marginLeft: 12, 
+                   color: '#fff', 
+                   fontSize: 14,
+                   fontFamily: 'Inter-Medium'
+                 }}
+               />
+               {searchQuery.length > 0 && (
+                 <TouchableOpacity onPress={() => setSearchQuery('')}>
+                   <Lucide.XCircle size={18} color="rgba(255,255,255,0.4)" />
+                 </TouchableOpacity>
+               )}
+             </View>
+           </View>
+
            <ScrollView 
              horizontal 
              showsHorizontalScrollIndicator={false} 
-             contentContainerStyle={{ paddingBottom: 16, gap: 10 }}
+             contentContainerStyle={{ paddingBottom: 20, gap: 10 }}
            >
              {filters.map((filter) => {
                const isSelected = selectedFilter === filter;
@@ -146,16 +180,19 @@ const ReportsScreen = ({ navigation }) => {
                    onPress={() => setSelectedFilter(filter)}
                    activeOpacity={0.8}
                    style={{
-                     paddingHorizontal: 16,
+                     paddingHorizontal: 18,
                      paddingVertical: 10,
-                     borderRadius: 12,
-                     backgroundColor: isSelected ? theme.primary : theme.surface,
-                     borderWidth: 1.5,
-                     borderColor: isSelected ? theme.primary : theme.border,
-                     ...Platform.select({ web: { boxShadow: isSelected ? `0 4px 10px ${theme.primary}30` : 'none' }, default: {} })
+                     borderRadius: 14,
+                     backgroundColor: isSelected ? '#F5B235' : 'rgba(255,255,255,0.05)',
+                     borderWidth: 1,
+                     borderColor: isSelected ? '#F5B235' : 'rgba(255,255,255,0.1)',
+                     flexDirection: 'row',
+                     alignItems: 'center',
+                     gap: 8
                    }}
                  >
-                   <Text style={{ fontSize: 11, fontWeight: '600', color: isSelected ? '#fff' : theme.textSecondary, letterSpacing: 0.5 }}>
+                   {filter === 'My Intelligence' && <Lucide.Fingerprint size={14} color={isSelected ? '#000' : '#F5B235'} />}
+                   <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#000' : 'rgba(255,255,255,0.6)', letterSpacing: 0.8 }}>
                      {filter.toUpperCase()}
                    </Text>
                  </TouchableOpacity>

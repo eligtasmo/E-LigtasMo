@@ -73,10 +73,10 @@ const resourceItems: NavItem[] = [
   },
   {
     icon: <RouteIcon size={20} />,
-    name: "Safe Routes",
+    name: "Route Planner",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/admin-routes", brgy: "/brgy/safe-routes", resident: "/route-planner" },
-    nameByRole: { admin: "Global Routes", brgy: "Local Routes", resident: "Route Planner" },
+    nameByRole: { admin: "Mission Routing", brgy: "Local Routes", resident: "Route Planner" },
   },
 ];
 
