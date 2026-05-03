@@ -677,18 +677,18 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
           })()}
         </MapboxMap>
         
-        <div className="absolute top-6 left-1/2 md:left-[calc(50%-222px)] -translate-x-1/2 z-[10] w-72">
-          <form onSubmit={handleSearch} className="flex shadow-xl rounded-2xl bg-[#1e1e1e]/90 backdrop-blur-md overflow-hidden border border-white/10 transition-all focus-within:ring-2 focus-within:ring-blue-500/50">
+        <div className="absolute top-6 right-20 z-[10] w-72 md:w-80">
+          <form onSubmit={handleSearch} className="flex shadow-xl rounded-xl bg-[#1c1c1e]/90 backdrop-blur-md overflow-hidden border border-white/10 transition-all focus-within:ring-2 focus-within:ring-[#f59e0b]/50">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search a location..."
-              className="flex-1 px-4 py-3 text-sm outline-none bg-transparent text-white placeholder-gray-400"
+              placeholder="Search location..."
+              className="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent text-white placeholder-gray-500"
             />
             <button 
               type="submit" 
-              className="bg-blue-600/80 text-white px-5 hover:bg-blue-600 transition-colors flex items-center justify-center"
+              className="bg-[#f59e0b] text-black px-4 hover:bg-[#f59e0b]/90 transition-colors flex items-center justify-center"
               disabled={isSearching}
             >
               {isSearching ? <FaSpinner className="animate-spin" /> : <FaSearch />}
@@ -696,14 +696,15 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
           </form>
           
           {searchResults.length > 0 && (
-            <div className="mt-2 bg-[#1e1e1e] rounded-2xl shadow-xl max-h-60 overflow-y-auto border border-white/10">
+            <div className="mt-2 bg-[#1c1c1e] rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-white/10 custom-scrollbar">
               {searchResults.map((result, idx) => (
                 <div 
                   key={idx}
                   onClick={() => selectSearchResult(result)}
-                  className="px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white cursor-pointer border-b border-white/5 last:border-b-0 transition-colors"
+                  className="px-4 py-3 text-sm text-gray-300 hover:bg-[#f59e0b]/10 hover:text-white cursor-pointer border-b border-white/5 last:border-b-0 transition-colors"
                 >
-                  {result.place_name}
+                  <p className="font-bold text-[13px]">{result.text}</p>
+                  <p className="text-[11px] text-gray-500 truncate">{result.place_name}</p>
                 </div>
               ))}
             </div>

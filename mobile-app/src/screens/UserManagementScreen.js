@@ -75,16 +75,25 @@ const UserManagementScreen = ({ navigation, route }) => {
     try {
       const session = await AsyncStorage.getItem('CURRENT_USER');
       const token = session ? JSON.parse(session).token : null;
-      const response = await fetch(`${API_URL}/update-user-status.php`, {
+      
+      const endpoint = newStatus === 'delete' ? 'admin-delete-user.php' : 'update-user-status.php';
+      const body = newStatus === 'delete' ? { user_id: userId } : { user_id: userId, status: newStatus };
+
+      const response = await fetch(`${API_URL}/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ user_id: userId, status: newStatus })
+        body: JSON.stringify(body)
       });
-      if ((await response.json()).success) {
-        Alert.alert('Success', `User ${newStatus}.`);
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('Success', newStatus === 'delete' ? 'User deleted permanently.' : `User ${newStatus}.`);
         fetchUsers();
+      } else {
+        Alert.alert('Error', data.error || 'Action failed.');
       }
-    } catch (e) {} finally { setActionLoading(null); }
+    } catch (e) {
+        Alert.alert('Error', 'Network error.');
+    } finally { setActionLoading(null); }
   };
 
   const generateInvite = async () => {

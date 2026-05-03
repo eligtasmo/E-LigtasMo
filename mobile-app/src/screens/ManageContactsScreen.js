@@ -15,6 +15,7 @@ const ManageContactsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   
   // Animation Values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -24,7 +25,8 @@ const ManageContactsScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    category: '',
+    name: '',
+    category: 'Family',
     number: '',
     description: '',
     priority: 'Normal'
@@ -54,6 +56,7 @@ const ManageContactsScreen = ({ navigation }) => {
       if (session) {
         const user = JSON.parse(session);
         setUserRole(user.role);
+        setCurrentUser(user);
       }
     } catch (error) {
       console.error('Error checking user role:', error);
@@ -62,7 +65,12 @@ const ManageContactsScreen = ({ navigation }) => {
 
   const fetchContacts = async () => {
     try {
-        const response = await fetch(`${API_URL}/contacts-list.php`);
+        const session = await AsyncStorage.getItem('CURRENT_USER');
+        const user = session ? JSON.parse(session) : null;
+        const brgy = user?.brgy_name || '';
+        const userId = user?.id || '';
+        
+        const response = await fetch(`${API_URL}/contacts-list.php?brgy=${brgy}&user_id=${userId}`);
         const data = await response.json();
         
         if (Array.isArray(data)) {
@@ -102,7 +110,9 @@ const ManageContactsScreen = ({ navigation }) => {
 
         const payload = {
             ...formData,
-            created_by: username
+            user_id: userRole === 'resident' ? currentUser?.id : null,
+            created_by: currentUser?.username,
+            created_brgy: userRole === 'brgy' ? currentUser?.brgy_name : null
         };
 
         const response = await fetch(`${API_URL}/contacts-add.php`, {
@@ -118,7 +128,7 @@ const ManageContactsScreen = ({ navigation }) => {
         if (result.id) {
             Alert.alert('Success', 'Contact added successfully');
             setModalVisible(false);
-            setFormData({ category: '', number: '', description: '', priority: 'Normal' });
+            setFormData({ name: '', category: 'Family', number: '', description: '', priority: 'Normal' });
             fetchContacts();
         } else {
             Alert.alert('Error', result.error || 'Failed to add contact');
@@ -199,7 +209,8 @@ const ManageContactsScreen = ({ navigation }) => {
             <MaterialCommunityIcons name={getIconForCategory(item.category)} size={24} color={getColorForCategory(item.category)} />
         </View>
         <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{item.category}</Text>
+            <Text style={styles.cardTitle}>{item.name || item.category}</Text>
+            {item.name && <Text style={[styles.cardDesc, { color: theme.primary, fontWeight: '700' }]}>{item.category}</Text>}
             <Text style={styles.cardNumber}>{item.number}</Text>
             {item.description ? (
                 <Text style={styles.cardDesc}>{item.description}</Text>
@@ -268,14 +279,21 @@ const ManageContactsScreen = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Add Contact</Text>
-                
-                <Text style={styles.label}>Category Name</Text>
+                <Text style={styles.label}>{userRole === 'resident' ? 'Contact Name (Family Member)' : 'Service Name'}</Text>
+                <TextInput
+                    style={styles.input}
+                    value={formData.name}
+                    onChangeText={(text) => setFormData({...formData, name: text})}
+                    placeholder={userRole === 'resident' ? "e.g. My Mom" : "e.g. MDRRMO Support"}
+                    placeholderTextColor={theme.placeholder}
+                />
+
+                <Text style={styles.label}>Category / Relationship</Text>
                 <TextInput
                     style={styles.input}
                     value={formData.category}
                     onChangeText={(text) => setFormData({...formData, category: text})}
-                    placeholder="e.g. Fire Station"
+                    placeholder="e.g. Family, Police, Fire"
                     placeholderTextColor={theme.placeholder}
                 />
 

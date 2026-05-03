@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import MapboxMap, { Popup, NavigationControl, FullscreenControl } from "../maps/MapboxMap";
 import TacticalMarker from "../maps/TacticalMarker";
-import { FaCheckCircle, FaTimesCircle, FaPhone, FaPencilAlt, FaTrash, FaHome, FaTimes, FaCamera, FaPlus } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaPhone, FaPencilAlt, FaTrash, FaHome, FaTimes, FaCamera, FaPlus, FaSearch, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
 import { useNavigate } from "react-router-dom";
@@ -61,6 +61,12 @@ export default function ManageSheltersView() {
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState<string | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const mapRef = useRef<any>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     const fetchShelters = async () => {
@@ -84,8 +90,61 @@ export default function ManageSheltersView() {
       status: "available", contact_person: "", contact_number: "", address,
       created_by: user?.username || "", created_brgy: user?.brgy_name || ""
     });
+    
+    // Smooth zoom to the picked location
+    if (mapRef.current) {
+      mapRef.current.getMap().flyTo({
+        center: [latlng.lng, latlng.lat],
+        zoom: 17,
+        pitch: 45,
+        duration: 1500
+      });
+    }
+
     setAdding(false);
     setLoadingAddress(false);
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&country=ph&proximity=121.4167,14.2833`;
+      const response = await fetch(url);
+      const data = await response.json();
+      setSearchResults(data.features || []);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectSearchResult = (result: any) => {
+    const [lng, lat] = result.center;
+    
+    // Fly to location
+    if (mapRef.current) {
+      mapRef.current.getMap().flyTo({
+        center: [lng, lat],
+        zoom: 17,
+        pitch: 45,
+        duration: 1500
+      });
+    }
+
+    // Drop a pinpoint for the new shelter
+    setForm({
+      name: "", lat: lat, lng: lng, capacity: 100, occupancy: 0,
+      status: "available", contact_person: "", contact_number: "", 
+      address: result.place_name,
+      created_by: user?.username || "", created_brgy: user?.brgy_name || ""
+    });
+
+    setSearchResults([]);
+    setSearchQuery("");
   };
 
   const handleEdit = async (shelter: any) => {
@@ -93,6 +152,16 @@ export default function ManageSheltersView() {
     setLoadingAddress(true);
     const address = await reverseGeocode(shelter.lat, shelter.lng);
     setForm({ ...shelter, address });
+    
+    // Zoom to existing shelter being edited
+    if (mapRef.current) {
+      mapRef.current.getMap().flyTo({
+        center: [Number(shelter.lng), Number(shelter.lat)],
+        zoom: 17,
+        pitch: 45,
+        duration: 1500
+      });
+    }
     setLoadingAddress(false);
   };
 
@@ -205,6 +274,7 @@ export default function ManageSheltersView() {
             }
           }}
           style={{ width: '100%', height: '100%' }}
+          ref={mapRef}
         >
           <NavigationControl position="top-right" />
           <FullscreenControl position="top-right" />
@@ -222,6 +292,17 @@ export default function ManageSheltersView() {
               }}
             />
           ))}
+
+          {/* Draft Marker for new/editing shelter */}
+          {form && !editId && (
+            <TacticalMarker 
+              latitude={Number(form.lat)} 
+              longitude={Number(form.lng)}
+              type="shelter"
+              status="available"
+              style={{ opacity: 0.8, filter: 'drop-shadow(0 0 10px #f59e0b)' }}
+            />
+          )}
 
           {selectedShelter && (
             <Popup
@@ -251,6 +332,41 @@ export default function ManageSheltersView() {
             </Popup>
           )}
         </MapboxMap>
+
+        {/* Floating Search Bar */}
+        <div className="absolute top-6 right-20 z-[10] w-72 md:w-80">
+          <form onSubmit={handleSearch} className="flex shadow-xl rounded-xl bg-[#1c1c1e]/90 backdrop-blur-md overflow-hidden border border-white/10 transition-all focus-within:ring-2 focus-within:ring-[#f59e0b]/50">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search location..."
+              className="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent text-white placeholder-gray-500"
+            />
+            <button 
+              type="submit" 
+              className="bg-[#f59e0b] text-black px-4 hover:bg-[#f59e0b]/90 transition-colors flex items-center justify-center"
+              disabled={isSearching}
+            >
+              {isSearching ? <FaSpinner className="animate-spin" /> : <FaSearch />}
+            </button>
+          </form>
+          
+          {searchResults.length > 0 && (
+            <div className="mt-2 bg-[#1c1c1e] rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-white/10 custom-scrollbar">
+              {searchResults.map((result, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => selectSearchResult(result)}
+                  className="px-4 py-3 text-sm text-gray-300 hover:bg-[#f59e0b]/10 hover:text-white cursor-pointer border-b border-white/5 last:border-b-0 transition-colors"
+                >
+                  <p className="font-bold text-[13px]">{result.text}</p>
+                  <p className="text-[11px] text-gray-500 truncate">{result.place_name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Floating Dark Panel Section */}

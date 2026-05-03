@@ -35,19 +35,30 @@ const isPrivateIp = (host) => {
 };
 
 const getApiUrl = () => {
-    // 1. Force Production URL for mobile builds (APK/Expo Go)
+    // 1. Check for manual override (useful for dev testing on real devices)
+    const host = resolveHost() || MANUAL_API_HOST;
+
+    // 2. Mobile Platform (APK / Expo Go)
     if (Platform.OS !== 'web') {
+        // If we are in development/local testing, try the local host IP first
+        // But for production APK, we typically want the domain
+        if (__DEV__ && host && isPrivateIp(host)) {
+             return `http://${host}${BASE_PATH}`;
+        }
+        
+        // Fallback/Production: Use the actual live domain
         return 'https://api.eligtasmo.site';
     }
 
-    // 2. Web Platform (Immediate priority for dashboard/local dev)
+    // 3. Web Platform
     if (Platform.OS === 'web') {
-        // If we are on the production site, use the production API
-        if (typeof window !== 'undefined' && window.location.hostname === 'eligtasmo.site') {
-            return 'https://api.eligtasmo.site';
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname === 'eligtasmo.site' || hostname === 'www.eligtasmo.site') {
+                return 'https://api.eligtasmo.site';
+            }
+            return `http://${hostname}${BASE_PATH}`;
         }
-        const webHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-        return `http://${webHost}${BASE_PATH}`;
     }
 
     return 'https://api.eligtasmo.site';

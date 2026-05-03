@@ -7,6 +7,8 @@ require_once 'db.php';
 function ensure_contacts_table($pdo) {
     $sql = "CREATE TABLE IF NOT EXISTS emergency_contacts (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NULL,
+        name VARCHAR(100) NULL,
         category VARCHAR(100) NOT NULL,
         number VARCHAR(50) NOT NULL,
         description VARCHAR(255) NULL,
@@ -15,7 +17,8 @@ function ensure_contacts_table($pdo) {
         created_by VARCHAR(100) NULL,
         created_brgy VARCHAR(100) NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     $pdo->exec($sql);
 }
@@ -24,15 +27,37 @@ try {
     ensure_contacts_table($pdo);
     
     $brgy = isset($_GET['brgy']) ? trim($_GET['brgy']) : null;
-    $sql = 'SELECT id, category, number, description, type, priority, created_by, created_brgy, created_at, updated_at FROM emergency_contacts';
+    $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
+    
+    $sql = 'SELECT id, user_id, name, category, number, description, type, priority, created_by, created_brgy, created_at, updated_at FROM emergency_contacts';
     $params = [];
+    $where = [];
 
-    if ($brgy) {
-        $sql .= ' WHERE created_brgy IS NULL OR created_brgy = ?';
+    // Global contacts (user_id IS NULL AND created_brgy IS NULL)
+    // OR Brgy contacts (user_id IS NULL AND created_brgy = ?)
+    // OR Private contacts (user_id = ?)
+    
+    if ($user_id) {
+        if ($brgy) {
+            $where[] = '(user_id = ? OR (user_id IS NULL AND (created_brgy IS NULL OR created_brgy = ?)))';
+            $params[] = $user_id;
+            $params[] = $brgy;
+        } else {
+            $where[] = '(user_id = ? OR user_id IS NULL)';
+            $params[] = $user_id;
+        }
+    } else if ($brgy) {
+        $where[] = '(user_id IS NULL AND (created_brgy IS NULL OR created_brgy = ?))';
         $params[] = $brgy;
+    } else {
+        $where[] = 'user_id IS NULL';
     }
 
-    $sql .= ' ORDER BY CASE WHEN created_brgy IS NULL THEN 0 ELSE 1 END, id DESC';
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    $sql .= ' ORDER BY user_id DESC, CASE WHEN created_brgy IS NULL THEN 0 ELSE 1 END, id DESC';
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);

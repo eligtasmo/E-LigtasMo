@@ -16,6 +16,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [hotlines, setHotlines] = useState([]);
+  const [personalContacts, setPersonalContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   
@@ -27,6 +28,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
   useEffect(() => {
     loadUser();
     fetchHotlines();
+    fetchPersonalContacts();
   }, []);
 
   const loadUser = async () => {
@@ -46,6 +48,23 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPersonalContacts = async () => {
+    try {
+      const session = await AuthService.checkSession();
+      if (!session) return;
+      const brgy = session.brgy_name || '';
+      const userId = session.id || '';
+      
+      const response = await fetch(`${API_URL}/contacts-list.php?brgy=${brgy}&user_id=${userId}`);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setPersonalContacts(data);
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -224,9 +243,39 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
 
               {/* Personal Contacts Section */}
               <Row justify="space-between" align="center" style={{ marginTop: 32, marginBottom: 16 }}>
-                 <Text style={{ fontSize: 18, fontWeight: '600', color: '#F4F0E8', letterSpacing: -0.4 }}>Personal Contacts</Text>
-                 <TouchableOpacity><Text style={{ color: '#F59E0B', fontWeight: '700', fontSize: 13 }}>See All</Text></TouchableOpacity>
+                 <Text style={{ fontSize: 18, fontWeight: '600', color: '#F4F0E8', letterSpacing: -0.4 }}>Personal & Family</Text>
+                 <TouchableOpacity onPress={() => navigation.navigate('ManageContacts')}>
+                    <Text style={{ color: '#F59E0B', fontWeight: '700', fontSize: 13 }}>Manage</Text>
+                 </TouchableOpacity>
               </Row>
+
+              <View style={{ gap: 12 }}>
+                {personalContacts.length > 0 ? personalContacts.map(contact => (
+                  <Card key={contact.id} variant="raised" style={{ padding: 12, backgroundColor: '#222' }}>
+                    <Row align="center" justify="space-between">
+                      <Row align="center" gap={12}>
+                        <View style={[styles.iconContainer, { width: 44, height: 44, backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                           <Lucide.User size={20} color="#F59E0B" strokeWidth={2.5} />
+                        </View>
+                        <Col>
+                          <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFF' }}>{contact.name || contact.category}</Text>
+                          <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{contact.number}</Text>
+                        </Col>
+                      </Row>
+                      <TouchableOpacity 
+                        style={[styles.actionBtn, { backgroundColor: '#FFF' }]}
+                        onPress={() => require('react-native').Linking.openURL(`tel:${contact.number}`)}
+                      >
+                        <Lucide.Phone size={16} color="#000" strokeWidth={3} />
+                      </TouchableOpacity>
+                    </Row>
+                  </Card>
+                )) : (
+                  <Card variant="none" style={{ padding: 20, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)', borderStyle: 'dashed', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>No personal contacts added yet.</Text>
+                  </Card>
+                )}
+              </View>
             </Container>
           </ScrollView>
         )}

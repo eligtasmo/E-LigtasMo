@@ -61,28 +61,52 @@ export const UserCard = ({ item, onEdit, onUpdateStatus, actionLoading }) => {
       </View>
 
       <View style={[atomic.mt16, atomic.pt12, atomic.row, atomic.jcb, atomic.aic, { borderTopWidth: 1, borderTopColor: theme.border }]}>
-        <View style={[atomic.px10, atomic.py4, { backgroundColor: style.bg, borderRadius: 8 }]}>
-          <Text style={[atomic.t.tiny, atomic.t.heavy, { color: style.fg }]}>{currentStatus.toUpperCase()}</Text>
-        </View>
+        <Col>
+          <View style={[atomic.px10, atomic.py4, { backgroundColor: style.bg, borderRadius: 8, alignSelf: 'flex-start' }]}>
+            <Text style={[atomic.t.tiny, atomic.t.heavy, { color: style.fg }]}>{currentStatus.toUpperCase()}</Text>
+          </View>
+          {item.created_at && (
+            <Text style={[atomic.t.tiny, { color: theme.textMuted, marginTop: 4 }]}>Joined: {new Date(item.created_at).toLocaleDateString()}</Text>
+          )}
+        </Col>
 
-        {currentStatus === 'pending' && (
-          <Row gap={8}>
-            <TouchableOpacity 
-              style={[atomic.px12, atomic.py6, { backgroundColor: theme.error, borderRadius: 8 }]}
-              onPress={() => onUpdateStatus(item.id, 'rejected')}
-              disabled={actionLoading === item.id}
-            >
-              {actionLoading === item.id ? <ActivityIndicator size="small" color="#fff" /> : <Text style={[atomic.t.tiny, atomic.t.bold, { color: '#fff' }]}>Reject</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[atomic.px12, atomic.py6, { backgroundColor: theme.success, borderRadius: 8 }]}
-              onPress={() => onUpdateStatus(item.id, 'approved')}
-              disabled={actionLoading === item.id}
-            >
-              {actionLoading === item.id ? <ActivityIndicator size="small" color="#fff" /> : <Text style={[atomic.t.tiny, atomic.t.bold, { color: '#fff' }]}>Approve</Text>}
-            </TouchableOpacity>
-          </Row>
-        )}
+        <Row gap={8}>
+          {currentStatus === 'pending' && (
+            <>
+              <TouchableOpacity 
+                style={[atomic.px12, atomic.py6, { backgroundColor: theme.error, borderRadius: 8 }]}
+                onPress={() => onUpdateStatus(item.id, 'rejected')}
+                disabled={actionLoading === item.id}
+              >
+                {actionLoading === item.id ? <ActivityIndicator size="small" color="#fff" /> : <Text style={[atomic.t.tiny, atomic.t.bold, { color: '#fff' }]}>Reject</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[atomic.px12, atomic.py6, { backgroundColor: theme.success, borderRadius: 8 }]}
+                onPress={() => onUpdateStatus(item.id, 'approved')}
+                disabled={actionLoading === item.id}
+              >
+                {actionLoading === item.id ? <ActivityIndicator size="small" color="#fff" /> : <Text style={[atomic.t.tiny, atomic.t.bold, { color: '#fff' }]}>Approve</Text>}
+              </TouchableOpacity>
+            </>
+          )}
+          
+          <TouchableOpacity 
+            style={[atomic.p6, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 8 }]}
+            onPress={() => {
+              const name = item.full_name || item.username;
+              require('react-native').Alert.alert(
+                'Delete User',
+                `Are you sure you want to permanently delete ${name}? This action cannot be undone.`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Delete', style: 'destructive', onPress: () => onUpdateStatus(item.id, 'delete') }
+                ]
+              );
+            }}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.error} />
+          </TouchableOpacity>
+        </Row>
       </View>
     </Card>
   );
