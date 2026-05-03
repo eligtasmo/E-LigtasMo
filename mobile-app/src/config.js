@@ -41,8 +41,13 @@ const getApiUrl = () => {
     // 2. Mobile Platform (APK / Expo Go)
     if (Platform.OS !== 'web') {
         // If we are in development/local testing, try the local host IP first
-        // But for production APK, we typically want the domain
+        // CRITICAL: If we are using a tunnel (exp.direct or ngrok), we MUST use the production URL
+        // because the tunnel only tunnels the JS, not the PHP backend.
         if (__DEV__ && host && isPrivateIp(host)) {
+             const isTunnel = host.includes('exp.direct') || host.includes('ngrok');
+             if (isTunnel) {
+                 return 'https://api.eligtasmo.site';
+             }
              return `http://${host}${BASE_PATH}`;
         }
         
