@@ -323,10 +323,13 @@ const createMapHTML = (token) => `
                 'fire', '#FF4B4B',
                 'hazard', '#F59E0B',
                 'incident', '#EF4444',
+                'accident', '#FF4B4B',
+                'landslide', '#78350F',
+                'road_block', '#374151',
                 'shelter', '#27AE60',
                 '#EF4444' 
               ], 
-              'fill-opacity': 0.25 
+              'fill-opacity': 0.18 
             } 
           });
           map.addLayer({ 
@@ -341,11 +344,14 @@ const createMapHTML = (token) => `
                 'fire', '#FF4B4B',
                 'hazard', '#F59E0B',
                 'incident', '#EF4444',
+                'accident', '#FF4B4B',
+                'landslide', '#78350F',
+                'road_block', '#374151',
                 'shelter', '#27AE60',
                 '#EF4444' 
               ], 
-              'line-width': 2, 
-              'line-dasharray': [2, 2] 
+              'line-width': 1.8, 
+              'line-dasharray': [3, 2] 
             } 
           });
 
@@ -525,17 +531,22 @@ const createMapHTML = (token) => `
                           // 3c. POLYGON / RADIUS RENDERING (Exclude Shelters and Barangays from radius generation)
                           const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay');
                           
-                          // ROBUST PARSING: Handle cases where area_geojson might be a string
                           let geom = m.area_geojson;
-                          if (typeof geom === 'string') {
-                              try { geom = JSON.parse(geom); } catch(e) { geom = null; }
-                          }
+                          if (typeof geom === 'string') { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
 
-                          if (geom && (geom.type || geom.geometry)) {
-                              const featureGeom = geom.type === 'Feature' ? geom.geometry : geom;
-                              polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: featureGeom });
+                          const addPoly = (g) => {
+                            if (!g) return;
+                            if (g.type === 'FeatureCollection') {
+                                (g.features || []).forEach(f => addPoly(f));
+                                return;
+                            }
+                            const finalGeom = g.type === 'Feature' ? g.geometry : g;
+                            if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: finalGeom });
+                          };
+
+                          if (geom) {
+                              addPoly(geom);
                           } else if (!isAsset) {
-                              // Only generate radius for Hazards and Incidents
                               const rLat = Number(m.lat);
                               const rLng = Number(m.lng || m.lon);
                               polyFeatures.push({ 
