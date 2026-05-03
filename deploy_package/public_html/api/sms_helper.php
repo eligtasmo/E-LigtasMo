@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 require_once 'env_helper.php';
 
 /**

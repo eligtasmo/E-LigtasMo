@@ -71,7 +71,7 @@ const AdminResourceHub = ({ navigation }) => {
 
             <View style={{ gap: 16 }}>
               {resources.map((item, index) => {
-                const Icon = Lucide[item.icon];
+                const Icon = Lucide[item.icon] || Lucide.Activity;
                 return (
                   <TouchableOpacity 
                     key={index}

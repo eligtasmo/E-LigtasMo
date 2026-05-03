@@ -9,11 +9,6 @@ require_once 'cors.php';
 require_once 'db.php';
 require_once 'tokens.php';
 require_once 'session_boot.php';
-header("Content-Type: application/json");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
 
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
@@ -32,21 +27,21 @@ if ($username === '' || $password === '') {
 }
 
 $now = time();
-$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $limDir = __DIR__ . '/tmp';
-if (!is_dir($limDir)) { @mkdir($limDir, 0777, true); }
-$limFile = $limDir . '/rate_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ip) . '.json';
 $attempts = [];
-if (file_exists($limFile)) {
-    $raw = file_get_contents($limFile);
-    $attempts = json_decode($raw, true) ?: [];
-}
-$attempts = array_values(array_filter($attempts, function ($t) use ($now) { return ($now - (int)$t) < 300; }));
-if (count($attempts) >= 5) {
-    header('Retry-After: 300');
-    http_response_code(200);
-    echo json_encode(["success" => false, "message" => "Too many login attempts. Try again later."]);
-    exit();
+if (is_dir($limDir) || @mkdir($limDir, 0755, true)) {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $limFile = $limDir . '/rate_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $ip) . '.json';
+    if (file_exists($limFile)) {
+        $rawLim = @file_get_contents($limFile);
+        $attempts = json_decode($rawLim, true) ?: [];
+    }
+    $attempts = array_values(array_filter($attempts, function ($t) use ($now) { return ($now - (int)$t) < 300; }));
+    if (count($attempts) >= 10) { // Increased limit for testing
+        header('Retry-After: 300');
+        echo json_encode(["success" => false, "message" => "Security: Too many attempts. Try again in 5 minutes."]);
+        exit();
+    }
 }
 
 $connError = null;

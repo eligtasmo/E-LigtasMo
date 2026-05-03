@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 /**
  * FULL TACTICAL CLEANUP & CONSOLIDATION
  * Merges hazards and incidents into incident_reports and removes legacy tables.

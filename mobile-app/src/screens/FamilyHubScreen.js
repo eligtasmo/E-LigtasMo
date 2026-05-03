@@ -153,6 +153,14 @@ const FamilyHubScreen = ({ navigation }) => {
         <TacticalHeader 
           title="Family Hub" 
           showBack
+          rightAction={
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('AddFamilyMember')}
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(245,178,53,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(245,178,53,0.2)' }}
+            >
+              <Lucide.Plus size={20} color="#F5B235" />
+            </TouchableOpacity>
+          }
         />
       </View>
 
@@ -204,8 +212,6 @@ const FamilyHubScreen = ({ navigation }) => {
            ))}
         </ScrollView>
       </Container>
-      
-      <TacticalBottomNav navigation={navigation} activeRoute="Family" />
     </Screen>
   );
 };

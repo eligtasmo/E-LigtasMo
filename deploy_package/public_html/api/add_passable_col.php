@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 require_once 'db.php';
 try {
     $pdo->exec("ALTER TABLE hazards ADD COLUMN is_passable TINYINT(1) DEFAULT 0");

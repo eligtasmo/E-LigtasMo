@@ -50,15 +50,14 @@ export const RouteOptionsSheet = ({
 
   return (
     <View 
-      pointerEvents="box-none"
       style={{ 
         position: 'absolute', 
         top: 0, bottom: 0, left: 16, right: 16, 
-        zIndex: 4000
+        zIndex: 4000,
+        pointerEvents: 'box-none'
       }}
     >
       <MotiView
-        pointerEvents="box-none"
         animate={{ 
           height: showExpanded ? MAX_HEIGHT + BOTTOM_MARGIN + 16 : currentHeight,
           bottom: 0,
@@ -70,10 +69,10 @@ export const RouteOptionsSheet = ({
           alignSelf: isLandscape ? 'flex-end' : 'center',
           height: showExpanded ? MAX_HEIGHT + BOTTOM_MARGIN + 16 : currentHeight,
           bottom: 0,
+          pointerEvents: 'box-none'
         }}
       >
       <View 
-        pointerEvents="auto"
         style={{ 
           width: '100%',
           height: '100%',
@@ -91,7 +90,8 @@ export const RouteOptionsSheet = ({
           elevation: 20,
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          pointerEvents: 'auto'
         }}
       >
           {!isLandscape && (

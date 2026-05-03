@@ -90,18 +90,23 @@ export const darkTheme = {
     none: { boxShadow: 'none', shadowOpacity: 0, elevation: 0 },
     xs: { 
       shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
+      boxShadow: '0px 2px 4px rgba(0,0,0,0.2)' 
     },
     sm: { 
       shadowColor: '#000000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5,
+      boxShadow: '0px 4px 10px rgba(0,0,0,0.3)' 
     },
     md: { 
       shadowColor: '#000000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 20, elevation: 12,
+      boxShadow: '0px 8px 20px rgba(0,0,0,0.4)' 
     },
     lg: { 
       shadowColor: '#000000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.5, shadowRadius: 30, elevation: 20,
+      boxShadow: '0px 16px 30px rgba(0,0,0,0.5)' 
     },
     glow: { 
       shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 6,
+      boxShadow: '0px 4px 12px rgba(245,158,11,0.4)' 
     },
   },
 

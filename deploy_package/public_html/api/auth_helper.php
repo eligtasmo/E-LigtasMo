@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 require_once __DIR__ . '/tokens.php';
 
 function get_current_user_data() {

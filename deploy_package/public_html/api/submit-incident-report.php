@@ -1,16 +1,4 @@
-<?php
-// CORS for credentialed requests from the Vite dev server
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-if ($origin) {
-    header("Access-Control-Allow-Origin: " . $origin);
-    header("Access-Control-Allow-Credentials: true");
-    header("Vary: Origin");
-} else {
-    header("Access-Control-Allow-Origin: http://localhost");
-}
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: *");
-header("Content-Type: application/json");
+<?php require_once 'cors.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);

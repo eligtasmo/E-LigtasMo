@@ -22,7 +22,6 @@ export const SearchHeader = ({
     <MotiView
       from={{ opacity: 0, translateY: -20 }}
       animate={{ opacity: 1, translateY: 0 }}
-      pointerEvents="box-none"
       style={{
         position: 'absolute',
         top: 0,
@@ -31,9 +30,10 @@ export const SearchHeader = ({
         zIndex: 5000,
         paddingTop: safeTop,
         paddingHorizontal: 16,
+        pointerEvents: 'box-none'
       }}
     >
-      <View pointerEvents="auto" style={{ width: '100%' }}>
+      <View style={{ width: '100%', pointerEvents: 'auto' }}>
         {/* Header Row */}
         <Row justify="space-between" align="center" style={{ marginBottom: 8 }}>
           <Row align="center" gap={10}>

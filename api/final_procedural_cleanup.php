@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 $conn = mysqli_connect("192.168.1.19", "root", "", "eligtasmo");
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());

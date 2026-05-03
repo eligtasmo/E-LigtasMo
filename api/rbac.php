@@ -1,4 +1,7 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+require_once "cors.php";
 require_once __DIR__ . '/tokens.php';
 
 function has_permission_for_role($role, $permission) {

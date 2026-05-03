@@ -596,9 +596,7 @@ export default function App() {
       <AuthProvider>
         <ThemeProvider>
           <SafeAreaProvider>
-            <SimulatorWrapper>
-              <NavigationContent initialNavState={initialNavState} linking={linking} />
-            </SimulatorWrapper>
+            <NavigationContent initialNavState={initialNavState} linking={linking} />
           </SafeAreaProvider>
         </ThemeProvider>
       </AuthProvider>

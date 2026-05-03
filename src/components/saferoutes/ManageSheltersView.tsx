@@ -22,7 +22,6 @@ type ShelterForm = {
   contact_number: string;
   address: string;
   category?: string;
-  photos?: string[]; // Up to 3
   created_by?: string;
   created_brgy?: string;
 };
@@ -541,52 +540,6 @@ export default function ManageSheltersView() {
               </div>
 
               <div className="bg-[#2c2c2e] rounded-xl overflow-hidden p-3 border border-[#3a3a3c]">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#8e8e93]">Evidence_Photos (MAX 3)</label>
-                  <span className="text-[#f59e0b] text-[10px] uppercase">{(form.photos || []).length}/3</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(form.photos || []).map((p, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-[#3a3a3c] bg-[#1c1c1e]">
-                      <img src={p.startsWith('data:') ? p : `/${p}`} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setForm(f => f ? { ...f, photos: f.photos?.filter((_, i) => i !== idx) } : f)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-red-500 transition-colors"
-                      >
-                        <FaTimes size={10} />
-                      </button>
-                    </div>
-                  ))}
-                  {(form.photos || []).length < 3 && (
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById('shelter-photo-upload')?.click()}
-                      className="aspect-square rounded-lg border-2 border-dashed border-[#3a3a3c] hover:border-[#f59e0b] hover:bg-[#3a3a3c]/50 transition-all flex flex-col items-center justify-center gap-1 text-[#8e8e93] hover:text-white"
-                    >
-                      <FaCamera size={18} />
-                      <span className="text-[9px] font-bold uppercase">Add</span>
-                    </button>
-                  )}
-                </div>
-                <input
-                  id="shelter-photo-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        const base64 = reader.result as string;
-                        setForm(f => f ? { ...f, photos: [...(f.photos || []), base64].slice(0, 3) } : f);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                    e.target.value = '';
-                  }}
-                />
               </div>
 
               <div className="bg-[#2c2c2e] rounded-xl overflow-hidden border border-[#3a3a3c]">
@@ -671,25 +624,10 @@ export default function ManageSheltersView() {
 
           {/* Left Side: Photo/Visuals */}
           <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-[#1c1c1e]">
-            {(() => {
-              let media = selectedShelter.photos;
-              if (typeof media === 'string') {
-                try { media = JSON.parse(media); } catch (e) { media = []; }
-              }
-              const urls = Array.isArray(media) ? media : [];
-              return urls.length > 0 ? (
-                <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar">
-                  {urls.map((p: string, i: number) => (
-                     <img key={i} src={p.startsWith('data:') ? p : `/${p}`} alt={selectedShelter.name} className="w-full h-full object-cover snap-center shrink-0" />
-                  ))}
-                </div>
-              ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-[#3a3a3c]">
                   <FaHome className="text-[120px] mb-4 opacity-20" />
-                  <span className="text-lg font-mono tracking-widest uppercase opacity-50">NO_VISUAL_DATA</span>
+                  <span className="text-lg font-mono tracking-widest uppercase opacity-50">NO_VISUAL_DATA_REQUIRED</span>
                 </div>
-              );
-            })()}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
             <div className="absolute bottom-12 left-12">
               <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest ${selectedShelter.status === 'available' ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 'bg-red-500/20 text-red-500 border border-red-500/30'}`}>

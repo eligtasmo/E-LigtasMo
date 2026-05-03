@@ -122,7 +122,6 @@ const AdminDashboardScreen = ({ navigation, route }) => {
                actions={[
                  { id: 'hotlines', icon: 'PhoneCall', label: 'Emergency\nHotlines' },
                  { id: 'donation', icon: 'HeartPulse', label: 'Donation\nDrive' },
-                 { id: 'checkin', icon: 'RadioTower', label: 'Check-In\nStatus' },
                  { id: 'more', icon: 'Ellipsis', label: 'System\nLogs' },
                ]}
                onAction={(id) => {
@@ -194,7 +193,7 @@ const AdminDashboardScreen = ({ navigation, route }) => {
                    { title: 'Intelligence Feed', icon: 'Radio', color: theme.success, sub: 'Broadcast announcements', route: 'Announcements' },
                    { title: 'Shelter Hub', icon: 'Home', color: theme.warning, sub: 'Evacuation logistics', route: 'Shelters' }
                 ].map((item, idx) => {
-                   const Icon = Lucide[item.icon];
+                   const Icon = Lucide[item.icon] || Lucide.Shield;
                    return (
                       <TouchableOpacity 
                          key={idx}

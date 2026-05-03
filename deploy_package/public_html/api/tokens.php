@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 function b64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }

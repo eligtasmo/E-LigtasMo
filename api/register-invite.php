@@ -6,7 +6,6 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ERROR | E_PARSE);
 
-header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
 
 $raw = file_get_contents("php://input");

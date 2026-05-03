@@ -1,3 +1,0 @@
-[2026-05-03 16:11:00] SYSTEM: Remote Logger Initialized
-STATUS: Ready for Tactical Intel.
-----------------------------------------

@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 // Returns a time-series of shelter occupancy and capacity based on snapshots
 header('Content-Type: application/json');
 require_once 'db.php';

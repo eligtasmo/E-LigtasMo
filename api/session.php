@@ -6,11 +6,6 @@ require_once 'tokens.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit(0);
-}
-header('Content-Type: application/json');
 if (true) {
     $connError = null;
     try {

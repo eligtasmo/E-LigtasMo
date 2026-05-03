@@ -1,11 +1,10 @@
 <?php
+require_once "cors.php";
 // Simple proxy to fetch a static map image from OpenStreetMap and return as a data URL
 // Input (POST JSON): { center_lat, center_lng, zoom, width, height }
 // Output (JSON): { data_url: "data:image/png;base64,..." }
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: Content-Type');
 
 try {
     $raw = file_get_contents('php://input');

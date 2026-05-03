@@ -1,10 +1,12 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 require_once 'cors.php';
 header('Content-Type: application/json');
 require_once 'db.php';
 
 require_once 'rbac.php';
-session_start();
+// session_start is handled by rbac.php if needed
 require_permission('users.view');
 
 $userRole = $_SESSION['role'] ?? null;

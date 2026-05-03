@@ -270,7 +270,7 @@ const BrgyHomeScreen = ({ navigation, route }) => {
                 { title: 'Broadcast', icon: 'Radio', color: '#22C55E', sub: 'Citizen-wide alerts', route: 'Announcements' },
                 { title: 'Logistics', icon: 'Package', color: '#3B82F6', sub: 'Relief mission management', route: 'DonationDrives' }
              ].map((item, idx) => {
-                const Icon = Lucide[item.icon];
+                const Icon = Lucide[item.icon] || Lucide.Shield;
                 return (
                     <TouchableOpacity 
                        key={idx}

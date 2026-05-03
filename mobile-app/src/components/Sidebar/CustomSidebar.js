@@ -31,7 +31,6 @@ const CustomSidebar = (props) => {
     { label: 'HERE Tactical Planner', icon: Lucide.Locate, route: 'HEREPlanner' },
     { label: 'Emergency Mode', icon: Lucide.Zap, route: 'QuickReport' },
     { label: 'Emergency Hotlines', icon: Lucide.Phone, route: 'EmergencyHotlines' },
-    { label: 'Family Check-In', icon: Lucide.Users, route: 'Reports' },
     { label: 'Donation Drives', icon: Lucide.Heart, route: 'DonationDrives' },
     { label: 'Evacuation Centers', icon: Lucide.MapPin, route: 'Shelters' },
     { label: 'Community Chat', icon: Lucide.MessageSquare, route: 'Placeholder' },

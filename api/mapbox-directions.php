@@ -1,72 +1,78 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 require_once 'cors.php';
 header('Content-Type: application/json');
 require_once 'db.php';
 
 // ── Configuration & Input ──────────────────────────────────────────────────
-function loadEnv($path)
-{
-    if (!file_exists($path))
-        return;
-    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false)
-            continue;
-        list($name, $value) = explode('=', $line, 2);
-        putenv(trim($name) . '=' . trim($value));
-    }
-}
+// loadEnv is already defined in env_helper.php via db.php
 loadEnv(__DIR__ . '/../.env');
 
-$MAPBOX_TOKEN = getenv('VITE_MAPBOX_ACCESS_TOKEN') ?: (getenv('MAPBOX_ACCESS_TOKEN') ?: getenv('EXPO_PUBLIC_MAPBOX_TOKEN'));
-if (!$MAPBOX_TOKEN || strlen($MAPBOX_TOKEN) < 20) {
-    $MAPBOX_TOKEN = 'pk.eyJ1IjoiaXNoZWVjaGFuMTEiLCJhIjoiY21tbTV5cTVvMjduZTJycHM3NGhqbGJpaSJ9.IPJeEJ6qwGE3C1_dlo5BLw';
-}
+try {
+    $MAPBOX_TOKEN = getenv('VITE_MAPBOX_ACCESS_TOKEN') ?: (getenv('MAPBOX_ACCESS_TOKEN') ?: getenv('EXPO_PUBLIC_MAPBOX_TOKEN'));
+    if (!$MAPBOX_TOKEN || strlen($MAPBOX_TOKEN) < 20) {
+        $MAPBOX_TOKEN = 'pk.eyJ1IjoiaXNoZWVjaGFuMTEiLCJhIjoiY21tbTV5cTVvMjduZTJycHM3NGhqbGJpaSJ9.IPJeEJ6qwGE3C1_dlo5BLw';
+    }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$logMsg = "[DEBUG] Request at " . date('Y-m-d H:i:s') . "\n";
-$logMsg .= "Profile: " . ($input['profile'] ?? 'N/A') . "\n";
-$logMsg .= "Hazards Count: " . count($input['avoid_zones'] ?? []) . "\n";
-file_put_contents(__DIR__ . '/route_debug.log', $logMsg, FILE_APPEND);
+    $input = json_decode(file_get_contents('php://input'), true);
+    $logMsg = "[DEBUG] Request at " . date('Y-m-d H:i:s') . "\n";
+    $logMsg .= "Profile: " . ($input['profile'] ?? 'N/A') . "\n";
+    $logMsg .= "Hazards Count: " . count($input['avoid_zones'] ?? []) . "\n";
+    file_put_contents(__DIR__ . '/route_debug.log', $logMsg, FILE_APPEND);
 
-$start = $input['start'] ?? null;
-$end = $input['end'] ?? null;
+    $start = $input['start'] ?? null;
+    $end = $input['end'] ?? null;
 
-if (!$start && isset($input['coordinates'][0]))
-    $start = $input['coordinates'][0];
-if (!$end && isset($input['coordinates'][1]))
-    $end = $input['coordinates'][1];
+    if (!$start && isset($input['coordinates'][0]))
+        $start = $input['coordinates'][0];
+    if (!$end && isset($input['coordinates'][1]))
+        $end = $input['coordinates'][1];
 
-if (!$start)
-    $start = [121.41, 14.30];
-if (!$end)
-    $end = [121.42, 14.31];
+    if (!$start)
+        $start = [121.41, 14.30];
+    if (!$end)
+        $end = [121.42, 14.31];
 
-$profile = $input['profile'] ?? 'driving-car';
-$avoidZones = $input['avoid_zones'] ?? []; // GeoJSON Features/Geometries
+    $profile = $input['profile'] ?? 'driving-car';
+    $avoidZones = $input['avoid_zones'] ?? []; // GeoJSON Features/Geometries
 
-$startLng = (float) $start[0];
-$startLat = (float) $start[1];
-$endLng = (float) $end[0];
-$endLat = (float) $end[1];
+    $startLng = (float) $start[0];
+    $startLat = (float) $start[1];
+    $endLng = (float) $end[0];
+    $endLat = (float) $end[1];
 
-$mbProfile = match ($profile) {
-    'walking', 'foot-walking', 'on_foot' => 'walking',
-    'cycling', 'cycling-regular' => 'cycling',
-    default => 'driving-traffic', // SMART ROUTING: Use real-time traffic data
-};
+    // Tactical Profile Resolution
+    $profileMap = [
+        'driving'      => 'mapbox/driving',
+        'walking'      => 'mapbox/walking',
+        'cycling'      => 'mapbox/cycling',
+        'driving-car'  => 'mapbox/driving',
+        'walking-foot' => 'mapbox/walking',
+        'on_foot'      => 'mapbox/walking'
+    ];
+    $mapboxProfile = $profileMap[$profile] ?? 'mapbox/driving';
+    
+    // Annotations are only valid for driving profiles in some cases (traffic/congestion)
+    $annotations = "maxspeed";
+    if (strpos($mapboxProfile, 'driving') !== false) {
+        $annotations .= ",congestion";
+    }
 
-// Tactical Speed Factors
+// Tactical Speed Factors (Mapbox Duration Multipliers)
 $speedFactor = 1.0;
 if ($profile === 'driving-hgv') {
-    $speedFactor = 0.7;
+    $speedFactor = 0.75; // Slower for heavy tactical vehicles
 } else if (strpos($profile, 'motorcycle') !== false) {
-    $speedFactor = 1.25;
+    $speedFactor = 1.15; // Faster for agile mission units
+} else if (strpos($profile, 'walking') !== false || strpos($profile, 'foot') !== false) {
+    $speedFactor = 1.0; // Keep Mapbox native walking speed
+} else if (strpos($profile, 'cycling') !== false) {
+    $speedFactor = 1.0; // Keep Mapbox native cycling speed
 }
 
-$baseParams = "?access_token={$MAPBOX_TOKEN}&geometries=geojson&steps=true&overview=full&annotations=maxspeed,congestion";
-$baseUrl = "https://api.mapbox.com/directions/v5/mapbox/{$mbProfile}";
+$baseUrl = "https://api.mapbox.com/directions/v5/{$mapboxProfile}";
+$baseParams = "?access_token={$MAPBOX_TOKEN}&geometries=geojson&steps=true&overview=full&annotations={$annotations}";
 
 // ── Tactical Helper Functions ───────────────────────────────────────────────
 
@@ -207,8 +213,8 @@ function isUniqueRoute($newRoute, $existingRoutes)
             $dLat = $p1[1] - $p2[1];
             $dist = sqrt($dLng * $dLng + $dLat * $dLat);
 
-            // Extreme permissiveness: If any sample point is > 50m apart (0.0005 deg), routes are unique
-            if ($dist > 0.0005) {
+            // Robust spatial variance: If any sample point is > 300m apart (0.003 deg), routes are unique
+            if ($dist > 0.003) {
                 $isDifferent = true;
                 break;
             }
@@ -309,25 +315,71 @@ function tacticalFetch($url)
 }
 
 // ── Tactical Route Acquisition (High Efficiency) ──────────────────────────
-try {
     $allFound = [];
     // Standardize safety response
     $safetyDefaults = ['intersects' => false, 'hard_block' => false, 'hazard_dist' => 0];
 
     // Phase 1: Request Primary & Natural Alternatives (Mapbox Native)
-    $directUrl = "{$baseUrl}/{$startLng},{$startLat};{$endLng},{$endLat}{$baseParams}&alternatives=true&steps=true&radiuses=50;50";
+    $directUrl = "{$baseUrl}/{$startLng},{$startLat};{$endLng},{$endLat}{$baseParams}&alternatives=true&radiuses=50;50";
     $res = tacticalFetch($directUrl);
-    if ($res) {
-        $data = json_decode($res, true);
-        if (!empty($data['routes'])) {
-            foreach ($data['routes'] as $idx => $r) {
-                $safety = $hasAvoid ? evaluateRouteSafety($r['geometry']['coordinates'], $avoidRings) : $safetyDefaults;
-                $allFound[] = routeToFeature($r, "primary_{$idx}", $safety, $speedFactor);
+    file_put_contents(__DIR__ . '/route_debug.txt', "--- [" . date('Y-m-d H:i:s') . "] RAW RESPONSE ---\n" . ($res ?? 'NULL') . "\n\n", FILE_APPEND);
+
+    if (!$res) {
+        throw new Exception("Tactical Comms Failure: Mapbox API is unreachable or token is invalid. Please check your satellite connection.");
+    }
+    
+    $data = json_decode($res, true);
+    if (isset($data['code']) && $data['code'] !== 'Ok') {
+        throw new Exception("Mission Error: Mapbox returned '{$data['code']}' - " . ($data['message'] ?? 'Unknown tactical error'));
+    }
+
+    if (!empty($data['routes'])) {
+        foreach ($data['routes'] as $idx => $r) {
+            $safety = $hasAvoid ? evaluateRouteSafety($r['geometry']['coordinates'], $avoidRings) : $safetyDefaults;
+            $allFound[] = routeToFeature($r, "primary_{$idx}", $safety, $speedFactor);
+        }
+    }
+
+    // Phase 2: Strategic Synthetic Alternates (Force Unique Corridors)
+    if (count($allFound) < 3) {
+        $missionDist = sqrt(pow($endLng - $startLng, 2) + pow($endLat - $startLat, 2));
+        $missionBearing = atan2($endLat - $startLat, $endLng - $startLng);
+        
+        // Tactical nudge points (25%, 50%, 75%)
+        $nudgeSpecs = [
+            ['at' => 0.40, 'side' => 1,  'push' => 0.25], // 40% along, push right hard
+            ['at' => 0.60, 'side' => -1, 'push' => 0.25], // 60% along, push left hard
+            ['at' => 0.50, 'side' => 1,  'push' => 0.40]  // 50% along, deep push right
+        ];
+
+        foreach ($nudgeSpecs as $spec) {
+            if (count($allFound) >= 3) break;
+
+            $mX = $startLng + ($endLng - $startLng) * $spec['at'];
+            $mY = $startLat + ($endLat - $startLat) * $spec['at'];
+
+            // Calculate perpendicular nudge
+            $perp = $missionBearing + ($spec['side'] * M_PI / 2);
+            $nX = $mX + (cos($perp) * $missionDist * $spec['push']);
+            $nY = $mY + (sin($perp) * $missionDist * $spec['push']);
+
+            $altUrl = "{$baseUrl}/{$startLng},{$startLat};{$nX},{$nY};{$endLng},{$endLat}{$baseParams}&alternatives=false";
+            $resAlt = tacticalFetch($altUrl);
+            if ($resAlt) {
+                $dataAlt = json_decode($resAlt, true);
+                if (!empty($dataAlt['routes'])) {
+                    $r = $dataAlt['routes'][0];
+                    $safety = $hasAvoid ? evaluateRouteSafety($r['geometry']['coordinates'], $avoidRings) : $safetyDefaults;
+                    $feat = routeToFeature($r, "strategic_" . count($allFound), $safety, $speedFactor);
+                    if (isUniqueRoute($feat, $allFound)) {
+                        $allFound[] = $feat;
+                    }
+                }
             }
         }
     }
 
-    // Phase 2: Strategic Flanking (Multi-Hazard & Perpendicular Offsets)
+    // Phase 3: Strategic Flanking (Multi-Hazard & Perpendicular Offsets)
     if (count($allFound) < 10 && $hasAvoid) {
         try {
             // Calculate main mission bearing to determine perpendicular "push" directions
@@ -443,9 +495,11 @@ try {
             'total_found' => count($allFound)
         ]
     ]);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+} catch (Throwable $e) {
+    file_put_contents(__DIR__ . '/route_debug.log', "[FATAL ERROR] " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine() . "\n", FILE_APPEND);
+    // Return 200 so the mobile app can parse the actual 'error' message
+    http_response_code(200);
+    echo json_encode(['success' => false, 'error' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
 }
 
 

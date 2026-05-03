@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 /**
  * E-LigtasMo Mail Helper
  * Sends email via PHPMailer + SMTP (Gmail, etc.)

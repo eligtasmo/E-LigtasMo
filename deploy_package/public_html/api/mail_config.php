@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 /**
  * E-LigtasMo SMTP Mail Configuration
  * 

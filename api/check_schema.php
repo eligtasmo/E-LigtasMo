@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 require_once 'db.php';
 $tables = ['hazards', 'incidents', 'incident_reports'];
 foreach ($tables as $t) {

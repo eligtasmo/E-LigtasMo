@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 // Configuration for Social Media Scraping
 // We recommend using Apify (https://apify.com) for reliable Facebook scraping.
 // You need to sign up for an API key.

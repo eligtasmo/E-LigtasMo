@@ -43,7 +43,6 @@ const QUICK_ACTIONS = [
   { id: 'disaster', label: 'Disaster\nAlerts', icon: 'ShieldAlert' },
   { id: 'news', label: 'News &\nUpdates', icon: 'Megaphone' },
   { id: 'donation', label: 'Donation\nDrive', icon: 'HeartPulse' },
-  { id: 'checkin', label: 'Emergency\nCheck-In', icon: 'RadioTower' },
   { id: 'hazard', label: 'Hazard\nMap', icon: 'Map' },
   { id: 'hotlines', label: 'Emergency\nHotlines', icon: 'PhoneCall' },
 ];

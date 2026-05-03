@@ -102,11 +102,10 @@ const UniversalWebView = forwardRef(({ source, onMessage, style, ...props }, ref
   if (Platform.OS === 'web') {
     return (
       <View style={[style, { overflow: 'hidden' }]}>
-        {blobUrl ? (
+        {source?.html ? (
           <iframe
-            key={blobUrl}
             ref={webRef}
-            src={blobUrl}
+            srcDoc={source.html}
             style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'auto' }}
             allow="geolocation; microphone; camera; midi; encrypted-media;"
             referrerPolicy="no-referrer-when-downgrade"

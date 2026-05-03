@@ -1,14 +1,6 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:5173");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
-
-header("Content-Type: application/json");
 require_once 'cors.php';
+header("Content-Type: application/json");
 require_once 'db.php';
 require_once 'tokens.php';
 require_once 'session_boot.php';

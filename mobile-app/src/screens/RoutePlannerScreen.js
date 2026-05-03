@@ -504,11 +504,17 @@ const createMapHTML = (token) => `
                               if (type.includes('fire')) { icon = 'fire'; color = '#FF4B4B'; }
                               else if (type.includes('flood')) { icon = 'waves'; color = '#2F7BFF'; }
                               else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
+                              else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
                               else if (type.includes('shelter')) { icon = 'home-heart'; color = '#27AE60'; }
+                              else if (type.includes('hall') || type.includes('barangay')) { icon = 'office-building'; color = '#9333EA'; }
                               
                               el.innerHTML = '<div style="background: ' + color + '; width: 32px; height: 32px; border-radius: 16px; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">' +
                                 '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 18px; line-height: 1; display: block;"></i>' +
                                 '</div>';
+
+                              el.addEventListener('click', () => {
+                                sendAppMsg({ type: 'MARKER_CLICK', marker: m });
+                              });
                               
                               window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
                           } else {
@@ -566,11 +572,83 @@ const createMapHTML = (token) => `
               }
           }
       };
-      window.addEventListener('message', (e) => { try { var d = JSON.parse(e.data); if (d.type === 'SYNC') window.handleSync(d); } catch(err){} });
+      const syncHandler = (e) => {
+          try {
+              var d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+              if (d && d.type === 'SYNC') window.handleSync(d);
+          } catch(err){}
+      };
+      window.addEventListener('message', syncHandler);
+      document.addEventListener('message', syncHandler);
   </script>
 </body>
 </html>
 `;
+
+const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets }) => {
+  if (!marker) return null;
+  const type = marker.type || 'Asset';
+  const isShelter = type.includes('shelter');
+  const isBrgy = type.includes('hall') || type.includes('barangay');
+
+  return (
+    <View style={[StyleSheet.absoluteFill, { zIndex: 8500, backgroundColor: 'rgba(0,0,0,0.4)' }]}>
+      <TouchableOpacity style={{ flex: 1 }} onPress={onCancel} />
+      <MotiView
+        from={{ translateY: 300, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        exit={{ translateY: 300, opacity: 0 }}
+        transition={{ type: 'spring', damping: 20 }}
+        style={{
+          backgroundColor: '#1C1C1E',
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 24,
+          paddingBottom: (insets.bottom || 0) + 24,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.1)',
+        }}
+      >
+        <Row align="center" justify="between" style={{ marginBottom: 20 }}>
+          <View style={{ flex: 1 }}>
+            <Row align="center" style={{ marginBottom: 6 }}>
+              <View style={{ backgroundColor: isShelter ? 'rgba(39,174,96,0.15)' : (isBrgy ? 'rgba(147,51,234,0.15)' : 'rgba(245,158,11,0.15)'), paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderSize: 1, borderColor: isShelter ? 'rgba(39,174,96,0.3)' : (isBrgy ? 'rgba(147,51,234,0.3)' : 'rgba(245,158,11,0.3)') }}>
+                <Text style={{ color: isShelter ? '#27AE60' : (isBrgy ? '#A855F7' : '#F59E0B'), fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>{type}</Text>
+              </View>
+            </Row>
+            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800', letterSpacing: -0.5 }}>{marker.name || 'Tactical Asset'}</Text>
+          </View>
+          <TouchableOpacity onPress={onCancel} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' }}>
+            <Lucide.X size={18} color="rgba(255,255,255,0.4)" />
+          </TouchableOpacity>
+        </Row>
+
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+          {isShelter && (
+            <Row align="center" justify="between" style={{ marginBottom: 12 }}>
+              <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600' }}>Occupancy</Text>
+              <Text style={{ color: '#F3EEE6', fontSize: 14, fontWeight: '700' }}>{marker.occupancy} / {marker.capacity}</Text>
+            </Row>
+          )}
+          <Row align="center" justify="between">
+            <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600' }}>Hotline / Comms</Text>
+            <Text style={{ color: '#F3EEE6', fontSize: 14, fontWeight: '700' }}>{marker.contact || 'SECURE_LINE_ONLY'}</Text>
+          </Row>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => onSetAsDestination(marker)}
+          style={{ backgroundColor: '#2F7BFF', height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#2F7BFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 }}
+        >
+          <Row align="center">
+            <MaterialCommunityIcons name="navigation-variant" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 }}>SET_AS_DESTINATION</Text>
+          </Row>
+        </TouchableOpacity>
+      </MotiView>
+    </View>
+  );
+};
 
 const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets }) => {
   const counts = {
@@ -579,7 +657,7 @@ const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets
   };
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'box-none' }]}>
       <TouchableOpacity
         style={{ flex: 1 }}
         activeOpacity={1}
@@ -683,6 +761,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const [transportModes, setTransportModes] = useState([]);
   const [pendingRedirect, setPendingRedirect] = useState(null);
   const [user, setUser] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
   const tacticalMarkersRef = useRef([]);
   const isNavRef = useRef(false);
@@ -743,42 +822,58 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   useEffect(() => {
     const fetchTactical = async () => {
       try {
-        const [hRes, iRes] = await Promise.all([
+        const [hRes, iRes, sRes, bRes] = await Promise.all([
           fetch(`${API_URL}/list-map-overlays.php`).catch(() => null),
-          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null)
+          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null),
+          fetch(`${API_URL}/shelters-list.php`).catch(() => null),
+          fetch(`${API_URL}/list-barangays.php`).catch(() => null)
         ]);
-        if (!hRes || !iRes) return;
-        const hData = await hRes.json();
-        const iData = await iRes.json();
+        
         const markers = [];
-        if (hData?.success) {
-          (hData.hazards || []).forEach(h => markers.push({
-            id: `h${h.id}`,
-            lat: parseFloat(h.lat),
-            lng: parseFloat(h.lng),
-            type: 'hazard',
-            area_geojson: h.area_geojson,
-            is_passable: h.is_passable === undefined ? true : !!h.is_passable
-          }));
-          (hData.reports || []).forEach(f => markers.push({
-            id: `f${f.id}`,
-            lat: parseFloat(f.lat),
-            lng: parseFloat(f.lng),
-            type: 'flood',
-            area_geojson: f.area_geojson,
-            is_passable: f.is_passable === undefined ? true : !!f.is_passable
-          }));
+
+        if (hRes) {
+          const hData = await hRes.json();
+          if (hData?.success) {
+            (hData.hazards || []).forEach(h => markers.push({
+              id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
+              type: 'hazard', area_geojson: h.area_geojson,
+              is_passable: h.is_passable === undefined ? true : !!h.is_passable
+            }));
+          }
         }
-        if (iData?.success && iData.reports) {
-          iData.reports.forEach(r => markers.push({
-            id: `i${r.id}`,
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lng),
-            type: 'incident',
-            area_geojson: r.area_geojson,
-            is_passable: r.is_passable === undefined ? true : !!r.is_passable
-          }));
+
+        if (iRes) {
+          const iData = await iRes.json();
+          if (iData?.success && iData.reports) {
+            iData.reports.forEach(r => markers.push({
+              id: `i${r.id}`, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
+              type: 'incident', area_geojson: r.area_geojson,
+              is_passable: r.is_passable === undefined ? true : !!r.is_passable
+            }));
+          }
         }
+
+        if (sRes) {
+          const sData = await sRes.json();
+          if (Array.isArray(sData)) {
+            sData.forEach(s => markers.push({
+              id: `s${s.id}`, lat: parseFloat(s.lat), lng: parseFloat(s.lng),
+              type: 'shelter', name: s.name, status: s.status,
+              capacity: s.capacity, occupancy: s.occupancy, contact: s.contact_number
+            }));
+          }
+        }
+
+        if (bRes) {
+          const bData = await bRes.json();
+          if (bData?.success && bData.barangays) {
+            bData.barangays.forEach(b => markers.push({
+              id: `b${b.id}`, lat: parseFloat(b.lat), lng: parseFloat(b.lng),
+              type: b.type?.toLowerCase() || 'barangay', name: b.name, contact: b.contact
+            }));
+          }
+        }
+
         setTacticalMarkers(markers);
       } catch (e) { console.warn("[Tactical] Marker fetch failed:", e); }
     };
@@ -789,32 +884,51 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
   // State moved to top for stability
 
-
   const handleShareRoute = async () => {
     if (!destCoords) return;
     try {
       const mode = travelMode;
-      // Format: eligtasmo://route-planner/:lat/:lon/:name/:mode/:autoStart
       const missionName = destination || 'Tactical Target';
-      // Use Linking.createURL to handle both Expo Go (exp://) and Production (eligtasmo://)
-      // Include current startCoords if they exist to share the EXACT path
-      // Generate Universal Web Link
+      
+      // Generate Universal Web Link based on dynamic API_ROOT
       const query = `lat=${destCoords.lat}&lon=${destCoords.lon}&name=${encodeURIComponent(missionName)}&mode=${mode}`;
       const startQuery = startCoords ? `&sLat=${startCoords.lat}&sLon=${startCoords.lon}` : '';
       const prefix = encodeURIComponent(Linking.createURL(''));
+      
+      // Construct the final URL using API_ROOT (now dynamic from config)
       const shareLink = `${API_ROOT}/mission.php?${query}${startQuery}&prefix=${prefix}`;
 
-      console.log('[Tactical] Generated Share Link:', shareLink);
+      console.log('[Tactical] Mission Link Sync:', shareLink);
 
+      // Attempt Clipboard Copy
       await Clipboard.setStringAsync(shareLink);
-      Alert.alert('Mission Link Copied', 'The tactical mission path has been copied to your clipboard. You can now paste it into any secure messaging channel.');
-    } catch (e) { }
+      
+      // Native Share API for maximum reliability
+      const shareResult = await Share.share({
+        message: `Strategic Mission Path: ${missionName}\nInitiate Navigation: ${shareLink}`,
+        url: shareLink, // For iOS support
+        title: 'E-LigtasMo Tactical Route'
+      });
+
+      if (shareResult.action === Share.sharedAction) {
+        // Success
+      }
+    } catch (e) {
+      console.warn('[Share] Mission link failed:', e);
+      Alert.alert('Comms Error', 'Failed to generate mission link. Check network connection.');
+    }
   };
 
   // Move useEffect to bottom of component to fix hoisting
 
 
   const mapHtml = useMemo(() => ({ html: createMapHTML(MAPBOX_ACCESS_TOKEN) }), []);
+
+  useEffect(() => {
+    if (destCoords) {
+      calculateRoute(destCoords);
+    }
+  }, [travelMode, destCoords]);
 
   useEffect(() => {
     init();
@@ -842,7 +956,15 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       } catch (e) { }
     };
     startWatching();
-    return () => { isMounted = false; if (locationWatchRef.current?.remove) locationWatchRef.current.remove(); };
+    return () => {
+      isMounted = false;
+      if (locationWatchRef.current) {
+        if (typeof locationWatchRef.current.remove === 'function') {
+          locationWatchRef.current.remove();
+        }
+        locationWatchRef.current = null;
+      }
+    };
   }, []);
 
   const init = async () => {
@@ -908,11 +1030,14 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       });
 
       const body = {
-        coordinates: [[startCoords.lon, startCoords.lat], [targetDest.lon, targetDest.lat]],
-        profile: travelMode,
+        start: [startCoords.lon, startCoords.lat],
+        end: [targetDest.lon, targetDest.lat],
+        profile: travelMode, // Crucial: This must be the current selected profile
         avoid_zones: avoidZones
       };
 
+      console.log(`[Tactical] Requesting Route: START[${startCoords.lon}, ${startCoords.lat}] -> END[${targetDest.lon}, ${targetDest.lat}]`);
+      
       const resp = await fetch(`${API_URL}/mapbox-directions.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -928,17 +1053,28 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         throw new Error("Invalid Mission Data: The server returned an unreadable response.");
       }
 
-      if (data?.features) {
-        const routes = data.features.map((f, i) => ({
-          ...buildRoutePresentation(i, f.properties?.segments?.[0]?.steps || [], f.properties?.summary?.distance || 0),
-          geometry: f.geometry,
-          steps: f.properties?.segments?.[0]?.steps || [],
-          distMeters: f.properties?.summary?.distance || 0,
-          totalDurationSec: f.properties?.summary?.duration || 0,
-          time: Math.round(f.properties?.summary?.duration / 60) + ' min',
-          distance: (f.properties?.summary?.distance / 1000).toFixed(1) + ' km',
-          hazardWarning: !!f.properties?.intersects
-        }));
+      if (data?.error) {
+        alert("Mission System Error: " + data.error);
+        setIsCalculating(false);
+        return;
+      }
+      if (data?.features && data.features.length > 0) {
+        const routes = data.features.map((f, i) => {
+          const steps = f.properties?.summary?.steps || f.properties?.segments?.[0]?.steps || [];
+          const distMeters = f.properties?.summary?.distance || 0;
+          const durationSec = f.properties?.summary?.duration || 0;
+          
+          return {
+            ...buildRoutePresentation(i, steps, distMeters),
+            geometry: f.geometry,
+            steps: steps,
+            distMeters: distMeters,
+            totalDurationSec: durationSec,
+            time: Math.round(durationSec / 60) + ' min',
+            distance: (distMeters / 1000).toFixed(1) + ' km',
+            hazardWarning: !!f.properties?.intersects
+          };
+        });
         setAllRoutes(routes);
         setRoute(routes[0]);
         setSelectedRouteIndex(0);
@@ -952,6 +1088,10 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           recenter: true,
           routeIsUnsafe: !!routes[0]?.hazardWarning
         }));
+      } else {
+        alert("Mission Blocked: No viable routes found. Please check if the destination is reachable or if there are too many hazards in the area.");
+        setAllRoutes([]);
+        setRoute(null);
       }
     } catch (e) {
       console.error("[Route] Calculation error:", e);
@@ -1029,17 +1169,17 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const startNavigation = () => { if (!route) return; setIsNavigating(true); setCurrentStep(route.steps[0]); webviewRef.current?.injectJavaScript(`if(window.map){window.map.easeTo({center:[${startCoords.lon},${startCoords.lat}],pitch:65,zoom:19,duration:1000});}`); };
   const stopNavigation = () => {
     setIsNavigating(false);
-    webviewRef.current?.injectJavaScript(`
-      if(window.map){
-        window.map.easeTo({
-          center: [${startCoords.lon}, ${startCoords.lat}],
-          pitch: 0,
-          bearing: 0,
-          zoom: 17,
-          duration: 1000
-        });
-      }
-    `);
+    // Send SYNC with shouldRefit to see the whole path again
+    webviewRef.current?.postMessage(JSON.stringify({
+      type: 'SYNC',
+      routeGeom: route?.geometry?.coordinates || [],
+      altRouteGeoms: allRoutes.filter(r => r !== route).map(r => r.geometry?.coordinates || []),
+      shouldRefit: true,
+      destLoc: destCoords,
+      userLoc: startCoords,
+      isNav: false,
+      recenter: true
+    }));
   };
 
   return (
@@ -1049,10 +1189,19 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         <UniversalWebView
           ref={webviewRef}
           source={mapHtml}
-          onMessage={(e) => { try { const d = JSON.parse(e.nativeEvent.data); if (d.type === 'MAP_INTERACTION') setIsUserInteraction(d.manual); } catch (e) { } }}
+          onMessage={(e) => {
+            try {
+              const d = JSON.parse(e.nativeEvent.data);
+              if (d.type === 'MAP_INTERACTION') {
+                setIsUserInteraction(d.manual);
+              } else if (d.type === 'MARKER_CLICK') {
+                setSelectedMarker(d.marker);
+              }
+            } catch (err) { }
+          }}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
-        <View style={[atomic.l.abs, atomic.l.fill, { zIndex: 3000 }]} pointerEvents="box-none">
+        <View style={[atomic.l.abs, atomic.l.fill, { zIndex: 3000, pointerEvents: 'box-none' }]}>
           {(!isNavigating && allRoutes.length === 0) ? (
             <SearchHeader
               title="Search"
@@ -1146,6 +1295,21 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               insets={insets}
             />
           ) : null}
+
+          {selectedMarker && (
+            <AnimatePresence>
+              <TacticalMarkerBriefing
+                marker={selectedMarker}
+                insets={insets}
+                onCancel={() => setSelectedMarker(null)}
+                onSetAsDestination={(m) => {
+                  setDestination(m.name || m.type);
+                  setDestCoords({ lat: m.lat, lng: m.lng });
+                  setSelectedMarker(null);
+                }}
+              />
+            </AnimatePresence>
+          )}
 
           {/* Authentication Guard Overlay */}
           {!user && (

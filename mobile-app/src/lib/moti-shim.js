@@ -4,7 +4,7 @@
  * avoiding the Reanimated v4 incompatibility that crashes Expo Go SDK 54.
  */
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, Text } from 'react-native';
+import { Animated, View, Text, Platform } from 'react-native';
 
 /**
  * MotiView — animates a View with `from`, `animate`, and `exit` props.
@@ -40,7 +40,7 @@ export const MotiView = React.forwardRef(({
         Animated.timing(animValues.current[key], {
           toValue: typeof animate[key] === 'number' ? animate[key] : 1,
           duration,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         })
       );
 
@@ -95,7 +95,7 @@ export const MotiText = React.forwardRef(({
       Animated.timing(opacityVal, {
         toValue: animate.opacity,
         duration,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }).start();
     }
   }, [animate.opacity]);

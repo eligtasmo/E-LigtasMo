@@ -66,7 +66,7 @@ const WeatherScreen = () => {
   const current = weather?.current;
   const daily = weather?.daily;
 
-  const renderTacticalMetric = (label, value, icon: Icon, subValue) => (
+  const renderTacticalMetric = (label, value, Icon, subValue) => (
     <View style={styles.metricCard}>
         <Row align="center" gap={8} style={{ marginBottom: 12 }}>
             <View style={styles.metricIconBox}>
@@ -130,11 +130,21 @@ const WeatherScreen = () => {
                     <Text style={styles.sectionHeading}>LIVE RADAR INTEL</Text>
                 </Row>
                 <View style={styles.mapContainer}>
-                    <WebView 
-                        source={{ uri: 'https://www.windy.com/14.2833/121.4167?13.684,121.417,7' }}
-                        style={{ flex: 1, backgroundColor: '#000' }}
-                        scrollEnabled={false}
-                    />
+                    <View style={styles.radarWrapper}>
+                        {Platform.OS === 'web' ? (
+                            <iframe 
+                                src="https://embed.windy.com/embed2.html?lat=14.2833&lon=121.4167&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"
+                                style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#000' }}
+                                title="Weather Radar"
+                            />
+                        ) : (
+                            <WebView 
+                                source={{ uri: 'https://embed.windy.com/embed2.html?lat=14.2833&lon=121.4167&zoom=7&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1' }}
+                                style={{ flex: 1, backgroundColor: '#000' }}
+                                scrollEnabled={false}
+                            />
+                        )}
+                    </View>
                     <View style={styles.mapOverlay}>
                         <TouchableOpacity style={styles.mapExpandBtn}>
                             <Lucide.Maximize2 size={14} color="#FFF" />
@@ -297,12 +307,17 @@ const styles = StyleSheet.create({
         fontFamily: DS_FONT_UI,
     },
     mapContainer: {
-        height: 240,
+        height: 400,
         borderRadius: 16,
         overflow: 'hidden',
         backgroundColor: '#000',
         borderWidth: 1,
         borderColor: '#1E1E1E',
+    },
+    radarWrapper: {
+        width: '100%',
+        height: '110%', // Slightly taller to push the logo out of view
+        marginTop: -10, // Crop the top if needed
     },
     mapOverlay: {
         position: 'absolute',

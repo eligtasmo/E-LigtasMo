@@ -69,11 +69,18 @@ const UserManagement: React.FC = () => {
       const res = await fetch(`/api/list-users.php?status=${filterStatus}&brgy=${encodeURIComponent(brgyParam)}`, {
         credentials: "include"
       });
+      if (!res.ok) {
+        setError(`Server error: ${res.status} ${res.statusText}`);
+        setLoading(false);
+        return;
+      }
       const text = await res.text();
+      console.log('[DEBUG] User fetch response:', text);
       let data;
       try {
         data = JSON.parse(text);
       } catch (e) {
+        console.error('[DEBUG] JSON Parse error:', e, 'Raw text:', text);
         setError("Invalid JSON from server");
         setLoading(false);
         return;
@@ -97,11 +104,18 @@ const UserManagement: React.FC = () => {
       const res = await fetch(`/api/list-brgy-accounts.php`, {
         credentials: "include"
       });
+      if (!res.ok) {
+        setBrgyError(`Server error: ${res.status} ${res.statusText}`);
+        setBrgyLoading(false);
+        return;
+      }
       const text = await res.text();
+      console.log('[DEBUG] Brgy accounts response:', text);
       let data;
       try {
         data = JSON.parse(text);
       } catch (e) {
+        console.error('[DEBUG] Brgy JSON Parse error:', e, 'Raw text:', text);
         setBrgyError("Invalid JSON from server");
         setBrgyLoading(false);
         return;

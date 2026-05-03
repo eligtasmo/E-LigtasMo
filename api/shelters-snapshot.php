@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 // Inserts a snapshot of current shelter occupancy/capacity into shelter_occupancy_snapshots
 header('Content-Type: application/json');
 require_once 'db.php';

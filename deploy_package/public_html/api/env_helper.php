@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 /**
  * Simple .env parser for PHP
  */

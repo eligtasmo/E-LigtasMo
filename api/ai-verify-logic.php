@@ -1,4 +1,5 @@
 <?php
+require_once "cors.php";
 
 function verifyReport($pdo, $report_id, $lat, $lng) {
     $confidence = 0;
