@@ -3,6 +3,20 @@ import { API_URL } from '../config';
 
 const SESSION_KEY = 'CURRENT_USER';
 
+const remoteLog = async (message, details) => {
+  try {
+    await fetch(`${API_URL}/log-mobile-error.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        device: Platform.OS + ' ' + Platform.Version,
+        message,
+        details
+      })
+    });
+  } catch (e) { /* silent fail */ }
+};
+
 export const AuthService = {
   login: async (username, password) => {
     try {
@@ -22,10 +36,12 @@ export const AuthService = {
         data = JSON.parse(responseText);
       } catch (jsonError) {
         console.error('[AuthService] JSON Parse Error. Raw body:', responseText);
+        await remoteLog('JSON_PARSE_ERROR', { url, body: responseText });
         throw new Error('INVALID_JSON_RESPONSE');
       }
       
       if (data.success) {
+        // ... (rest of success logic remains same)
         const user = {
           id: data.id,
           username: data.username,
@@ -40,11 +56,13 @@ export const AuthService = {
       }
       return data;
     } catch (error) {
-      console.error('AuthService Login Error [Details]:', {
+      const errorPayload = {
         message: error.message,
         url: `${API_URL}/login.php`,
         type: error.constructor.name
-      });
+      };
+      console.error('AuthService Login Error [Details]:', errorPayload);
+      await remoteLog('LOGIN_NETWORK_ERROR', errorPayload);
       throw error;
     }
   },
