@@ -317,17 +317,10 @@ const createMapHTML = (token) => `
             source: 'tactical-polygons', 
             paint: { 
               'fill-color': [
-                'match', 
-                ['get', 'type'],
-                'flood', '#3B82F6',
-                'fire', '#FF4B4B',
-                'hazard', '#F59E0B',
-                'incident', '#EF4444',
-                'accident', '#FF4B4B',
-                'landslide', '#78350F',
-                'road_block', '#374151',
-                'shelter', '#27AE60',
-                '#EF4444' 
+                'case',
+                ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
+                ['==', ['get', 'type'], 'flood'], '#3B82F6',
+                '#F59E0B'
               ], 
               'fill-opacity': 0.18 
             } 
@@ -338,19 +331,12 @@ const createMapHTML = (token) => `
             source: 'tactical-polygons', 
             paint: { 
               'line-color': [
-                'match', 
-                ['get', 'type'],
-                'flood', '#3B82F6',
-                'fire', '#FF4B4B',
-                'hazard', '#F59E0B',
-                'incident', '#EF4444',
-                'accident', '#FF4B4B',
-                'landslide', '#78350F',
-                'road_block', '#374151',
-                'shelter', '#27AE60',
-                '#EF4444' 
+                'case',
+                ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
+                ['==', ['get', 'type'], 'flood'], '#3B82F6',
+                '#F59E0B'
               ], 
-              'line-width': 1.8, 
+              'line-width': 2, 
               'line-dasharray': [3, 2] 
             } 
           });
@@ -541,7 +527,7 @@ const createMapHTML = (token) => `
                                 return;
                             }
                             const finalGeom = g.type === 'Feature' ? g.geometry : g;
-                            if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type }, geometry: finalGeom });
+                            if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type, severity: m.severity || 'Normal' }, geometry: finalGeom });
                           };
 
                           if (geom) {
@@ -551,7 +537,7 @@ const createMapHTML = (token) => `
                               const rLng = Number(m.lng || m.lon);
                               polyFeatures.push({ 
                                 type: 'Feature', 
-                                properties: { type: type }, 
+                                properties: { type: type, severity: m.severity || 'Normal' }, 
                                 geometry: {
                                     type: 'Polygon',
                                     coordinates: createCircle([rLng, rLat], 0.1)
@@ -872,6 +858,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
             (hData.reports || []).forEach(h => markers.push({
               id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
               type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
+              severity: h.severity || 'Normal',
               is_passable: h.is_passable === undefined ? true : !!h.is_passable
             }));
           }
