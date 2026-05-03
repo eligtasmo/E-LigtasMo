@@ -551,7 +551,12 @@ const createMapHTML = (token) => `
 
                       // 3d. SYNC POLYGON SOURCE
                       if (map.getSource('tactical-polygons')) {
+                          console.log("[Tactical] Syncing Polygons:", polyFeatures.length);
                           map.getSource('tactical-polygons').setData({ type: 'FeatureCollection', features: polyFeatures });
+                          
+                          // Ensure polygons are above the route but below markers
+                          if (map.getLayer('tactical-polygons-fill')) map.moveLayer('tactical-polygons-fill');
+                          if (map.getLayer('tactical-polygons-line')) map.moveLayer('tactical-polygons-line');
                       }
                   }
               }
@@ -836,9 +841,9 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         if (hRes) {
           const hData = await hRes.json();
           if (hData?.success) {
-            (hData.hazards || []).forEach(h => markers.push({
+            (hData.reports || []).forEach(h => markers.push({
               id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
-              type: 'hazard', area_geojson: h.area_geojson,
+              type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
               is_passable: h.is_passable === undefined ? true : !!h.is_passable
             }));
           }
