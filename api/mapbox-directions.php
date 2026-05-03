@@ -53,10 +53,10 @@ try {
     ];
     $mapboxProfile = $profileMap[$profile] ?? 'mapbox/driving';
     
-    // Annotations are only valid for driving profiles in some cases (traffic/congestion)
-    $annotations = "maxspeed";
+    // Annotations must match profile capabilities
+    $annotations = "duration,distance";
     if (strpos($mapboxProfile, 'driving') !== false) {
-        $annotations .= ",congestion";
+        $annotations .= ",maxspeed,congestion";
     }
 
 // Tactical Speed Factors (Mapbox Duration Multipliers)
