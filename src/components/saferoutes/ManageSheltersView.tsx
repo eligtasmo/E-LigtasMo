@@ -315,9 +315,21 @@ export default function ManageSheltersView() {
                 </div>
                 <button
                   onClick={() => {
-                    const shareUrl = `eligtasmo://route-planner?lat=${selectedShelter.lat}&lon=${selectedShelter.lng}&name=${encodeURIComponent(selectedShelter.name)}&autoStart=true`;
-                    navigator.clipboard.writeText(shareUrl);
-                    setShowToast('Mission link copied to clipboard.');
+                    const missionParams = `lat=${selectedShelter.lat}&lon=${selectedShelter.lng}&name=${encodeURIComponent(selectedShelter.name)}&autoStart=true`;
+                    
+                    // Generate a deep link that adapts to the environment
+                    // For production/installed app: eligtasmo://route-planner?...
+                    // For local development (Expo Go): exp://exp.host/@kaizendotexe/mobileligtas/--/route-planner?...
+                    
+                    // We'll provide a helpful prompt or just copy the universal format
+                    const deepLink = `eligtasmo://route-planner?${missionParams}`;
+                    const expoLink = `exp://exp.host/@kaizendotexe/mobileligtas/--/route-planner?${missionParams}`;
+                    
+                    // Prefer the expo link for development/testing via Expo Go
+                    const finalLink = expoLink;
+                    
+                    navigator.clipboard.writeText(finalLink);
+                    setShowToast('Mission link copied! Ready for mobile deployment.');
                     setTimeout(() => setShowToast(null), 3000);
                   }}
                   className="mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronDownIcon } from '../../icons';
 import { apiFetch } from '../../utils/api';
 import { Link } from 'react-router-dom';
@@ -231,6 +232,7 @@ interface Hazard {
 }
 
 const MMDRMODashboard: React.FC = () => {
+  const navigate = useNavigate();
   // Admin dashboard metrics range (affects only top metrics, not map)
   const [metricsRange, setMetricsRange] = useState<'24h' | '7d' | '30d' | '90d'>('24h');
   const [metricsRangeMenuOpen, setMetricsRangeMenuOpen] = useState<string | null>(null);
@@ -314,6 +316,7 @@ const MMDRMODashboard: React.FC = () => {
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [dangerZones, setDangerZones] = useState<DangerZone[]>([]);
   const [enhancedShelters, setEnhancedShelters] = useState<EnhancedShelter[]>([]);
+  const [barangays, setBarangays] = useState<any[]>([]);
   
   // Filter states for map markers
   const [showIncidents, setShowIncidents] = useState(true);
@@ -996,6 +999,18 @@ const MMDRMODashboard: React.FC = () => {
     ]
   };
 
+  const fetchBarangays = async () => {
+    try {
+      const response = await apiFetch('list-barangays.php');
+      const data = await response.json();
+      if (data.success && Array.isArray(data.barangays)) {
+        setBarangays(data.barangays);
+      }
+    } catch (error) {
+      console.error('Error fetching barangays:', error);
+    }
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -1008,6 +1023,7 @@ const MMDRMODashboard: React.FC = () => {
     fetchHazards();
     fetchDangerZones();
     fetchShelters();
+    fetchBarangays();
     
     // Refresh all data every 60 seconds
     const interval = setInterval(() => {
@@ -1015,6 +1031,7 @@ const MMDRMODashboard: React.FC = () => {
       fetchHazards();
       fetchDangerZones();
       fetchShelters();
+      fetchBarangays();
     }, 60000);
     
     return () => clearInterval(interval);
@@ -1765,6 +1782,40 @@ const MMDRMODashboard: React.FC = () => {
                     </Marker>
                   ))}
 
+                {/* Hazard Markers */}
+                {showHazards && hazards
+                  .filter(h => 
+                    (typeof h.latitude === 'number' || typeof h.longitude === 'number')
+                  )
+                  .map((h) => (
+                    <Marker
+                      key={`hazard-pin-${h.id}`}
+                      latitude={Number(h.latitude || (h as any).lat)}
+                      longitude={Number(h.longitude || (h as any).lng)}
+                      onClick={(e: any) => {
+                        e.originalEvent.stopPropagation();
+                        setSelectedMarker({ type: 'incident', data: { ...h, type: h.type || 'Hazard', lat: h.latitude || (h as any).lat, lng: h.longitude || (h as any).lng, location: h.location || 'Hazard Area' } });
+                      }}
+                    >
+                      <div className="cursor-pointer transition-transform hover:scale-110">
+                        <Pin3D color="#f59e0b" size={32} icon={<FiAlertTriangle size={14} />} />
+                      </div>
+                    </Marker>
+                  ))}
+
+                {/* Barangay Markers */}
+                {barangays.map((b) => (
+                  <Marker
+                    key={`brgy-pin-${b.id}`}
+                    latitude={Number(b.lat)}
+                    longitude={Number(b.lng)}
+                  >
+                    <div className="cursor-pointer transition-transform hover:scale-110">
+                      <Pin3D color="#3b82f6" size={30} icon={<FiHome size={14} />} />
+                    </div>
+                  </Marker>
+                ))}
+
                 {/* Shelter Markers */}
                 {showShelters && shelters
                   .filter(shelter => 
@@ -1962,6 +2013,15 @@ const MMDRMODashboard: React.FC = () => {
                           >
                             Details
                           </button>
+                        </div>
+                        <div className="pt-1">
+                           <button
+                             type="button"
+                             onClick={() => navigate('/admin/report-incident', { state: { prefill: selectedMarker.data, isEdit: true } })}
+                             className="w-full bg-gray-600 hover:bg-gray-500 text-white text-[10px] py-1 px-2 rounded transition-colors uppercase font-bold tracking-widest"
+                           >
+                             Modify Intel
+                           </button>
                         </div>
                       </div>
                     </div>

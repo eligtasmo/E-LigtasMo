@@ -307,6 +307,8 @@ const createMapHTML = (token) => `
             paint: { 
               'fill-color': [
                 'case',
+                ['==', ['get', 'is_passable'], 0], '#EF4444',
+                ['==', ['get', 'is_passable'], 1], '#F59E0B',
                 ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
                 ['==', ['get', 'type'], 'flood'], '#3B82F6',
                 '#F59E0B'
@@ -321,12 +323,14 @@ const createMapHTML = (token) => `
             paint: { 
               'line-color': [
                 'case',
+                ['==', ['get', 'is_passable'], 0], '#EF4444',
+                ['==', ['get', 'is_passable'], 1], '#F59E0B',
                 ['any', ['==', ['get', 'severity'], 'High'], ['==', ['get', 'severity'], 'Critical']], '#EF4444',
                 ['==', ['get', 'type'], 'flood'], '#3B82F6',
                 '#F59E0B'
               ], 
-              'line-width': 2, 
-              'line-dasharray': [3, 2] 
+              'line-width': 2.5, 
+              'line-dasharray': [2, 1.5] 
             } 
           });
 
@@ -347,6 +351,11 @@ const createMapHTML = (token) => `
           
           window.loaded = true;
           window.safeSetLayout = function(id, key, val) { if (map.getLayer(id)) map.setLayoutProperty(id, key, val); };
+          window.sendMarkerClick = function(id) {
+               const m = window.markerDataMap[id];
+               if (m) sendAppMsg({ type: 'MARKER_CLICK', marker: m });
+          };
+
           window.safeSetPaint = function(id, key, val) { if (map.getLayer(id)) map.setPaintProperty(id, key, val); };
           while (window.pendingMessages.length) window.handleSync(window.pendingMessages.shift());
       });
@@ -469,10 +478,12 @@ const createMapHTML = (token) => `
               var polyFeatures = [];
               var currentIds = data.tacticalMarkers.map(m => 'marker-' + m.id);
 
+              window.markerDataMap = {};
               data.tacticalMarkers.forEach(m => {
-                  const markerId = 'marker-' + m.id;
-                  let lat = Number(m.lat);
-                  let lng = Number(m.lng || m.lon);
+                  const markerId = m.id;
+                  window.markerDataMap[markerId] = m;
+                  let lng = parseFloat(m.lng || m.lon);
+                  let lat = parseFloat(m.lat);
 
                   // 3a. AREA DATA RESOLUTION
                   let geom = m.area_geojson;
@@ -488,41 +499,48 @@ const createMapHTML = (token) => `
                   }
 
                   // 3c. PINPOINT RENDERING (Three-Ring Style)
-                  if (!window.activeMarkers[markerId]) {
-                      var el = document.createElement('div');
-                      el.className = 'tactical-marker';
-                      
-                      let icon = 'alert';
-                      let color = '#F59E0B';
                       const type = (m.type || '').toLowerCase();
-                      if (type.includes('fire')) { icon = 'fire'; color = '#EF4444'; }
-                      else if (type.includes('flood')) { icon = 'waves'; color = '#3B82F6'; }
-                      else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
-                      else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
+                      const isPassable = String(m.is_passable) === '1' || m.is_passable === true;
+                      const severity = m.severity || 'Moderate';
+
+                      let icon = 'alert';
+                      let color = isPassable ? '#F59E0B' : '#EF4444';
+                      
+                      if (type.includes('fire')) { icon = 'fire'; if (isPassable === undefined) color = '#EF4444'; }
+                      else if (type.includes('flood')) { icon = 'waves'; if (isPassable === undefined) color = '#3B82F6'; }
+                      else if (type.includes('hazard')) { icon = 'alert-octagon'; if (isPassable === undefined) color = '#F59E0B'; }
+                      else if (type.includes('incident')) { icon = 'alert'; if (isPassable === undefined) color = '#EF4444'; }
                       else if (type.includes('shelter')) { icon = 'shield-home'; color = '#059669'; }
                       else if (type.includes('hall') || type.includes('barangay') || type.includes('brgy')) { icon = 'home'; color = '#3B82F6'; }
                       
-                      el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
-                          '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
-                          '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + color + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
-                          '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + color + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
-                          '<div style="position: absolute; width: 14px; height: 14px; background: ' + color + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
-                            '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
-                          '</div>' +
-                        '</div>';
+                      if (!window.activeMarkers[markerId]) {
+                        var el = document.createElement('div');
+                        el.className = 'tactical-marker';
+                        el.style.cursor = 'pointer';
+                        el.style.zIndex = '50';
+                        el.style.pointerEvents = 'auto';
+                        
+                        el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
+                            '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
+                            '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + color + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
+                            '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + color + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
+                            '<div style="position: absolute; width: 14px; height: 14px; background: ' + color + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
+                              '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                            '</div>' +
+                          '</div>';
+                        
+                        el.onclick = function(e) {
+                          e.stopPropagation();
+                          window.sendMarkerClick(markerId);
+                        };
+                        
+                        window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+                      } else {
+                        window.activeMarkers[markerId].setLngLat([lng, lat]);
+                      }
 
-                      el.addEventListener('click', () => {
-                        sendAppMsg({ type: 'MARKER_CLICK', marker: m });
-                      });
-                      
-                      window.activeMarkers[markerId] = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
-                  } else {
-                      window.activeMarkers[markerId].setLngLat([lng, lat]);
-                  }
-
-                  // 3d. POLYGON / RADIUS RENDERING
-                  const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay') || type.includes('brgy');
-                  const severity = m.severity || 'Moderate';
+                      // 3d. POLYGON / RADIUS RENDERING
+                      const isAsset = type.includes('shelter') || type.includes('hall') || type.includes('barangay') || type.includes('brgy');
 
                   const addPoly = (g) => {
                     if (!g) return;
@@ -531,21 +549,55 @@ const createMapHTML = (token) => `
                         return;
                     }
                     const finalGeom = g.type === 'Feature' ? g.geometry : g;
-                    if (finalGeom) polyFeatures.push({ type: 'Feature', properties: { type: type, severity: severity }, geometry: finalGeom });
+                    if (finalGeom) polyFeatures.push({ 
+                        type: 'Feature', 
+                        properties: { 
+                            type: type, 
+                            severity: severity,
+                            is_passable: normalizeIsPassable(m.is_passable)
+                        }, 
+                        geometry: finalGeom 
+                    });
                   };
 
-                  if (geom) {
-                      addPoly(geom);
-                  } else if (!isAsset) {
-                      polyFeatures.push({ 
-                        type: 'Feature', 
-                        properties: { type: type, severity: severity }, 
-                        geometry: {
-                            type: 'Polygon',
-                            coordinates: createCircle([lng, lat], 0.4) 
-                        } 
-                      });
+                  function normalizeIsPassable(val) {
+                      if (val === true || val === 1 || val === "1" || val === "true") return 1;
+                      return 0;
                   }
+
+                      const finalGeom = geom ? (geom.type === 'Feature' ? geom.geometry : geom) : null;
+                      
+                      if (finalGeom) {
+                        polyFeatures.push({ 
+                          type: 'Feature', 
+                          properties: { 
+                              type: type, 
+                              severity: severity,
+                              is_passable: normalizeIsPassable(m.is_passable)
+                          }, 
+                          geometry: finalGeom 
+                        });
+                      } else if (!isAsset) {
+                        let radius = 0.3;
+                        const sev = severity.toLowerCase();
+                        if (sev.includes('critical')) radius = 0.6;
+                        else if (sev.includes('high')) radius = 0.45;
+                        else if (sev.includes('moderate') || sev.includes('medium')) radius = 0.3;
+                        else radius = 0.2;
+
+                        polyFeatures.push({ 
+                          type: 'Feature', 
+                          properties: { 
+                              type: type, 
+                              severity: severity,
+                              is_passable: normalizeIsPassable(m.is_passable)
+                          }, 
+                          geometry: {
+                              type: 'Polygon',
+                              coordinates: createCircle([lng, lat], radius) 
+                          } 
+                        });
+                      }
               });
 
               // 3e. CLEANUP REMOVED MARKERS
@@ -656,8 +708,33 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets, 
           )}
           {isIncident && (
             <View style={{ marginBottom: 12 }}>
-              <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Intelligence Detail</Text>
-              <Text style={{ color: '#F3EEE6', fontSize: 14, lineHeight: 20 }}>{marker.description || 'No detailed intel provided for this entry.'}</Text>
+              <Text style={{ color: 'rgba(243,238,230,0.5)', fontSize: 12, fontWeight: '600', marginBottom: 8 }}>TACTICAL INTELLIGENCE</Text>
+              
+              <Row align="center" justify="between" style={{ marginBottom: 10, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Passability</Text>
+                <Badge 
+                  label={marker.is_passable ? 'PASSABLE' : 'NOT PASSABLE'} 
+                  variant={marker.is_passable ? 'success' : 'danger'} 
+                />
+              </Row>
+
+              {marker.allowed_modes && Array.isArray(marker.allowed_modes) && marker.allowed_modes.length > 0 && (
+                <View style={{ marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', marginBottom: 8 }}>ALLOWED MODES</Text>
+                  <Row wrap gap={6}>
+                    {marker.allowed_modes.map(mode => (
+                      <View key={mode} style={{ backgroundColor: 'rgba(47, 123, 255, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(47, 123, 255, 0.2)' }}>
+                        <Text style={{ color: '#2F7BFF', fontSize: 9, fontWeight: '900', textTransform: 'uppercase' }}>{mode.replace(/-/g, ' ')}</Text>
+                      </View>
+                    ))}
+                  </Row>
+                </View>
+              )}
+
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>DESCRIPTION</Text>
+                <Text style={{ color: '#F3EEE6', fontSize: 13, lineHeight: 18 }}>{marker.description || 'No detailed intel provided.'}</Text>
+              </View>
             </View>
           )}
           <Row align="center" justify="between">
@@ -680,7 +757,15 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets, 
   );
 };
 
-const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets }) => {
+const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets, destCoords }) => {
+  const marker = useMemo(() => {
+    if (!destination || !tacticalData) return null;
+    return tacticalData.find(m => 
+      m.name === destination || 
+      (m.type && m.type.toUpperCase() === destination.toUpperCase())
+    );
+  }, [destination, tacticalData]);
+
   const counts = {
     flood: (tacticalData || []).filter(m => m.type === 'flood').length,
     hazard: (tacticalData || []).filter(m => m.type === 'hazard' || m.type === 'incident').length
@@ -722,7 +807,7 @@ const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets
           <Row align="center" justify="space-between">
             <Col>
               <Heading size="lg" style={{ letterSpacing: 1 }}>TACTICAL BRIEFING</Heading>
-              <Text style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: 2, fontSize: 9, fontWeight: '800', marginTop: 4 }}>MISSION ID: {Math.random().toString(36).substring(7).toUpperCase()}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.4)', letterSpacing: 2, fontSize: 9, fontWeight: '800', marginTop: 4 }}>MISSION ID: {destination ? (destination.length + (destCoords?.lat || 0)).toString(36).toUpperCase() : 'BETA-1'}</Text>
             </Col>
             <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(179,114,19,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(179,114,19,0.2)' }}>
               <Lucide.ShieldAlert size={20} color="#B37213" />
@@ -743,19 +828,30 @@ const MissionBriefing = ({ destination, onAccept, onCancel, tacticalData, insets
             <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 16 }} />
 
             <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: '800', letterSpacing: 1, marginBottom: 12 }}>INTELLIGENCE SUMMARY</Text>
+            {marker ? (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: '#F3EEE6', fontSize: 13, lineHeight: 18, marginBottom: 12 }}>{marker.description || 'Target area verified for tactical deployment. Standard protocols apply.'}</Text>
+                {marker.capacity && (
+                  <Row justify="between" style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: 10, borderRadius: 8 }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Occupancy Status</Text>
+                    <Text style={{ color: '#F2AB2E', fontSize: 11, fontWeight: '800' }}>{marker.occupancy} / {marker.capacity}</Text>
+                  </Row>
+                )}
+              </View>
+            ) : null}
             <Row wrap gap={8}>
-              <Badge label={`${counts.flood || 3} FLOOD ZONES AVOIDED`} variant="info" />
-              <Badge label={`${counts.hazard || 1} HAZARDS BYPASSED`} variant="danger" />
+              <Badge label={`${counts.flood || 0} FLOOD ZONES AVOIDED`} variant="info" />
+              <Badge label={`${counts.hazard || 0} HAZARDS BYPASSED`} variant="danger" />
               <Badge label="PATH VERIFIED" variant="success" />
             </Row>
           </Card>
 
           <Col gap={12}>
             <PrimaryButton
-              title="ACCEPT MISSION"
+              title="TAKE ME THERE"
               onPress={onAccept}
               variant="tactical"
-              lucideIcon="CheckCircle"
+              lucideIcon="Navigation"
             />
             <TouchableOpacity onPress={onCancel} style={{ alignSelf: 'center', paddingVertical: 10 }}>
               <Text style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: 11, letterSpacing: 1 }}>ABORT MISSION</Text>
@@ -802,6 +898,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const isNavRef = useRef(false);
   const webviewRef = useRef(null);
   const locationWatchRef = useRef(null);
+  const paramsProcessedRef = useRef(false);
 
   useEffect(() => { tacticalMarkersRef.current = tacticalMarkers; }, [tacticalMarkers]);
   useEffect(() => { isNavRef.current = isNavigating; }, [isNavigating]);
@@ -823,8 +920,9 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   useEffect(() => {
     const params = navRoute.params;
     console.log('[RoutePlanner] Params received:', params);
-    if (params) {
+    if (params && !paramsProcessedRef.current) {
       if (params.lat && params.lon) {
+        paramsProcessedRef.current = true;
         const newDest = { lat: parseFloat(params.lat), lon: parseFloat(params.lon) };
         console.log('[RoutePlanner] Setting destination:', newDest);
         setDestCoords(newDest);
@@ -873,7 +971,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         }
       }
     }
-  }, [navRoute.params, tacticalMarkers]);
+  }, [navRoute.params, tacticalMarkers.length > 0]);
 
   useEffect(() => {
     if (pendingRedirect && startCoords && destCoords && !isNavigating && !isCalculating) {
@@ -909,16 +1007,20 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         if (iRes) {
           const iData = await iRes.json();
           if (iData?.success && iData.incidents) {
-            iData.incidents.forEach(r => markers.push({
-              id: `i${r.id}`, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
-              type: 'incident', area_geojson: r.area_geojson,
-              severity: r.severity || 'Moderate',
-              is_passable: r.is_passable === undefined ? true : !!r.is_passable,
-              status: r.status,
-              description: r.description,
-              time: r.time,
-              user_id: r.user_id
-            }));
+            const allowedStats = ['ACTIVE', 'APPROVED', 'VERIFIED', 'RESOLVED'];
+            iData.incidents
+              .filter(r => allowedStats.includes((r.status || '').toUpperCase()))
+              .forEach(r => markers.push({
+                id: `i${r.id}`, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
+                type: 'incident', area_geojson: r.area_geojson,
+                severity: r.severity || 'Moderate',
+                is_passable: r.is_passable === undefined ? true : (r.is_passable === true || r.is_passable === 1 || r.is_passable === "1"),
+                status: r.status,
+                description: r.description,
+                time: r.time,
+                user_id: r.user_id,
+                allowed_modes: r.allowed_modes
+              }));
           }
         }
 
@@ -961,15 +1063,21 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       const mode = travelMode;
       const missionName = destination || 'Tactical Target';
       
-      // Generate Universal Web Link based on dynamic API_ROOT
-      const query = `lat=${destCoords.lat}&lon=${destCoords.lon}&name=${encodeURIComponent(missionName)}&mode=${mode}`;
-      const startQuery = startCoords ? `&sLat=${startCoords.lat}&sLon=${startCoords.lon}` : '';
-      const prefix = encodeURIComponent(Linking.createURL(''));
-      
-      // Construct the final URL using API_ROOT (now dynamic from config)
-      const shareLink = `${API_ROOT}/mission.php?${query}${startQuery}&prefix=${prefix}`;
+      // Use expo-linking to generate the correct URI for the current environment
+      // This will automatically handle exp:// for development and eligtasmo:// for production
+      const shareLink = Linking.createURL('route-planner', {
+        queryParams: {
+          lat: destCoords.lat,
+          lon: destCoords.lon,
+          name: missionName,
+          mode: mode,
+          autoStart: 'true',
+          sLat: startCoords?.lat,
+          sLon: startCoords?.lon
+        }
+      });
 
-      console.log('[Tactical] Mission Link Sync:', shareLink);
+      console.log('[Tactical] Adaptive Mission Link:', shareLink);
 
       // Attempt Clipboard Copy
       await Clipboard.setStringAsync(shareLink);
@@ -977,16 +1085,12 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       // Native Share API for maximum reliability
       const shareResult = await Share.share({
         message: `Strategic Mission Path: ${missionName}\nInitiate Navigation: ${shareLink}`,
-        url: shareLink, // For iOS support
+        url: shareLink, 
         title: 'E-LigtasMo Tactical Route'
       });
-
-      if (shareResult.action === Share.sharedAction) {
-        // Success
-      }
     } catch (e) {
       console.warn('[Share] Mission link failed:', e);
-      Alert.alert('Comms Error', 'Failed to generate mission link. Check network connection.');
+      Alert.alert('Comms Error', 'Failed to generate adaptive mission link.');
     }
   };
 
@@ -1030,9 +1134,13 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     return () => {
       isMounted = false;
       if (locationWatchRef.current) {
-        if (typeof locationWatchRef.current.remove === 'function') {
-          locationWatchRef.current.remove();
-        }
+        try {
+          if (typeof locationWatchRef.current.remove === 'function') {
+            locationWatchRef.current.remove();
+          } else if (locationWatchRef.current.removeSubscription) {
+             locationWatchRef.current.removeSubscription();
+          }
+        } catch (e) { console.log("[Location] Cleanup error:", e); }
         locationWatchRef.current = null;
       }
     };
@@ -1084,8 +1192,9 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
       const avoidZones = [];
       tacticalMarkersRef.current.forEach(item => {
-        // Only avoid zones that are NOT passable
-        if (item.is_passable === true) return;
+        // Only avoid zones that are NOT passable (is_passable false or 0)
+        const isActuallyPassable = item.is_passable === true || item.is_passable === 1 || item.is_passable === "1";
+        if (isActuallyPassable) return;
 
         const geom = normalizeGeom(item.area_geojson, parseFloat(item.lat), parseFloat(item.lng));
         if (geom) {
@@ -1130,7 +1239,12 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         return;
       }
       if (data?.features && data.features.length > 0) {
-        const routes = data.features.map((f, i) => {
+        // Ensure they are sorted by duration (fastest first) before mapping
+        const rawFeatures = [...data.features].sort((a, b) => 
+          (a.properties?.summary?.duration || 0) - (b.properties?.summary?.duration || 0)
+        );
+
+        const routes = rawFeatures.map((f, i) => {
           const steps = f.properties?.summary?.steps || f.properties?.segments?.[0]?.steps || [];
           const distMeters = f.properties?.summary?.distance || 0;
           const durationSec = f.properties?.summary?.duration || 0;
@@ -1368,6 +1482,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               destination={destination}
               tacticalData={tacticalMarkers}
               insets={insets}
+              destCoords={destCoords}
               onAccept={() => {
                 setIsMissionBriefing(false);
               }}
@@ -1396,7 +1511,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           {/* Floating Report Button Removed - Moved to SearchHeader Top Right */}
 
 
-          {allRoutes.length > 0 && !isNavigating ? (
+          {allRoutes.length > 0 && !isNavigating && !isMissionBriefing ? (
             <RouteOptionsSheet
               allRoutes={allRoutes}
               selectedRouteIndex={selectedRouteIndex}

@@ -195,11 +195,11 @@ const HomeScreen = ({ navigation }) => {
       setAnnouncements(combined);
 
       // Check for urgent ones (is_urgent === 1 or alert type)
-      const urgent = combined.find(a => (a.is_urgent === 1 || a._source === 'alert') && a.status !== 'archived');
-      if (urgent) {
-        setUrgentAnnouncement(urgent);
-        setShowUrgentModal(true);
-      }
+      // const urgent = combined.find(a => (a.is_urgent === 1 || a._source === 'alert') && a.status !== 'archived');
+      // if (urgent) {
+      //   setUrgentAnnouncement(urgent);
+      //   setShowUrgentModal(true);
+      // }
     } catch (error) {
       console.error('Error loading announcements:', error);
     }

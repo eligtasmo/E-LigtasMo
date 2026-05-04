@@ -1,5 +1,5 @@
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, FormEvent, useMemo, useRef } from "react";
 import { FaExclamationTriangle, FaCheckCircle, FaUsers, FaMapMarkerAlt, FaPlus, FaBullhorn, FaHome, FaTimes, FaWater, FaList } from "react-icons/fa";
 import { FiMapPin, FiClock as FiClockIcon, FiChevronRight, FiSearch, FiFilter, FiRefreshCw } from "react-icons/fi";
@@ -15,6 +15,7 @@ const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.en
 
 const BrgyHome = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [barangayLocation, setBarangayLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ const BrgyHome = () => {
     activeIncidents: 0,
     pendingApprovals: 0,
     shelterCapacity: "0/0",
+    statusUpdatedBy: null as string | null
   });
   const [recentIncidents, setRecentIncidents] = useState<any[]>([]);
   const [hazards, setHazards] = useState<any[]>([]);
@@ -268,7 +270,7 @@ const BrgyHome = () => {
   const [selectedIncident, setSelectedBrgyIncident] = useState<any | null>(null);
   const [selectedShelter, setSelectedBrgyShelter] = useState<any | null>(null);
 
-  const { viewport: viewState, setViewport: setViewState } = useGlobalMapContext();
+  const { viewport: viewState, setViewport: setViewState, updateViewport } = useGlobalMapContext();
   const mapRef = useRef<any>(null);
   const [mapDebugOpen, setMapDebugOpen] = useState(false);
   const [mapLayers, setMapLayers] = useState({
@@ -280,12 +282,11 @@ const BrgyHome = () => {
   // Center on barangay location if available
   useEffect(() => {
     if (barangayLocation) {
-      setViewState(prev => ({
-        ...prev,
+      updateViewport({
         latitude: barangayLocation.lat,
         longitude: barangayLocation.lng,
         zoom: 14
-      }));
+      });
     }
   }, [barangayLocation]);
 
@@ -793,6 +794,14 @@ const BrgyHome = () => {
                         Operational_Complete
                       </div>
                     )}
+                    {(selectedIncident.status !== 'Resolved' && selectedIncident.status !== 'Rejected') && (
+                      <button 
+                        onClick={() => navigate('/barangay/report-incident', { state: { prefill: selectedIncident, isEdit: true } })}
+                        className="col-span-2 flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                      >
+                        Modify Intel
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -915,6 +924,20 @@ const BrgyHome = () => {
                   />
                 </Source>
               )}
+              
+              {/* Hazard Pinpoint Markers */}
+              {mapLayers.showHazards && hazards.map((h, idx) => (
+                <TacticalMarker
+                  key={`brgy-map-hazard-pin-${h.id || idx}`}
+                  latitude={Number(h.latitude ?? h.lat)}
+                  longitude={Number(h.longitude ?? h.lng)}
+                  type="hazard"
+                  onClick={e => {
+                    e.originalEvent.stopPropagation();
+                    // Optional: open hazard detail
+                  }}
+                />
+              ))}
 
               {/* Incident Markers */}
               {mapLayers.showIncidents && recentIncidents

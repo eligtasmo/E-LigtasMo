@@ -288,7 +288,9 @@ const HazardMapScreen = ({ navigation, route }) => {
         lng: hazard.lng,
         type: hazard.type || kind,
         accent,
-        area: hazard.area_geojson || null
+        area: hazard.area_geojson || null,
+        is_passable: hazard.is_passable,
+        severity: hazard.severity
       };
     });
 
@@ -299,27 +301,18 @@ const HazardMapScreen = ({ navigation, route }) => {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet" />
         <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
         <style>
           html, body { margin: 0; padding: 0; background: #080808; }
           #map { position: absolute; inset: 0; }
           .hazard-marker {
-            width: 28px;
-            height: 28px;
-            border-radius: 14px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2.5px solid #FFF;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
             cursor: pointer;
-          }
-          .hazard-marker::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 4px;
-            background: #FFF;
           }
           .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib { display: none !important; }
         </style>
@@ -339,6 +332,23 @@ const HazardMapScreen = ({ navigation, route }) => {
             antialias: true
           });
 
+          // Circle generator helper
+          function createCircle(center, radiusInKm, points = 64) {
+            const coords = { lat: center[1], lng: center[0] };
+            const earthR = 6378137;
+            const radiusM = radiusInKm * 1000;
+            const ret = [];
+            for (let i = 0; i < points; i++) {
+              const angle = (i * 360) / points;
+              const rad = (angle * Math.PI) / 180;
+              const dLat = (radiusM / earthR) * (180 / Math.PI) * Math.cos(rad);
+              const dLng = (radiusM / (earthR * Math.cos((coords.lat * Math.PI) / 180))) * (180 / Math.PI) * Math.sin(rad);
+              ret.push([coords.lng + dLng, coords.lat + dLat]);
+            }
+            ret.push(ret[0]);
+            return { type: 'Polygon', coordinates: [ret] };
+          }
+
           function post(payload) {
             const data = JSON.stringify(payload);
             if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -349,49 +359,77 @@ const HazardMapScreen = ({ navigation, route }) => {
           function drawHazards() {
             markers.forEach((m) => m.remove());
             hazards.forEach((hazard) => {
-              // 1. Draw Area Polygons if present
-              if (hazard.area) {
-                const sourceId = 'source-' + hazard.id;
-                const layerId = 'layer-' + hazard.id;
-                const borderId = 'border-' + hazard.id;
+              const isPassable = String(hazard.is_passable) === '1' || hazard.is_passable === true;
+              const hazardColor = isPassable ? '#F59E0B' : '#EF4444';
+              
+              // 1. Draw Area Polygons / Pinpoint Radius
+              const sourceId = 'source-' + hazard.id;
+              const layerId = 'layer-' + hazard.id;
+              const borderId = 'border-' + hazard.id;
 
-                if (!map.getSource(sourceId)) {
-                  map.addSource(sourceId, {
-                    type: 'geojson',
-                    data: hazard.area
-                  });
-
-                  map.addLayer({
-                    id: layerId,
-                    type: 'fill',
-                    source: sourceId,
-                    paint: {
-                      'fill-color': hazard.accent,
-                      'fill-opacity': 0.35
-                    }
-                  });
-
-                  map.addLayer({
-                    id: borderId,
-                    type: 'line',
-                    source: sourceId,
-                    paint: {
-                      'line-color': hazard.accent,
-                      'line-width': 2.5
-                    }
-                  });
-
-                  map.on('click', layerId, () => post({ type: 'select-hazard', id: hazard.id }));
-                  map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-                  map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+              if (!map.getSource(sourceId)) {
+                let geometry = hazard.area;
+                if (!geometry) {
+                  // Fallback to pinpoint radius
+                  geometry = createCircle([hazard.lng, hazard.lat], 0.35);
                 }
+
+                map.addSource(sourceId, {
+                  type: 'geojson',
+                  data: {
+                    type: 'Feature',
+                    properties: { id: hazard.id },
+                    geometry: geometry
+                  }
+                });
+
+                map.addLayer({
+                  id: layerId,
+                  type: 'fill',
+                  source: sourceId,
+                  paint: {
+                    'fill-color': hazardColor,
+                    'fill-opacity': 0.22
+                  }
+                });
+
+                map.addLayer({
+                  id: borderId,
+                  type: 'line',
+                  source: sourceId,
+                  paint: {
+                    'line-color': hazardColor,
+                    'line-width': 2.5,
+                    'line-dasharray': [2, 1.5]
+                  }
+                });
+
+                map.on('click', layerId, () => post({ type: 'select-hazard', id: hazard.id }));
               }
 
               // 2. Draw Points/Markers
               const el = document.createElement('div');
               el.className = 'hazard-marker';
-              el.style.background = hazard.accent;
               el.onclick = () => post({ type: 'select-hazard', id: hazard.id });
+              
+              const type = (hazard.type || '').toLowerCase();
+              let icon = 'alert';
+              if (type.includes('fire')) icon = 'fire';
+              else if (type.includes('flood')) icon = 'waves';
+              else if (type.includes('hazard')) icon = 'alert-octagon';
+              else if (type.includes('incident')) icon = 'alert';
+              else if (type.includes('earthquake')) icon = 'activity';
+              else if (type.includes('storm')) icon = 'cloud-lightning';
+              else if (type.includes('landslide')) icon = 'mountain';
+
+              el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
+                  '<div style="position: absolute; inset: 0; background: ' + hazardColor + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
+                  '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + hazardColor + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
+                  '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + hazardColor + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
+                  '<div style="position: absolute; width: 14px; height: 14px; background: ' + hazardColor + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
+                    '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                  '</div>' +
+                '</div>';
 
               const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
                 .setLngLat([hazard.lng, hazard.lat])

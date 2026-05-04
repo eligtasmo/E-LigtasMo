@@ -227,6 +227,14 @@ const router = createBrowserRouter([
             ),
           },
           {
+            path: "report-incident",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <IncidentReportingWrapper />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "admin-routes",
             element: (
               <ProtectedRoute requiredRole="admin" requiredPermission="routes.suggest">
