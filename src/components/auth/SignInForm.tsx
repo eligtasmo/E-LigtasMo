@@ -46,9 +46,9 @@ export default function SignInForm() {
       </div>
       
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto py-12">
-        <div className="bg-[#0C0B0A]/80 backdrop-blur-xl border border-white/5 p-8 sm:p-10 rounded-2xl shadow-2xl">
+        <div className="bg-white p-8 sm:p-10 rounded-2xl">
           <div className="mb-8 sm:mb-10">
-            <h1 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase italic">
+            <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tighter uppercase italic">
               TACTICAL SIGN IN
             </h1>
             <p className="text-sm text-gray-500 font-medium border-l-2 border-brand-500 pl-3">
@@ -60,19 +60,19 @@ export default function SignInForm() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                  USERNAME <span className="text-brand-500">*</span>
+                   IDENTIFIER (USERNAME) <span className="text-brand-500">*</span>
                 </label>
                 <Input
                   placeholder="Enter username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 focus:ring-brand-500/10 h-12"
+                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-brand-500/50 focus:ring-brand-500/10 h-12"
                 />
               </div>
               
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                  PASSWORD <span className="text-brand-500">*</span>
+                   ACCESS KEY (PASSWORD) <span className="text-brand-500">*</span>
                 </label>
                 <div className="relative">
                   <Input
@@ -80,7 +80,7 @@ export default function SignInForm() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 focus:ring-brand-500/10 h-12 pr-12"
+                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-brand-500/50 focus:ring-brand-500/10 h-12 pr-12"
                   />
                   <button
                     type="button"
@@ -123,16 +123,16 @@ export default function SignInForm() {
             </div>
           </form>
           
-          <div className="mt-8 pt-8 border-t border-white/5 flex flex-col gap-3">
+          <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col gap-3">
              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">NO CLEARANCE?</span>
-                <Link to="/brgy-signin" className="text-[10px] font-black text-white hover:text-brand-500 uppercase tracking-widest transition-colors">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">NO CLEARANCE?</span>
+                <Link to="/auth/register" className="text-[10px] font-black text-gray-900 hover:text-brand-500 uppercase tracking-widest transition-colors">
                   REGISTER BARANGAY
                 </Link>
              </div>
              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">RESIDENT ACCESS?</span>
-                <Link to="/register" className="text-[10px] font-black text-white hover:text-brand-500 uppercase tracking-widest transition-colors">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">RESIDENT ACCESS?</span>
+                <Link to="/auth/register?mode=resident" className="text-[10px] font-black text-gray-900 hover:text-brand-500 uppercase tracking-widest transition-colors">
                   CREATE ACCOUNT
                 </Link>
              </div>

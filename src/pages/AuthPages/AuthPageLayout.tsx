@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 
 const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#080808] selection:bg-brand-500/30">
-      {/* Left: Form Area (Centered on mobile/tablet, split on large screens) */}
-      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 min-h-screen px-6 sm:px-12 lg:px-16 z-10 py-12">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white selection:bg-brand-500/30">
+      {/* Left: Form Area (White background for clarity) */}
+      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 min-h-screen px-6 sm:px-12 lg:px-16 z-10 py-12 bg-white">
         <div className="w-full max-w-[440px]">
           {children ?? <Outlet />}
         </div>

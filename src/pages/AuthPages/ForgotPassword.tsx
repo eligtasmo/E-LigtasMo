@@ -31,9 +31,9 @@ export default function ForgotPassword() {
         description="Reset your barangay account password via email or phone."
       />
       <div className="w-full max-w-lg mx-auto py-12">
-        <div className="bg-[#0C0B0A]/80 backdrop-blur-xl border border-white/5 p-8 sm:p-10 rounded-2xl shadow-2xl">
+        <div className="bg-white p-8 sm:p-10 rounded-2xl">
           <div className="mb-8 sm:mb-10">
-            <h1 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase italic">
+            <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tighter uppercase italic">
               RECOVER ACCESS
             </h1>
             <p className="text-sm text-gray-500 font-medium border-l-2 border-brand-500 pl-3">
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder="e.g. brgy@email.com"
-                className="h-12 w-full bg-white/5 border border-white/10 rounded-lg px-4 text-sm text-white placeholder:text-white/20 focus:border-brand-500/50 focus:ring-brand-500/10 transition-all"
+                className="h-12 w-full bg-gray-50 border border-gray-200 rounded-lg px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500/50 focus:ring-brand-500/10 transition-all"
                 required
               />
             </div>
@@ -70,9 +70,9 @@ export default function ForgotPassword() {
             </div>
           </form>
           
-          <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">REMEMBERED?</span>
-            <Link to="/auth/signin" className="text-[10px] font-black text-white hover:text-brand-500 uppercase tracking-widest transition-colors">
+          <div className="mt-8 pt-8 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">REMEMBERED?</span>
+            <Link to="/auth/signin" className="text-[10px] font-black text-gray-900 hover:text-brand-500 uppercase tracking-widest transition-colors">
               BACK TO LOGIN
             </Link>
           </div>
