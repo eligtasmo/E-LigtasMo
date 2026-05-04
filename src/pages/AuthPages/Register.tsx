@@ -16,34 +16,41 @@ export default function BrgySignUp() {
         title={mode === 'brgy' ? "Register Barangay | E-LigtasMo" : "Register Resident | E-LigtasMo"}
         description={mode === 'brgy' ? "Barangay registration page for disaster risk management." : "Resident registration page for submitting hazard reports."}
       />
-      <div className="w-full max-w-lg mx-auto py-12">
-        <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100">
-          <div className="mb-8 sm:mb-10 text-center">
-            <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tighter uppercase italic">
-              {mode === 'brgy' ? 'BARANGAY REGISTRATION' : 'RESIDENT ENROLLMENT'}
-            </h1>
-            <p className="text-[10px] font-black text-brand-500 uppercase tracking-[0.3em]">
-              ESTABLISH SECTOR CLEARANCE
-            </p>
+      <div className="min-h-screen w-full flex flex-col bg-[#f0f4ff]">
+        {/* ── Compact Header ── */}
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+              C
+            </div>
+            <span className="font-bold text-sm tracking-widest text-gray-800 uppercase">
+              E-LigtasMo
+            </span>
           </div>
+          <Link to="/signin" className="text-gray-300 hover:text-gray-500 transition-colors">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </Link>
+        </div>
 
-          <BrgyRegisterForm formClassName="space-y-4" mode={mode as any} />
+        {/* ── Main Content Card ── */}
+        <div className="flex-1 flex items-start justify-center px-4 pt-2 pb-8">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-100/50 px-6 py-8 sm:px-8">
+            <BrgyRegisterForm formClassName="space-y-4" mode={mode as any} />
 
-          <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col gap-4">
-             <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ALREADY REGISTERED?</span>
-                <Link to="/auth/signin" className="text-[10px] font-black text-gray-900 hover:text-brand-500 uppercase tracking-widest transition-colors">
-                  SIGN IN
-                </Link>
-             </div>
-             {mode !== 'brgy' && (
-                <div className="flex items-center justify-between">
-                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">BARANGAY UNIT?</span>
-                   <Link to="/auth/register?mode=brgy" className="text-[10px] font-black text-gray-900 hover:text-brand-500 uppercase tracking-widest transition-colors">
-                     SWITCH TO BRGY
-                   </Link>
-                </div>
-             )}
+            <div className="mt-6 text-center text-sm text-gray-400">
+              Already have an account?{' '}
+              <Link to="/signin" className="text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+                Sign in
+              </Link>
+            </div>
+            {mode !== 'brgy' && (
+              <div className="mt-2 text-center text-xs text-gray-400">
+                Registering a barangay?{' '}
+                 <Link to="/register?mode=brgy" className="text-blue-600 hover:underline">Register Barangay</Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
