@@ -719,7 +719,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
               {isEditMode ? 'INTEL_MODIFICATION' : (selectedAsset ? 'INSPECTION_MODE' : 'HAZARD_MANAGEMENT')}
             </h2>
             <p className="text-white text-[13px] mt-1 tracking-widest">
-              {selectedAsset ? `REF_${selectedAsset.id}` : 'Awaiting Data'}
+              {isEditMode ? `REF_${editId}` : (selectedAsset ? `REF_${selectedAsset.id}` : 'Awaiting Data')}
             </p>
           </div>
           <div className="flex items-center gap-2">
