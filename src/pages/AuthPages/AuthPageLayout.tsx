@@ -12,14 +12,14 @@ const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) 
           {children ?? <Outlet />}
         </div>
       </div>
-      
+
       {/* Right: Branding/Graphic (Hidden on mobile/tablet, shown on lg+) */}
       <div className="hidden lg:flex w-1/2 h-screen items-center justify-center bg-[#0C0B0A] relative overflow-hidden border-l border-white/5">
         <div className="absolute inset-0 z-0 opacity-20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent"></div>
           <GridShape />
         </div>
-        
+
         <div className="flex flex-col items-center max-w-sm z-10 p-8">
           <Link to="/" className="block mb-8 transition-transform hover:scale-105 active:scale-95">
             <img
@@ -34,11 +34,11 @@ const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) 
           <p className="text-center text-gray-400 font-medium leading-relaxed max-w-xs">
             Safe Routes, Safe Escapes for Municipal Disaster Risk Reduction of Santa Cruz, Laguna
           </p>
-          
+
           <div className="mt-12 flex gap-4 opacity-50">
-             <div className="h-1 w-8 bg-brand-500 rounded-full"></div>
-             <div className="h-1 w-8 bg-white/10 rounded-full"></div>
-             <div className="h-1 w-8 bg-white/10 rounded-full"></div>
+            <div className="h-1 w-8 bg-brand-500 rounded-full"></div>
+            <div className="h-1 w-8 bg-white/10 rounded-full"></div>
+            <div className="h-1 w-8 bg-white/10 rounded-full"></div>
           </div>
         </div>
 
