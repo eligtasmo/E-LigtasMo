@@ -5,31 +5,46 @@ import { Link } from "react-router-dom";
 
 const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Left: Full form area, no card */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 min-h-screen bg-white px-4 md:px-16">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#080808]">
+      {/* Left: Form Area */}
+      <div className="flex flex-col justify-center items-center w-full md:w-1/2 min-h-screen px-4 md:px-16 z-10">
         <div className="w-full max-w-lg">
           {children ?? <Outlet />}
         </div>
       </div>
-      {/* Right: Branding/graphic (full height, centered) */}
-      <div className="hidden md:flex w-1/2 h-screen items-center justify-center bg-brand-950 relative">
-        <div className="absolute inset-0 z-0">
+      
+      {/* Right: Branding/Graphic (High-Fidelity Tactical) */}
+      <div className="hidden md:flex w-1/2 h-screen items-center justify-center bg-[#0C0B0A] relative overflow-hidden border-l border-white/5">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent"></div>
           <GridShape />
         </div>
-        <div className="flex flex-col items-center max-w-xs z-10">
-          <Link to="/" className="block mb-4">
+        
+        <div className="flex flex-col items-center max-w-sm z-10 p-8">
+          <Link to="/" className="block mb-8 transition-transform hover:scale-105 active:scale-95">
             <img
-              width={231}
-              height={48}
+              width={180}
+              height={180}
               src="/images/logo/auth-logo.png"
               alt="Logo"
+              className="drop-shadow-[0_0_30px_rgba(245,178,53,0.3)]"
             />
           </Link>
-          <p className="text-center text-gray-400 dark:text-white/60">
+          <h2 className="text-2xl font-black text-white mb-4 tracking-tighter uppercase italic">E-LIGTASMO</h2>
+          <p className="text-center text-gray-400 font-medium leading-relaxed max-w-xs">
             Safe Routes, Safe Escapes for Municipal Disaster Risk Reduction of Santa Cruz, Laguna
           </p>
+          
+          <div className="mt-12 flex gap-4 opacity-50">
+             <div className="h-1 w-8 bg-brand-500 rounded-full"></div>
+             <div className="h-1 w-8 bg-white/10 rounded-full"></div>
+             <div className="h-1 w-8 bg-white/10 rounded-full"></div>
+          </div>
         </div>
+
+        {/* Tactical Corner accents */}
+        <div className="absolute top-8 right-8 w-16 h-16 border-t-2 border-r-2 border-brand-500/30"></div>
+        <div className="absolute bottom-8 left-8 w-16 h-16 border-b-2 border-l-2 border-brand-500/30"></div>
       </div>
     </div>
   );

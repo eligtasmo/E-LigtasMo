@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator, Image as RNImage, ScrollView, Dimensions, StyleSheet, StatusBar as RNStatusBar, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -55,7 +55,7 @@ const circleGeoJSON = (lat, lng, radiusM, steps = 64) => {
   return { type: 'Polygon', coordinates: [coords] };
 };
 
-const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, drawMode, polygonPoints, radiusM }) => {
+const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, drawMode, polygonPoints, radiusM, tacticalData }) => {
   const santaCruzLaguna = { lat: 14.2811, lng: 121.4150 };
   const center = incidentCoords || santaCruzLaguna;
   const initialZoom = incidentCoords ? 16.5 : 13.5;
@@ -97,7 +97,19 @@ const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, dr
           border-radius: 50%;
           box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        .hazard-marker, .shelter-marker, .brgy-marker {
+          width: 30px;
+          height: 30px;
+          border-radius: 15px;
+          background: rgba(15, 23, 42, 0.9);
+          border: 1.5px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
       </style>
+      <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet" />
     </head>
     <body>
       <div id="map"></div>
@@ -217,6 +229,7 @@ const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, dr
           });
 
           updateMap();
+          loadTacticalData();
         });
 
         function centerMapOnPoint(lng, lat, offset = false) {
@@ -247,6 +260,57 @@ const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, dr
             window.parent.postMessage(JSON.stringify(payload), '*');
           }
         });
+
+        window.addEventListener('message', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'fly_to') {
+              centerMapOnPoint(data.lng, data.lat, true);
+            }
+          } catch(err) {}
+        });
+
+        // TACTICAL LAYERS
+        function loadTacticalData() {
+          const hazards = ${JSON.stringify(tacticalData.hazards)};
+          const shelters = ${JSON.stringify(tacticalData.shelters)};
+          const barangays = ${JSON.stringify(tacticalData.barangays)};
+
+          hazards.forEach(h => {
+            if (!h.lng || !h.lat) return;
+            const el = document.createElement('div');
+            el.className = 'hazard-marker';
+            el.title = h.type + ': ' + (h.address || '');
+            el.innerHTML = '<span class="mdi mdi-alert" style="color: #EF4444; font-size: 18px; line-height: 1;"></span>';
+            new mapboxgl.Marker({ element: el, anchor: 'center' })
+              .setLngLat([parseFloat(h.lng), parseFloat(h.lat)])
+              .addTo(map);
+          });
+
+          shelters.forEach(s => {
+            const lng = parseFloat(s.longitude || s.lng);
+            const lat = parseFloat(s.latitude || s.lat);
+            if (!lng || !lat) return;
+            const el = document.createElement('div');
+            el.className = 'shelter-marker';
+            el.title = s.name;
+            el.innerHTML = '<span class="mdi mdi-home-flood" style="color: #10B981; font-size: 18px; line-height: 1;"></span>';
+            new mapboxgl.Marker({ element: el, anchor: 'center' })
+              .setLngLat([lng, lat])
+              .addTo(map);
+          });
+
+          barangays.forEach(b => {
+            if (!b.lng || !b.lat) return;
+            const el = document.createElement('div');
+            el.className = 'brgy-marker';
+            el.title = b.name;
+            el.innerHTML = '<span class="mdi mdi-shield-home" style="color: #3B82F6; font-size: 18px; line-height: 1;"></span>';
+            new mapboxgl.Marker({ element: el, anchor: 'center' })
+              .setLngLat([parseFloat(b.lng), parseFloat(b.lat)])
+              .addTo(map);
+          });
+        }
       </script>
     </body>
     </html>
@@ -296,14 +360,13 @@ const buildStaticMapHtml = ({ lat, lng, isDark }) => {
 };
 
 const ReportIncidentScreen = ({ navigation, route }) => {
-  const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscape = windowWidth > windowHeight;
   const isTablet = windowWidth > 600;
-  const useWideLayout = isLandscape || isTablet;
   const requestedType = route.params?.type;
   
+  const webViewRef = useRef(null);
   const [user, setUser] = useState(null);
   const [currentCoords, setCurrentCoords] = useState(null);
   const [incidentCoords, setIncidentCoords] = useState(null);
@@ -324,7 +387,125 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   const [submitting, setSubmitting] = useState(false);
   const [isRefreshingMap, setIsRefreshingMap] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [finalReportId, setFinalReportId] = useState('');
+
+  // My Reports State
+  const [myReports, setMyReports] = useState([]);
+  const [reportFilter, setReportFilter] = useState('All');
+  const [fetchingReports, setFetchingReports] = useState(false);
+
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [tacticalData, setTacticalData] = useState({ hazards: [], shelters: [], barangays: [] });
+
+  const fetchTacticalData = async () => {
+    try {
+      const [hRes, sRes, bRes] = await Promise.all([
+        fetch(`${API_URL}/list-hazards.php`),
+        fetch(`${API_URL}/shelters-list.php`),
+        fetch(`${API_URL}/list-barangays.php`)
+      ]);
+      const [hazardsData, sheltersData, barangaysData] = await Promise.all([
+        hRes.json(),
+        sRes.json(),
+        bRes.json()
+      ]);
+      setTacticalData({
+        hazards: hazardsData.hazards || [],
+        shelters: Array.isArray(sheltersData) ? sheltersData : (sheltersData.shelters || []),
+        barangays: barangaysData.barangays || []
+      });
+    } catch (e) {
+      console.error('Tactical data fetch error:', e);
+    }
+  };
+
+  const updateSearchSuggestions = async (query) => {
+    setSearchQuery(query);
+    if (!query.trim() || query.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_ACCESS_TOKEN}&country=ph&proximity=121.4167,14.2833&autocomplete=true`;
+      const res = await fetch(url);
+      const data = await res.json();
+      setSearchResults(data.features || []);
+    } catch (e) {
+      console.error('Search error:', e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    updateSearchSuggestions(searchQuery);
+  };
+
+  const selectSearchResult = (result) => {
+    const [lng, lat] = result.center;
+    setIncidentCoords({ lat, lng });
+    setAddress(result.place_name);
+    setSearchQuery('');
+    setSearchResults([]);
+
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(JSON.stringify({
+        type: 'fly_to',
+        lat,
+        lng
+      }));
+    }
+  };
+
+  const fetchMyReports = useCallback(async () => {
+    if (!user?.id) return;
+    setFetchingReports(true);
+    try {
+      const res = await fetch(`${API_URL}/list-incident-reports.php?user_id=${user.id}&all_time=true`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setMyReports(data);
+      }
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+    } finally {
+      setFetchingReports(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) fetchMyReports();
+  }, [user?.id, fetchMyReports]);
+
+  const filteredReports = useMemo(() => {
+    let base = myReports;
+    if (reportFilter !== 'All') {
+      base = myReports.filter(r => {
+        const status = (r.status || 'Pending').toLowerCase();
+        const filter = reportFilter.toLowerCase();
+        if (filter === 'approved' && status === 'verified') return true;
+        return status === filter;
+      });
+    }
+
+    if (historySearchQuery.trim()) {
+      const q = historySearchQuery.toLowerCase();
+      base = base.filter(r => 
+        (r.type || '').toLowerCase().includes(q) || 
+        (r.location_text || '').toLowerCase().includes(q) ||
+        (r.description || '').toLowerCase().includes(q)
+      );
+    }
+
+    return base;
+  }, [myReports, reportFilter, historySearchQuery]);
 
   useEffect(() => {
     const init = async () => {
@@ -336,10 +517,28 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         setCurrentCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
       }
+      fetchTacticalData();
       setLoading(false);
     };
     init();
   }, []);
+
+  const handleReportClick = (report) => {
+    setShowHistory(false);
+    const lat = parseFloat(report.lat);
+    const lng = parseFloat(report.lng);
+    
+    setIncidentCoords({ lat, lng });
+    setAddress(report.location_text || report.barangay || '');
+
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(JSON.stringify({
+        type: 'fly_to',
+        lat,
+        lng
+      }));
+    }
+  };
 
   const handleMapClick = async (lat, lng) => {
     if (drawMode === 'pinpoint') {
@@ -453,6 +652,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         const reportId = `REPORT${dateStr}${timeStr}${randomStr}`;
         setFinalReportId(reportId);
         setShowConfirmation(true);
+        fetchMyReports(); // Refresh history list
       } else {
         Alert.alert('Sync Error', result.error || 'Failed to submit report.');
       }
@@ -508,6 +708,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       <View style={styles.mapContainer}>
         {!isRefreshingMap && (
           <UniversalWebView
+            ref={webViewRef}
             originWhitelist={['*']}
             source={{ html: buildMapHtml({ 
               currentCoords, 
@@ -515,7 +716,8 @@ const ReportIncidentScreen = ({ navigation, route }) => {
               isDark: true, 
               drawMode, 
               polygonPoints, 
-              radiusM 
+              radiusM,
+              tacticalData
             }) }}
             onMessage={(e) => {
               try {
@@ -555,7 +757,66 @@ const ReportIncidentScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+          {user?.role === 'resident' && (
+            <TouchableOpacity 
+              onPress={() => setShowHistory(true)} 
+              style={[styles.backBtn, { marginLeft: 10 }]}
+            >
+              <Lucide.History size={20} color="#F5B235" />
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Search Bar (Route Planner Style) */}
+        <MotiView 
+          from={{ opacity: 0, translateY: -10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          style={styles.searchContainer}
+        >
+          <View style={styles.searchBarPill}>
+            <Lucide.Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.5} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={updateSearchSuggestions}
+              onSubmitEditing={handleSearch}
+              placeholder="Search location..."
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              style={styles.searchPillInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => { setSearchQuery(''); setSearchResults([]); }} style={{ padding: 4 }}>
+                <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <MotiView 
+                from={{ opacity: 0, scale: 0.98, translateY: -10 }}
+                animate={{ opacity: 1, scale: 1, translateY: 0 }}
+                exit={{ opacity: 0, scale: 0.98, translateY: -10 }}
+                style={styles.suggestionsDropdown}
+              >
+                <ScrollView keyboardShouldPersistTaps="handled">
+                  {searchResults.map((res, i) => (
+                    <TouchableOpacity 
+                      key={i} 
+                      onPress={() => selectSearchResult(res)}
+                      style={styles.suggestionItem}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.suggestionTitle} numberOfLines={1}>{res.text}</Text>
+                        <Text style={styles.suggestionSubtitle} numberOfLines={1}>{res.place_name}</Text>
+                      </View>
+                      <Lucide.ArrowUpLeft size={16} color="rgba(255,255,255,0.3)" strokeWidth={2.1} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </MotiView>
+            )}
+          </AnimatePresence>
+        </MotiView>
       </SafeAreaView>
 
       <AnimatePresence>
@@ -729,6 +990,112 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         </View>
       </View>
 
+      {/* ── MY REPORTS MODAL (RESIDENTS ONLY) ── */}
+      <AnimatePresence>
+        {showHistory && (
+          <MotiView 
+            from={{ opacity: 0, translateY: 100 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            exit={{ opacity: 0, translateY: 100 }}
+            style={[styles.historyModal, { paddingTop: insets.top + 20 }]}
+          >
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.trayTitleRow}>
+                <Lucide.ClipboardList size={22} color="#F5B235" />
+                <View>
+                  <Text style={styles.modalTitle}>Mission History</Text>
+                  <Text style={styles.modalSubtitle}>{myReports.length} INTEL PACKETS SYNCED</Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setShowHistory(false)}
+                style={styles.modalCloseBtn}
+              >
+                <Lucide.X size={20} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Modal Search Bar */}
+            <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
+              <View style={styles.modalSearchBar}>
+                <Lucide.Search size={16} color="rgba(255,255,255,0.3)" />
+                <TextInput
+                  value={historySearchQuery}
+                  onChangeText={setHistorySearchQuery}
+                  placeholder="Filter by type or location..."
+                  placeholderTextColor="rgba(255,255,255,0.2)"
+                  style={styles.modalSearchInput}
+                />
+                {historySearchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setHistorySearchQuery('')}>
+                    <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            {/* Filters */}
+            <View style={{ paddingHorizontal: 24, marginBottom: 20 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+                {['All', 'Pending', 'Approved', 'Resolved', 'Rejected'].map(f => (
+                  <TouchableOpacity 
+                    key={f}
+                    onPress={() => setReportFilter(f)}
+                    style={[styles.filterBtn, reportFilter === f && styles.filterBtnActive]}
+                  >
+                    <Text style={[styles.filterBtnText, reportFilter === f && styles.filterBtnTextActive]}>{f}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* List */}
+            <ScrollView 
+              style={styles.reportsList}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 40 }}
+            >
+              {fetchingReports ? (
+                <View style={styles.listLoading}>
+                  <ActivityIndicator color="#F5B235" size="small" />
+                </View>
+              ) : filteredReports.length === 0 ? (
+                <View style={styles.listEmpty}>
+                  <Lucide.SearchX size={40} color="rgba(255,255,255,0.1)" />
+                  <Text style={styles.listEmptyText}>NO DATA IN SECTOR</Text>
+                </View>
+              ) : (
+                filteredReports.map((report) => (
+                  <TouchableOpacity 
+                    key={report.id}
+                    activeOpacity={0.8}
+                    onPress={() => handleReportClick(report)}
+                    style={styles.reportCard}
+                  >
+                    <View style={styles.reportCardHeader}>
+                      <View>
+                        <Text style={styles.reportType}>{report.type}</Text>
+                        <Text style={styles.reportTime}>{new Date(report.time).toLocaleString()}</Text>
+                      </View>
+                      <View style={[styles.statusBadge, { 
+                        backgroundColor: 
+                          report.status?.toLowerCase() === 'resolved' ? '#10B981' :
+                          report.status?.toLowerCase() === 'active' ? '#3B82F6' :
+                          report.status?.toLowerCase() === 'rejected' ? '#EF4444' : '#F5B235'
+                      }]}>
+                        <Text style={styles.statusBadgeText}>{(report.status || 'PENDING').toUpperCase()}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.reportAddress} numberOfLines={1}>{report.location_text || report.barangay || 'Field Intelligence'}</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </MotiView>
+        )}
+      </AnimatePresence>
+
       {/* MISSION CONFIRMATION MODAL */}
       <AnimatePresence>
         {showConfirmation && (
@@ -823,7 +1190,14 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                    </View>
 
                    <TouchableOpacity 
-                    onPress={() => navigation.goBack()}
+                      onPress={() => {
+                        setShowConfirmation(false);
+                        setIncidentCoords(null);
+                        setPolygonPoints([]);
+                        setDetails('');
+                        setMediaList([]);
+                        fetchTacticalData();
+                      }}
                      style={[styles.confCloseBtn, { marginBottom: Math.max(insets.bottom, 24) + 20 }]}
                   >
                     <Text style={styles.confCloseBtnText}>ACKNOWLEDGE MISSION</Text>
@@ -919,7 +1293,224 @@ const styles = {
   confStatusCard: { marginHorizontal: 24, flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 4, marginTop: 16 },
   confStatusText: { flex: 1, color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 20, fontWeight: '500' },
   confCloseBtn: { marginHorizontal: 24, height: 64, backgroundColor: '#F5B235', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 32 },
-  confCloseBtnText: { color: '#000', fontSize: 15, fontWeight: '900', letterSpacing: 1, fontFamily: DS_FONT_UI }
+  confCloseBtnText: { color: '#000', fontSize: 15, fontWeight: '900', letterSpacing: 1, fontFamily: DS_FONT_UI },
+
+  // My Reports Modal Styles
+  historyModal: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#080808',
+    zIndex: 2000
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 20
+  },
+  modalTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
+    fontFamily: DS_FONT_UI
+  },
+  modalSubtitle: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginTop: 2,
+    fontFamily: DS_FONT_UI
+  },
+  modalCloseBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  trayTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16
+  },
+  filterScroll: {
+    gap: 8
+  },
+  filterBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  filterBtnActive: {
+    backgroundColor: '#F5B235',
+    borderColor: '#F5B235'
+  },
+  filterBtnText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 11,
+    fontWeight: '800',
+    fontFamily: DS_FONT_UI
+  },
+  filterBtnTextActive: {
+    color: '#000'
+  },
+  reportsList: {
+    flex: 1
+  },
+  reportCard: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 4,
+    padding: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  reportCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12
+  },
+  reportType: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '800',
+    fontFamily: DS_FONT_UI
+  },
+  reportTime: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
+    marginTop: 2,
+    fontFamily: DS_FONT_UI
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4
+  },
+  statusBadgeText: {
+    color: '#000',
+    fontSize: 9,
+    fontWeight: '900',
+    fontFamily: DS_FONT_UI
+  },
+  reportAddress: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontFamily: DS_FONT_UI
+  },
+  listLoading: {
+    paddingVertical: 40,
+    alignItems: 'center'
+  },
+  listEmpty: {
+    paddingVertical: 80,
+    alignItems: 'center',
+    gap: 16
+  },
+  listEmptyText: {
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    fontFamily: DS_FONT_UI
+  },
+
+  // Search Styles (Route Planner Aesthetic)
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    zIndex: 5000
+  },
+  searchBarPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#161412',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    height: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 }
+  },
+  searchPillInput: {
+    flex: 1,
+    marginLeft: 10,
+    color: '#F3EEE6',
+    fontSize: 14,
+    fontWeight: '400',
+    fontFamily: DS_FONT_INPUT
+  },
+  suggestionsDropdown: {
+    position: 'absolute',
+    top: 64,
+    left: 16,
+    right: 16,
+    backgroundColor: '#161412',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    overflow: 'hidden',
+    maxHeight: 320,
+    zIndex: 6000
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)'
+  },
+  suggestionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#F2EEE8',
+    fontFamily: DS_FONT_UI
+  },
+  suggestionSubtitle: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: 'rgba(242,238,232,0.55)',
+    marginTop: 2,
+    fontFamily: DS_FONT_INPUT
+  },
+
+  // Modal Search Styles
+  modalSearchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  modalSearchInput: {
+    flex: 1,
+    marginLeft: 10,
+    color: '#FFF',
+    fontSize: 13,
+    fontFamily: DS_FONT_INPUT
+  }
 };
 
 export default ReportIncidentScreen;
