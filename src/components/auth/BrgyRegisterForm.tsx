@@ -55,7 +55,7 @@ const LocationPicker = ({ position, setPosition }: { position: { lat: number, ln
 
 /* ── Step Progress Indicator ── */
 const StepIndicator = ({ current, total }: { current: number; total: number }) => (
-  <div className="flex items-center justify-center gap-0 mb-6">
+  <div className="flex items-center justify-center gap-0 mb-8">
     {Array.from({ length: total }).map((_, i) => {
       const stepNum = i + 1;
       const isActive = stepNum === current;
@@ -63,13 +63,13 @@ const StepIndicator = ({ current, total }: { current: number; total: number }) =
       return (
         <React.Fragment key={i}>
           <div
-            className={`w-3 h-3 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isActive ? 'bg-blue-600 scale-125 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]'
-              : isDone ? 'bg-blue-600' : 'bg-gray-200'
+            className={`w-4 h-1 rounded-full transition-all duration-500 ${
+              isActive ? 'bg-brand-500 w-8 shadow-[0_0_15px_rgba(245,178,53,0.5)]'
+              : isDone ? 'bg-brand-500' : 'bg-white/10'
             }`}
           />
           {i < total - 1 && (
-            <div className={`w-12 h-0.5 transition-colors duration-300 ${isDone ? 'bg-blue-600' : 'bg-gray-200'}`} />
+            <div className={`w-4 h-0.5 transition-colors duration-300 ${isDone ? 'bg-brand-500/30' : 'bg-transparent'}`} />
           )}
         </React.Fragment>
       );
@@ -79,17 +79,17 @@ const StepIndicator = ({ current, total }: { current: number; total: number }) =
 
 /* ── Privacy Banner ── */
 const PrivacyBanner = ({ onDismiss }: { onDismiss: () => void }) => (
-  <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3.5 mb-6 relative">
-    <div className="mt-0.5 text-gray-400 flex-shrink-0">
+  <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 mb-6 relative">
+    <div className="mt-0.5 text-brand-500 flex-shrink-0">
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
         <rect x="5" y="11" width="14" height="10" rx="2" />
         <path d="M8 11V7a4 4 0 118 0v4" />
       </svg>
     </div>
-    <p className="text-xs text-gray-500 leading-relaxed pr-4">
-      We take privacy issues seriously. You can be sure that your personal data is securely protected.
+    <p className="text-[11px] text-gray-400 font-medium leading-relaxed pr-4 uppercase tracking-wider">
+      DATA INTEGRITY SECURED. ENCRYPTED CHANNEL ESTABLISHED FOR CREDENTIAL TRANSMISSION.
     </p>
-    <button onClick={onDismiss} className="absolute top-3 right-3 text-gray-300 hover:text-gray-500 transition-colors" type="button">
+    <button onClick={onDismiss} className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors" type="button">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
         <path d="M18 6L6 18M6 6l12 12" />
       </svg>
@@ -291,7 +291,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
   return (
     <>
       <form
-        className={`w-full max-w-md mx-auto bg-white flex flex-col ${formClassName}`}
+        className={`w-full max-w-md mx-auto flex flex-col ${formClassName}`}
         onSubmit={handleSubmit}
         autoComplete="off"
       >
@@ -299,15 +299,18 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
         <StepIndicator current={step} total={TOTAL_STEPS} />
 
         {/* Title */}
-        <div className="mb-5 sm:mb-6 text-center">
-          <h1 className="mb-2 font-bold text-gray-800 text-xl sm:text-2xl dark:text-white/90">
-            Registration
-          </h1>
-          <p className="text-sm text-gray-400 dark:text-gray-400 leading-relaxed">
-            {isEmailStep && "Fill in the registration data. It will take a couple of minutes. All you need is your e-mail."}
-            {isLocationStep && "Select your barangay and location details."}
-            {isMapStep && "Pin the exact location of your Barangay Hall on the map."}
-            {isAccountStep && "Create your account credentials."}
+        <div className="mb-8 text-center">
+          <h2 className="mb-2 font-black text-white text-xl sm:text-2xl uppercase italic tracking-tighter">
+            {isEmailStep && "PHASE 1: VERIFICATION"}
+            {isLocationStep && "PHASE 2: SECTOR DATA"}
+            {isMapStep && "PHASE 3: GEOSPATIAL PIN"}
+            {isAccountStep && "PHASE 4: ACCESS CODE"}
+          </h2>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] leading-relaxed">
+            {isEmailStep && "SECURE CHANNEL VERIFICATION REQUIRED VIA EMAIL"}
+            {isLocationStep && "SPECIFY GEOGRAPHIC JURISDICTION AND SECTOR"}
+            {isMapStep && "PINPOINT COMMAND CENTER COORDINATES"}
+            {isAccountStep && "ESTABLISH FINAL ACCESS CREDENTIALS"}
           </p>
         </div>
 
@@ -321,11 +324,11 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
               {!codeSent ? (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Enter your email address
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 block">
+                      EMAIL COORDINATES <span className="text-brand-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                           <rect x="2" y="4" width="20" height="16" rx="3" />
                           <path d="M2 7l10 6 10-6" />
@@ -336,67 +339,46 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
                         name="email"
                         value={form.email}
                         onChange={handleChange}
-                        placeholder="name@example.com"
-                        className="h-12 w-full rounded-xl border border-gray-200 pl-11 pr-4 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                        placeholder="IDENTIFY@CHANNEL.COM"
+                        className="h-12 w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 text-sm text-white placeholder:text-white/20 focus:border-brand-500/50 focus:ring-brand-500/10 transition-all uppercase font-medium"
                       />
                     </div>
                   </div>
-                  <div className="flex justify-center pt-1">
+                  <div className="flex justify-center pt-2">
                     <button
                       type="button"
                       onClick={handleSendCode}
                       disabled={sendingCode || !form.email}
-                      className="px-8 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="px-8 py-3 rounded-xl border border-brand-500/30 text-[10px] font-black text-brand-500 hover:bg-brand-500/10 transition-all disabled:opacity-30 tracking-widest uppercase"
                     >
-                      {sendingCode ? "Sending..." : "Send Code"}
+                      {sendingCode ? "TRANSMITTING..." : "GENERATE ACCESS CODE"}
                     </button>
                   </div>
                 </>
               ) : !emailVerified ? (
                 <>
                   {/* Email display card */}
-                  <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                  <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl px-4 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-base font-semibold text-gray-800">{form.email}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Email not confirmed yet</p>
+                      <p className="text-sm font-black text-white tracking-widest uppercase">{form.email}</p>
+                      <p className="text-[10px] text-brand-500/60 font-bold uppercase tracking-widest mt-1">PENDING VERIFICATION</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setCodeSent(false); setCodeDigits(["","","","","",""]); }}
-                      className="text-gray-300 hover:text-blue-500 transition-colors"
+                      className="text-gray-500 hover:text-white transition-colors p-2"
                     >
-                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path d="M15.232 5.232l3.536 3.536M9 11l6.232-6.232a2.5 2.5 0 013.536 3.536L12.535 14.57a2 2 0 01-.878.506l-3.29.914.914-3.29a2 2 0 01.506-.878L9 11z" />
                       </svg>
                     </button>
                   </div>
 
-                  {/* Email display & resend */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
-                    <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-                      <span className="text-gray-300">
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <rect x="2" y="4" width="20" height="16" rx="3" />
-                          <path d="M2 7l10 6 10-6" />
-                        </svg>
-                      </span>
-                      <span className="text-sm text-gray-400">{form.email}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleSendCode}
-                      disabled={cooldown > 0 || sendingCode}
-                      className="text-blue-600 text-xs font-semibold mt-2 hover:text-blue-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {cooldown > 0 ? `Send again (${cooldown}s)` : "Send again"}
-                    </button>
-                  </div>
-
-                  {/* Code input */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Confirmation code</label>
-                    <div className="flex gap-2.5 justify-center mb-3">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4 block text-center">
+                      INSERT ACCESS KEY
+                    </label>
+                    <div className="flex gap-2 justify-center mb-6">
                       {codeDigits.map((d, i) => (
                         <input
                           key={i}
@@ -407,26 +389,28 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
                           value={d}
                           onChange={e => handleCodeInput(i, e.target.value)}
                           onKeyDown={e => handleCodeKeyDown(i, e)}
-                          className="w-11 h-12 text-center text-lg font-semibold rounded-xl border-2 border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                          className="w-11 h-14 text-center text-xl font-black rounded-xl bg-white/5 border border-white/10 text-brand-500 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-gray-400 text-center">
-                      Confirm your e-mail with the verification code we sent.
-                    </p>
+                    <button
+                      type="button"
+                      onClick={handleSendCode}
+                      disabled={cooldown > 0 || sendingCode}
+                      className="w-full text-center text-[10px] font-black text-gray-500 hover:text-brand-500 disabled:text-gray-700 transition-colors uppercase tracking-[0.2em]"
+                    >
+                      {cooldown > 0 ? `RE-TRANSMIT IN ${cooldown}S` : "REQUEST NEW KEY"}
+                    </button>
                   </div>
 
-                  <div className="flex justify-center pt-2">
+                  <div className="flex justify-center pt-4">
                     <button
                       type="button"
                       onClick={handleVerifyCode}
                       disabled={verifying || codeDigits.join("").length < 6}
-                      className="flex items-center gap-2 px-10 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+                      className="w-full h-12 rounded-xl bg-brand-500 text-black text-xs font-black uppercase tracking-widest hover:bg-brand-600 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(245,178,53,0.2)]"
                     >
-                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M5 13l4 4L19 7" />
-                      </svg>
-                      {verifying ? "Verifying..." : "Confirm"}
+                      {verifying ? "VALIDATING..." : "VALIDATE CLEARANCE"}
                     </button>
                   </div>
                 </>
@@ -436,37 +420,37 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
 
           {/* ═══════ STEP 2: Location Details ═══════ */}
           {isLocationStep && (
-            <div className="animate-fade-in space-y-4">
-              <div className="flex gap-2">
-                <div className="w-1/2">
-                  <Label>Barangay <span className="text-error-500">*</span></Label>
+            <div className="animate-fade-in space-y-5">
+              <div className="flex gap-3">
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">BARANGAY UNIT</label>
                   <select name="barangay" value={form.barangay} onChange={handleChange} required
-                    className="h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
-                    <option value="">Select Barangay</option>
-                    {barangays.map(b => <option key={b} value={b}>{b}</option>)}
+                    className="h-12 w-full bg-white/5 border border-white/10 rounded-xl px-3 text-white text-sm focus:border-brand-500/50 focus:ring-brand-500/10 transition-all">
+                    <option value="" className="bg-[#0C0B0A]">SELECT UNIT</option>
+                    {barangays.map(b => <option key={b} value={b} className="bg-[#0C0B0A]">{b.toUpperCase()}</option>)}
                   </select>
                 </div>
-                <div className="w-1/2">
-                  <Label>City/Municipality <span className="text-error-500">*</span></Label>
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">CITY</label>
                   <select name="city" value={form.city} onChange={handleChange} required
-                    className="h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
-                    <option value="">Select City</option>
-                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                    className="h-12 w-full bg-white/5 border border-white/10 rounded-xl px-3 text-white text-sm focus:border-brand-500/50 focus:ring-brand-500/10 transition-all">
+                    <option value="" className="bg-[#0C0B0A]">SELECT CITY</option>
+                    {cities.map(c => <option key={c} value={c} className="bg-[#0C0B0A]">{c.toUpperCase()}</option>)}
                   </select>
                 </div>
               </div>
-              <div>
-                <Label>Province</Label>
-                <Input name="province" value={form.province} disabled className="bg-gray-50 rounded-xl" />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">PROVINCE</label>
+                <input value={form.province} disabled className="h-12 w-full bg-white/5 border border-white/5 rounded-xl px-4 text-sm text-gray-500 font-bold uppercase tracking-widest" />
               </div>
-              <div className="flex gap-3 pt-3">
+              <div className="flex gap-4 pt-4">
                 <button type="button" onClick={handleBack}
-                  className="flex items-center justify-center gap-1.5 px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-medium transition-all">
-                  <ChevronLeftIcon className="w-4 h-4" /> Back
+                  className="px-6 py-3 border border-white/10 rounded-xl hover:bg-white/5 text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">
+                  PREVIOUS
                 </button>
                 <button type="button" onClick={handleNextFromLocation}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                  Next Step
+                  className="flex-1 py-3 rounded-xl bg-brand-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all shadow-[0_0_20px_rgba(245,178,53,0.2)]">
+                  CONTINUE
                 </button>
               </div>
             </div>
@@ -474,23 +458,22 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
 
           {/* ═══════ STEP 3 (brgy only): Map Pin ═══════ */}
           {isMapStep && (
-            <div className="animate-fade-in space-y-4">
-              <Label>Pin Barangay Hall Location <span className="text-gray-400 font-normal text-sm ml-1">(Optional)</span></Label>
-              <div className="h-64 w-full rounded-xl border overflow-hidden relative z-0">
+            <div className="animate-fade-in space-y-5">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] block">PIN BRGY HALL COORDINATES</label>
+              <div className="h-64 w-full rounded-xl border border-white/10 overflow-hidden relative z-0 grayscale invert contrast-125 brightness-75">
                 <MapContainer center={[14.28, 121.42]} zoom={13} minZoom={12} maxBounds={SANTA_CRUZ_BOUNDS} style={{ height: "100%", width: "100%" }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
                   <LocationPicker position={location} setPosition={setLocation} />
                 </MapContainer>
               </div>
-              <p className="text-xs text-gray-400">Click on the map to pin the exact location.</p>
-              <div className="flex gap-3 pt-1">
+              <div className="flex gap-4 pt-1">
                 <button type="button" onClick={handleBack}
-                  className="flex items-center justify-center gap-1.5 px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-medium transition-all">
-                  <ChevronLeftIcon className="w-4 h-4" /> Back
+                  className="px-6 py-3 border border-white/10 rounded-xl hover:bg-white/5 text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">
+                  PREVIOUS
                 </button>
                 <button type="button" onClick={() => setStep(s => s + 1)}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                  Next Step
+                  className="flex-1 py-3 rounded-xl bg-brand-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all shadow-[0_0_20px_rgba(245,178,53,0.2)]">
+                  LOCK LOCATION
                 </button>
               </div>
             </div>
@@ -498,40 +481,40 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
 
           {/* ═══════ FINAL STEP: Account Info ═══════ */}
           {isAccountStep && (
-            <div className="animate-fade-in space-y-4">
-              <div>
-                <Label>Full Name {mode === 'brgy' && "(Brgy Official)"} <span className="text-error-500">*</span></Label>
-                <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder={mode === 'brgy' ? "Full Name (Brgy Official)" : "Full Name"} className="rounded-xl" />
+            <div className="animate-fade-in space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">IDENTIFICATION (FULL NAME)</label>
+                <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder="ENTER FULL NAME" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 rounded-xl" />
               </div>
-              <div>
-                <Label>Username <span className="text-error-500">*</span></Label>
-                <Input name="username" value={form.username} onChange={handleChange} placeholder="Username" className="rounded-xl" />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">TACTICAL USERNAME</label>
+                <Input name="username" value={form.username} onChange={handleChange} placeholder="ASSIGN USERNAME" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 rounded-xl" />
               </div>
-              <div>
-                <Label>Contact Number <span className="text-error-500">*</span></Label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">CONTACT INTEL</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><EnvelopeIcon className="w-5 h-5" /></span>
-                  <Input name="contact" value={form.contact} onChange={handleChange} placeholder="e.g. 0917 123 4567" className="pl-10 rounded-xl" />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"><EnvelopeIcon className="w-5 h-5" /></span>
+                  <Input name="contact" value={form.contact} onChange={handleChange} placeholder="09XX XXX XXXX" className="h-12 pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 rounded-xl" />
                 </div>
               </div>
-              <div className="flex gap-2">
-                <div className="w-1/2">
-                  <Label>Password <span className="text-error-500">*</span></Label>
-                  <Input type="password" name="password" value={form.password} onChange={handleChange} placeholder="Password" className="rounded-xl" />
+              <div className="flex gap-4">
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">SECRET KEY</label>
+                  <Input type="password" name="password" value={form.password} onChange={handleChange} placeholder="••••••••" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 rounded-xl" />
                 </div>
-                <div className="w-1/2">
-                  <Label>Confirm Password <span className="text-error-500">*</span></Label>
-                  <Input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm" className="rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">CONFIRM KEY</label>
+                  <Input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="••••••••" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-brand-500/50 rounded-xl" />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-4 pt-4">
                 <button type="button" onClick={handleBack}
-                  className="flex items-center justify-center gap-1.5 px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-medium transition-all">
-                  <ChevronLeftIcon className="w-4 h-4" /> Back
+                  className="px-6 py-3 border border-white/10 rounded-xl hover:bg-white/5 text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">
+                  PREVIOUS
                 </button>
                 <button type="submit" disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20">
-                  {loading ? "Registering..." : (mode === 'brgy' ? "Register Barangay" : "Register Resident")}
+                  className="flex-1 py-3 rounded-xl bg-brand-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(245,178,53,0.2)]">
+                  {loading ? "PROCESSING..." : "FINALIZE REGISTRATION"}
                 </button>
               </div>
             </div>

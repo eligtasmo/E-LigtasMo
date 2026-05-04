@@ -30,50 +30,54 @@ export default function ForgotPassword() {
         title="Forgot Password | Eligtasmo"
         description="Reset your barangay account password via email or phone."
       />
-      <AuthLayout>
-        <div className="w-full max-w-lg mx-auto">
-          <div className="w-full mt-2">
-            <form
-              className="w-full max-w-md mx-auto bg-white flex flex-col space-y-6"
-              onSubmit={handleSubmit}
-              autoComplete="off"
-            >
-              <div className="mb-5 sm:mb-8">
-                <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                  Forgot Password
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Enter your barangay account email or phone number to recover your password.
-                </p>
-              </div>
-              <div>
-                <label className="block mb-2 font-medium">Email or Phone</label>
-                <input
-                  type="text"
-                  name="recovery"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  placeholder="e.g. brgy@email.com or 09171234567"
-                  className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:border-gray-700 dark:focus:border-brand-800"
-                  required
-                />
-              </div>
-              {error && <div className="text-error-500 text-sm">{error}</div>}
-              {success && <div className="text-green-600 text-sm">{success}</div>}
+      <div className="w-full max-w-lg mx-auto py-12">
+        <div className="bg-[#0C0B0A]/80 backdrop-blur-xl border border-white/5 p-8 sm:p-10 rounded-2xl shadow-2xl">
+          <div className="mb-8 sm:mb-10">
+            <h1 className="text-3xl font-black text-white mb-2 tracking-tighter uppercase italic">
+              RECOVER ACCESS
+            </h1>
+            <p className="text-sm text-gray-500 font-medium border-l-2 border-brand-500 pl-3">
+              FORGOT PASSWORD? ENTER COORDINATES (EMAIL/PHONE) TO INITIATE RESET.
+            </p>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                EMAIL OR PHONE <span className="text-brand-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="recovery"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="e.g. brgy@email.com"
+                className="h-12 w-full bg-white/5 border border-white/10 rounded-lg px-4 text-sm text-white placeholder:text-white/20 focus:border-brand-500/50 focus:ring-brand-500/10 transition-all"
+                required
+              />
+            </div>
+            {error && <div className="text-error-500 text-[11px] font-bold uppercase tracking-wider">{error}</div>}
+            {success && <div className="text-green-500 text-[11px] font-bold uppercase tracking-wider">{success}</div>}
+            
+            <div className="pt-2">
               <button
                 type="submit"
-                className="w-full px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold text-sm hover:bg-brand-600 transition disabled:opacity-60"
+                className="w-full h-12 bg-brand-500 hover:bg-brand-600 text-black font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(245,178,53,0.2)] rounded-lg transition-all disabled:opacity-60"
                 disabled={loading}
               >
-                {loading ? "Sending..." : "Send Recovery Link/Code"}
+                {loading ? "INITIATING..." : "SEND RECOVERY INTEL"}
               </button>
-            </form>
-            <div className="mt-4 text-center text-sm">
-              <a href="/signin" className="text-blue-600 hover:underline">Go back to Sign In</a>
             </div>
+          </form>
+          
+          <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">REMEMBERED?</span>
+            <Link to="/auth/signin" className="text-[10px] font-black text-white hover:text-brand-500 uppercase tracking-widest transition-colors">
+              BACK TO LOGIN
+            </Link>
           </div>
         </div>
-      </AuthLayout>
+      </div>
     </>
   );
 } 

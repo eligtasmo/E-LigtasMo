@@ -11,13 +11,11 @@ const SignIn = () => {
         title="Sign In | E-LigtasMo Tactical"
         description="Access the E-LigtasMo tactical dashboard for disaster risk reduction and management."
       />
-      <AuthLayout>
-        <div className="w-full max-w-lg mx-auto">
-          <div className="w-full mt-2">
-            <SignInForm />
-          </div>
+      <div className="w-full max-w-lg mx-auto">
+        <div className="w-full mt-2">
+          <SignInForm />
         </div>
-      </AuthLayout>
+      </div>
     </>
   );
 };
