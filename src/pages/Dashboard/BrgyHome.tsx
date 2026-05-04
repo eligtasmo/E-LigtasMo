@@ -12,6 +12,7 @@ import TacticalMarker from "../../components/maps/TacticalMarker";
 import { useGlobalMapContext } from "../../context/MapContext";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
+const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefined;
 
 const BrgyHome = () => {
   const { user } = useAuth();
@@ -46,6 +47,8 @@ const BrgyHome = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [activeTab, setActiveTab] = useState('Pending');
   const [loadingData, setLoadingData] = useState(false);
+  const [weatherLayer, setWeatherLayer] = useState<'none' | 'wind_new' | 'precipitation_new' | 'clouds_new'>('none');
+  const [showWindyRadar, setShowWindyRadar] = useState(false);
 
   const loadData = async () => {
     try {
@@ -819,16 +822,60 @@ const BrgyHome = () => {
                 Live Tactical Map
               </h2>
               <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Shelters_Active</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full" />
-                  <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Threat_Vectors</span>
                 </div>
               </div>
             </div>
+
+            {/* Weather Controls Overlay */}
+            <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
+              <div className="flex bg-black/60 backdrop-blur-xl rounded-2xl p-1 border border-white/10 shadow-2xl">
+                <button 
+                  onClick={() => setShowWindyRadar(!showWindyRadar)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
+                  Windy Radar
+                </button>
+              </div>
+
+              {!showWindyRadar && (
+                <div className="flex flex-col bg-black/60 backdrop-blur-xl rounded-2xl p-2 border border-white/10 shadow-2xl gap-1">
+                  <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-2 mb-1">Weather Layers</span>
+                  {[
+                    { id: 'none', label: 'None', icon: <FaTimes /> },
+                    { id: 'wind_new', label: 'Wind', icon: <FaWind /> },
+                    { id: 'precipitation_new', label: 'Rain', icon: <FaWater /> },
+                    { id: 'clouds_new', label: 'Clouds', icon: <FaCloudSun /> }
+                  ].map((layer) => (
+                    <button
+                      key={layer.id}
+                      onClick={() => setWeatherLayer(layer.id as any)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                    >
+                      <span className={weatherLayer === layer.id ? 'text-blue-500' : ''}>{layer.icon}</span>
+                      {layer.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {showWindyRadar && (
+              <div className="absolute inset-0 z-30 bg-black animate-in fade-in duration-500">
+                <iframe 
+                  src={`https://embed.windy.com/embed2.html?lat=${barangayLocation?.lat || 14.28}&lon=${barangayLocation?.lng || 121.41}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
+                  className="w-full h-full border-none"
+                  title="Windy Radar"
+                />
+                <button 
+                  onClick={() => setShowWindyRadar(false)}
+                  className="absolute top-6 right-6 z-40 bg-red-600 text-white p-3 rounded-full shadow-2xl hover:bg-red-500 transition-all border border-white/20"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            )}
+
             <MapboxMap
               ref={mapRef}
               {...viewState}
@@ -850,11 +897,28 @@ const BrgyHome = () => {
                     } as any);
                   }
                   map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.2 } as any);
-                } catch {}
+                } catch (err) {
+                  console.error("Terrain load error:", err);
+                }
               }}
             >
               <NavigationControl position="bottom-right" />
               <FullscreenControl position="bottom-right" />
+
+              {weatherLayer !== 'none' && OWM_KEY && (
+                <Source
+                  id="owm-weather"
+                  type="raster"
+                  tiles={[`https://tile.openweathermap.org/map/${weatherLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`]}
+                  tileSize={256}
+                >
+                  <Layer
+                    id="owm-layer"
+                    type="raster"
+                    paint={{ 'raster-opacity': 0.6 }}
+                  />
+                </Source>
+              )}
               
               {/* Layer Controls Widget */}
               <div className="absolute right-6 top-6 z-20 bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-4 min-w-[180px]">

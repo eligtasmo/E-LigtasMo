@@ -47,6 +47,7 @@ import React, { useEffect, useState } from "react";
 import { apiFetch } from "../../utils/api";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
+const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefined;
 
 ChartJS.register(
   CategoryScale,
@@ -141,6 +142,8 @@ export default function Home() {
   const [loadingShelters, setLoadingShelters] = useState(true);
   const [shelterError, setShelterError] = useState<string | null>(null);
   const [keyMetrics, setKeyMetrics] = useState(initialMetrics);
+  const [weatherLayer, setWeatherLayer] = useState<'none' | 'wind_new' | 'precipitation_new' | 'clouds_new'>('none');
+  const [showWindyRadar, setShowWindyRadar] = useState(false);
   const [recentIncidents, setRecentIncidents] = useState<any[]>([]);
   const [loadingIncidents, setLoadingIncidents] = useState(true);
   const [loadingHazards, setLoadingHazards] = useState(true);
@@ -578,18 +581,58 @@ export default function Home() {
                 Geospatial Tactical Map
               </h3>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-700/50">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Shelters</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Incidents</span>
-                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Weather Controls Overlay (Admin) */}
+            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 mt-16">
+              <div className="flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-white/10 shadow-2xl">
+                <button 
+                  onClick={() => setShowWindyRadar(!showWindyRadar)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
+                  Windy Radar
+                </button>
+              </div>
+
+              {!showWindyRadar && (
+                <div className="flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-white/10 shadow-2xl gap-1">
+                  {[
+                    { id: 'none', label: 'OFF', icon: <FaTimes /> },
+                    { id: 'wind_new', label: 'WIND', icon: <FaWind /> },
+                    { id: 'precipitation_new', label: 'RAIN', icon: <FaWater /> },
+                    { id: 'clouds_new', label: 'CLD', icon: <FaCloudSun /> }
+                  ].map((layer) => (
+                    <button
+                      key={layer.id}
+                      onClick={() => setWeatherLayer(layer.id as any)}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white border border-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      {layer.icon}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {showWindyRadar && (
+              <div className="absolute inset-0 z-30 bg-black animate-in fade-in duration-500 rounded-2xl overflow-hidden">
+                <iframe 
+                  src={`https://embed.windy.com/embed2.html?lat=14.28&lon=121.41&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
+                  className="w-full h-full border-none"
+                  title="Windy Radar Admin"
+                />
+                <button 
+                  onClick={() => setShowWindyRadar(false)}
+                  className="absolute top-4 right-4 z-40 bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-500 transition-all border border-white/20"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            )}
+
             <div className="h-[550px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-inner relative">
               <MapboxMap
                 {...viewState}
@@ -598,6 +641,20 @@ export default function Home() {
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ height: '100%', width: '100%' }}
               >
+                {weatherLayer !== 'none' && OWM_KEY && (
+                  <Source
+                    id="owm-weather-admin"
+                    type="raster"
+                    tiles={[`https://tile.openweathermap.org/map/${weatherLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`]}
+                    tileSize={256}
+                  >
+                    <Layer
+                      id="owm-layer-admin"
+                      type="raster"
+                      paint={{ 'raster-opacity': 0.6 }}
+                    />
+                  </Source>
+                )}
                 {/* Layer Controls Widget */}
                 <div className="absolute right-4 top-4 z-10 bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-4 min-w-[180px]">
                   <div className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 border-b border-slate-800 pb-2">Tactical_Layers</div>
