@@ -5,16 +5,16 @@ import { Link } from "react-router-dom";
 
 const AuthPageLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row bg-[#080808]">
-      {/* Left: Form Area */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 min-h-screen px-4 md:px-16 z-10">
-        <div className="w-full max-w-lg">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#080808] selection:bg-brand-500/30">
+      {/* Left: Form Area (Centered on mobile/tablet, split on large screens) */}
+      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 min-h-screen px-6 sm:px-12 lg:px-16 z-10 py-12">
+        <div className="w-full max-w-[440px]">
           {children ?? <Outlet />}
         </div>
       </div>
       
-      {/* Right: Branding/Graphic (High-Fidelity Tactical) */}
-      <div className="hidden md:flex w-1/2 h-screen items-center justify-center bg-[#0C0B0A] relative overflow-hidden border-l border-white/5">
+      {/* Right: Branding/Graphic (Hidden on mobile/tablet, shown on lg+) */}
+      <div className="hidden lg:flex w-1/2 h-screen items-center justify-center bg-[#0C0B0A] relative overflow-hidden border-l border-white/5">
         <div className="absolute inset-0 z-0 opacity-20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent"></div>
           <GridShape />
