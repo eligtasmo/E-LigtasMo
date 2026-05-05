@@ -257,7 +257,7 @@ export default function Home() {
           avgMins = Math.round((sums.reduce((a: number, b: number) => a + b, 0) / resolvedWithTimes.length) / 60000);
         }
 
-        const activeHazards = hazards.filter((h: any) => String(h.status || '').toLowerCase() === 'active').length;
+        const activeHazards = (Array.isArray(hazards) ? hazards : []).filter((h: any) => String(h.status || '').toLowerCase() === 'active').length;
 
         setKeyMetrics({
           activeIncidents: { value: activeCount, trend: 0, status: 'stable' },

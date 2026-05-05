@@ -28,7 +28,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const API_BASE = import.meta.env.VITE_API_URL;
+export const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const PUBLIC_ROUTES = ["/signin", "/register", "/forgot-password", "/residents"];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -73,6 +73,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         const path = location.pathname;
         
+        // If we have a user in localStorage, don't redirect even if session check fails 
+        // (Helps with cross-domain testing locally)
+        if (localStorage.getItem('user')) return;
+
         // Skip redirect logic for public routes
         if (PUBLIC_ROUTES.includes(path)) {
           setUser(null);
@@ -83,15 +87,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           path.startsWith("/admin") ||
           path.startsWith("/brgy") ||
           path.startsWith("/barangay");
-        const residentRestricted =
-          path === "/" ||
-          path.startsWith("/resident") ||
-          path.startsWith("/residents");
         setUser(null);
         if (adminRestricted) {
           navigate('/signin');
         }
-        // For residentRestricted, do not navigate; ResidentProtectedRoute will render AccessRequired
       }
     };
     checkSession();

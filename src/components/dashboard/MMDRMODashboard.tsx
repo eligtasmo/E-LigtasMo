@@ -1783,9 +1783,9 @@ const MMDRMODashboard: React.FC = () => {
                   ))}
 
                 {/* Hazard Markers */}
-                {showHazards && hazards
+                {showHazards && Array.isArray(hazards) && hazards
                   .filter(h => 
-                    (typeof h.latitude === 'number' || typeof h.longitude === 'number')
+                    (typeof h.latitude === 'number' || typeof h.longitude === 'number' || typeof (h as any).lat === 'number')
                   )
                   .map((h) => (
                     <Marker
@@ -1817,7 +1817,7 @@ const MMDRMODashboard: React.FC = () => {
                 ))}
 
                 {/* Shelter Markers */}
-                {showShelters && shelters
+                {showShelters && Array.isArray(enhancedShelters) && enhancedShelters
                   .filter(shelter => 
                     (typeof shelter.lat === 'number' && !isNaN(shelter.lat)) &&
                     (typeof shelter.lng === 'number' && !isNaN(shelter.lng))
@@ -1929,7 +1929,7 @@ const MMDRMODashboard: React.FC = () => {
                 ) : null}
 
                 {/* Road Zone Markers */}
-                {showRoadZones && roadZones
+                {showRoadZones && Array.isArray(roadZones) && roadZones
                   .filter(zone => zone.status !== 'clear')
                   .map((zone) => (
                     <Marker

@@ -701,7 +701,7 @@ export default function WeatherFloodTrackingView() {
   }, [dangerZones, mapBounds]);
 
   const scopedHazards = useMemo(() => {
-    return hazards.filter((hz) => {
+    return (Array.isArray(hazards) ? hazards : []).filter((hz) => {
       const latRaw = (hz.start_lat ?? hz.lat);
       const lngRaw = (hz.start_lng ?? hz.lng);
       const lat = typeof latRaw === 'number' ? latRaw : Number(latRaw);

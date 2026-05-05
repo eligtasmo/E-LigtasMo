@@ -227,7 +227,7 @@ const HazardManagementPanel: React.FC<HazardManagementPanelProps> = ({
             <span className="font-medium text-gray-700">Hazard System</span>
           </div>
           <div className="text-gray-600">
-            {hazards.filter(h => h.status === 'active').length} active hazard{hazards.filter(h => h.status === 'active').length !== 1 ? 's' : ''}
+            {(Array.isArray(hazards) ? hazards : []).filter(h => h.status === 'active').length} active hazard{(Array.isArray(hazards) ? hazards : []).filter(h => h.status === 'active').length !== 1 ? 's' : ''}
           </div>
         </div>
 
