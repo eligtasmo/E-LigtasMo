@@ -36,7 +36,6 @@ const BrgyHome = () => {
     shelterCapacity: "0/0",
     statusUpdatedBy: null as string | null
   });
-  const [selectedBrgyIncident, setSelectedBrgyIncident] = useState<any | null>(null);
   const [recentIncidents, setRecentIncidents] = useState<any[]>([]);
   const [hazards, setHazards] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -823,7 +822,6 @@ const BrgyHome = () => {
                 Live Tactical Map
               </h2>
               <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-                </div>
               </div>
             </div>
 
