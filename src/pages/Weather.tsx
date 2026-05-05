@@ -17,6 +17,7 @@ import {
   FaMapMarkerAlt
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { FaWind as FiWindIcon, FaTimes as FiTimesIcon } from 'react-icons/fa';
 
 interface WeatherData {
   current: {
@@ -71,6 +72,7 @@ const Weather: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [showRadar, setShowRadar] = useState(false);
 
   // OpenWeatherMap API key from environment variables
   const API_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY;
@@ -317,6 +319,13 @@ const Weather: React.FC = () => {
                 Last 24 Hours
               </button>
               <button
+                onClick={() => setShowRadar(!showRadar)}
+                className={`flex items-center gap-2 font-medium px-3 py-2 rounded-lg text-xs transition-colors ${showRadar ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <FaWind className={showRadar ? 'animate-spin-slow' : ''} />
+                {showRadar ? 'Close Radar' : 'Tactical Radar'}
+              </button>
+              <button
                 onClick={refreshWeather}
                 disabled={loading}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
@@ -365,6 +374,21 @@ const Weather: React.FC = () => {
         {/* Weather Content */}
         {weatherData && location && !loading && (
           <div className="space-y-4">
+            {showRadar && (
+              <div className="w-full h-[600px] bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative">
+                <iframe 
+                  src={`https://embed.windy.com/embed2.html?lat=${location.lat}&lon=${location.lon}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
+                  className="w-full h-full border-none"
+                  title="Windy Radar"
+                />
+                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Live_Radar_Feed</span>
+                </div>
+              </div>
+            )}
+
+            {!showRadar && (
+              <>
             {/* Current Weather Card */}
             <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg text-white p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
@@ -505,6 +529,8 @@ const Weather: React.FC = () => {
                 ))}
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
       </div>

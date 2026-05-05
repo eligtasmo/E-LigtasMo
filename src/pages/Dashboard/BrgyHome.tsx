@@ -1,7 +1,7 @@
 import PageMeta from "../../components/common/PageMeta";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, FormEvent, useMemo, useRef } from "react";
-import { FaExclamationTriangle, FaCheckCircle, FaUsers, FaMapMarkerAlt, FaPlus, FaBullhorn, FaHome, FaTimes, FaWater, FaList } from "react-icons/fa";
+import { FaExclamationTriangle, FaCheckCircle, FaUsers, FaMapMarkerAlt, FaPlus, FaBullhorn, FaHome, FaTimes, FaWater, FaList, FaWind, FaCloudSun } from "react-icons/fa";
 import { FiMapPin, FiClock as FiClockIcon, FiChevronRight, FiSearch, FiFilter, FiRefreshCw } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from 'react-hot-toast';
