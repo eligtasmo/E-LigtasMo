@@ -30,15 +30,15 @@ const localCommandItems: NavItem[] = [
     name: "Barangay Dashboard",
     path: "/barangay",
   },
-  {
-    icon: <FaMapMarkerAlt size={20} />,
-    name: "Local Area Map",
-    path: "/barangay/barangay-map",
-  },
 ];
 
 // SafeRoute & Emergency Response
 const safeRouteItems: NavItem[] = [
+  {
+    icon: <FaMapMarkerAlt size={20} />,
+    name: "Barangay Management",
+    path: "/barangay/barangay-map",
+  },
   {
     icon: <RouteIcon size={20} />,
     name: "Safe Routes Map",
@@ -83,14 +83,14 @@ const communityItems: NavItem[] = [
 // Monitoring & Support
 const monitoringItems: NavItem[] = [
   {
+    icon: <FiUser size={20} />,
+    name: "Profile & Settings",
+    path: "/brgy/profile",
+  },
+  {
     icon: <FaPhone size={20} />,
     name: "Emergency Guides",
     path: "/brgy/resources",
-  },
-  {
-    icon: <FiUser size={20} />,
-    name: "Profile & Settings",
-    path: "/profile",
   },
 ];
 
@@ -299,11 +299,11 @@ const BrgySidebar: React.FC = () => {
         />
       )}
       <aside
-        className={`sx-sidebar sentinelx-glass border-r border-sentinelx-glass-border fixed flex flex-col top-[72px] left-0 h-[calc(100vh-72px)] transition-transform duration-300 ease-in-out z-[1200] ${
+        className={`sx-sidebar bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 fixed flex flex-col top-[64px] left-0 h-[calc(100vh-64px)] transition-transform duration-300 ease-in-out z-[1200] ${
           isExpanded || isHovered || isMobileOpen ? "w-[278px]" : "w-[80px]"
         } ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        } lg:translate-x-0 shadow-sm`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -313,42 +313,42 @@ const BrgySidebar: React.FC = () => {
               {/* Local Command Center */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                  <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
                     <FiActivity size={12} className="mr-2" />
-                    Local Command
+                    Local Command Center
                   </div>
                 )}
                 {renderMenuItems(localCommandItems, "main")}
               </div>
               
-              {/* SafeRoute & Emergency Response */}
+              {/* Tactical Response Unit */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-3 px-1 flex items-center">
+                  <div className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
                     <FiShield size={12} className="mr-2" />
-                    SafeRoute & Emergency
+                    Tactical Response Unit
                   </div>
                 )}
                 {renderMenuItems(safeRouteItems, "main")}
               </div>
               
-              {/* Community Management */}
+              {/* Community Operations */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                  <div className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
                     <FiUsers size={12} className="mr-2" />
-                    Community Management
+                    Community Operations
                   </div>
                 )}
                 {renderMenuItems(communityItems, "main")}
               </div>
               
-              {/* Monitoring & Support */}
+              {/* Account & Meta */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-3 px-1 flex items-center">
+                  <div className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
                     <WeatherIcon size={12} className="mr-2" />
-                    Monitoring & Support
+                    Account & Support
                   </div>
                 )}
                 {renderMenuItems(monitoringItems, "main")}

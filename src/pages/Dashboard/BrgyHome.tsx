@@ -36,6 +36,7 @@ const BrgyHome = () => {
     shelterCapacity: "0/0",
     statusUpdatedBy: null as string | null
   });
+  const [selectedBrgyIncident, setSelectedBrgyIncident] = useState<any | null>(null);
   const [recentIncidents, setRecentIncidents] = useState<any[]>([]);
   const [hazards, setHazards] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -561,10 +562,10 @@ const BrgyHome = () => {
         
         
         {/* High-Fidelity Tactical Command Center (Side-by-Side Map & Operational Command) */}
-        <div className="flex flex-col lg:flex-row gap-6 h-[750px] mb-8">
+        <div className="flex flex-col lg:flex-row gap-6 min-h-[800px] lg:h-[750px] mb-8">
           
           {/* Operational Command Panel (Right side) */}
-          <div className="lg:w-1/3 flex flex-col h-full bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden order-2 relative">
+          <div className="w-full lg:w-1/3 flex flex-col h-[500px] lg:h-full bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden order-2 lg:order-2 relative">
             {!selectedIncident ? (
               <>
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
@@ -812,7 +813,7 @@ const BrgyHome = () => {
           </div>
 
           {/* Tactical Map Viewport (Main Center/Left) */}
-          <div className="flex-1 bg-[#0f172a] rounded-3xl shadow-2xl border border-gray-800 overflow-hidden relative order-1 group">
+          <div className="flex-1 min-h-[400px] lg:h-full bg-[#0f172a] rounded-3xl shadow-2xl border border-gray-800 overflow-hidden relative order-1 lg:order-1 group">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent pointer-events-none z-10" />
             
             {/* Map Header Overlay */}

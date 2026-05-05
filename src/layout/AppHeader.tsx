@@ -57,7 +57,7 @@ const AppHeader: React.FC = () => {
   const role = (user?.role || 'resident').toLowerCase();
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[64px] flex items-center z-[1300] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300">
+    <header className="fixed top-0 left-0 w-full h-[64px] flex items-center z-[1300] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm">
       <div className="w-full px-4 lg:px-6">
         <div className="flex items-center justify-between h-full">
           {/* Left side - Logo & Tactical Toggle */}

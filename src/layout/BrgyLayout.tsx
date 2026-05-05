@@ -40,12 +40,12 @@ const LayoutContent: React.FC = () => {
     <div className={`${isPlannerRoute ? 'h-screen' : 'min-h-screen'} bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden`}>
       <AppHeader />
       <div className="flex flex-1 overflow-hidden relative">
-        <div className={isPlannerRoute ? "" : "pt-[72px]"}>
+        <div className={isPlannerRoute ? "" : "pt-[64px]"}>
           <BrgySidebar />
           <Backdrop />
         </div>
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out pt-[72px] ${
+          className={`flex-1 transition-all duration-300 ease-in-out pt-[64px] ${
             isPlannerRoute ? "overflow-hidden" : "overflow-y-auto"
           } ${
             isExpanded || isHovered ? "lg:ml-[278px]" : "lg:ml-[80px]"

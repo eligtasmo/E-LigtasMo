@@ -128,9 +128,9 @@ export default function BarangayMapView() {
   const [selectedBrgy, setSelectedBrgy] = useState<Barangay | null>(null);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#0a0a0a] font-mono">
+    <div className="flex flex-col lg:flex-row h-full w-full overflow-hidden bg-[#0a0a0a] font-mono">
       {/* Map Section */}
-      <div className="flex-1 relative h-full z-0 overflow-hidden">
+      <div className="flex-1 relative min-h-[400px] lg:h-full z-0 overflow-hidden">
         <MapboxMap
           {...viewState}
           onMove={(evt: any) => setViewState(evt.viewState)}
@@ -196,7 +196,7 @@ export default function BarangayMapView() {
       </div>
 
       {/* Right Panel Section */}
-      <div className="w-[420px] h-full bg-[#1c1c1e] p-6 border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-y-auto custom-scrollbar font-mono shrink-0 animate-in slide-in-from-right duration-500">
+      <div className="w-full lg:w-[420px] h-[500px] lg:h-full bg-[#1c1c1e] p-6 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-y-auto custom-scrollbar font-mono shrink-0 animate-in slide-in-from-bottom lg:slide-in-from-right duration-500">
         <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-[#f59e0b] font-bold text-xl tracking-wider">BARANGAY_MAP</h2>

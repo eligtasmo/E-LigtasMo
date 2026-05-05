@@ -528,9 +528,9 @@ export default function Home() {
         </div>
 
         {/* Main Content Area - Enhanced Layout & Responsive */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 min-h-[800px]">
           {/* Recent Incidents List - Enhanced */}
-          <div className="lg:col-span-1 bg-white rounded-2xl shadow-xl p-5 border border-slate-100 order-2">
+          <div className="w-full lg:col-span-1 h-[400px] lg:h-[600px] bg-white rounded-2xl shadow-xl p-5 border border-slate-100 order-2 lg:order-2 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-3">
                 <div className="bg-slate-900 text-white rounded-xl p-2.5">
@@ -542,7 +542,7 @@ export default function Home() {
                 View_Matrix
               </Link>
             </div>
-            <div className="space-y-3">
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
               {recentIncidents.map((incident, index) => (
                 <div key={`incident-item-${incident.id || index}`} onClick={() => { setSelectedIncident(incident); setIsViewingDetails(true); }} className="group p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-all duration-300 cursor-pointer border border-transparent hover:border-slate-200 relative overflow-hidden">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${
@@ -572,7 +572,7 @@ export default function Home() {
           </div>
 
           {/* Live Map - Enhanced */}
-          <div className="lg:col-span-3 bg-[#0f172a] rounded-2xl shadow-2xl p-4 border border-slate-800 order-1 relative group">
+          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-[600px] bg-[#0f172a] rounded-2xl shadow-2xl p-4 border border-slate-800 order-1 lg:order-1 relative group">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
                 <div className="bg-red-600/20 text-red-500 rounded-xl p-2.5 border border-red-500/20">
@@ -633,7 +633,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="h-[550px] bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-inner relative">
+            <div className="h-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-inner relative">
               <MapboxMap
                 {...viewState}
                 onMove={(evt: any) => setViewState(evt.viewState)}

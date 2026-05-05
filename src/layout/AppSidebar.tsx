@@ -37,7 +37,7 @@ const operationsItems: NavItem[] = [
     name: "Tactical Map",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/barangay-map", brgy: "/brgy/barangay-map" },
-    nameByRole: { admin: "Global Map", brgy: "Local Area Map" },
+    nameByRole: { admin: "Global Map", brgy: "Barangay Management" },
     badge: "LIVE"
   },
   {
@@ -62,6 +62,13 @@ const operationsItems: NavItem[] = [
     pathByRole: { admin: "/admin/flood-reports", brgy: "/brgy/flood-reports" },
     nameByRole: { admin: "Global Intel", brgy: "Flood Intel" },
   },
+  {
+    icon: <FiBell size={18} />,
+    name: "Alerts",
+    roles: ["admin", "brgy", "resident"],
+    pathByRole: { admin: "/admin/announcements", brgy: "/barangay/announcements", resident: "/announcements" },
+    nameByRole: { admin: "Broadcasts", brgy: "Community Alerts", resident: "Announcements" },
+  },
 ];
 
 const resourceItems: NavItem[] = [
@@ -78,28 +85,12 @@ const resourceItems: NavItem[] = [
     pathByRole: { admin: "/admin/admin-routes", brgy: "/brgy/safe-routes", resident: "/route-planner" },
     nameByRole: { admin: "Mission Routing", brgy: "Local Routes", resident: "Route Planner" },
   },
-];
-
-const communityItems: NavItem[] = [
   {
     icon: <UsersIcon size={20} />,
     name: "Residents",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/user-management", brgy: "/brgy/residents" },
     nameByRole: { admin: "User Registry", brgy: "Resident Registry" },
-  },
-  {
-    icon: <FiBell size={18} />,
-    name: "Alerts",
-    roles: ["admin", "brgy", "resident"],
-    pathByRole: { admin: "/admin/announcements", brgy: "/barangay/announcements", resident: "/announcements" },
-    nameByRole: { admin: "Broadcasts", brgy: "Community Alerts", resident: "Announcements" },
-  },
-  {
-    icon: <FaPhone size={18} />,
-    name: "Directory",
-    roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/contacts", brgy: "/barangay/contacts" },
   },
 ];
 
@@ -111,10 +102,10 @@ const systemItems: NavItem[] = [
     pathByRole: { admin: "/admin/resources", brgy: "/brgy/resources", resident: "/resources" },
   },
   {
-    icon: <FiUser size={20} />,
-    name: "Profile",
+    icon: <FaPhone size={18} />,
+    name: "Directory",
     roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/profile", brgy: "/brgy/profile" },
+    pathByRole: { admin: "/admin/contacts", brgy: "/barangay/contacts" },
   },
   {
     icon: <LogsIcon size={20} />,
@@ -212,10 +203,9 @@ const AppSidebar: React.FC = () => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex-1 overflow-y-auto no-scrollbar p-4">
-          {renderSection("Operations", operationsItems, <FiActivity />)}
-          {renderSection("Resources", resourceItems, <FiShield />)}
-          {renderSection("Community", communityItems, <UsersIcon />)}
-          {renderSection("System", systemItems, <FiSettings />)}
+          {renderSection("Tactical Operations", operationsItems, <FiActivity />)}
+          {renderSection("Logistics & Assets", resourceItems, <FiShield />)}
+          {renderSection("System Intelligence", systemItems, <FiSettings />)}
         </div>
 
         {/* Footer info */}
