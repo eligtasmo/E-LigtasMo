@@ -54,6 +54,8 @@ const safeRouteItems: NavItem[] = [
     name: "Hazard Management",
     path: "/barangay/report-incident",
   },
+  {
+    icon: <ShelterIcon size={20} />,
     name: "Shelter Management",
     path: "/barangay/shelters",
   },

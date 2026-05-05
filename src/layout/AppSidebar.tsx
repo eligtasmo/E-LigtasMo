@@ -62,6 +62,11 @@ const operationsItems: NavItem[] = [
     pathByRole: { admin: "/admin/flood-reports", brgy: "/brgy/flood-reports" },
     nameByRole: { admin: "Global Intel", brgy: "Flood Intel" },
   },
+  {
+    icon: <FiBell size={18} />,
+    name: "Alerts",
+    roles: ["admin", "brgy", "resident"],
+    pathByRole: { admin: "/admin/announcements", brgy: "/barangay/announcements", resident: "/announcements" },
     nameByRole: { admin: "Broadcasts", brgy: "Community Alerts", resident: "Announcements" },
   },
   {
