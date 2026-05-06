@@ -326,7 +326,7 @@ export default function ResidentHome() {
         title="Resident Dashboard - E-LigtasMo"
         description="Your personalized safety dashboard."
       />
-      <div className="min-h-screen w-full bg-[#fcfcfd] px-4 py-8 lg:px-12 space-y-10">
+      <div className="w-full space-y-10">
         {/* Header / Weather Section */}
         <div className="bento-card overflow-hidden !rounded-[2.5rem]">
           <div className="bg-white p-6 sm:p-8">

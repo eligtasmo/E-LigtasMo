@@ -197,8 +197,8 @@ const TacticalApprovalDashboard: React.FC = () => {
         <div className="flex-1 relative h-full">
           <MapboxMap
             {...viewState}
-            onMove={evt => setViewState(evt.viewState)}
-            onLoad={e => setMapInstance(e.target)}
+            onMove={(evt: any) => setViewState(evt.viewState)}
+            onLoad={(e: any) => setMapInstance(e.target)}
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle="mapbox://styles/mapbox/streets-v12"
             style={{ width: '100%', height: '100%' }}
@@ -475,7 +475,7 @@ const TacticalApprovalDashboard: React.FC = () => {
                         flyToIncident(Number(inc.lat), Number(inc.lng));
                       }}
                       className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl mb-2 ${
-                        selectedIncident?.id === inc.id && selectedIncident?.source_table === inc.source_table
+                        (selectedIncident as any)?.id === inc.id && (selectedIncident as any)?.source_table === inc.source_table
                         ? 'bg-[#f59e0b]/10 border-[#f59e0b] shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]' 
                         : 'bg-white/5 border-transparent border-b border-white/[0.02] hover:bg-white/[0.08]'
                       }`}

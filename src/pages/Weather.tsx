@@ -300,7 +300,7 @@ const Weather: React.FC = () => {
         description="Current weather conditions and forecast for emergency preparedness"
       />
       
-      <div className="w-full">
+      <div className="w-full font-outfit">
         {/* Header */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

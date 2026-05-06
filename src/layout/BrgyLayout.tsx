@@ -8,33 +8,36 @@ const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const location = useLocation();
   const isPlannerRoute = [
-    "/safe-routes", 
-    "/route-planner", 
-    "/barangay/safe-routes",
-    "/barangay/barangay-map",
-    "/barangay/shelters",
-    "/barangay/report-incident",
-    "/barangay/flood-reports"
-  ].some((p) => location.pathname.startsWith(p));
+    "/brgy",
+    "/brgy/safe-routes", 
+    "/brgy/barangay-map",
+    "/brgy/shelters",
+    "/brgy/report-incident",
+    "/brgy/flood-reports",
+    "/brgy/dispatch-board",
+    "/brgy/analytics",
+    "/brgy/flood-tracking"
+  ].some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
 
   // Width strategy for barangay: default full-width; center selected content pages
   const fullWidthRoutes = [
-    "/barangay",
-    "/barangay/safe-routes",
-    "/barangay/barangay-map",
-    "/barangay/analytics",
-    "/barangay/dispatch-board",
-    "/barangay/report-incident",
-    "/barangay/flood-reports",
+    "/brgy",
+    "/brgy/safe-routes",
+    "/brgy/barangay-map",
+    "/brgy/analytics",
+    "/brgy/dispatch-board",
+    "/brgy/report-incident",
+    "/brgy/flood-reports",
+    "/brgy/flood-tracking"
   ];
   const centeredRoutes = [
-    "/barangay/profile",
-    "/barangay/resources",
-    "/barangay/coordinators",
-    "/barangay/residents",
+    "/brgy/profile",
+    "/brgy/resources",
+    "/brgy/coordinators",
+    "/brgy/residents",
   ];
-  const isFullWidth = fullWidthRoutes.some((p) => location.pathname.startsWith(p));
-  const isCentered = centeredRoutes.some((p) => location.pathname.startsWith(p));
+  const isFullWidth = fullWidthRoutes.some((p) => location.pathname === p || location.pathname.startsWith(p));
+  const isCentered = centeredRoutes.some((p) => location.pathname === p || location.pathname.startsWith(p));
 
   return (
     <div className={`${isPlannerRoute ? 'h-screen' : 'min-h-screen'} bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden`}>

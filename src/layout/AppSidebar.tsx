@@ -56,25 +56,11 @@ const operationsItems: NavItem[] = [
     },
   },
   {
-    icon: <FaTint size={18} />,
-    name: "Env Intel",
-    roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/flood-reports", brgy: "/brgy/flood-reports" },
-    nameByRole: { admin: "Global Intel", brgy: "Flood Intel" },
-  },
-  {
     icon: <FiBell size={18} />,
     name: "Alerts",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/announcements", brgy: "/barangay/announcements", resident: "/announcements" },
     nameByRole: { admin: "Broadcasts", brgy: "Community Alerts", resident: "Announcements" },
-  },
-  {
-    icon: <FiWind size={18} />,
-    name: "Weather",
-    roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/weather", brgy: "/brgy/weather" },
-    nameByRole: { admin: "Meteorological Intel", brgy: "Weather Monitoring" },
   },
 ];
 
@@ -110,7 +96,13 @@ const systemItems: NavItem[] = [
   },
   {
     icon: <FaPhone size={18} />,
-    name: "Directory",
+    name: "Emergency Hotlines",
+    roles: ["admin"],
+    path: "/admin/hotlines",
+  },
+  {
+    icon: <FaPhone size={18} />,
+    name: "Manage Contacts",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/contacts", brgy: "/barangay/contacts" },
   },
@@ -158,7 +150,7 @@ const AppSidebar: React.FC = () => {
     return (
       <div className="mb-6">
         {(isExpanded || isHovered || isMobileOpen) && (
-          <div className="flex items-center gap-2 px-3 mb-3 text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase select-none">
+          <div className="flex items-center gap-2 px-3 mb-3 text-[11px] font-semibold tracking-wide text-gray-400 select-none">
             {icon}
             {title}
           </div>
@@ -181,10 +173,10 @@ const AppSidebar: React.FC = () => {
                     {nav.icon}
                   </span>
                   {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="text-sm font-bold flex-1 truncate uppercase tracking-tight">{getName(nav)}</span>
+                    <span className="text-sm font-bold flex-1 truncate tracking-tight">{getName(nav)}</span>
                   )}
                   {(isExpanded || isHovered || isMobileOpen) && nav.badge && (
-                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${active ? "bg-white/20" : "bg-red-500 text-white animate-pulse"}`}>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${active ? "bg-white/20" : "bg-red-500 text-white animate-pulse"}`}>
                       {nav.badge}
                     </span>
                   )}
@@ -203,7 +195,7 @@ const AppSidebar: React.FC = () => {
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] lg:hidden" onClick={toggleMobileSidebar} />
       )}
       <aside
-        className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 transition-all duration-300 z-[1200] flex flex-col ${
+        className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 transition-all duration-300 z-[1200] flex flex-col font-outfit ${
           isExpanded || isHovered || isMobileOpen ? "w-[260px]" : "w-[80px]"
         } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
@@ -221,9 +213,9 @@ const AppSidebar: React.FC = () => {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">EOC ONLINE</span>
+                <span className="text-[10px] font-semibold text-gray-500 tracking-wide">EOC Online</span>
               </div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase">v.1.0.0 Alpha</div>
+              <div className="text-[10px] text-gray-400 font-medium">v.1.0.0 Alpha</div>
             </div>
           </div>
         )}

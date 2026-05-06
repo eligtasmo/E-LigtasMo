@@ -426,249 +426,154 @@ const router = createBrowserRouter([
         path: "/brgy",
         element: <BrgyLayout />,
         children: [
-      {
-        index: true,
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyHome />
-          </ProtectedRoute>
-        ),
+          {
+            index: true,
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BrgyHome />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "safe-routes",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <SafeRoutes />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "report-incident",
+            element: (
+              <ProtectedRoute requiredRole="brgy" requiredPermission="incident.create">
+                <IncidentReportingWrapper />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "shelters",
+            element: (
+              <ProtectedRoute requiredRole="brgy" requiredPermission="shelter.manage">
+                <ManageShelters />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "flood-reports",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <TacticalApprovalDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "residents",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <UserManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "coordinators",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BarangayCoordinators />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "resources",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <Resources />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "barangay-map",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BarangayMapView />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "weather",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <Weather />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "flood-tracking",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <WeatherFloods />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BrgyProfile />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "analytics",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <AnalyticsDashboard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "dispatch-board",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BrgyDispatchBoard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "contacts",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <Suspense fallback={<div className="p-6">Loading directory…</div>}>
+                  <TacticalContactManager />
+                </Suspense>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "announcements",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <Announcements />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "hotlines",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <HotlineManagement />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "settings",
+            element: (
+              <ProtectedRoute requiredRole="brgy">
+                <BrgyProfile />
+              </ProtectedRoute>
+            ),
+          },
+        ],
       },
-      {
-        path: "safe-routes",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <SafeRoutes />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "report-incident",
-        element: (
-          <ProtectedRoute requiredRole="brgy" requiredPermission="incident.create">
-            <IncidentReportingWrapper />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "shelters",
-        element: (
-          <ProtectedRoute requiredRole="brgy" requiredPermission="shelter.manage">
-            <ManageShelters />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "flood-reports",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <FloodReport />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "residents",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <UserManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "coordinators",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BarangayCoordinators />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "resources",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Resources />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "barangay-map",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BarangayMapView />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "weather",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Weather />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "flood-tracking",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <WeatherFloods />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyProfile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "analytics",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <AnalyticsDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dispatch-board",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyDispatchBoard />
-          </ProtectedRoute>
-        ),
-      },
-    ],
-  },
-      {
-        path: "/barangay",
-        element: <BrgyLayout />,
-        children: [
-      {
-        index: true,
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyHome />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "safe-routes",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <SafeRoutes />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "report-incident",
-        element: (
-          <ProtectedRoute requiredRole="brgy" requiredPermission="incident.create">
-            <IncidentReportingWrapper />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "shelters",
-        element: (
-          <ProtectedRoute requiredRole="brgy" requiredPermission="shelter.manage">
-            <ManageShelters />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "flood-reports",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <TacticalApprovalDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "residents",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <UserManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "coordinators",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BarangayCoordinators />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "resources",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Resources />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "barangay-map",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BarangayMapView />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "weather",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Weather />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyProfile />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "analytics",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <AnalyticsDashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "dispatch-board",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <BrgyDispatchBoard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "contacts",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Suspense fallback={<div className="p-6">Loading directory…</div>}>
-              <TacticalContactManager />
-            </Suspense>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "announcements",
-        element: (
-          <ProtectedRoute requiredRole="brgy">
-            <Announcements />
-          </ProtectedRoute>
-        ),
-      },
-    ],
-  },
-
       {
         path: "/auth",
         element: <AuthPageLayout />,
@@ -676,10 +581,6 @@ const router = createBrowserRouter([
           {
             path: "signin",
             element: <SignIn />,
-          },
-          {
-            path: "register",
-            element: <Register />,
           },
           {
             path: "forgot-password",
@@ -748,16 +649,21 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "/auth/signin",
-        element: <SignIn />,
-      },
-      {
-        path: "/signin",
-        element: <SignIn />,
-      },
-      {
-        path: "/register",
-        element: <Register />,
+        element: <AuthPageLayout />,
+        children: [
+          {
+            path: "/auth/signin",
+            element: <SignIn />,
+          },
+          {
+            path: "/signin",
+            element: <SignIn />,
+          },
+          {
+            path: "/auth/forgot-password",
+            element: <ForgotPassword />,
+          },
+        ],
       },
       {
         path: "/navigation-demo",

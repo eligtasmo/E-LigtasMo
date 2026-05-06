@@ -10,6 +10,7 @@ import { apiFetch } from "../../utils/api";
 import * as turf from '@turf/turf';
 import TacticalMarker from "../../components/maps/TacticalMarker";
 import { useGlobalMapContext } from "../../context/MapContext";
+import SantaCruzOutline from "../../components/maps/SantaCruzOutline";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefined;
@@ -441,19 +442,19 @@ const BrgyHome = () => {
         title="Command Center - E-LigtasMo"
         description="Barangay Tactical Operations Dashboard."
       />
-      <div className="flex flex-col gap-6 p-1 sm:p-2 font-jetbrains">
+      <div className="flex flex-col font-outfit">
         {/* Tactical Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-black p-6 rounded-3xl text-white shadow-2xl border border-white/10 relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-black p-6 text-white shadow-2xl border-b border-white/10 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <FaExclamationTriangle size={120} />
           </div>
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-black tracking-[0.3em] text-red-500 uppercase">Live Operations Active</span>
+              <span className="text-[10px] font-semibold tracking-wide text-red-500">Live Operations Active</span>
             </div>
-            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none mb-2">
-              {user?.brgy_name || 'Barangay'} <span className="text-gray-500 text-xl font-medium tracking-normal">MDRRMO Console</span>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              {user?.brgy_name || 'Barangay'} <span className="text-gray-400 text-xl font-medium tracking-normal italic">MDRRMO Console</span>
             </h1>
             <p className="text-gray-400 text-sm font-medium max-w-xl">
               Real-time disaster risk reduction and management oversight for the local command sector.
@@ -462,13 +463,13 @@ const BrgyHome = () => {
           <div className="flex items-center gap-3 relative z-10">
             <button 
               onClick={loadData}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all flex items-center gap-2 text-xs font-bold tracking-wide"
             >
               <FiRefreshCw className={loadingData ? 'animate-spin' : ''} /> Refresh Sync
             </button>
             <Link 
-              to="/barangay/report-incident"
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center gap-2"
+              to="/brgy/report-incident"
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center gap-2"
             >
               <FaExclamationTriangle /> Declare Incident
             </Link>
@@ -476,18 +477,18 @@ const BrgyHome = () => {
         </div>
 
         {/* Tactical Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 lg:px-8 mt-6">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="p-3 bg-yellow-50 dark:bg-yellow-500/10 rounded-2xl">
                 <FaWater className="text-yellow-600 dark:text-yellow-500 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 tracking-widest uppercase bg-yellow-50 dark:bg-yellow-500/10 px-2 py-1 rounded-md">Live</span>
+              <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 tracking-wide bg-yellow-50 dark:bg-yellow-500/10 px-2 py-1 rounded-md">Live</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums">{metrics.activeIncidents}</div>
-              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Incident Reports</div>
+              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.activeIncidents}</div>
+              <div className="text-xs font-bold text-gray-500 tracking-wide">Active Incident Reports</div>
             </div>
           </div>
 
@@ -497,11 +498,11 @@ const BrgyHome = () => {
               <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-2xl">
                 <FaCheckCircle className="text-blue-600 dark:text-blue-500 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black text-blue-600 dark:text-blue-500 tracking-widest uppercase bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md">Critical</span>
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-500 tracking-wide bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md">Critical</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums">{metrics.pendingApprovals}</div>
-              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pending Verification</div>
+              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.pendingApprovals}</div>
+              <div className="text-xs font-bold text-gray-500 tracking-wide">Pending Verification</div>
             </div>
           </div>
 
@@ -511,11 +512,11 @@ const BrgyHome = () => {
               <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-2xl">
                 <FaHome className="text-green-600 dark:text-green-500 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black text-green-600 dark:text-green-500 tracking-widest uppercase bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">Capacity</span>
+              <span className="text-[10px] font-bold text-green-600 dark:text-green-500 tracking-wide bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">Capacity</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums">{metrics.shelterCapacity}</div>
-              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Shelter Occupancy</div>
+              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.shelterCapacity}</div>
+              <div className="text-xs font-bold text-gray-500 tracking-wide">Shelter Occupancy</div>
             </div>
           </div>
 
@@ -525,23 +526,23 @@ const BrgyHome = () => {
               <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-2xl">
                 <FaBullhorn className="text-red-600 dark:text-red-500 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-black text-red-600 dark:text-red-500 tracking-widest uppercase bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-md">Broadcasting</span>
+              <span className="text-[10px] font-bold text-red-600 dark:text-red-500 tracking-wide bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-md">Broadcasting</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums">{announcements.length}</div>
-              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Announcements</div>
+              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{announcements.length}</div>
+              <div className="text-xs font-bold text-gray-500 tracking-wide">Active Announcements</div>
             </div>
           </div>
         </div>
 
         {/* Emergency Alert Banner */}
-        <div className="bg-red-600 p-4 rounded-2xl text-white shadow-xl flex items-center justify-between gap-4">
+        <div className="mx-4 lg:mx-8 bg-red-600 p-4 rounded-2xl text-white shadow-xl flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center animate-bounce">
               <FaExclamationTriangle />
             </div>
             <div>
-              <div className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+              <div className="text-sm font-bold tracking-wide flex items-center gap-2">
                 Emergency Dispatch Active
                 {metrics.statusUpdatedBy && (
                   <span className="text-[8px] bg-white/20 px-2 py-0.5 rounded text-white/70">
@@ -553,31 +554,31 @@ const BrgyHome = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => window.open('tel:911')} className="px-4 py-2 bg-white text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all">Emergency 911</button>
-            <button onClick={() => window.open('tel:143')} className="px-4 py-2 bg-white/20 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white/30 transition-all">Red Cross 143</button>
+            <button onClick={() => window.open('tel:911')} className="px-4 py-2 bg-white text-red-600 rounded-lg text-[10px] font-bold tracking-wide hover:bg-gray-100 transition-all">Emergency 911</button>
+            <button onClick={() => window.open('tel:143')} className="px-4 py-2 bg-white/20 text-white rounded-lg text-[10px] font-bold tracking-wide hover:bg-white/30 transition-all">Red Cross 143</button>
           </div>
         </div>
         {/* Shelter Overview - Restricted to Admin Dashboard */}
         
         
         {/* High-Fidelity Tactical Command Center (Side-by-Side Map & Operational Command) */}
-        <div className="flex flex-col lg:flex-row gap-6 min-h-[800px] lg:h-[750px] mb-8">
+        <div className="px-4 lg:px-8 flex flex-col lg:flex-row min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)] mb-6">
           
           {/* Operational Command Panel (Right side) */}
-          <div className="w-full lg:w-1/3 flex flex-col h-[500px] lg:h-full bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden order-2 lg:order-2 relative">
+          <div className="w-full lg:w-1/3 flex flex-col h-[500px] lg:h-full bg-white shadow-xl border-l border-gray-100 overflow-hidden order-2 lg:order-2 relative">
             {!selectedIncident ? (
               <>
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-black text-gray-900 uppercase tracking-widest flex items-center gap-3">
+                    <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
                       <div className="bg-red-600 text-white rounded-xl p-2.5">
                         <FaList className="text-sm" />
                       </div>
                       Operational Command
                     </h2>
-                    <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 tracking-wide">
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      Live_Feed
+                      Live Feed
                     </div>
                   </div>
 
@@ -594,7 +595,7 @@ const BrgyHome = () => {
                     </div>
                     <div className="flex gap-2">
                       <select
-                        className="flex-1 appearance-none px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
+                        className="flex-1 appearance-none px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-bold tracking-wide outline-none cursor-pointer"
                         value={filterSeverity}
                         onChange={(e) => setFilterSeverity(e.target.value)}
                       >
@@ -605,11 +606,11 @@ const BrgyHome = () => {
                         <option value="Low">Low</option>
                       </select>
                       <select
-                        className="flex-1 appearance-none px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer"
+                        className="flex-1 appearance-none px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-bold tracking-wide outline-none cursor-pointer"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                       >
-                        <option value="newest">Latest_First</option>
+                        <option value="newest">Latest First</option>
                         <option value="oldest">Historical</option>
                       </select>
                     </div>
@@ -621,7 +622,7 @@ const BrgyHome = () => {
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold tracking-wide transition-all ${
                         activeTab === tab
                           ? 'bg-white text-red-600 shadow-sm border border-gray-200'
                           : 'text-gray-500 hover:text-gray-700'
@@ -650,11 +651,11 @@ const BrgyHome = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-lg">🌊</span>
                             <div>
-                              <div className="text-[11px] font-black text-gray-900 uppercase tracking-tight">{incident.type || 'Flood'}</div>
+                              <div className="text-[11px] font-bold text-gray-900 tracking-tight">{incident.type || 'Flood'}</div>
                               <div className="text-[9px] font-mono text-gray-400">#REF-{incident.id}</div>
                             </div>
                           </div>
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${getSeverityColor(incident.severity)}`}>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wide ${getSeverityColor(incident.severity)}`}>
                             {incident.severity}
                           </span>
                         </div>
@@ -662,7 +663,7 @@ const BrgyHome = () => {
                           {incident.location_text || 'Active Incident Zone'}
                         </p>
                         <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                          <div className="flex items-center gap-2 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 tracking-wide">
                             <FiClockIcon className="text-red-500" />
                             {formatTime(incident.time || incident.created_at)}
                           </div>
@@ -674,7 +675,7 @@ const BrgyHome = () => {
                   {filteredIncidents.length === 0 && (
                     <div className="py-20 text-center flex flex-col items-center gap-4">
                       <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-2xl">📡</div>
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Matrix_Clear_No_Reports</div>
+                      <div className="text-[10px] font-bold text-gray-400 tracking-widest">Matrix Clear - No Reports</div>
                     </div>
                   )}
                 </div>
@@ -812,12 +813,12 @@ const BrgyHome = () => {
           </div>
 
           {/* Tactical Map Viewport (Main Center/Left) */}
-          <div className="flex-1 min-h-[400px] lg:h-full bg-[#0f172a] rounded-3xl shadow-2xl border border-gray-800 overflow-hidden relative order-1 lg:order-1 group">
+          <div className="flex-1 min-h-[400px] lg:h-full bg-[#0f172a] overflow-hidden relative order-1 lg:order-1 group">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent pointer-events-none z-10" />
             
             {/* Map Header Overlay */}
             <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
-              <h2 className="text-lg font-black text-white uppercase tracking-[0.3em] flex items-center gap-3 drop-shadow-lg">
+              <h2 className="text-lg font-black text-white tracking-wide flex items-center gap-3 drop-shadow-lg">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
                 Live Tactical Map
               </h2>
@@ -830,7 +831,7 @@ const BrgyHome = () => {
               <div className="flex bg-black/60 backdrop-blur-xl rounded-2xl p-1 border border-white/10 shadow-2xl">
                 <button 
                   onClick={() => setShowWindyRadar(!showWindyRadar)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
                 >
                   <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
                   Windy Radar
@@ -839,7 +840,7 @@ const BrgyHome = () => {
 
               {!showWindyRadar && (
                 <div className="flex flex-col bg-black/60 backdrop-blur-xl rounded-2xl p-2 border border-white/10 shadow-2xl gap-1">
-                  <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest px-2 mb-1">Weather Layers</span>
+                  <span className="text-[8px] font-black text-gray-500 tracking-widest px-2 mb-1">Weather Layers</span>
                   {[
                     { id: 'none', label: 'None', icon: <FaTimes /> },
                     { id: 'wind_new', label: 'Wind', icon: <FaWind /> },
@@ -849,7 +850,7 @@ const BrgyHome = () => {
                     <button
                       key={layer.id}
                       onClick={() => setWeatherLayer(layer.id as any)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[9px] font-black tracking-widest transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}
                     >
                       <span className={weatherLayer === layer.id ? 'text-blue-500' : ''}>{layer.icon}</span>
                       {layer.label}
@@ -901,6 +902,7 @@ const BrgyHome = () => {
                 }
               }}
             >
+              <SantaCruzOutline />
               <NavigationControl position="bottom-right" />
               <FullscreenControl position="bottom-right" />
 
@@ -1101,19 +1103,19 @@ const BrgyHome = () => {
         {/* Existing grid links */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Link
-            to="/barangay/resources"
+            to="/brgy/resources"
             className="block rounded-lg bg-red-100 p-4 text-red-800 hover:bg-red-200"
           >
             📚 Emergency Guides
           </Link>
           <Link
-            to="/barangay/report-incident"
+            to="/brgy/report-incident"
             className="block rounded-lg bg-yellow-100 p-4 text-yellow-800 hover:bg-yellow-200"
           >
             🚨 Report Incident
           </Link>
           <Link
-            to="/barangay/shelters"
+            to="/brgy/shelters"
             className="block rounded-lg bg-blue-100 p-4 text-blue-800 hover:bg-blue-200"
           >
             🏠 Shelter Management

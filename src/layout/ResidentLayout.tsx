@@ -12,7 +12,16 @@ import { Navigate } from "react-router-dom";
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const location = useLocation();
-  const isPlannerRoute = ["/safe-routes", "/route-planner", "/barangay/safe-routes", "/shelters", "/hazard-map", "/report-incident"].some((p) => location.pathname.startsWith(p));
+  const isPlannerRoute = [
+    "/safe-routes", 
+    "/route-planner", 
+    "/barangay/safe-routes", 
+    "/shelters", 
+    "/hazard-map", 
+    "/report-incident",
+    "/reports",
+    "/weather"
+  ].some((p) => location.pathname === p || location.pathname.startsWith(p));
 
   // Width strategy for residents: default full-width; center selected content pages
   const fullWidthRoutes = [
@@ -36,7 +45,7 @@ const LayoutContent: React.FC = () => {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       <AppHeader />
-      <div className="flex flex-1 overflow-hidden relative pt-[72px]">
+      <div className="flex flex-1 overflow-hidden relative pt-[64px]">
         <div>
           <AppSidebar />
           <Backdrop />

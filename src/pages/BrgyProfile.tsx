@@ -13,7 +13,7 @@ export default function BrgyProfile() {
       
       <div className="w-full">
         {/* Header */}
-        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4 sm:p-6 mb-4">
+        <div className="mb-6">
           <div className="flex flex-col gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
               Barangay Profile

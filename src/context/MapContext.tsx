@@ -10,7 +10,7 @@ interface ViewportState {
 
 interface MapContextType {
   viewport: ViewportState;
-  setViewport: (vp: ViewportState) => void;
+  setViewport: React.Dispatch<React.SetStateAction<ViewportState>>;
   updateViewport: (vp: Partial<ViewportState>) => void;
 }
 

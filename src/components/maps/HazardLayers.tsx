@@ -8,6 +8,7 @@ type HazardPoint = {
   lat?: number;
   lng?: number;
   severity?: string;
+  type?: string;
 };
 
 export default function HazardLayers({

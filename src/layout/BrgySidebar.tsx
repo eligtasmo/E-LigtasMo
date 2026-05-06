@@ -28,7 +28,7 @@ const localCommandItems: NavItem[] = [
   {
     icon: <GridIcon className="w-5 h-5" />,
     name: "Barangay Dashboard",
-    path: "/barangay",
+    path: "/brgy",
   },
 ];
 
@@ -37,32 +37,27 @@ const safeRouteItems: NavItem[] = [
   {
     icon: <FaMapMarkerAlt size={20} />,
     name: "Barangay Management",
-    path: "/barangay/barangay-map",
+    path: "/brgy/barangay-map",
   },
   {
     icon: <RouteIcon size={20} />,
-    name: "Safe Routes Map",
-    path: "/barangay/safe-routes",
+    name: "Route Planner",
+    path: "/brgy/safe-routes",
   },
   {
     icon: <FiAlertCircle size={20} />,
     name: "Environmental Intel",
-    path: "/barangay/flood-reports",
+    path: "/brgy/flood-reports",
   },
   {
     icon: <WarningIcon size={20} />,
     name: "Hazard Management",
-    path: "/barangay/report-incident",
+    path: "/brgy/report-incident",
   },
   {
     icon: <ShelterIcon size={20} />,
     name: "Shelter Management",
-    path: "/barangay/shelters",
-  },
-  {
-    icon: <WeatherIcon size={22} />,
-    name: "Weather Monitoring",
-    path: "/barangay/weather",
+    path: "/brgy/shelters",
   },
 ];
 
@@ -71,17 +66,22 @@ const communityItems: NavItem[] = [
   {
     icon: <FiUsers size={20} />,
     name: "Resident Directory",
-    path: "/barangay/residents",
+    path: "/brgy/residents",
   },
   {
     icon: <FiBell size={20} />,
     name: "Community Alerts",
-    path: "/barangay/announcements",
+    path: "/brgy/announcements",
   },
   {
     icon: <FaPhone size={18} />,
-    name: "Contact Directory",
-    path: "/barangay/contacts",
+    name: "Manage Contacts",
+    path: "/brgy/contacts",
+  },
+  {
+    icon: <FiAlertCircle size={18} />,
+    name: "Emergency Hotlines",
+    path: "/brgy/hotlines",
   },
 ];
 
@@ -304,7 +304,7 @@ const BrgySidebar: React.FC = () => {
         />
       )}
       <aside
-        className={`sx-sidebar bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 fixed flex flex-col top-[64px] left-0 h-[calc(100vh-64px)] transition-transform duration-300 ease-in-out z-[1200] ${
+        className={`sx-sidebar bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 fixed flex flex-col top-[64px] left-0 h-[calc(100vh-64px)] transition-transform duration-300 ease-in-out z-[1200] font-outfit ${
           isExpanded || isHovered || isMobileOpen ? "w-[278px]" : "w-[80px]"
         } ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
@@ -318,7 +318,7 @@ const BrgySidebar: React.FC = () => {
               {/* Local Command Center */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
+                  <div className="text-[11px] font-semibold text-blue-600 tracking-wide mb-3 px-1 flex items-center">
                     <FiActivity size={12} className="mr-2" />
                     Local Command Center
                   </div>
@@ -329,7 +329,7 @@ const BrgySidebar: React.FC = () => {
               {/* Tactical Response Unit */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
+                  <div className="text-[11px] font-semibold text-red-500 tracking-wide mb-3 px-1 flex items-center">
                     <FiShield size={12} className="mr-2" />
                     Tactical Response Unit
                   </div>
@@ -340,7 +340,7 @@ const BrgySidebar: React.FC = () => {
               {/* Community Operations */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
+                  <div className="text-[11px] font-semibold text-green-600 tracking-wide mb-3 px-1 flex items-center">
                     <FiUsers size={12} className="mr-2" />
                     Community Operations
                   </div>
@@ -351,7 +351,7 @@ const BrgySidebar: React.FC = () => {
               {/* Account & Meta */}
               <div>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] mb-3 px-1 flex items-center">
+                  <div className="text-[11px] font-semibold text-purple-600 tracking-wide mb-3 px-1 flex items-center">
                     <WeatherIcon size={12} className="mr-2" />
                     Account & Support
                   </div>

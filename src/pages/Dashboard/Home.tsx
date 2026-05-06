@@ -1,5 +1,6 @@
-import MapboxMap, { Popup } from '../../components/maps/MapboxMap';
+import MapboxMap, { Popup, Source, Layer } from '../../components/maps/MapboxMap';
 import TacticalMarker from "../../components/maps/TacticalMarker";
+import SantaCruzOutline from "../../components/maps/SantaCruzOutline";
 import { useGlobalMapContext } from "../../context/MapContext";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { Link } from "react-router-dom";
@@ -18,6 +19,7 @@ import {
   Filler,
 } from 'chart.js';
 import { AlertIcon, BoxCubeIcon, ListIcon, CloudIcon } from "../../icons";
+import { FiMapPin, FiClock as FiClockIcon, FiChevronRight, FiRefreshCw, FiActivity } from "react-icons/fi";
 import { 
   FaBullhorn, 
   FaInfoCircle, 
@@ -286,9 +288,9 @@ export default function Home() {
     <>
       <PageMeta
         title="Admin Command Center - E-LigtasMo"
-        description="Dashboard for disaster risk management."
+        description="Real-time disaster risk management and emergency response coordination dashboard."
       />
-      <div className="flex flex-col">
+      <div className="flex flex-col font-outfit">
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -325,23 +327,23 @@ export default function Home() {
                   <FaShieldAlt className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight uppercase flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
                     MDRRMO <span className="text-red-500">Command Center</span>
                   </h1>
                   <p className="text-slate-400 font-mono text-xs flex items-center gap-2 mt-1">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    SYSTEM_PROTOCOL_ACTIVE // {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
+                    SYSTEM_PROTOCOL_ACTIVE // {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <div className="text-3xl font-black font-mono tracking-tighter text-white">
+                  <div className="text-3xl font-bold font-mono tracking-tighter text-white">
                     {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                     <span className="text-red-500 animate-pulse">:</span>
                     {new Date().toLocaleTimeString('en-US', { second: '2-digit' })}
                   </div>
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Live_Tactical_Clock</div>
+                  <div className="text-[10px] font-semibold text-slate-500 tracking-wide">Live Tactical Clock</div>
                 </div>
               </div>
             </div>
@@ -355,8 +357,8 @@ export default function Home() {
                   <FaBullhorn className="text-lg" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-sm text-slate-200 uppercase tracking-widest">Tactical Hotlines</h2>
-                  <p className="text-slate-500 text-[10px] font-mono uppercase">Direct_Channel_Authorization_Required</p>
+                  <h2 className="font-bold text-sm text-slate-200 tracking-wide">Tactical Hotlines</h2>
+                  <p className="text-slate-500 text-[10px] font-medium tracking-tight">Direct channel authorization required</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -374,8 +376,8 @@ export default function Home() {
                       {h.icon}
                     </div>
                     <div className="text-left">
-                      <div className="text-lg font-black text-white font-mono leading-none mb-1">{h.num}</div>
-                      <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{h.label}</div>
+                      <div className="text-lg font-bold text-white font-mono leading-none mb-1">{h.num}</div>
+                      <div className="text-[9px] font-semibold text-slate-500 tracking-wide">{h.label.replace(/_/g, ' ')}</div>
                     </div>
                   </button>
                 ))}
@@ -425,7 +427,7 @@ export default function Home() {
             { 
               label: 'Response Time', 
               value: `${keyMetrics.responseTime.value}m`, 
-              icon: <FaActivity />, 
+              icon: <FiActivity />, 
               color: 'purple', 
               path: '/admin/analytics',
               sub: 'Average verification speed'
@@ -436,7 +438,7 @@ export default function Home() {
               icon: <FaWind />, 
               color: 'cyan', 
               path: '/admin/weather',
-              sub: `Level: ${keyMetrics.weatherAlert.level.toUpperCase()}`
+              sub: `Level: ${keyMetrics.weatherAlert.level}`
             }
           ].map((m, idx) => (
             <Link 
@@ -450,15 +452,15 @@ export default function Home() {
                   {m.icon}
                 </div>
                 {m.trend !== undefined && (
-                  <div className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${m.trend < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide ${m.trend < 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {m.trend < 0 ? <FaArrowDown /> : <FaArrowUp />}
                     {Math.abs(m.trend)}%
                   </div>
                 )}
               </div>
-              <div className="text-2xl font-black text-slate-900 mb-1 font-mono tracking-tight">{m.value}</div>
-              <div className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.1em] mb-2">{m.label}</div>
-              <div className="text-[9px] text-slate-400 font-medium italic">{m.sub}</div>
+              <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{m.value}</div>
+              <div className="text-slate-500 text-[11px] font-semibold tracking-wide mb-2">{m.label}</div>
+              <div className="text-[9px] text-slate-400 font-medium">{m.sub}</div>
               {m.occupancy !== undefined && (
                 <div className="w-full bg-slate-100 rounded-full h-1 mt-3 overflow-hidden">
                   <div 
@@ -474,7 +476,7 @@ export default function Home() {
         {/* Barangay Flood Levels Section */}
         <div className="mb-6 bg-[#0f172a] rounded-2xl shadow-2xl p-6 border border-slate-800">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
+            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-3">
               <div className="bg-blue-600/20 text-blue-400 rounded-xl p-2.5 border border-blue-500/20">
                 <FaWater className="text-lg" />
               </div>
@@ -513,11 +515,11 @@ export default function Home() {
                          </span>
                        )}
                     </div>
-                    <div className="font-black text-sm mb-1 text-white truncate uppercase tracking-tight" title={brgy.barangay_name}>
+                    <div className="font-bold text-sm mb-1 text-white truncate tracking-tight" title={brgy.barangay_name}>
                       {brgy.barangay_name}
                     </div>
-                    <div className={`text-[9px] text-${colorClass}-400 font-black tracking-[0.2em] uppercase flex items-center justify-between`}>
-                      <span>{status}</span>
+                    <div className={`text-[9px] text-${colorClass}-400 font-bold tracking-wide flex items-center justify-between`}>
+                      <span className="capitalize">{status}</span>
                       {brgy.message && <FaInfoCircle className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity" title={brgy.message} />}
                     </div>
                   </div>
@@ -528,18 +530,18 @@ export default function Home() {
         </div>
 
         {/* Main Content Area - Enhanced Layout & Responsive */}
-        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 min-h-[800px]">
+        <div className="flex flex-col lg:grid lg:grid-cols-4 min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)]">
           {/* Recent Incidents List - Enhanced */}
-          <div className="w-full lg:col-span-1 h-[400px] lg:h-[600px] bg-white rounded-2xl shadow-xl p-5 border border-slate-100 order-2 lg:order-2 overflow-hidden flex flex-col">
+          <div className="w-full lg:col-span-1 h-[400px] lg:h-full bg-white shadow-xl border-l border-slate-100 order-2 lg:order-2 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-3">
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
                 <div className="bg-slate-900 text-white rounded-xl p-2.5">
                   <FaList className="text-sm" />
                 </div>
                 Live Reports
               </h3>
-              <Link to="/admin/incident-reports" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-colors">
-                View_Matrix
+              <Link to="/admin/incident-reports" className="text-[10px] font-bold text-blue-600 tracking-wide hover:text-blue-800 transition-colors">
+                View Matrix
               </Link>
             </div>
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
@@ -552,12 +554,12 @@ export default function Home() {
                   }`} />
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="font-black text-slate-900 text-xs uppercase tracking-tight mb-1">{incident.type}</div>
+                      <div className="font-bold text-slate-900 text-xs tracking-tight mb-1">{incident.type}</div>
                       <div className="text-[11px] text-slate-500 mb-1 flex items-center gap-1 font-medium truncate">
                         <FaMapMarkerAlt className="text-[10px] text-slate-400" />
                         {incident.location}
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono uppercase">
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
                         <FaCalendarAlt className="text-[10px]" />
                         {incident.time}
                       </div>
@@ -572,9 +574,9 @@ export default function Home() {
           </div>
 
           {/* Live Map - Enhanced */}
-          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-[600px] bg-[#0f172a] rounded-2xl shadow-2xl p-4 border border-slate-800 order-1 lg:order-1 relative group">
+          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full bg-[#0f172a] order-1 lg:order-1 relative group">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
+              <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-3">
                 <div className="bg-red-600/20 text-red-500 rounded-xl p-2.5 border border-red-500/20">
                   <FaMapMarkerAlt className="text-sm" />
                 </div>
@@ -583,14 +585,14 @@ export default function Home() {
               <div className="flex items-center gap-4">
                 </div>
               </div>
-            </div>
+            {/* Map Section Content continues... */}
 
             {/* Weather Controls Overlay (Admin) */}
             <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 mt-16">
               <div className="flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-white/10 shadow-2xl">
                 <button 
                   onClick={() => setShowWindyRadar(!showWindyRadar)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wide transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
                 >
                   <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
                   Windy Radar
@@ -608,7 +610,7 @@ export default function Home() {
                     <button
                       key={layer.id}
                       onClick={() => setWeatherLayer(layer.id as any)}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white border border-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[8px] font-bold tracking-wide transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white border border-white/10' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                       {layer.icon}
                     </button>
@@ -641,6 +643,7 @@ export default function Home() {
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ height: '100%', width: '100%' }}
               >
+                <SantaCruzOutline />
                 {weatherLayer !== 'none' && OWM_KEY && (
                   <Source
                     id="owm-weather-admin"
@@ -657,10 +660,10 @@ export default function Home() {
                 )}
                 {/* Layer Controls Widget */}
                 <div className="absolute right-4 top-4 z-10 bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-4 min-w-[180px]">
-                  <div className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 border-b border-slate-800 pb-2">Tactical_Layers</div>
+                  <div className="text-[10px] font-semibold text-slate-500 tracking-wide mb-4 border-b border-slate-800 pb-2">Tactical Layers</div>
                   <div className="space-y-3">
                     <label className="flex items-center justify-between cursor-pointer group">
-                      <span className="text-[11px] font-black text-slate-300 group-hover:text-red-500 transition-colors uppercase tracking-tight">Active_Incidents</span>
+                      <span className="text-[11px] font-bold text-slate-300 group-hover:text-red-500 transition-colors tracking-tight">Active Incidents</span>
                       <input 
                         type="checkbox" 
                         className="rounded border-slate-700 bg-slate-800 text-red-600 focus:ring-red-500/50 w-4 h-4"
@@ -669,7 +672,7 @@ export default function Home() {
                       />
                     </label>
                     <label className="flex items-center justify-between cursor-pointer group">
-                      <span className="text-[11px] font-black text-slate-300 group-hover:text-emerald-500 transition-colors uppercase tracking-tight">Shelter_Network</span>
+                      <span className="text-[11px] font-bold text-slate-300 group-hover:text-emerald-500 transition-colors tracking-tight">Shelter Network</span>
                       <input 
                         type="checkbox" 
                         className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-emerald-500/50 w-4 h-4"

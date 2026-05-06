@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMapEvents, useMap } from 'react-leaflet';
+import { SantaCruzLeafletOutline } from '../maps/SantaCruzOutline';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect, useCallback, useReducer, useRef, Fragment } from "react";
@@ -888,6 +889,7 @@ export default function ResidentView() {
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             attribution="&copy; OpenStreetMap &copy; CARTO"
           />
+          <SantaCruzLeafletOutline />
           <StartEndHandler setStart={setStart} setEnd={setEnd} start={start} end={end} />
           {floodZones.map((zone) => {
             // Buffer flood areas visually as semi-transparent polygons to indicate "Heavy Flooded Area"

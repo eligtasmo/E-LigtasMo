@@ -5,7 +5,8 @@ import AdminDispatchNavBar from '../../components/admin/AdminDispatchNavBar';
 import type { TabKey } from '../../components/admin/AdminDispatchNavBar';
 import { apiFetch } from '../../utils/api';
 import { FiUsers, FiClock, FiCheckSquare, FiList, FiAlertTriangle, FiClipboard, FiCheck, FiRefreshCw, FiUploadCloud, FiImage } from 'react-icons/fi';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMapEvents, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMapEvents, ZoomControl, Polygon } from 'react-leaflet';
+import { SANTA_CRUZ_OUTLINE } from '../../constants/geo';
 import { FaFacebookF } from 'react-icons/fa';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -1087,6 +1088,10 @@ const AdminDispatchResponse: React.FC = () => {
                       <TileLayer
                         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                         attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+                      />
+                      <Polygon 
+                        positions={SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]])}
+                        pathOptions={{ color: '#3b82f6', weight: 2, dashArray: '5, 5', fillOpacity: 0 }}
                       />
                       {/* Heatmap and danger layers removed */}
                       {incidentsForMap.map((i: any, idx) => {

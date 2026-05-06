@@ -7,15 +7,16 @@ const SignIn = () => {
   return (
     <>
       <PageMeta
-        title="React.js SignIn Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js SignIn Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Sign In | E-LigtasMo Tactical"
+        description="Secure access for E-LigtasMo administrators and barangay personnel."
       />
       <div className="w-full max-w-lg mx-auto">
         <div className="w-full mt-2">
           <SignInForm />
-          <div className="mt-4 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{' '}
-            <Link to="/auth/register" className="text-blue-600 hover:underline font-bold">Register Barangay</Link>
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+            <p className="text-xs text-gray-400 font-medium tracking-widest uppercase">
+              Tactical Operations Center • Secured Connection
+            </p>
           </div>
         </div>
       </div>

@@ -19,11 +19,18 @@ const LayoutContent: React.FC = () => {
     "/admin/admin-routes",
     "/admin/shelters",
     "/admin/flood-reports",
-    "/brgy/flood-reports"
-  ].some((p) => location.pathname.startsWith(p));
+    "/brgy/flood-reports",
+    "/admin/incident-reports",
+    "/admin/unified-command",
+    "/admin/emergency-requests",
+    "/admin/dispatch-response",
+    "/admin/emergency-operations",
+    "/admin/analytics",
+    "/admin/emergency-analytics"
+  ].some((p) => location.pathname === p || location.pathname === "/admin/");
 
   // Dynamic margin based on sidebar state
-  const sidebarWidth = isExpanded || isHovered ? "lg:ml-[260px]" : "lg:ml-[80px]";
+  const sidebarWidth = isExpanded || isHovered ? "lg:ml-[278px]" : "lg:ml-[80px]";
   const isNoSidebarRoute = location.pathname.startsWith('/admin/emergency-analytics');
 
   return (

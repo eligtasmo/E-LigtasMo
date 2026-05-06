@@ -149,12 +149,17 @@ const TacticalContactManager = () => {
 
   const filteredContacts = useMemo(() => {
     return contacts.filter(c => {
-      const matchesSearch = 
-        c.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+      if (!c) return false;
+      const category = c.category || '';
+      const number = c.number || '';
+      const description = c.description || '';
       
-      const matchesCategory = filterCategory === "All" || c.category === filterCategory;
+      const matchesSearch = 
+        category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = filterCategory === "All" || category === filterCategory;
       
       return matchesSearch && matchesCategory;
     });
@@ -162,8 +167,8 @@ const TacticalContactManager = () => {
 
   return (
     <>
-      <PageMeta title="Contact Directory | Command Center" />
-      <div className="flex flex-col gap-6 p-4 font-jetbrains">
+      <PageMeta title="Manage Contacts | Command Center" />
+      <div className="flex flex-col gap-6 font-jetbrains">
         {/* Tactical Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-black p-6 rounded-3xl text-white shadow-2xl border border-white/10 relative overflow-hidden">
           <div className="relative z-10">
@@ -171,8 +176,8 @@ const TacticalContactManager = () => {
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] font-black tracking-[0.3em] text-emerald-500 uppercase">Communications Active</span>
             </div>
-            <h1 className="text-3xl font-black tracking-tighter uppercase leading-none mb-2">
-              Contact <span className="text-gray-500 text-xl font-medium tracking-normal">Directory Console</span>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              Manage <span className="text-gray-500 text-xl font-medium tracking-normal">Contacts Console</span>
             </h1>
             <p className="text-gray-400 text-sm font-medium max-w-xl">
               {isAdmin ? "Global emergency and inter-barangay communication management." : `Local coordinator and emergency directory for ${brgyName}.`}
@@ -187,7 +192,7 @@ const TacticalContactManager = () => {
             </button>
             <button 
               onClick={handleOpenAdd}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
             >
               <FaPlus /> Add New Contact
             </button>
@@ -208,7 +213,7 @@ const TacticalContactManager = () => {
           </div>
           <div className="flex gap-2">
             <select 
-              className="px-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-xs uppercase tracking-widest cursor-pointer"
+              className="px-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-xs tracking-wide cursor-pointer"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
             >
@@ -264,12 +269,12 @@ const TacticalContactManager = () => {
                   <div className="relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-black tracking-tight mb-1 truncate uppercase">{contact.category}</h3>
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-black mb-3">
+                        <h3 className="text-lg font-bold tracking-tight mb-1 truncate">{contact.category}</h3>
+                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold mb-3">
                           <span className="p-1.5 rounded-lg bg-emerald-500/10">
                             {style.icon}
                           </span>
-                          <span className="text-base tabular-nums tracking-widest">{contact.number}</span>
+                          <span className="text-base tabular-nums tracking-wide">{contact.number}</span>
                         </div>
                       </div>
                     </div>
@@ -310,7 +315,7 @@ const TacticalContactManager = () => {
             <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-gray-800">
               <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-black uppercase tracking-tighter">
+                  <h2 className="text-2xl font-bold tracking-tight">
                     {isEditing ? "Modify" : "Provision"} <span className="text-emerald-500">Contact</span>
                   </h2>
                   <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-black transition-all">
@@ -320,7 +325,7 @@ const TacticalContactManager = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Category Segment</label>
+                    <label className="block text-[11px] font-semibold tracking-wide text-gray-400 mb-2">Category Segment</label>
                     <select 
                       className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 transition-all font-bold text-sm"
                       value={formData.category}
@@ -331,7 +336,7 @@ const TacticalContactManager = () => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Tactical Number</label>
+                    <label className="block text-[11px] font-semibold tracking-wide text-gray-400 mb-2">Tactical Number</label>
                     <input 
                       type="text"
                       className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 transition-all font-mono font-bold"
@@ -342,8 +347,35 @@ const TacticalContactManager = () => {
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-semibold tracking-wide text-gray-400 mb-2">Priority</label>
+                      <select 
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 transition-all font-bold text-sm"
+                        value={formData.priority}
+                        onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                      >
+                        <option value="Normal">Normal</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold tracking-wide text-gray-400 mb-2">Type</label>
+                      <select 
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 transition-all font-bold text-sm"
+                        value={formData.type}
+                        onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      >
+                        <option value="Emergency">Emergency</option>
+                        <option value="Support">Support</option>
+                        <option value="Information">Information</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Resource Description</label>
+                    <label className="block text-[11px] font-semibold tracking-wide text-gray-400 mb-2">Resource Description</label>
                     <textarea 
                       className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-emerald-500 transition-all text-sm h-24 resize-none"
                       placeholder="Identify the coordinator or station details..."
@@ -356,13 +388,13 @@ const TacticalContactManager = () => {
                     <button 
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all"
+                      className="py-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 font-bold tracking-wide text-[11px] hover:bg-gray-200 transition-all"
                     >
                       Abort
                     </button>
                     <button 
                       type="submit"
-                      className="py-4 rounded-2xl bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                      className="py-4 rounded-2xl bg-emerald-600 text-white font-bold tracking-wide text-[11px] hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
                     >
                       {isEditing ? "Sync Changes" : "Deploy Contact"}
                     </button>

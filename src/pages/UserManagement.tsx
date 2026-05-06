@@ -42,7 +42,7 @@ const UserManagement: React.FC = () => {
   // Initialize activeTab based on role
   // Both admins and brgy officials can see approvals (officials only see their own residents)
   const [activeTab, setActiveTab] = useState<'approvals' | 'users' | 'brgyAccounts'>(
-    'approvals'
+    isBrgy ? 'users' : 'approvals'
   );
   
   const [showToast, setShowToast] = useState<string | null>(null);
@@ -182,13 +182,17 @@ const UserManagement: React.FC = () => {
   });
 
   return (
-    <div className="w-full">
+    <div className="w-full font-outfit">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage user accounts{isBrgy ? '' : ' and approvals'}</p>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isBrgy ? `Barangay "${user?.brgy_name || ''}" Residents List Registered` : "User Management"}
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {isBrgy ? `Comprehensive directory of all registered residents within your jurisdiction.` : "Manage user accounts and approvals"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -198,10 +202,10 @@ const UserManagement: React.FC = () => {
         </div>
       {error && <div className="text-error-500 mb-2">{error}</div>}
 
-        {/* Tab Bar */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-            <div className="flex gap-2">
+        {!isBrgy && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+              <div className="flex gap-2">
                 <button
                   className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'approvals' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                   onClick={() => setActiveTab('approvals')}
@@ -209,91 +213,88 @@ const UserManagement: React.FC = () => {
                   Approvals {pendingUsers.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full">{pendingUsers.length}</span>}
                 </button>
 
-              <button
-                className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'users' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                onClick={() => setActiveTab('users')}
-              >
-                All Users
-              </button>
-              {!isBrgy && (
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'users' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  onClick={() => setActiveTab('users')}
+                >
+                  All Users
+                </button>
                 <button
                   className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'brgyAccounts' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                   onClick={() => setActiveTab('brgyAccounts')}
                 >
                   Barangay Accounts
                 </button>
-              )}
-            </div>
-            {activeTab !== 'brgyAccounts' && (
-              <div className="flex gap-2">
-                <button
-                  className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-                  onClick={() => {
-                    const data = (activeTab === 'users' ? otherUsers : pendingUsers);
-                    if (data.length === 0) { setShowToast('No users to export.'); return; }
-                    const csvRows = [];
-                    // Conditional headers based on role
-                    const headers = isBrgy 
-                      ? ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact']
-                      : ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact', 'Role', 'Status'];
-                    
-                    csvRows.push(headers.join(','));
-                    data.forEach(u => {
-                      const row = isBrgy 
-                        ? [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number]
-                        : [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number, u.role, u.status];
+              </div>
+              {activeTab !== 'brgyAccounts' && (
+                <div className="flex gap-2">
+                  <button
+                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
+                    onClick={() => {
+                      const data = (activeTab === 'users' ? otherUsers : pendingUsers);
+                      if (data.length === 0) { setShowToast('No users to export.'); return; }
+                      const csvRows = [];
+                      // Conditional headers based on role
+                      const headers = isBrgy 
+                        ? ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact']
+                        : ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact', 'Role', 'Status'];
                       
-                      csvRows.push(row.map(val => `"${val ?? ''}"`).join(','));
-                    });
-                    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.join('\n');
-                    const encodedUri = encodeURI(csvContent);
-                    const link = document.createElement('a');
-                    link.setAttribute('href', encodedUri);
-                    link.setAttribute('download', `users_${activeTab}_${new Date().toISOString().slice(0,10)}.csv`);
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    setShowToast(`Exported ${data.length} users as CSV.`);
-                  }}
-                  aria-label="Export as CSV"
-                  title="Export as CSV"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                  CSV
-                </button>
-                <button
-                  className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-                  onClick={() => {
-                    const data = (activeTab === 'users' ? otherUsers : pendingUsers);
-                    if (data.length === 0) { setShowToast('No users to export.'); return; }
-                    const ws = XLSX.utils.json_to_sheet((data || []).map(u => {
-                      const row: any = {
-                        Username: u.username,
-                        'Full Name': u.full_name,
-                        Barangay: u.brgy_name,
-                        City: u.city,
-                        Province: u.province,
-                        Email: u.email,
-                        Contact: u.contact_number,
-                      };
-                      if (!isBrgy) {
-                        row.Role = u.role;
-                        row.Status = u.status;
-                      }
-                      return row;
-                    }));
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, 'Users');
-                    XLSX.writeFile(wb, `users_${activeTab}_${new Date().toISOString().slice(0,10)}.xlsx`);
-                    setShowToast(`Exported ${data.length} users as Excel.`);
-                  }}
-                  aria-label="Export as Excel"
-                  title="Export as Excel"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                  Excel
-                </button>
-                {!isBrgy && (
+                      csvRows.push(headers.join(','));
+                      data.forEach(u => {
+                        const row = isBrgy 
+                          ? [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number]
+                          : [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number, u.role, u.status];
+                        
+                        csvRows.push(row.map(val => `"${val ?? ''}"`).join(','));
+                      });
+                      const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.join('\n');
+                      const encodedUri = encodeURI(csvContent);
+                      const link = document.createElement('a');
+                      link.setAttribute('href', encodedUri);
+                      link.setAttribute('download', `users_${activeTab}_${new Date().toISOString().slice(0,10)}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      setShowToast(`Exported ${data.length} users as CSV.`);
+                    }}
+                    aria-label="Export as CSV"
+                    title="Export as CSV"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                    CSV
+                  </button>
+                  <button
+                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
+                    onClick={() => {
+                      const data = (activeTab === 'users' ? otherUsers : pendingUsers);
+                      if (data.length === 0) { setShowToast('No users to export.'); return; }
+                      const ws = XLSX.utils.json_to_sheet((data || []).map(u => {
+                        const row: any = {
+                          Username: u.username,
+                          'Full Name': u.full_name,
+                          Barangay: u.brgy_name,
+                          City: u.city,
+                          Province: u.province,
+                          Email: u.email,
+                          Contact: u.contact_number,
+                        };
+                        if (!isBrgy) {
+                          row.Role = u.role;
+                          row.Status = u.status;
+                        }
+                        return row;
+                      }));
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, 'Users');
+                      XLSX.writeFile(wb, `users_${activeTab}_${new Date().toISOString().slice(0,10)}.xlsx`);
+                      setShowToast(`Exported ${data.length} users as Excel.`);
+                    }}
+                    aria-label="Export as Excel"
+                    title="Export as Excel"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                    Excel
+                  </button>
                   <button
                     className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
                     onClick={async () => {
@@ -322,11 +323,11 @@ const UserManagement: React.FC = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     Invite
                   </button>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         
         {showToast && (
           <div className="mb-4 text-xs text-green-700 bg-green-100 rounded-lg px-3 py-2">{showToast}</div>
@@ -393,13 +394,13 @@ const UserManagement: React.FC = () => {
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-              <thead className="bg-[#0A192F] text-white">
+                <thead className="bg-[#0A192F] text-white">
                   <tr>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">Resident Details</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">Barangay</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">Location</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">Contact Info</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-center">Action</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Resident Details</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Barangay</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Location</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Contact Info</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -475,11 +476,12 @@ const UserManagement: React.FC = () => {
               <table className="min-w-full text-sm">
                 <thead className="bg-[#0A192F] text-white">
                   <tr>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">User Profile</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider">Barangay</th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-center">Contact</th>
-                    {!isBrgy && <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-center">Role</th>}
-                    {!isBrgy && <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-center">Status</th>}
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">User Profile</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Barangay</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Contact Info</th>
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Location</th>
+                    {!isBrgy && <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Role</th>}
+                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -502,25 +504,29 @@ const UserManagement: React.FC = () => {
                            </div>
                         </td>
                         <td className="px-5 py-4">
-                           <div className="flex flex-col items-center gap-0.5 text-xs">
+                           <div className="flex flex-col items-center text-xs">
                              <span className="font-semibold text-gray-700">{u.contact_number}</span>
                              <span className="text-[10px] text-gray-400 break-all">{u.email}</span>
                            </div>
                         </td>
+                        <td className="px-5 py-4 text-center">
+                           <div className="text-[11px] text-gray-600">
+                             <div>{u.city}</div>
+                             <div className="text-[9px] text-gray-400">{u.province}</div>
+                           </div>
+                        </td>
                         {!isBrgy && (
                           <td className="px-5 py-4 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                               {u.role || "N/A"}
                             </span>
                           </td>
                         )}
-                        {!isBrgy && (
-                          <td className="px-5 py-4 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.status === 'active' || u.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                              {u.status || "N/A"}
-                            </span>
-                          </td>
-                        )}
+                        <td className="px-5 py-4 text-center">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'active' || u.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                            {u.status || "N/A"}
+                          </span>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -545,14 +551,14 @@ const UserManagement: React.FC = () => {
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barangay</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Barangay</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Address</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Contact</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Username</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Role</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">

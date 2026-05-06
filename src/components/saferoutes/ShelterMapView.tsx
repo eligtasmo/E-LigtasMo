@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon } from "react-leaflet";
+import { SANTA_CRUZ_OUTLINE } from "../../constants/geo";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { apiFetch } from "../../utils/api";
@@ -230,6 +231,11 @@ export default function ShelterMapView() {
             attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           />
           <MapController panTo={panTo} bounds={bounds} />
+          
+          <Polygon 
+            positions={SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]])}
+            pathOptions={{ color: '#3b82f6', weight: 2, dashArray: '5, 5', fillOpacity: 0 }}
+          />
           {shelters.map((shelter) => (
             <Marker
               key={shelter.id}

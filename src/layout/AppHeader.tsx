@@ -32,10 +32,10 @@ const PHClock: React.FC = () => {
   return (
     <div className="flex items-center gap-4 group bg-black/5 dark:bg-white/5 px-4 py-1.5 rounded-2xl border border-black/5 dark:border-white/5 backdrop-blur-sm">
       <div className="flex flex-col items-end leading-tight">
-        <span className="text-xl font-black tabular-nums tracking-tight text-gray-900 dark:text-white uppercase">
+        <span className="text-xl font-bold tabular-nums tracking-tight text-gray-900 dark:text-white">
           {phTime}
         </span>
-        <span className="text-[9px] font-black text-blue-500 uppercase tracking-[0.2em]">
+        <span className="text-[9px] font-semibold text-blue-500 tracking-wide">
           {phDate}
         </span>
       </div>
@@ -43,9 +43,9 @@ const PHClock: React.FC = () => {
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-          <span className="text-[9px] font-black tracking-widest text-gray-500 dark:text-gray-400">EOC LIVE</span>
+          <span className="text-[9px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">EOC Live</span>
         </div>
-        <span className="text-[12px] font-black tracking-tighter text-gray-900 dark:text-white leading-none">STX-OPS</span>
+        <span className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-white leading-none">STX-Ops</span>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ const AppHeader: React.FC = () => {
   const role = (user?.role || 'resident').toLowerCase();
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[64px] flex items-center z-[1300] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm">
+    <header className="fixed top-0 left-0 w-full h-[64px] flex items-center z-[1300] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm font-outfit">
       <div className="w-full px-4 lg:px-6">
         <div className="flex items-center justify-between h-full">
           {/* Left side - Logo & Tactical Toggle */}
@@ -67,7 +67,7 @@ const AppHeader: React.FC = () => {
               className="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-black dark:hover:bg-white transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-black dark:hover:border-white"
             >
               <FiMenu className="w-5 h-5 text-gray-500 group-hover:text-white dark:group-hover:text-black transition-colors" />
-              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white dark:group-hover:text-black">Menu</span>
+              <span className="hidden sm:inline text-[10px] font-bold tracking-wider text-gray-400 group-hover:text-white dark:group-hover:text-black">Menu</span>
             </button>
             
             <Link to={role === 'admin' ? '/admin' : role === 'brgy' ? '/brgy' : '/'} className="flex items-center gap-3 group">
@@ -75,8 +75,8 @@ const AppHeader: React.FC = () => {
                 <img src="/images/logo/logo-icon.png" alt="Logo" className="w-7 h-7 brightness-0 invert" />
               </div>
               <div className="hidden md:flex flex-col leading-none">
-                <span className="text-sm font-black tracking-tighter text-gray-900 dark:text-white uppercase">E-LigtasMo</span>
-                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{role === 'admin' ? 'MDRRMO HQ' : 'Brgy Command'}</span>
+                <span className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">E-LigtasMo</span>
+                <span className="text-[10px] font-semibold text-blue-500 tracking-wide">{role === 'admin' ? 'MDRRMO HQ' : 'Brgy Command'}</span>
               </div>
             </Link>
           </div>

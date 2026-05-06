@@ -21,6 +21,7 @@ export default function Announcements() {
   const [showModal, setShowModal] = useState(false);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const [form, setForm] = useState({ 
     title: '', 
@@ -51,6 +52,11 @@ export default function Announcements() {
       setIsLoading(false);
     }
   };
+
+  const filteredAnnouncements = useMemo(() => {
+    if (!selectedCategory) return announcements;
+    return announcements.filter(a => a.category === selectedCategory);
+  }, [announcements, selectedCategory]);
 
   useEffect(() => { loadAnnouncements(); }, [role]);
 
@@ -101,6 +107,44 @@ export default function Announcements() {
     }
   };
 
+  const confirmUpdate = async () => {
+    if (!existing) return;
+    try {
+      const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
+      const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
+      
+      const payload = { 
+        title: form.title, 
+        message: form.message, 
+        type: form.isUrgent ? 'error' : form.type, 
+        audience,
+        category: form.category,
+        external_link: form.externalLink,
+        is_urgent: form.isUrgent ? 1 : 0,
+        overwrite: true,
+        existing_id: existing.id
+      };
+
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Role': role },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Broadcast Overwritten & Synced.");
+        setShowModal(false);
+        resetForm();
+        loadAnnouncements();
+      } else {
+        throw new Error('Overwrite failed');
+      }
+    } catch {
+      toast.error("Critical update synchronization failure.");
+    }
+  };
+
   const resetForm = () => {
     setForm({ 
       title: '', 
@@ -121,7 +165,7 @@ export default function Announcements() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 lg:p-8 font-jetbrains">
+    <div className="max-w-5xl mx-auto font-outfit">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-black p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -130,15 +174,15 @@ export default function Announcements() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-[10px] font-black tracking-[0.3em] text-blue-500 uppercase">Communication Hub Active</span>
+            <span className="text-[10px] font-semibold tracking-wide text-blue-500">Communication Hub Active</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tighter uppercase mb-2">Community Alerts</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Community Alerts</h1>
           <p className="text-gray-400 text-sm font-medium">Broadcast operational updates, typhoon warnings, and relief schedules to residents.</p>
         </div>
         {canSend && (
           <button 
             onClick={() => setShowModal(true)}
-            className="relative z-10 px-6 py-3 bg-white text-black rounded-xl font-black tracking-widest uppercase text-xs shadow-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center gap-2"
+            className="relative z-10 px-6 py-3 bg-white text-black rounded-xl font-bold tracking-wide text-xs shadow-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center gap-2"
           >
             <FiPlus /> New Broadcast
           </button>
@@ -149,9 +193,9 @@ export default function Announcements() {
         {/* Main Feed */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">Operational Feed</h2>
+            <h2 className="text-xs font-bold text-gray-500 tracking-wide">Operational Feed</h2>
             <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
-              <FiActivity className="animate-pulse text-emerald-500" /> SYNCED LIVE
+              <FiActivity className="animate-pulse text-emerald-500" /> Live Synced
             </div>
           </div>
 
@@ -161,9 +205,9 @@ export default function Announcements() {
                 <div key={n} className="h-32 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-3xl" />
               ))}
             </div>
-          ) : announcements.length > 0 ? (
+          ) : filteredAnnouncements.length > 0 ? (
             <div className="space-y-4">
-              {announcements.map((a: any) => (
+              {filteredAnnouncements.map((a: any) => (
                 <div 
                   key={a.id} 
                   className={`bg-white dark:bg-gray-900 rounded-3xl border ${a.is_urgent ? 'border-red-500/20 shadow-lg shadow-red-500/5' : 'border-gray-100 dark:border-gray-800'} p-6 transition-all hover:shadow-md group`}
@@ -180,12 +224,12 @@ export default function Announcements() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-black text-gray-900 dark:text-white uppercase tracking-tight leading-none">{a.title}</h3>
+                          <h3 className="font-bold text-gray-900 dark:text-white tracking-tight leading-none">{a.title}</h3>
                           {a.is_urgent === 1 && (
-                            <span className="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black tracking-widest rounded-md uppercase">Urgent</span>
+                            <span className="px-2 py-0.5 bg-red-600 text-white text-[8px] font-bold tracking-wide rounded-md">Urgent</span>
                           )}
                         </div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                        <div className="text-[10px] font-bold text-gray-400 tracking-wide mt-1">
                           {new Date(a.created_at).toLocaleString()} • {a.audience}
                         </div>
                       </div>
@@ -210,7 +254,7 @@ export default function Announcements() {
           ) : (
             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 p-12 text-center">
               <FiBell className="mx-auto text-gray-300 mb-4" size={40} />
-              <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">No active broadcasts found</p>
+              <p className="text-gray-500 font-bold tracking-wide text-xs">No active broadcasts found</p>
             </div>
           )}
         </div>
@@ -218,18 +262,29 @@ export default function Announcements() {
         {/* Categories / Side Info */}
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-6">Dispatch Filters</h2>
+            <h2 className="text-xs font-bold text-gray-500 tracking-wide mb-6">Dispatch Filters</h2>
             <div className="space-y-3">
+              <button 
+                onClick={() => setSelectedCategory(null)}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${!selectedCategory ? 'bg-black text-white border-black' : 'border-gray-50 dark:border-gray-800 hover:bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <FiLayers className={!selectedCategory ? 'text-blue-400' : 'text-gray-400'} />
+                  <span className={`text-xs font-bold tracking-wide ${!selectedCategory ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`}>All Broadcasts</span>
+                </div>
+                <FiChevronRight className={!selectedCategory ? 'text-white' : 'text-gray-300'} />
+              </button>
               {CATEGORIES.map(cat => (
                 <button 
                   key={cat.id}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-50 dark:border-gray-800 hover:bg-gray-50 transition-all group"
+                  onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${selectedCategory === cat.id ? 'bg-black text-white border-black' : 'border-gray-50 dark:border-gray-800 hover:bg-gray-50'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`text-lg text-${cat.color}-600`}>{cat.icon}</span>
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest">{cat.name}</span>
+                    <span className={`text-lg ${selectedCategory === cat.id ? 'text-white' : `text-${cat.color}-600`}`}>{cat.icon}</span>
+                    <span className={`text-xs font-bold tracking-wide ${selectedCategory === cat.id ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`}>{cat.name}</span>
                   </div>
-                  <FiChevronRight className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                  <FiChevronRight className={selectedCategory === cat.id ? 'text-white' : 'text-gray-300'} />
                 </button>
               ))}
             </div>
@@ -239,9 +294,9 @@ export default function Announcements() {
             <div className="absolute -bottom-4 -right-4 text-white/10 rotate-12 transition-transform group-hover:scale-110">
               <FiSend size={100} />
             </div>
-            <h3 className="text-lg font-black uppercase tracking-tight mb-2">Direct Notification</h3>
+            <h3 className="text-lg font-bold tracking-tight mb-2">Direct Notification</h3>
             <p className="text-white/80 text-xs leading-relaxed mb-4">Urgent alerts are pushed directly to resident devices as high-priority interruptions.</p>
-            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase">
+            <div className="flex items-center gap-2 text-[10px] font-bold tracking-wide">
               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Mobile Push Enabled
             </div>
           </div>
@@ -257,7 +312,7 @@ export default function Announcements() {
               <div className="p-8">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-2xl font-black tracking-tighter uppercase">New Tactical Broadcast</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">New Tactical Broadcast</h2>
                     <p className="text-xs text-gray-500 font-medium">Configure alert parameters and audience targeting.</p>
                   </div>
                   <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-xl transition-all"><FiX size={24} /></button>
@@ -265,7 +320,7 @@ export default function Announcements() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Category</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Category</label>
                     <div className="grid grid-cols-2 gap-2">
                       {CATEGORIES.map(cat => (
                         <button
@@ -278,14 +333,14 @@ export default function Announcements() {
                           }`}
                         >
                           <span className="text-lg">{cat.icon}</span>
-                          <span className="text-[10px] font-bold uppercase truncate">{cat.name.split(' ')[0]}</span>
+                          <span className="text-[10px] font-bold truncate">{cat.name.split(' ')[0]}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Broadcast Priority</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Broadcast Priority</label>
                     <button
                       onClick={() => setForm(f => ({ ...f, isUrgent: !f.isUrgent }))}
                       className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${
@@ -296,7 +351,7 @@ export default function Announcements() {
                     >
                       <div className="flex items-center gap-3">
                         <FiAlertTriangle className={form.isUrgent ? 'animate-pulse' : ''} size={20} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Urgent Alert</span>
+                        <span className="text-[10px] font-bold tracking-wide">Urgent Alert</span>
                       </div>
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
                         form.isUrgent ? 'border-red-600 bg-red-600' : 'border-gray-200'
@@ -309,7 +364,7 @@ export default function Announcements() {
 
                 <div className="space-y-4 mb-8">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Headline</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Headline</label>
                     <input 
                       className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl p-4 text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all"
                       placeholder="Enter a compelling subject line..."
@@ -319,7 +374,7 @@ export default function Announcements() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Intelligence Brief (Message)</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Intelligence Brief (Message)</label>
                     <textarea 
                       className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl p-4 text-sm font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all min-h-[120px]"
                       placeholder="Details of the announcement, relief schedule, or incident..."
@@ -329,7 +384,7 @@ export default function Announcements() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">External Intelligence Source (URL)</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">External Intelligence Source (URL)</label>
                     <div className="relative">
                       <FiLink className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input 
@@ -342,13 +397,13 @@ export default function Announcements() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Audience Targeting</label>
+                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Audience Targeting</label>
                     <div className="flex gap-2">
                       {['All Residents', 'Barangay Only', 'Everyone'].map(target => (
                         <button
                           key={target}
                           onClick={() => setForm(f => ({ ...f, audience: target }))}
-                          className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                          className={`flex-1 py-3 rounded-xl border text-[10px] font-bold tracking-wide transition-all ${
                             form.audience === target 
                             ? 'border-black bg-black text-white' 
                             : 'border-gray-100 text-gray-400 hover:bg-gray-50'
@@ -362,10 +417,10 @@ export default function Announcements() {
                 </div>
 
                 <div className="flex gap-4">
-                  <button onClick={resetForm} className="flex-1 py-4 text-xs font-black uppercase tracking-[0.2em] text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Cancel</button>
+                  <button onClick={resetForm} className="flex-1 py-4 text-xs font-bold tracking-wide text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Cancel</button>
                   <button 
                     onClick={handleSend}
-                    className={`flex-1 py-4 rounded-2xl text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    className={`flex-1 py-4 rounded-2xl text-white text-xs font-bold tracking-wide shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
                       form.isUrgent ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700' : 'bg-blue-600 shadow-blue-600/20 hover:bg-blue-700'
                     }`}
                   >
@@ -378,13 +433,13 @@ export default function Announcements() {
                 <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <FiAlertTriangle size={40} />
                 </div>
-                <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Update Deployment?</h2>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">Update Deployment?</h2>
                 <p className="text-gray-500 text-sm mb-8">An active broadcast for this audience already exists. Do you want to overwrite it with this new intelligence?</p>
                 <div className="flex gap-4">
-                  <button onClick={() => setPhase('compose')} className="flex-1 py-4 text-xs font-black uppercase tracking-[0.2em] text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Back to Edit</button>
+                  <button onClick={() => setPhase('compose')} className="flex-1 py-4 text-xs font-bold tracking-wide text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Back to Edit</button>
                   <button 
                     onClick={confirmUpdate}
-                    className="flex-1 py-4 bg-black text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-gray-900 transition-all active:scale-95"
+                    className="flex-1 py-4 bg-black text-white rounded-2xl text-xs font-bold tracking-wide shadow-xl hover:bg-gray-900 transition-all active:scale-95"
                   >
                     Overwrite Sync
                   </button>

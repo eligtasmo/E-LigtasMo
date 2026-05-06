@@ -5,12 +5,14 @@ import { apiFetch } from '../../utils/api';
 import { Link } from 'react-router-dom';
 import { FaWater, FaFire, FaCarCrash } from 'react-icons/fa';
 import { GiEarthCrack } from 'react-icons/gi';
-import { FiAlertTriangle, FiAlertCircle, FiHome, FiActivity, FiExternalLink, FiTrendingUp, FiTrendingDown, FiMap, FiChevronRight, FiX } from 'react-icons/fi';
+import { FiAlertTriangle, FiAlertCircle, FiHome, FiActivity, FiExternalLink, FiTrendingUp, FiTrendingDown, FiMap, FiChevronRight, FiX, FiRefreshCw } from 'react-icons/fi';
 import { RiEarthquakeLine } from 'react-icons/ri';
 import MapboxMap, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from '../maps/MapboxMap';
 import { Line, Doughnut } from 'react-chartjs-2';
 import * as turf from '@turf/turf';
 import Pin3D from '../maps/Pin3D';
+import { SANTA_CRUZ_OUTLINE } from '../../constants/geo';
+import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 
@@ -325,6 +327,43 @@ const MMDRMODashboard: React.FC = () => {
   const [showDangerZones, setShowDangerZones] = useState(true);
   
   const [showRoadZones, setShowRoadZones] = useState(true);
+  const [apiStatus, setApiStatus] = useState<Record<string, 'online' | 'offline' | 'checking'>>({
+    'Authentication': 'checking',
+    'Incident Engine': 'checking',
+    'Hazard Intel': 'checking',
+    'Shelter Comms': 'checking',
+    'Danger Zone API': 'checking'
+  });
+
+  const checkApiHealth = async () => {
+    const endpoints = [
+      { name: 'Authentication', path: 'session.php' },
+      { name: 'Incident Engine', path: 'fetch_incidents.php' },
+      { name: 'Hazard Intel', path: 'list-hazards.php' },
+      { name: 'Shelter Comms', path: 'shelters-list.php' },
+      { name: 'Danger Zone API', path: 'list-danger-zones.php' }
+    ];
+
+    for (const api of endpoints) {
+      try {
+        const start = Date.now();
+        const res = await apiFetch(api.path);
+        if (res.ok) {
+          setApiStatus(prev => ({ ...prev, [api.name]: 'online' }));
+        } else {
+          setApiStatus(prev => ({ ...prev, [api.name]: 'offline' }));
+        }
+      } catch (e) {
+        setApiStatus(prev => ({ ...prev, [api.name]: 'offline' }));
+      }
+    }
+  };
+
+  useEffect(() => {
+    checkApiHealth();
+    const interval = setInterval(checkApiHealth, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Date filtering for visible incidents on map and charts
   const [datePreset, setDatePreset] = useState<'all' | '24h' | '7d' | '30d' | 'custom'>('all');
@@ -479,96 +518,7 @@ const MMDRMODashboard: React.FC = () => {
     return { labels, values, total, change, trend };
   }, [visibleIncidents, incidentTrendGranularity, currentTime]);
 
-  // Calculate Most Affected Area and its Trend (Average Severity)
-  const mostAffectedData = useMemo(() => {
-    // 1. Find Most Affected Area
-    const floodIncidents = visibleIncidents || []; // Include all types in area analysis
-    const locationCounts: Record<string, number> = {};
-    
-    floodIncidents.forEach(i => {
-      const loc = i.location || 'Unknown';
-      locationCounts[loc] = (locationCounts[loc] || 0) + 1;
-    });
-    
-    let mostAffected = 'None';
-    let maxCount = 0;
-    
-    Object.entries(locationCounts).forEach(([loc, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        mostAffected = loc;
-      }
-    });
 
-    // 2. Calculate Trend (Average Severity over time for this area)
-    const now = currentTime ? new Date(currentTime) : new Date();
-    let bucketCount = 7;
-    let start = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
-    let labels: string[] = [];
-
-    if (incidentTrendGranularity === 'day') {
-      bucketCount = 24;
-      start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      labels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-    } else if (incidentTrendGranularity === 'week') {
-      bucketCount = 7;
-      start = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      labels = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-        return days[d.getDay()];
-      });
-    } else {
-      bucketCount = 30;
-      start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
-      labels = Array.from({ length: 30 }, (_, i) => {
-        const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-        return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
-      });
-    }
-
-    const severitySums = Array(bucketCount).fill(0);
-    const incidentCounts = Array(bucketCount).fill(0);
-
-    const severityMap: Record<string, number> = {
-      'Low': 1,
-      'Medium': 2,
-      'High': 3,
-      'Critical': 4
-    };
-
-    if (mostAffected !== 'None') {
-      floodIncidents.forEach((inc) => {
-        if (inc.location !== mostAffected) return;
-        if (!inc.reportedAt) return;
-        const ts = new Date(inc.reportedAt);
-        if (isNaN(ts.getTime())) return;
-        if (ts < start || ts > now) return;
-        
-        const idx = incidentTrendGranularity === 'day'
-          ? Math.floor((ts.getTime() - start.getTime()) / (60 * 60 * 1000))
-          : Math.floor((ts.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-        
-        if (idx >= 0 && idx < bucketCount) {
-          severitySums[idx] += severityMap[inc.severity] || 0;
-          incidentCounts[idx]++;
-        }
-      });
-    }
-
-    const avgSeverityValues = severitySums.map((sum, i) => 
-      incidentCounts[i] > 0 ? Number((sum / incidentCounts[i]).toFixed(1)) : 0
-    );
-
-    return {
-      name: mostAffected,
-      count: maxCount,
-      trendData: {
-        labels,
-        values: avgSeverityValues
-      }
-    };
-  }, [visibleIncidents, incidentTrendGranularity, currentTime]);
 
   // Road zones data
   const [roadZones] = useState<RoadZone[]>([
@@ -919,19 +869,9 @@ const MMDRMODashboard: React.FC = () => {
         color: 'green',
         description: 'Available Centers',
         unit: ''
-      },
-      {
-        title: 'Most Affected Area',
-        value: mostAffectedData.name,
-        change: 0,
-        trend: 'stable',
-        icon: FiMap,
-        color: 'orange',
-        description: mostAffectedData.count > 0 ? `${mostAffectedData.count} Reports` : 'No reports found',
-        unit: ''
       }
     ];
-  }, [metricsRange, incidentTrend, visibleIncidents, shelters, totalIncidents, mostAffectedData]);
+  }, [metricsRange, incidentTrend, visibleIncidents, shelters, totalIncidents]);
 
   const [incidentTypeView, setIncidentTypeView] = useState<'all' | 'hazards' | 'road'>('hazards');
   // Chart data (enhanced with real incident types)
@@ -1301,7 +1241,7 @@ const MMDRMODashboard: React.FC = () => {
         `
       }} />
       
-      <div className="min-h-screen bg-gray-50 text-gray-900 p-2 sm:p-4 relative z-10">
+      <div className="min-h-screen bg-gray-50 text-gray-900 relative z-10 font-outfit">
       {/* Simplified Header */}
       <div className="mb-0">
         <div className="bg-gray-800 rounded-t-lg p-3 sm:p-4 border border-gray-700">
@@ -1364,6 +1304,53 @@ const MMDRMODashboard: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* API Health & Quick Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="md:col-span-3">
+           <div className="bg-white/50 border border-gray-200 rounded-xl p-4 flex items-center justify-center text-gray-500 text-sm italic">
+             Tactical Data Feed Operational • Standardized 24/7 Monitoring
+           </div>
+        </div>
+        
+        {/* API Health Widget */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              API Connectivity
+            </h3>
+            <button 
+              onClick={checkApiHealth}
+              className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+              title="Refresh Health Status"
+            >
+              <FiRefreshCw className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+          </div>
+          <div className="p-4 flex-1 space-y-3">
+            {Object.entries(apiStatus).map(([name, status]) => (
+              <div key={name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 
+                    status === 'offline' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 
+                    'bg-yellow-400'
+                  }`}></div>
+                  <span className="text-xs font-medium text-gray-700">{name}</span>
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                  status === 'online' ? 'text-green-600' : 
+                  status === 'offline' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }`}>
+                  {status}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1518,67 +1505,8 @@ const MMDRMODashboard: React.FC = () => {
                   </div>
                 </div>
               )}
-              {metric.title === 'Most Affected Area' && (
-                <div className="mt-2 -mx-2 sm:-mx-4 -mb-2 sm:-mb-4 border-t border-gray-300 bg-gray-100 px-2 sm:px-4 py-2 flex-1 relative group cursor-pointer" onClick={() => setShowFloodDetails(true)}>
-                  <div className="absolute top-1 right-2 text-xs text-gray-500 group-hover:text-blue-600 flex items-center gap-1">
-                    Expand <FiExternalLink />
-                  </div>
-                  <div className="h-full pt-4">
-                    <Line
-                      data={{
-                        labels: mostAffectedData.trendData.labels,
-                        datasets: [
-                          {
-                            label: 'Avg Severity',
-                            data: mostAffectedData.trendData.values,
-                            borderColor: '#f97316',
-                            backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                            tension: 0.4,
-                            pointRadius: 0,
-                            borderWidth: 1.5,
-                            fill: true,
-                          },
-                        ],
-                      }}
-                      options={{
-                        maintainAspectRatio: false,
-                        responsive: true,
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: { enabled: true, intersect: false },
-                        },
-                        scales: {
-                          x: {
-                            display: true,
-                            grid: { display: false },
-                            ticks: { maxTicksLimit: 4, color: '#64748b', font: { size: 10 } },
-                          },
-                           y: {
-                            display: true,
-                            grid: { color: 'rgba(0,0,0,0.06)' },
-                            beginAtZero: true,
-                            min: 0,
-                            max: 4,
-                            ticks: { 
-                              color: '#94a3b8', 
-                              font: { size: 10 }, 
-                              stepSize: 1,
-                              callback: function(value) {
-                                if (value === 1) return 'L';
-                                if (value === 2) return 'M';
-                                if (value === 3) return 'H';
-                                if (value === 4) return 'C';
-                                return '';
-                              }
-                            },
-                           },
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-              {metric.title !== 'Total Incident Reports' && metric.title !== 'Most Affected Area' && (
+
+              {metric.title !== 'Total Incident Reports' && (
                 <div className="mt-2 -mx-2 sm:-mx-4 -mb-2 sm:-mb-4 border-t border-gray-300 bg-gray-100 px-2 sm:px-4 py-2 flex-1">
                   <div className="h-full flex items-center">
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -1682,7 +1610,7 @@ const MMDRMODashboard: React.FC = () => {
         {/* Center Panel - Live Incident Map (Takes 70% of Space) */}
         <div className="xl:col-span-7">
           {/* Interactive Map */}
-          <div className="bg-white rounded-lg p-3 sm:p-4 h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)] relative border border-gray-200 flex flex-col">
+          <div className="bg-white h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] relative border-r border-gray-200 flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
               <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
@@ -1734,6 +1662,9 @@ const MMDRMODashboard: React.FC = () => {
               >
                 <NavigationControl position="top-right" />
                 <FullscreenControl position="top-right" />
+
+                {/* Santa Cruz Outline */}
+                <SantaCruzMapboxOutline />
 
                 <Layer
                   id="sky"
@@ -1952,8 +1883,8 @@ const MMDRMODashboard: React.FC = () => {
                 {/* Popups */}
                 {selectedMarker?.type === 'incident' && (
                   <Popup
-                    latitude={selectedMarker.data.lat}
-                    longitude={selectedMarker.data.lng}
+                    latitude={selectedMarker?.data?.lat}
+                    longitude={selectedMarker?.data?.lng}
                     onClose={() => setSelectedMarker(null)}
                     closeButton={false}
                     maxWidth="200px"
@@ -1961,20 +1892,20 @@ const MMDRMODashboard: React.FC = () => {
                   >
                     <div className="bg-white rounded-lg shadow-lg border-0 overflow-hidden min-w-[180px]">
                       <div className={`px-3 py-2 ${
-                        selectedMarker.data.type === 'Flood' ? 'bg-blue-600' : 'bg-gray-600'
+                        selectedMarker?.data?.type === 'Flood' ? 'bg-blue-600' : 'bg-gray-600'
                       }`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-white text-sm">🌊</span>
-                            <h3 className="font-bold text-white text-sm">{selectedMarker.data.type}</h3>
+                            <h3 className="font-bold text-white text-sm">{selectedMarker?.data?.type}</h3>
                           </div>
                           <span className={`px-2 py-1 rounded text-xs font-bold ${
-                            selectedMarker.data.severity === 'Critical' ? 'bg-red-100 text-red-800' :
-                            selectedMarker.data.severity === 'High' ? 'bg-orange-100 text-orange-800' :
-                            selectedMarker.data.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                            selectedMarker?.data?.severity === 'Critical' ? 'bg-red-100 text-red-800' :
+                            selectedMarker?.data?.severity === 'High' ? 'bg-orange-100 text-orange-800' :
+                            selectedMarker?.data?.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-green-100 text-green-800'
                           }`}>
-                            {selectedMarker.data.severity}
+                            {selectedMarker?.data?.severity}
                           </span>
                         </div>
                       </div>
@@ -1982,21 +1913,21 @@ const MMDRMODashboard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             <div className={`w-2 h-2 rounded-full ${
-                              selectedMarker.data.status === 'Active' ? 'bg-red-500 animate-pulse' :
-                              selectedMarker.data.status === 'Responding' ? 'bg-yellow-500 animate-pulse' :
+                              selectedMarker?.data?.status === 'Active' ? 'bg-red-500 animate-pulse' :
+                              selectedMarker?.data?.status === 'Responding' ? 'bg-yellow-500 animate-pulse' :
                               'bg-green-500'
                             }`}></div>
                             <span className={`font-medium text-xs ${
-                              selectedMarker.data.status === 'Active' ? 'text-red-600' :
-                              selectedMarker.data.status === 'Responding' ? 'text-yellow-600' :
+                              selectedMarker?.data?.status === 'Active' ? 'text-red-600' :
+                              selectedMarker?.data?.status === 'Responding' ? 'text-yellow-600' :
                               'text-green-600'
                             }`}>
-                              {selectedMarker.data.status}
+                              {selectedMarker?.data?.status}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-500">{selectedMarker.data.time}</span>
+                          <span className="text-xs text-gray-500">{selectedMarker?.data?.time}</span>
                         </div>
-                        <div className="text-xs text-gray-700">📍 {selectedMarker.data.location}</div>
+                        <div className="text-xs text-gray-700">📍 {selectedMarker?.data?.location}</div>
                         <div className="flex gap-1 pt-1">
                           <button
                             type="button"
@@ -2017,7 +1948,7 @@ const MMDRMODashboard: React.FC = () => {
                         <div className="pt-1">
                            <button
                              type="button"
-                             onClick={() => navigate('/admin/report-incident', { state: { prefill: selectedMarker.data, isEdit: true } })}
+                             onClick={() => navigate('/admin/report-incident', { state: { prefill: selectedMarker?.data, isEdit: true } })}
                              className="w-full bg-gray-600 hover:bg-gray-500 text-white text-[10px] py-1 px-2 rounded transition-colors uppercase font-bold tracking-widest"
                            >
                              Modify Intel
@@ -2030,8 +1961,8 @@ const MMDRMODashboard: React.FC = () => {
 
                 {selectedMarker?.type === 'shelter' && (
                   <Popup
-                    latitude={selectedMarker.data.lat}
-                    longitude={selectedMarker.data.lng}
+                    latitude={selectedMarker?.data?.lat}
+                    longitude={selectedMarker?.data?.lng}
                     onClose={() => setSelectedMarker(null)}
                     closeButton={false}
                     maxWidth="200px"
@@ -2040,17 +1971,17 @@ const MMDRMODashboard: React.FC = () => {
                     <div className="p-2 min-w-[180px]">
                       <div className="flex items-center gap-1 mb-1">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <h3 className="font-bold text-blue-600 text-xs">{selectedMarker.data.name}</h3>
+                        <h3 className="font-bold text-blue-600 text-xs">{selectedMarker?.data?.name}</h3>
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{selectedMarker.data.address}</p>
+                      <p className="text-xs text-gray-600 mb-1">{selectedMarker?.data?.address}</p>
                       <div className="flex justify-between text-xs mb-1">
-                        <span>👥 {selectedMarker.data.occupancy || 0}/{selectedMarker.data.capacity}</span>
+                        <span>👥 {selectedMarker?.data?.occupancy || 0}/{selectedMarker?.data?.capacity}</span>
                         <span className={`px-1 py-0.5 rounded text-xs ${
-                          selectedMarker.data.status === 'available' ? 'bg-green-600 text-white' :
-                          selectedMarker.data.status === 'full' ? 'bg-red-600 text-white' :
+                          selectedMarker?.data?.status === 'available' ? 'bg-green-600 text-white' :
+                          selectedMarker?.data?.status === 'full' ? 'bg-red-600 text-white' :
                           'bg-yellow-600 text-white'
                         }`}>
-                          {selectedMarker.data.status || 'available'}
+                          {selectedMarker?.data?.status || 'available'}
                         </span>
                       </div>
                     </div>
@@ -2059,8 +1990,8 @@ const MMDRMODashboard: React.FC = () => {
 
                 {selectedMarker?.type === 'road' && (
                   <Popup
-                    latitude={14.2833 + (selectedMarker.data.id * 0.005)}
-                    longitude={121.4167 - (selectedMarker.data.id * 0.005)}
+                    latitude={14.2833 + (selectedMarker?.data?.id * 0.005)}
+                    longitude={121.4167 - (selectedMarker?.data?.id * 0.005)}
                     onClose={() => setSelectedMarker(null)}
                     closeButton={false}
                     maxWidth="200px"
@@ -2069,17 +2000,17 @@ const MMDRMODashboard: React.FC = () => {
                     <div className="p-2 min-w-[180px]">
                       <div className="flex items-center gap-1 mb-1">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <h3 className="font-bold text-yellow-600 text-xs">{selectedMarker.data.name}</h3>
+                        <h3 className="font-bold text-yellow-600 text-xs">{selectedMarker?.data?.name}</h3>
                       </div>
-                      <p className="text-xs text-gray-700 mb-1">{selectedMarker.data.description}</p>
+                      <p className="text-xs text-gray-700 mb-1">{selectedMarker?.data?.description}</p>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">⏱️ {selectedMarker.data.estimatedClearance}</span>
+                        <span className="text-gray-600">⏱️ {selectedMarker?.data?.estimatedClearance}</span>
                         <span className={`px-1 py-0.5 rounded text-xs ${
-                          selectedMarker.data.status === 'closed' ? 'bg-red-600 text-white' :
-                          selectedMarker.data.status === 'restricted' ? 'bg-yellow-600 text-white' :
+                          selectedMarker?.data?.status === 'closed' ? 'bg-red-600 text-white' :
+                          selectedMarker?.data?.status === 'restricted' ? 'bg-yellow-600 text-white' :
                           'bg-blue-600 text-white'
                         }`}>
-                          {selectedMarker.data.status}
+                          {selectedMarker?.data?.status}
                         </span>
                       </div>
                     </div>
@@ -2267,8 +2198,6 @@ const MMDRMODashboard: React.FC = () => {
 
         </div>
       </div>
-
-
     </div>
     </>
   );

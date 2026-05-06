@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import MapboxMap, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer, MapProvider } from '../../components/maps/MapboxMap';
 import TacticalMarker from '../../components/maps/TacticalMarker';
 import { useMap } from 'react-map-gl';
+import { apiFetch } from "../../utils/api";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 
@@ -42,6 +43,7 @@ const FloodReport: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<"All" | "Pending" | "Verified" | "Rejected" | "Resolved">("Pending");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const flyToReport = (lat: number, lng: number) => {
     if (mapInstance) {
@@ -163,7 +165,10 @@ const FloodReport: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-72px)] w-full bg-black overflow-hidden font-mono">
-      <PageMeta title="Tactical Flood Oversight" />
+      <PageMeta 
+        title="Tactical Flood Oversight" 
+        description="Monitor and manage flood reports across all barangays." 
+      />
       <MapProvider>
         <div className="flex h-full w-full overflow-hidden">
           {/* Map Section */}
@@ -188,7 +193,7 @@ const FloodReport: React.FC = () => {
                   latitude={Number(report.lat)}
                   longitude={Number(report.lng)}
                   type="hazard"
-                  severity={report.severity as any}
+                  status={report.severity.toLowerCase()}
                   onClick={(e) => {
                     e.originalEvent.stopPropagation();
                     setSelectedReport(report);
@@ -436,7 +441,7 @@ const FloodReport: React.FC = () => {
                           }
                         }}
                         className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl ${
-                          selectedReport?.id === r.id
+                          (selectedReport as any)?.id === r.id
                           ? 'bg-blue-600/10 border-blue-600 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)]' 
                           : 'bg-white/5 border-transparent border-b border-white/[0.02] hover:bg-white/[0.08]'
                         }`}

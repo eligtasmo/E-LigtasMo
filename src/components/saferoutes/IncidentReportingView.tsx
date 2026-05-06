@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import MapboxMap, { NavigationControl, FullscreenControl, Source, Layer, Marker } from "../maps/MapboxMap";
+import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 import TacticalMarker from "../maps/TacticalMarker";
 import './IncidentReportingView.css';
 import { useAuth } from '../../context/AuthContext';
@@ -541,6 +542,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
         >
           <NavigationControl position="top-right" />
           <FullscreenControl position="top-right" />
+          <SantaCruzMapboxOutline />
           
           {drawMode === 'pinpoint' && form.latitude && form.longitude && (
             <TacticalMarker 

@@ -180,7 +180,7 @@ header [class*="CustomDropdown"] * {
   --font-inter: Inter, sans-serif;
   --font-jetbrains: 'JetBrains Mono', monospace;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-sans: 'JetBrains Mono', monospace;
+  --font-sans: Inter, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -322,7 +322,7 @@ header [class*="CustomDropdown"] * {
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-jetbrains z-1 bg-gray-50;
+    @apply relative font-normal font-sans z-1 bg-gray-50 text-gray-900;
   }
 }
 
@@ -430,7 +430,7 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility menu-dropdown-badge {
-  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+  @apply block rounded-full px-2.5 py-0.5 text-xs font-semibold text-brand-500 dark:text-brand-400;
 }
 
 @utility menu-dropdown-badge-active {

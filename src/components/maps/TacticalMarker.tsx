@@ -69,7 +69,7 @@ export default function TacticalMarker({ latitude, longitude, type, status, onCl
       >
         {label && (
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded shadow-2xl border border-black/5 whitespace-nowrap animate-in zoom-in fade-in duration-300">
-            <span className="text-[10px] font-black tracking-widest uppercase">{label}</span>
+            <span className="text-[11px] font-semibold tracking-tight">{label}</span>
             <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-r border-b border-black/5" />
           </div>
         )}

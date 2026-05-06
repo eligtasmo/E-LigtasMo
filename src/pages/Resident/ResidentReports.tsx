@@ -49,7 +49,10 @@ export default function ResidentReports() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] px-4 pb-32 pt-8">
-      <PageMeta title="Reports - E-LigtasMo" />
+      <PageMeta 
+        title="My Incident Reports" 
+        description="View and track your submitted incident reports and their current status." 
+      />
       
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Title */}

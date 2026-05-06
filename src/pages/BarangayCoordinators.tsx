@@ -110,7 +110,7 @@ const BarangayCoordinators: React.FC = () => {
         title="Barangay Coordinators | E-LigtasMo"
         description="Directory of registered barangay coordinators."
       />
-      <div className="px-4 py-6 md:px-8">
+      <div className="w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-1">Registered Barangay Coordinators</h1>
           <p className="text-gray-500">Directory of all registered barangay accounts and their locations.</p>

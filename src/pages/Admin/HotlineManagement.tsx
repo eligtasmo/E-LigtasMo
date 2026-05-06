@@ -170,6 +170,20 @@ const HotlineManagement: React.FC = () => {
                                         <option value="Police">Police</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Icon (Lucide)</label>
+                                    <select 
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
+                                        value={formData.icon}
+                                        onChange={e => setFormData({...formData, icon: e.target.value})}
+                                    >
+                                        <option value="HeartPulse">Heart (Medical)</option>
+                                        <option value="Flame">Flame (Fire)</option>
+                                        <option value="Shield">Shield (Police)</option>
+                                        <option value="Phone">Phone (General)</option>
+                                        <option value="AlertTriangle">Triangle (Alert)</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="flex gap-4 mt-8">

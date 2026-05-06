@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
 import * as THREE from 'three';
 import HazardLayers from '../maps/HazardLayers';
 import HazardManagementPanel from './HazardManagementPanel';
+import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 const MAPBOX_NAV_DAY = 'mapbox://styles/mapbox/navigation-day-v1';
@@ -798,7 +799,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
   const [dangerZones, setDangerZones] = useState<any[]>([]);
   const [accessPolygons, setAccessPolygons] = useState<AccessPolygon[]>([]);
   const [shelters, setShelters] = useState<any[]>([]);
-  const { viewport: viewState, setViewport: setViewState } = useGlobalMapContext();
+  const { viewport: viewState, setViewport: setViewState, updateViewport } = useGlobalMapContext();
   const [mapStyle, setMapStyle] = useState<string>(MAPBOX_NAV_DAY);
   const [navMode, setNavMode] = useState(false);
   const [enable3d, setEnable3d] = useState(true);
@@ -1005,7 +1006,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
         setEnd([parts[0], parts[1]]);
         setEndLocked(true);
         setActiveInput('start');
-        setViewState(v => ({ ...v, latitude: parts[0], longitude: parts[1], zoom: 16 }));
+        updateViewport({ latitude: parts[0], longitude: parts[1], zoom: 16 });
       }
     }
   }, [location.search]);
@@ -1221,7 +1222,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
     const coords = route?.routes?.[selectedRouteIndex]?.geometry?.coordinates;
     if (!coords || coords.length < 2) return;
     const b = bearingDegrees(coords[0], coords[1]);
-    setViewState(v => ({ ...v, bearing: b, pitch: enable3d ? 60 : 0, zoom: Math.max(v.zoom, 16) }));
+    updateViewport({ bearing: b, pitch: enable3d ? 60 : 0, zoom: Math.max(viewState.zoom, 16) });
     setMapStyle(MAPBOX_NAV_DAY);
   }, [navMode, route, selectedRouteIndex, enable3d]);
 
@@ -1271,17 +1272,16 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
           const dt = Math.max(0.5, (now - prev.t) / 1000);
           const dx = turf.distance(turf.point([prev.lng, prev.lat]), turf.point([lng, lat]), { units: 'kilometers' });
           const v = (dx / (dt / 3600));
-          setSpeedKmh(s => s * 0.6 + v * 0.4);
+          setSpeedKmh((s: number) => s * 0.6 + v * 0.4);
         }
         prevLocRef.current = { lat, lng, t: now };
-        setViewState(v => ({
-          ...v,
+        updateViewport({
           latitude: lat,
           longitude: lng,
           bearing: h,
           pitch: enable3d ? 60 : 0,
-          zoom: Math.max(v.zoom, 16),
-        }));
+          zoom: Math.max(viewState.zoom, 16),
+        });
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 500, timeout: 10000 }
@@ -1335,7 +1335,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
       setStart([lat, lng]);
       setStartQuery('Your Location');
       setActiveInput('end');
-      setViewState(v => ({ ...v, latitude: lat, longitude: lng, zoom: 16 }));
+      updateViewport({ latitude: lat, longitude: lng, zoom: 16 });
     });
   };
 
@@ -1641,7 +1641,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
                     }}
                     onSelectHazard={(h: any) => {
                       setSelectedHazard(h);
-                      if (h?.lat && h?.lng) setViewState(v => ({ ...v, latitude: Number(h.lat), longitude: Number(h.lng), zoom: Math.max(v.zoom, 15) }));
+                      if (h?.lat && h?.lng) updateViewport({ latitude: Number(h.lat), longitude: Number(h.lng), zoom: Math.max(viewState.zoom, 15) });
                     }}
                     selectedHazard={selectedHazard}
                     hazardStart={hazardStart}
@@ -1742,7 +1742,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
                     ) : null}
                     {status === 'error' ? (
                       <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-[11px] font-bold border border-red-100 flex items-center gap-3">
-                        <MdWarning size={20} />
+                        <FiAlertTriangle size={20} />
                         {error}
                       </div>
                     ) : null}
@@ -1849,7 +1849,9 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
             style={{ width: '100%', height: '100%' }}
           >
             <NavigationControl position="bottom-right" />
-            <FullscreenControl position="bottom-right" />
+            <FullscreenControl position="top-right" />
+
+            <SantaCruzMapboxOutline />
 
             <HazardLayers points={hazardPoints} areas={hazardAreas} idPrefix="routes-view" />
 
