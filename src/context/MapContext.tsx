@@ -18,7 +18,7 @@ const defaultViewport: ViewportState = {
   longitude: 121.410,
   latitude: 14.275,
   zoom: 12,
-  pitch: 45,
+  pitch: 0,
   bearing: 0
 };
 

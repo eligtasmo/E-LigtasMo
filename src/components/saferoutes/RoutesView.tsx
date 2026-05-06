@@ -802,7 +802,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
   const { viewport: viewState, setViewport: setViewState, updateViewport } = useGlobalMapContext();
   const [mapStyle, setMapStyle] = useState<string>(MAPBOX_NAV_DAY);
   const [navMode, setNavMode] = useState(false);
-  const [enable3d, setEnable3d] = useState(true);
+  const [enable3d, setEnable3d] = useState(false);
   const [state, dispatch] = useReducer(routeReducer, initialState);
   const { status, data: route, error } = state;
   const [speedKmh, setSpeedKmh] = useState<number>(0);

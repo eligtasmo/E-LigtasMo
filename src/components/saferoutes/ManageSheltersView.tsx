@@ -91,7 +91,7 @@ export default function ManageSheltersView() {
       mapRef.current.getMap().flyTo({
         center: [latlng.lng, latlng.lat],
         zoom: 17,
-        pitch: 45,
+        pitch: 0,
         duration: 1500
       });
     }
@@ -125,7 +125,7 @@ export default function ManageSheltersView() {
       mapRef.current.getMap().flyTo({
         center: [lng, lat],
         zoom: 17,
-        pitch: 45,
+        pitch: 0,
         duration: 1500
       });
     }
@@ -153,7 +153,7 @@ export default function ManageSheltersView() {
       mapRef.current.getMap().flyTo({
         center: [Number(shelter.lng), Number(shelter.lat)],
         zoom: 17,
-        pitch: 45,
+        pitch: 0,
         duration: 1500
       });
     }

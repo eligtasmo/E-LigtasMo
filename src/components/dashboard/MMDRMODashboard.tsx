@@ -1637,27 +1637,15 @@ const MMDRMODashboard: React.FC = () => {
                   latitude: 14.2833,
                   longitude: 121.4167,
                   zoom: 13,
-                  pitch: 35,
-                  bearing: -8
+                  pitch: 0,
+                  bearing: 0
                 }}
-                maxPitch={85}
+                maxPitch={0}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
                 mapboxAccessToken={MAPBOX_TOKEN}
-                onLoad={(e: any) => {
-                  try {
-                    const map = e?.target?.getMap?.();
-                    if (!map) return;
-                    if (!map.getSource('mapbox-dem')) {
-                      map.addSource('mapbox-dem', {
-                        type: 'raster-dem',
-                        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                        tileSize: 512,
-                        maxzoom: 14,
-                      } as any);
-                    }
-                    map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.2 } as any);
-                  } catch {}
+                onLoad={() => {
+                  // Standard 2D view - no terrain exaggeration
                 }}
               >
                 <NavigationControl position="top-right" />
