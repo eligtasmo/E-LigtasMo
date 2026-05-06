@@ -262,7 +262,7 @@ export default function ShelterMapView() {
                     <button
                       onClick={() => {
                         const role = (user?.role || '').toLowerCase();
-                        const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/barangay/safe-routes' : '/route-planner';
+                        const base = role === 'admin' ? '/admin/admin-routes' : role === 'brgy' ? '/brgy/safe-routes' : '/route-planner';
                         navigate(`${base}?end=${shelter.lat},${shelter.lng}`);
                       }}
                       className="bg-[#10B981] hover:bg-green-600 text-white text-xs font-medium px-3 py-1.5 rounded"

@@ -47,7 +47,7 @@ interface IncidentData {
   flood_level_cm?: number; // Added optional flood level (cm) for Flood incidents
   allowed_vehicles?: string; // PH-specific allowed vehicles derived from flood level
   source?: 'incident' | 'flood_report';
-  barangay?: string;
+  brgy?: string;
 }
 
 // Sample alert data for the live feed
@@ -880,8 +880,8 @@ const IncidentReports = () => {
     return apiReports.map(report => ({
       id: Number(report.id) + 1000000, // Offset ID to avoid collision with incidents
       type: 'Flood',
-      location: report.location_text || report.barangay || 'Unknown Location',
-      address: report.location_text || (report.barangay ? `Barangay ${report.barangay}` : 'Location not specified'),
+      location: report.location_text || report.brgy || 'Unknown Location',
+      address: report.location_text || (report.brgy ? `Barangay ${report.brgy}` : 'Location not specified'),
       severity: report.severity || 'Moderate',
       status: report.status === 'Verified' ? 'Approved' : (report.status || 'Pending'),
       datetime: report.time || report.created_at,
@@ -894,7 +894,7 @@ const IncidentReports = () => {
       responders: 0,
       response_time: 'N/A',
       source: 'flood_report',
-      barangay: report.barangay ? `Barangay ${report.barangay}` : undefined
+      brgy: report.brgy ? `Barangay ${report.brgy}` : undefined
     }));
   };
 
@@ -1586,10 +1586,10 @@ const IncidentReports = () => {
                       <span className="text-gray-900">{cleanAddress(selectedIncidentForDetails.location)}</span>
                     </div>
 
-                    {selectedIncidentForDetails.barangay && (
+                    {selectedIncidentForDetails.brgy && (
                       <div className="grid grid-cols-[100px_1fr] gap-2 items-baseline">
                         <span className="font-medium text-gray-700">Barangay:</span>
-                        <span className="text-gray-900">{selectedIncidentForDetails.barangay}</span>
+                        <span className="text-gray-900">{selectedIncidentForDetails.brgy}</span>
                       </div>
                     )}
 
@@ -1654,8 +1654,8 @@ const IncidentReports = () => {
                       <FiMapPin className="mt-0.5 text-blue-500 shrink-0" />
                       <div>
                         <p className="font-medium text-gray-900">{selectedIncidentForDetails.location}</p>
-                        {selectedIncidentForDetails.barangay && (
-                          <p className="text-xs text-gray-500 mt-0.5">{selectedIncidentForDetails.barangay}</p>
+                        {selectedIncidentForDetails.brgy && (
+                          <p className="text-xs text-gray-500 mt-0.5">{selectedIncidentForDetails.brgy}</p>
                         )}
                         <p className="text-xs text-gray-400 mt-0.5">Lat: {selectedIncidentForDetails.lat.toFixed(6)}, Lng: {selectedIncidentForDetails.lng.toFixed(6)}</p>
                       </div>

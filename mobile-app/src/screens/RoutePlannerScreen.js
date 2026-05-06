@@ -476,11 +476,10 @@ const createMapHTML = (token) => `
           if (data.tacticalMarkers && Array.isArray(data.tacticalMarkers)) {
               if (!window.activeMarkers) window.activeMarkers = {};
               var polyFeatures = [];
-              var currentIds = data.tacticalMarkers.map(m => 'marker-' + m.id);
-
               window.markerDataMap = {};
+              var currentIds = data.tacticalMarkers.map(m => String(m.id));
               data.tacticalMarkers.forEach(m => {
-                  const markerId = m.id;
+                  const markerId = String(m.id);
                   window.markerDataMap[markerId] = m;
                   let lng = parseFloat(m.lng || m.lon);
                   let lat = parseFloat(m.lat);
@@ -504,28 +503,30 @@ const createMapHTML = (token) => `
                       const severity = m.severity || 'Moderate';
 
                       let icon = 'alert';
-                      let color = isPassable ? '#F59E0B' : '#EF4444';
+                      let color = isPassable ? '#F5B235' : '#EF4444';
                       
-                      if (type.includes('fire')) { icon = 'fire'; if (isPassable === undefined) color = '#EF4444'; }
-                      else if (type.includes('flood')) { icon = 'waves'; if (isPassable === undefined) color = '#3B82F6'; }
-                      else if (type.includes('hazard')) { icon = 'alert-octagon'; if (isPassable === undefined) color = '#F59E0B'; }
-                      else if (type.includes('incident')) { icon = 'alert'; if (isPassable === undefined) color = '#EF4444'; }
-                      else if (type.includes('shelter')) { icon = 'shield-home'; color = '#059669'; }
-                      else if (type.includes('hall') || type.includes('barangay') || type.includes('brgy')) { icon = 'home'; color = '#3B82F6'; }
+                      if (type.includes('fire')) { icon = 'fire'; color = '#EF4444'; }
+                      else if (type.includes('flood')) { icon = 'waves'; color = '#3B82F6'; }
+                      else if (type.includes('accident')) { icon = 'car-alert'; color = '#F59E0B'; }
+                      else if (type.includes('medical')) { icon = 'heart-pulse'; color = '#F43F5E'; }
+                      else if (type.includes('security')) { icon = 'shield-lock'; color = '#6366F1'; }
+                      else if (type.includes('hazard')) { icon = 'alert-octagon'; color = '#F59E0B'; }
+                      else if (type.includes('incident')) { icon = 'alert'; color = '#EF4444'; }
+                      else if (type.includes('shelter')) { icon = 'home-heart'; color = '#10B981'; }
+                      else if (type.includes('hall') || type.includes('barangay') || type.includes('brgy')) { icon = 'shield-home'; color = '#3B82F6'; }
                       
                       if (!window.activeMarkers[markerId]) {
                         var el = document.createElement('div');
                         el.className = 'tactical-marker';
                         el.style.cursor = 'pointer';
-                        el.style.zIndex = '50';
-                        el.style.pointerEvents = 'auto';
+                        el.style.zIndex = '100';
                         
-                        el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
-                            '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
-                            '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + color + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
-                            '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + color + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
-                            '<div style="position: absolute; width: 14px; height: 14px; background: ' + color + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
-                              '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                        el.innerHTML = '<div style="position: relative; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">' +
+                            '<div style="position: absolute; inset: 0; background: ' + color + '; opacity: 0.15; border-radius: 50%; transform: scale(1.15);"></div>' +
+                            '<div style="position: absolute; width: 34px; height: 34px; border: 1.5px solid ' + color + '; opacity: 0.4; border-radius: 50%; box-sizing: border-box;"></div>' +
+                            '<div style="position: absolute; width: 26px; height: 26px; background: white; border: 2.5px solid ' + color + '; border-radius: 50%; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.4);"></div>' +
+                            '<div style="position: absolute; width: 16px; height: 16px; background: ' + color + '; border-radius: 50%; display: flex; align-items: center; justify-content: center;">' +
+                              '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 10px; line-height: 1;"></i>' +
                             '</div>' +
                           '</div>';
                         
@@ -602,7 +603,7 @@ const createMapHTML = (token) => `
 
               // 3e. CLEANUP REMOVED MARKERS
               Object.keys(window.activeMarkers).forEach(id => { 
-                  if (!currentIds.includes(id)) { 
+                  if (!currentIds.includes(String(id))) { 
                       window.activeMarkers[id].remove(); 
                       delete window.activeMarkers[id]; 
                   } 

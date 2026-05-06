@@ -90,6 +90,7 @@ export const AuthService = {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include', // Maintain session
         body: JSON.stringify({ email, purpose: type })
       });
       const responseText = await response.text();
@@ -114,6 +115,7 @@ export const AuthService = {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        credentials: 'include', // Maintain session
         body: JSON.stringify({ email, code })
       });
       const responseText = await response.text();

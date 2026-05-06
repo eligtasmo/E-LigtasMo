@@ -46,50 +46,44 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <AuthScreenShell title="Sign Up" onBack={() => navigation.navigate('Login')}>
-      <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 30 }}>
-        <RNImage
-          source={require('../../assets/eligtasmo_logo.png')}
-          style={{ width: 84, height: 84 }}
-          resizeMode="contain"
-        />
-        <Text style={{ fontSize: 26, fontWeight: '800', color: TEXT_MAIN, marginTop: 15, fontFamily: FONT_HEADING }}>E-LIGTASMO</Text>
-        <Text style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 4, fontFamily: FONT_INPUT }}>Your Disaster Safety Companion</Text>
-      </View>
+    <AuthScreenShell title="Create Account" onBack={() => navigation.navigate('Login')} step={1} totalSteps={4}>
+      <View style={{ marginTop: 10 }}>
+        <AuthField 
+          label="Email Address" 
+          required
+          hint="We'll send you a verification code to this address."
+        >
+          <AuthTextInput
+            value={email}
+            onChangeText={setEmail}
+            onClear={() => setEmail('')}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            placeholder="Enter your email"
+          />
+        </AuthField>
 
-      <View style={{ marginBottom: 30, paddingHorizontal: 10 }}>
-        <Text style={{ fontSize: 15, color: TEXT_MAIN, textAlign: 'center', lineHeight: 22, fontFamily: FONT_INPUT, fontWeight: '600' }}>
-            Start your registration
-        </Text>
-        <Text style={{ fontSize: 13, color: TEXT_MUTED, textAlign: 'center', lineHeight: 20, marginTop: 8, fontFamily: FONT_INPUT }}>
-            Enter your email address and we'll send you a verification code to get started.
-        </Text>
-      </View>
+        {errorText ? (
+          <View style={{ padding: 12, marginBottom: 24, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 4, borderWidth: 1, borderColor: '#EF4444' }}>
+              <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{errorText}</Text>
+          </View>
+        ) : null}
 
-      <AuthField label="Email" icon={Lucide.Mail}>
-        <AuthTextInput
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholder="juan@example.com"
-        />
-      </AuthField>
+        <AuthPrimaryAction title="Next" onPress={handleNext} loading={loading} />
 
-      {errorText ? <Text style={{ color: '#FF4B4B', textAlign: 'center', marginBottom: 15, fontWeight: '600', fontFamily: FONT_INPUT }}>{errorText}</Text> : null}
-
-      <AuthPrimaryAction title="Send Verification Code" onPress={handleNext} loading={loading} />
-
-      <View style={{ alignItems: 'center', marginTop: 30, paddingBottom: 60 }}>
-        <View style={{ flexDirection: 'row' }}>
-            <Text style={{ color: TEXT_MUTED, fontSize: 13, fontFamily: FONT_INPUT }}>Already a member? </Text>
+        <View style={{ alignItems: 'center', marginTop: 40, paddingBottom: 60 }}>
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={{ color: '#9CA3AF', fontSize: 15, fontFamily: FONT_INPUT }}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700', fontFamily: FONT_INPUT }}>Sign In</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: FONT_INPUT, textDecorationLine: 'underline' }}>Sign In</Text>
             </TouchableOpacity>
+          </View>
         </View>
       </View>
     </AuthScreenShell>
   );
 };
+
+
 
 export default RegisterScreen;

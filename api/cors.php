@@ -5,19 +5,21 @@
  */
 
 // 1. Detect and Validate Origin
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+$origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? null;
+if (!$origin || $origin === '*') {
+    // If no origin is provided (common in some mobile/curl requests), 
+    // we reflect the request's own host to allow credentials.
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $origin = "$protocol://" . ($_SERVER['HTTP_HOST'] ?? 'api.eligtasmo.site');
+}
 
 // 2. Broadcast Absolute CORS Policy
 header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Token, X-Role, X-User-ID, Accept, Origin");
-header("Access-Control-Expose-Headers: Content-Length, X-JSON");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Token, X-Role, X-User-ID, Accept, Origin, Cookie");
+header("Access-Control-Expose-Headers: Content-Length, X-JSON, Set-Cookie");
 header("Access-Control-Max-Age: 86400");
-
-// 3. Handle Credentials (Crucial for session/cookies)
-if ($origin !== '*') {
-    header('Access-Control-Allow-Credentials: true');
-}
+header('Access-Control-Allow-Credentials: true');
 
 // 4. Standardize Response Format
 header("Content-Type: application/json; charset=UTF-8");

@@ -15,7 +15,7 @@ const LayoutContent: React.FC = () => {
   const isPlannerRoute = [
     "/safe-routes", 
     "/route-planner", 
-    "/barangay/safe-routes", 
+    "/brgy/safe-routes", 
     "/shelters", 
     "/hazard-map", 
     "/report-incident",
@@ -75,7 +75,7 @@ const ResidentLayout: React.FC = () => {
   const role = auth?.user?.role;
   // If logged in as admin or brgy, redirect to their role dashboard and do not render resident layout/sidebar
   if (role === "admin") return <Navigate to="/admin" replace />;
-  if (role === "brgy") return <Navigate to="/barangay" replace />;
+  if (role === "brgy") return <Navigate to="/brgy" replace />;
 
   return (
     <SidebarProvider>

@@ -332,54 +332,54 @@ const HomeScreen = ({ navigation }) => {
                 </Row>
                 
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {floodReports.map((report, idx) => {
+                  {floodReports.slice(0, 6).map((report, idx) => {
                     const severity = String(report.severity || 'Moderate').toLowerCase();
-                    let color = '#3B82F6'; // Default Low/Blue
-                    if (severity === 'moderate' || severity === 'warning') color = '#F5B235'; // Moderate/Yellow
-                    if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444'; // High/Red
+                    let color = '#3B82F6';
+                    if (severity === 'moderate' || severity === 'warning') color = '#F5B235';
+                    if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444';
 
                     return (
                       <TouchableOpacity 
                         key={report.id || idx}
-                        onPress={() => navigation.navigate('ReportDetails', { reportId: report.id })}
+                        onPress={() => navigation.navigate('ReportDetails', { report })}
                         activeOpacity={0.8}
                         style={{ 
-                          width: (windowWidth - 32 - 20) / 3, // 3 per row
+                          width: (windowWidth - 32 - 20) / 3,
                           backgroundColor: color + '15',
-                          borderRadius: 24,
-                          padding: 14,
+                          borderRadius: 20,
+                          padding: 12,
                           borderWidth: 1.5,
-                          borderColor: color + '30',
+                          borderColor: color + '25',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          minHeight: 125, 
+                          minHeight: 115, 
                         }}
                       >
                         <View style={{ alignItems: 'center', width: '100%' }}>
                           <View style={{ 
-                            width: 38, 
-                            height: 38, 
-                            borderRadius: 14, 
+                            width: 34, 
+                            height: 34, 
+                            borderRadius: 12, 
                             backgroundColor: color + '20', 
                             alignItems: 'center', 
                             justifyContent: 'center', 
-                            marginBottom: 8,
+                            marginBottom: 6,
                             borderWidth: 1,
-                            borderColor: color + '40'
+                            borderColor: color + '35'
                           }}>
-                            <Lucide.Waves size={20} color={color} strokeWidth={2.5} />
+                            <Lucide.Waves size={18} color={color} strokeWidth={2.5} />
                           </View>
-                          <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '800', color: '#fff', textAlign: 'center', fontFamily: DS_FONT_UI, letterSpacing: -0.2 }}>
+                          <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '800', color: '#fff', textAlign: 'center', fontFamily: DS_FONT_UI, letterSpacing: -0.2 }}>
                             {report.barangay || 'Sector'}
                           </Text>
                           <View style={{ 
-                            marginTop: 5, 
-                            paddingHorizontal: 8, 
-                            paddingVertical: 3, 
-                            borderRadius: 8, 
+                            marginTop: 4, 
+                            paddingHorizontal: 6, 
+                            paddingVertical: 2, 
+                            borderRadius: 6, 
                             backgroundColor: color + '25',
                             borderWidth: 1,
-                            borderColor: color + '40'
+                            borderColor: color + '35'
                           }}>
                             <Text style={{ fontSize: 7, fontWeight: '900', color: color, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                               {report.severity || 'Normal'}
@@ -387,9 +387,9 @@ const HomeScreen = ({ navigation }) => {
                           </View>
                         </View>
                         
-                        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', paddingTop: 8, marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          <Lucide.Clock size={9} color="rgba(255,255,255,0.4)" />
-                          <Text style={{ fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.4)', fontFamily: DS_FONT_INPUT }}>
+                        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingTop: 6, marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                          <Lucide.Clock size={8} color="rgba(255,255,255,0.3)" />
+                          <Text style={{ fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.3)', fontFamily: DS_FONT_INPUT }}>
                             {formatRelativeTime(report.created_at)}
                           </Text>
                         </View>

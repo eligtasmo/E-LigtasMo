@@ -79,34 +79,30 @@ const VerifyOtpScreen = ({ navigation, route }) => {
   };
 
   return (
-    <AuthScreenShell title="Verify Code" onBack={() => navigation.goBack()}>
-      <View style={{ alignItems: 'center', marginVertical: 30 }}>
+    <AuthScreenShell title="Verify Account" onBack={() => navigation.goBack()} step={2} totalSteps={4}>
+      <View style={{ alignItems: 'flex-start', marginTop: 10, marginBottom: 30 }}>
         <RNImage
           source={require('../../assets/eligtasmo_logo.png')}
-          style={{ width: 100, height: 100 }}
+          style={{ width: 64, height: 64, marginBottom: 20 }}
           resizeMode="contain"
         />
-        <Text style={{ fontSize: 24, fontWeight: '800', color: '#FFF', marginTop: 15, letterSpacing: 0.5, fontFamily: FONT_HEADING }}>E-LigtasMo</Text>
-        <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4, fontFamily: FONT_INPUT }}>Your disaster safety companion</Text>
-      </View>
-
-      <View style={{ marginBottom: 30, paddingHorizontal: 10 }}>
-        <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 22, fontFamily: FONT_INPUT }}>
-            The confirmation code is sent to your email address
+        <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontFamily: FONT_INPUT, lineHeight: 22 }}>
+            Enter the confirmation code sent to{'\n'}
+            <Text style={{ fontWeight: '600', color: '#FFFFFF' }}>{email}</Text>
         </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 30 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginBottom: 32 }}>
         {otp.map((digit, index) => (
         <View
             key={index}
             style={{
             flex: 1,
-            height: 56,
-            borderRadius: 12,
-            backgroundColor: 'rgba(255,255,255,0.05)',
+            height: 52,
+            borderRadius: 4,
+            backgroundColor: 'transparent',
             borderWidth: 1,
-            borderColor: digit ? ACCENT : 'rgba(255,255,255,0.1)',
+            borderColor: digit ? '#FFFFFF' : 'rgba(255,255,255,0.2)',
             justifyContent: 'center',
             alignItems: 'center',
             }}
@@ -117,28 +113,35 @@ const VerifyOtpScreen = ({ navigation, route }) => {
             onChangeText={(text) => handleOtpChange(text, index)}
             keyboardType="number-pad"
             maxLength={1}
-            style={{ fontSize: 24, fontWeight: '700', textAlign: 'center', width: '100%', color: digit ? ACCENT : '#FFF', fontFamily: FONT_HEADING }}
+            style={{ fontSize: 22, fontWeight: '700', textAlign: 'center', width: '100%', color: '#FFFFFF', fontFamily: FONT_HEADING }}
             />
         </View>
         ))}
       </View>
 
-      {errorText ? <Text style={{ color: '#FF4B4B', textAlign: 'center', marginBottom: 15, fontWeight: '600', fontFamily: FONT_INPUT }}>{errorText}</Text> : null}
+      {errorText ? (
+        <View style={{ padding: 12, marginBottom: 20, backgroundColor: '#FEF2F2', borderRadius: 8, borderWidth: 1, borderColor: '#FCA5A5' }}>
+            <Text style={{ color: '#DC2626', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{errorText}</Text>
+        </View>
+      ) : null}
 
-      <AuthPrimaryAction title="Confirm" onPress={handleVerify} loading={loading} />
+      <AuthPrimaryAction title="Verify" onPress={handleVerify} loading={loading} />
 
       <View style={{ alignItems: 'center', marginTop: 30 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontFamily: FONT_INPUT }}>
-            Didn't receive a code?{' '}
-            {timer > 0 ? (
-                <Text style={{ color: 'rgba(255,255,255,0.3)', fontFamily: FONT_INPUT }}>{`Resend in ${timer}s`}</Text>
-            ) : (
-                <Text style={{ color: ACCENT, fontWeight: '700', fontFamily: FONT_INPUT }} onPress={handleResend}>Resend</Text>
-            )}
+          <Text style={{ color: '#737373', fontSize: 14, fontFamily: FONT_INPUT, marginBottom: 8 }}>
+            Didn't receive a code?
           </Text>
+          {timer > 0 ? (
+              <Text style={{ color: '#A3A3A3', fontSize: 14, fontFamily: FONT_INPUT }}>{`Resend in ${timer}s`}</Text>
+          ) : (
+              <TouchableOpacity onPress={handleResend}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14, fontFamily: FONT_INPUT, textDecorationLine: 'underline' }}>Resend</Text>
+              </TouchableOpacity>
+          )}
       </View>
     </AuthScreenShell>
   );
 };
+
 
 export default VerifyOtpScreen;

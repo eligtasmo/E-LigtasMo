@@ -167,32 +167,35 @@ const TacticalContactManager = () => {
 
   return (
     <>
-      <PageMeta title="Manage Contacts | Command Center" />
+      <PageMeta 
+        title="Manage Contacts | Command Center" 
+        description="Admin console for managing emergency contacts and tactical coordination channels."
+      />
       <div className="flex flex-col gap-6 font-jetbrains">
         {/* Tactical Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-black p-6 rounded-3xl text-white shadow-2xl border border-white/10 relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-8 rounded-[2.5rem] text-gray-900 shadow-xl border border-gray-100 relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black tracking-[0.3em] text-emerald-500 uppercase">Communications Active</span>
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <span className="text-[10px] font-bold tracking-tight text-blue-600">Communications active</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">
-              Manage <span className="text-gray-500 text-xl font-medium tracking-normal">Contacts Console</span>
+            <h1 className="text-3xl font-black tracking-tight mb-2">
+              Manage <span className="text-gray-400 text-xl font-bold tracking-normal">Contacts Console</span>
             </h1>
-            <p className="text-gray-400 text-sm font-medium max-w-xl">
-              {isAdmin ? "Global emergency and inter-barangay communication management." : `Local coordinator and emergency directory for ${brgyName}.`}
+            <p className="text-gray-500 text-sm font-bold max-w-xl">
+              {isAdmin ? "Global emergency and inter-brgy communication management." : `Local coordinator and emergency directory for ${brgyName}.`}
             </p>
           </div>
           <div className="flex items-center gap-3 relative z-10">
             <button 
               onClick={loadContacts}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+              className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all flex items-center gap-2 text-xs font-bold tracking-tight text-gray-600"
             >
               <FiRefreshCw className={loading ? 'animate-spin' : ''} /> Sync
             </button>
             <button 
               onClick={handleOpenAdd}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2"
             >
               <FaPlus /> Add New Contact
             </button>
@@ -206,14 +209,14 @@ const TacticalContactManager = () => {
             <input 
               type="text"
               placeholder="Search by name, number, or description..."
-              className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium"
+              className="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold placeholder:text-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
             <select 
-              className="px-4 py-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-xs tracking-wide cursor-pointer"
+              className="px-4 py-4 bg-white border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-bold text-[10px] tracking-tight cursor-pointer"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
             >
@@ -227,7 +230,7 @@ const TacticalContactManager = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-48 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-3xl" />
+              <div key={i} className="h-48 bg-gray-50 animate-pulse rounded-3xl" />
             ))
           ) : filteredContacts.length > 0 ? (
             filteredContacts.map((contact) => {
@@ -237,31 +240,31 @@ const TacticalContactManager = () => {
 
               const getTacticalIcon = (cat: string) => {
                 const c = cat.toLowerCase();
-                if (c.includes('fire')) return { icon: <FaPlus className="text-orange-500" />, color: 'bg-orange-500/10', border: 'border-orange-500/20' };
-                if (c.includes('police')) return { icon: <FaUserShield className="text-blue-500" />, color: 'bg-blue-500/10', border: 'border-blue-500/20' };
-                if (c.includes('medical') || c.includes('health')) return { icon: <FaCheckCircle className="text-red-500" />, color: 'bg-red-500/10', border: 'border-red-500/20' };
-                if (c.includes('rescue') || c.includes('drrmo')) return { icon: <FaUserShield className="text-emerald-500" />, color: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
-                if (c.includes('coast') || c.includes('water')) return { icon: <FaGlobe className="text-cyan-500" />, color: 'bg-cyan-500/10', border: 'border-cyan-500/20' };
-                if (c.includes('emergency') || c.includes('911')) return { icon: <FaPhone className="text-red-600 animate-pulse" />, color: 'bg-red-600/10', border: 'border-red-600/20' };
+                if (c.includes('fire')) return { icon: <FaPlus className="text-orange-600" />, color: 'bg-orange-600/5', border: 'border-orange-600/10' };
+                if (c.includes('police')) return { icon: <FaUserShield className="text-blue-600" />, color: 'bg-blue-600/5', border: 'border-blue-600/10' };
+                if (c.includes('medical') || c.includes('health')) return { icon: <FaCheckCircle className="text-red-600" />, color: 'bg-red-600/5', border: 'border-red-600/10' };
+                if (c.includes('rescue') || c.includes('drrmo')) return { icon: <FaUserShield className="text-emerald-600" />, color: 'bg-emerald-600/5', border: 'border-emerald-600/10' };
+                if (c.includes('coast') || c.includes('water')) return { icon: <FaGlobe className="text-cyan-600" />, color: 'bg-cyan-600/5', border: 'border-cyan-600/10' };
+                if (c.includes('emergency') || c.includes('911')) return { icon: <FaPhone className="text-red-600 animate-pulse" />, color: 'bg-red-600/5', border: 'border-red-600/10' };
                 return { icon: <FaPhone className="text-gray-500" />, color: 'bg-gray-500/10', border: 'border-gray-500/20' };
               };
 
               const style = getTacticalIcon(contact.category);
 
               return (
-                <div key={contact.id} className={`bg-white dark:bg-gray-900 border ${style.border} rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
+                <div key={contact.id} className={`bg-white border ${style.border} rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
                   <div className={`absolute -right-4 -top-4 w-24 h-24 ${style.color} rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity`} />
                   
                   <div className="flex items-center justify-between mb-4 relative z-10">
-                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                      isGlobal ? 'bg-blue-500/10 text-blue-500' : 'bg-emerald-500/10 text-emerald-500'
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold tracking-tight ${
+                      isGlobal ? 'bg-blue-600/10 text-blue-600' : 'bg-emerald-600/10 text-emerald-600'
                     }`}>
                       {isGlobal ? 'Global Asset' : `${contact.created_brgy} Auth`}
                     </span>
                     {canManage && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleOpenEdit(contact)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-emerald-500"><FaEdit /></button>
-                        <button onClick={() => handleDelete(contact.id)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-red-500"><FaTrash /></button>
+                        <button onClick={() => handleOpenEdit(contact)} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-blue-600 transition-colors"><FaEdit /></button>
+                        <button onClick={() => handleDelete(contact.id)} className="p-2 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-red-600 transition-colors"><FaTrash /></button>
                       </div>
                     )}
                   </div>
@@ -269,27 +272,27 @@ const TacticalContactManager = () => {
                   <div className="relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold tracking-tight mb-1 truncate">{contact.category}</h3>
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold mb-3">
-                          <span className="p-1.5 rounded-lg bg-emerald-500/10">
+                        <h3 className="text-lg font-bold tracking-tight mb-1 truncate text-gray-900">{contact.category}</h3>
+                        <div className="flex items-center gap-2 text-blue-600 font-black mb-3">
+                          <span className="p-2 rounded-xl bg-blue-600/5 border border-blue-600/10 shadow-sm">
                             {style.icon}
                           </span>
-                          <span className="text-base tabular-nums tracking-wide">{contact.number}</span>
+                          <span className="text-lg tabular-nums tracking-tighter">{contact.number}</span>
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 h-8 font-medium">
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 h-8 font-bold">
                       {contact.description || "Active emergency response resource."}
                     </p>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between relative z-10">
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                  <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between relative z-10">
+                    <span className="text-[9px] text-gray-400 font-bold tracking-tight">
                       Synced {new Date(contact.created_at).toLocaleDateString()}
                     </span>
                     <button 
                       onClick={() => window.open(`tel:${contact.number}`)}
-                      className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600/10 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl text-[10px] font-bold tracking-tight transition-all flex items-center gap-2 shadow-sm"
                     >
                       Call <FaChevronRight />
                     </button>
@@ -298,7 +301,7 @@ const TacticalContactManager = () => {
               );
             })
           ) : (
-            <div className="col-span-full py-20 text-center flex flex-col items-center gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+            <div className="col-span-full py-20 text-center flex flex-col items-center gap-4 bg-gray-50 rounded-3xl border border-dashed border-gray-100">
               <div className="text-5xl">📵</div>
               <div>
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No Signal Detected</p>
@@ -312,7 +315,7 @@ const TacticalContactManager = () => {
         {showModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-            <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200 dark:border-gray-800">
+            <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200">
               <div className="p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold tracking-tight">
@@ -394,7 +397,7 @@ const TacticalContactManager = () => {
                     </button>
                     <button 
                       type="submit"
-                      className="py-4 rounded-2xl bg-emerald-600 text-white font-bold tracking-wide text-[11px] hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                      className="py-4 rounded-2xl bg-blue-600 text-white font-bold tracking-wide text-[11px] hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all active:scale-95"
                     >
                       {isEditing ? "Sync Changes" : "Deploy Contact"}
                     </button>

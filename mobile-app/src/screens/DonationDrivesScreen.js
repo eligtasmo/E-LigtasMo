@@ -290,14 +290,20 @@ const DonationDrivesScreen = ({ navigation }) => {
                       paddingHorizontal: 18, 
                       height: 34,
                       borderRadius: 17, 
-                      backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.10)',
+                      backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.08)',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      borderWidth: 1,
-                      borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.14)'
+                      borderWidth: 1.5,
+                      borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.25)'
                     }}
                   >
-                    <Text style={{ fontSize: 10, fontWeight: '600', color: isSelected ? '#000' : 'rgba(255,255,255,0.5)', textTransform: 'capitalize' }}>
+                    <Text style={{ 
+                      fontSize: 10, 
+                      fontWeight: '700', 
+                      color: isSelected ? '#000' : 'rgba(255,255,255,0.8)', 
+                      textTransform: 'uppercase',
+                      fontFamily: DS_FONT_UI 
+                    }}>
                       {item}
                     </Text>
                   </TouchableOpacity>

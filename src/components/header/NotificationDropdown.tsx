@@ -20,7 +20,7 @@ type NotificationItem = {
 export default function NotificationDropdown({ notificationCount = 0 }: NotificationDropdownProps) {
   const { user } = useAuth();
   const role = (user?.role || "guest").toLowerCase();
-  const brgyName = (user as any)?.brgy_name || (user as any)?.barangay || "";
+  const brgyName = (user as any)?.brgy_name || (user as any)?.brgy || "";
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const computedCount = items.length;
@@ -62,7 +62,7 @@ export default function NotificationDropdown({ notificationCount = 0 }: Notifica
       }
       // Announcements
       try {
-        const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'barangay' : 'residents');
+        const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'brgy' : 'residents');
         const brgyParam = brgyName && aud !== 'all' ? `&brgy=${encodeURIComponent(brgyName)}` : '';
         const res = await apiFetch(`list-announcements.php?audience=${encodeURIComponent(aud)}&limit=5${brgyParam}`, { headers: { 'X-Role': role } });
         const data = await res.json();
@@ -81,7 +81,7 @@ export default function NotificationDropdown({ notificationCount = 0 }: Notifica
 
       // Notifications (bell-specific)
       try {
-        const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'barangay' : 'residents');
+        const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'brgy' : 'residents');
         const brgyParam = brgyName && aud !== 'all' ? `&brgy=${encodeURIComponent(brgyName)}` : '';
         const res = await apiFetch(`list-notifications.php?audience=${encodeURIComponent(aud)}&limit=5${brgyParam}`, { headers: { 'X-Role': role } });
         const data = await res.json();

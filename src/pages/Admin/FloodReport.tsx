@@ -23,7 +23,7 @@ type FloodReportType = {
   status: "Pending" | "Verified" | "Rejected" | "Resolved";
   description: string;
   time: string;
-  barangay: string;
+  brgy: string;
   reporter_name?: string;
   reporter_contact?: string;
   reporter_email?: string;
@@ -164,10 +164,10 @@ const FloodReport: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-72px)] w-full bg-black overflow-hidden font-mono">
+    <div className="h-[calc(100vh-72px)] w-full bg-white overflow-hidden font-jetbrains">
       <PageMeta 
         title="Tactical Flood Oversight" 
-        description="Monitor and manage flood reports across all barangays." 
+        description="Monitor and manage flood reports across all brgys." 
       />
       <MapProvider>
         <div className="flex h-full w-full overflow-hidden">
@@ -179,7 +179,7 @@ const FloodReport: React.FC = () => {
                 longitude: 121.41,
                 zoom: 13
               }}
-              mapStyle="mapbox://styles/mapbox/dark-v11"
+              mapStyle="mapbox://styles/mapbox/light-v11"
               mapboxAccessToken={MAPBOX_TOKEN}
               onLoad={(e: any) => setMapInstance(e.target)}
               style={{ width: '100%', height: '100%' }}
@@ -203,10 +203,10 @@ const FloodReport: React.FC = () => {
             </MapboxMap>
 
             {/* Map Legend/Overlay */}
-            <div className="absolute bottom-6 left-6 p-4 bg-black/60 backdrop-blur-md rounded-2xl border border-white/10 z-10 select-none">
-              <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                Live_Monitor
+            <div className="absolute bottom-6 left-6 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 z-10 select-none shadow-xl">
+              <div className="text-[10px] font-bold text-blue-600 tracking-tight mb-3 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                Live Monitor
               </div>
               <div className="space-y-2">
                 {[
@@ -225,23 +225,23 @@ const FloodReport: React.FC = () => {
           </div>
 
           {/* Unified Sidebar (Right) */}
-          <div className="w-[400px] bg-[#1c1c1e] border-l border-white/5 flex flex-col h-full shrink-0 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] overflow-hidden">
+          <div className="w-[400px] bg-gray-50 border-l border-gray-100 flex flex-col h-full shrink-0 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] overflow-hidden">
             {selectedReport ? (
               /* Inspection Node View */
               <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-                <div className="p-4 border-b border-white/5 relative bg-[#2c2c2e]">
+                <div className="p-4 border-b border-gray-100 relative bg-gray-100/50">
                   <button 
                     onClick={() => setSelectedReport(null)}
-                    className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition-all border border-white/5"
+                    className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-all border border-gray-200 shadow-sm"
                   >
                     <FaTimes size={14} />
                   </button>
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    <h2 className="text-blue-500 font-black text-base tracking-tighter uppercase italic">Flood_Inspection</h2>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
+                    <h2 className="text-[#f59e0b] font-bold text-base tracking-tight">Environmental Intel</h2>
                   </div>
-                  <p className="text-gray-500 text-[8px] tracking-[0.2em] font-black uppercase mt-0.5">
-                    Ref_ID: {selectedReport.id}
+                  <p className="text-gray-400 text-[8px] tracking-tight font-bold mt-0.5">
+                    Ref Id: {selectedReport.id}
                   </p>
                 </div>
 
@@ -267,18 +267,18 @@ const FloodReport: React.FC = () => {
                     </div>
                     
                     {getMediaUrls(selectedReport).length > 0 ? (
-                      <div className="aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/5 relative group shadow-2xl">
+                      <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative group shadow-lg">
                         <img 
                           src={getMediaUrls(selectedReport)[currentImageIndex]} 
                           alt="Flood Evidence" 
                           className="w-full h-full object-cover" 
                         />
-                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-blue-500 border border-white/10">
+                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-white/80 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-blue-600 border border-gray-200 shadow-sm">
                           {currentImageIndex + 1}/{getMediaUrls(selectedReport).length}
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-video rounded-2xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center text-gray-700">
+                      <div className="aspect-video rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
                         <FaCamera size={24} className="mb-2 opacity-10" />
                         <span className="text-[9px] font-black tracking-widest uppercase opacity-40">Zero_Visual_Intel</span>
                       </div>
@@ -287,12 +287,12 @@ const FloodReport: React.FC = () => {
 
                   {/* Data Grid */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner group relative">
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm group relative">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block">Severity</span>
+                        <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block">Severity</span>
                         <button 
                           onClick={() => setIsEditingSeverity(!isEditingSeverity)}
-                          className="text-[8px] text-blue-500 hover:underline font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-[8px] text-blue-600 hover:underline font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           {isEditingSeverity ? 'Cancel' : 'Triage'}
                         </button>
@@ -306,7 +306,7 @@ const FloodReport: React.FC = () => {
                               className={`flex-1 py-1 rounded text-[8px] font-black uppercase transition-all ${
                                 selectedReport.severity === s 
                                 ? getSeverityStyle(s)
-                                : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
                               }`}
                             >
                               {s}
@@ -319,26 +319,26 @@ const FloodReport: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
-                      <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block mb-1">Status</span>
-                      <p className="text-xs font-black text-white uppercase">{selectedReport.status}</p>
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block mb-1">Status</span>
+                      <p className="text-xs font-black text-gray-900 uppercase">{selectedReport.status}</p>
                     </div>
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 col-span-2 flex items-center gap-4 shadow-inner">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shrink-0">
-                        <FaUser className="text-blue-500 text-sm" />
+                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 col-span-2 flex items-center gap-4 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center border border-blue-600/20 shrink-0">
+                        <FaUser className="text-blue-600 text-sm" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
-                        <p className="text-xs font-black text-white uppercase truncate">{selectedReport.reporter_name || 'Anonymous'}</p>
+                        <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
+                        <p className="text-xs font-black text-gray-900 uppercase truncate">{selectedReport.reporter_name || 'Anonymous'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Field Notes */}
-                  <div className="p-5 bg-white/5 rounded-2xl border border-white/5 relative overflow-hidden shadow-inner">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-40" />
-                    <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
-                    <p className="text-[11px] text-gray-400 leading-relaxed font-medium italic">
+                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-40" />
+                    <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
+                    <p className="text-[11px] text-gray-600 leading-relaxed font-bold italic">
                       "{selectedReport.description || 'No additional field intelligence recorded for this sector.'}"
                     </p>
                   </div>
@@ -371,8 +371,8 @@ const FloodReport: React.FC = () => {
                         RESOLVE_EVENT
                       </button>
                     ) : (
-                      <div className="py-5 text-center border border-white/5 rounded-2xl bg-white/5 shadow-inner">
-                        <span className="text-[9px] text-gray-500 uppercase font-black tracking-[0.3em]">ARCHIVED_LOG</span>
+                      <div className="py-5 text-center border border-gray-100 rounded-2xl bg-gray-50 shadow-sm">
+                        <span className="text-[9px] text-gray-400 uppercase font-black tracking-[0.3em]">ARCHIVED_LOG</span>
                       </div>
                     )}
                   </div>
@@ -381,29 +381,29 @@ const FloodReport: React.FC = () => {
             ) : (
               /* Tactical Feed View */
               <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-                <div className="p-6 border-b border-white/5 bg-[#2c2c2e] flex justify-between items-center">
+                <div className="p-6 border-b border-gray-100 bg-white flex justify-between items-center">
                   <div>
-                    <h1 className="text-white font-black text-xl tracking-tighter uppercase italic flex items-center gap-2">
-                      <div className="w-1.5 h-6 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                      ENVIRONMENTAL_INTEL
+                    <h1 className="text-gray-900 font-bold text-xl tracking-tight flex items-center gap-2">
+                      <div className="w-1.5 h-6 bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.3)]" />
+                      Environmental Intel
                     </h1>
-                    <p className="text-gray-500 text-[9px] tracking-[0.4em] mt-1 font-bold uppercase">Multi-Hazard Monitor</p>
+                    <p className="text-gray-400 text-[9px] tracking-tight mt-1 font-bold">Multi-Hazard Monitor</p>
                   </div>
                   <button 
                     onClick={() => fetchReports()}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#f59e0b] border border-white/5 group transition-all"
+                    className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-blue-600 border border-gray-200 group transition-all"
                   >
                     <FiRefreshCw className={`group-hover:rotate-180 transition-transform duration-500 ${loading ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-5 p-1 bg-black/40 border-b border-white/5">
+                <div className="grid grid-cols-5 p-1 bg-gray-50 border-b border-gray-100">
                   {(['All', 'Pending', 'Verified', 'Rejected', 'Resolved'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setFilterStatus(tab)}
                       className={`py-3 text-[7px] font-black uppercase tracking-widest transition-all ${
-                        filterStatus === tab ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-500 hover:text-white'
+                        filterStatus === tab ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-gray-600'
                       }`}
                     >
                       {tab.slice(0, 4)}
@@ -411,7 +411,7 @@ const FloodReport: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-black/10 p-4 space-y-3">
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/50 p-4 space-y-3">
                   {loading && reports.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-700">
                       <FaSpinner className="animate-spin text-xl mb-4" />
@@ -442,8 +442,8 @@ const FloodReport: React.FC = () => {
                         }}
                         className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl ${
                           (selectedReport as any)?.id === r.id
-                          ? 'bg-blue-600/10 border-blue-600 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)]' 
-                          : 'bg-white/5 border-transparent border-b border-white/[0.02] hover:bg-white/[0.08]'
+                          ? 'bg-white border-blue-600 shadow-xl ring-1 ring-black/5' 
+                          : 'bg-white border-transparent hover:border-gray-200 hover:bg-gray-50 shadow-sm border border-gray-100'
                         }`}
                       >
                         <div className="flex justify-between items-center mb-1.5">
@@ -452,17 +452,17 @@ const FloodReport: React.FC = () => {
                           </span>
                           <span className="text-[8px] text-gray-600 font-mono">#{r.id}</span>
                         </div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-tight truncate mb-1">Flood_Event</h3>
-                        <div className="flex items-center gap-1.5 text-gray-500 mb-2">
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">Flood_Event</h3>
+                        <div className="flex items-center gap-1.5 text-gray-400 mb-2">
                           <FaMapMarkerAlt className="text-[9px] shrink-0" />
                           <span className="text-[10px] truncate uppercase font-bold tracking-tighter">{r.location_text || `${r.lat.toFixed(4)}, ${r.lng.toFixed(4)}`}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[9px] opacity-40 font-bold uppercase">
+                        <div className="flex items-center justify-between text-[9px] text-gray-400 font-bold uppercase">
                           <div className="flex items-center gap-1.5">
                             <FaClock className="shrink-0" />
                             <span>{new Date(r.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <span className="text-blue-500 font-black">{r.barangay}</span>
+                          <span className="text-blue-600 font-black">{r.brgy}</span>
                         </div>
                       </div>
                     ))
@@ -477,8 +477,8 @@ const FloodReport: React.FC = () => {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.1); }
       `}</style>
     </div>
   );

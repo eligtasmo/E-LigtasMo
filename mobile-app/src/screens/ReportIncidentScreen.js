@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator, Image as RNImage, ScrollView, Dimensions, StyleSheet, StatusBar as RNStatusBar, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -12,7 +13,7 @@ import { BlurView } from 'expo-blur';
 import { useTheme } from '../context/ThemeContext';
 import { AuthService } from '../services/AuthService';
 import { API_URL, MAPBOX_ACCESS_TOKEN } from '../config';
-import { Screen, DS_FONT_UI, DS_FONT_INPUT } from '../components/DesignSystem';
+import { Screen, Row, DS_FONT_UI, DS_FONT_INPUT } from '../components/DesignSystem';
 import UniversalWebView from '../components/UniversalWebView';
 
 const INCIDENT_TYPES = [
@@ -389,6 +390,8 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [finalReportId, setFinalReportId] = useState('');
+  const [isViewingHistoryReport, setIsViewingHistoryReport] = useState(false);
+  const [selectedReportCoords, setSelectedReportCoords] = useState(null);
 
   // My Reports State
   const [myReports, setMyReports] = useState([]);
@@ -480,6 +483,53 @@ const ReportIncidentScreen = ({ navigation, route }) => {
     }
   }, [user?.id]);
 
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return 'Just now';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 84600) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  const handleReportClick = useCallback((report) => {
+    setShowHistory(false);
+    setIsViewingHistoryReport(true);
+    
+    const lat = parseFloat(report.lat || report.latitude);
+    const lon = parseFloat(report.lng || report.longitude);
+    
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(JSON.stringify({
+        type: 'fly_to',
+        lat,
+        lng: lon
+      }));
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.directView && route.params?.report) {
+         handleReportClick(route.params.report);
+         // Clear params after handling
+         navigation.setParams({ directView: undefined, report: undefined });
+      }
+      return () => {
+        // Reset state when navigating away
+        setIsViewingHistoryReport(false);
+        setIncidentCoords(null);
+        setPolygonPoints([]);
+        setDetails('');
+        setMediaList([]);
+        setSearchQuery('');
+        setSearchResults([]);
+      };
+    }, [route.params, handleReportClick])
+  );
+
   useEffect(() => {
     if (user?.id) fetchMyReports();
   }, [user?.id, fetchMyReports]);
@@ -523,22 +573,6 @@ const ReportIncidentScreen = ({ navigation, route }) => {
     init();
   }, []);
 
-  const handleReportClick = (report) => {
-    setShowHistory(false);
-    const lat = parseFloat(report.lat);
-    const lng = parseFloat(report.lng);
-    
-    setIncidentCoords({ lat, lng });
-    setAddress(report.location_text || report.barangay || '');
-
-    if (webViewRef.current) {
-      webViewRef.current.postMessage(JSON.stringify({
-        type: 'fly_to',
-        lat,
-        lng
-      }));
-    }
-  };
 
   const handleMapClick = async (lat, lng) => {
     if (drawMode === 'pinpoint') {
@@ -679,13 +713,18 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         style={[
           styles.optionCard,
           { 
-            borderColor: active ? item.tone : 'rgba(255,255,255,0.03)',
-            backgroundColor: active ? item.tone + '10' : 'rgba(255,255,255,0.02)'
+            borderWidth: 1.5,
+            borderColor: active ? '#F5B235' : 'rgba(255,255,255,0.3)',
+            backgroundColor: active ? '#F5B235' + '20' : 'rgba(255,255,255,0.03)'
           }
         ]}
       >
-        <Icon size={20} color={active ? item.tone : 'rgba(255,255,255,0.2)'} strokeWidth={2} />
-        <Text style={[styles.optionLabel, { color: active ? '#FFF' : 'rgba(255,255,255,0.3)', marginTop: 8 }]}>{item.label}</Text>
+        <Icon size={20} color={active ? '#F5B235' : 'rgba(255,255,255,0.85)'} strokeWidth={2.2} />
+        <Text style={[styles.optionLabel, { 
+          color: active ? '#FFF' : 'rgba(255,255,255,0.7)', 
+          marginTop: 8,
+          fontWeight: '700'
+        }]}>{item.label}</Text>
       </TouchableOpacity>
     );
   };
@@ -824,8 +863,25 @@ const ReportIncidentScreen = ({ navigation, route }) => {
           <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} exit={{ opacity: 0, translateY: 20 }} style={styles.overlayHint}>
             <Lucide.Crosshair size={24} color="#3B82F6" strokeWidth={2} />
             <Text style={styles.hintText}>
-              {drawMode === 'pinpoint' ? 'TAP MAP TO MARK INCIDENT' : 'TAP 3+ POINTS TO DEFINE ZONE'}
+              {isViewingHistoryReport ? 'Viewing tactical entry' : (drawMode === 'pinpoint' ? 'Tap map to mark incident' : 'Tap 3+ points to define zone')}
             </Text>
+          </MotiView>
+        )}
+
+        {isViewingHistoryReport && (
+          <MotiView from={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={styles.exitViewWrapper}>
+            <TouchableOpacity 
+              onPress={() => {
+                setIsViewingHistoryReport(false);
+                if (webViewRef.current && currentCoords) {
+                   webViewRef.current.postMessage(JSON.stringify({ type: 'fly_to', lat: currentCoords.lat, lng: currentCoords.lng }));
+                }
+              }}
+              style={styles.exitViewBtn}
+            >
+              <Lucide.X size={18} color="#000" />
+              <Text style={styles.exitViewText}>Exit view</Text>
+            </TouchableOpacity>
           </MotiView>
         )}
       </AnimatePresence>
@@ -959,35 +1015,44 @@ const ReportIncidentScreen = ({ navigation, route }) => {
           )}
         </ScrollView>
 
-        <View style={[
-          styles.footer, 
-          { 
-            bottom: Platform.OS === 'ios' ? insets.bottom + 100 : 90,
-            paddingBottom: Math.max(insets.bottom, 16) 
-          }
-        ]}>
-          {stage === 'details' ? (
-            <TouchableOpacity 
-              onPress={handleSubmit} 
-              disabled={submitting}
-              style={[styles.submitBtn, { backgroundColor: '#F5B235' }]}
+        <AnimatePresence>
+          {!isViewingHistoryReport && (
+            <MotiView 
+              from={{ translateY: 150 }} 
+              animate={{ translateY: 0 }} 
+              exit={{ translateY: 150 }}
+              style={[
+                styles.footer, 
+                { 
+                  bottom: Platform.OS === 'ios' ? insets.bottom + 100 : 90,
+                  paddingBottom: Math.max(insets.bottom, 16) 
+                }
+              ]}
             >
-              {submitting ? <ActivityIndicator color="#000" /> : (
-                <>
-                  <Text style={styles.submitBtnText}>Sync Report</Text>
-                  <Lucide.Send size={18} color="#000" strokeWidth={2.5} />
-                </>
-              )}
-            </TouchableOpacity>
-          ) : drawMode === 'polygon' && polygonPoints.length > 0 && (
-            <TouchableOpacity 
-              onPress={() => setPolygonPoints([])}
-              style={[styles.submitBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
-            >
-              <Text style={[styles.submitBtnText, { color: '#FFF' }]}>Reset Points</Text>
-            </TouchableOpacity>
+              {stage === 'details' ? (
+                <TouchableOpacity 
+                  onPress={handleSubmit} 
+                  disabled={submitting}
+                  style={[styles.submitBtn, { backgroundColor: '#F5B235' }]}
+                >
+                  {submitting ? <ActivityIndicator color="#000" /> : (
+                    <>
+                      <Text style={styles.submitBtnText}>Sync report</Text>
+                      <Lucide.Send size={18} color="#000" strokeWidth={2.5} />
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : (drawMode === 'polygon' && polygonPoints.length > 0) ? (
+                <TouchableOpacity 
+                  onPress={() => setPolygonPoints([])}
+                  style={[styles.submitBtn, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
+                >
+                  <Text style={[styles.submitBtnText, { color: '#FFF' }]}>Reset points</Text>
+                </TouchableOpacity>
+              ) : null}
+            </MotiView>
           )}
-        </View>
+        </AnimatePresence>
       </View>
 
       {/* ── MY REPORTS MODAL (RESIDENTS ONLY) ── */}
@@ -1004,8 +1069,8 @@ const ReportIncidentScreen = ({ navigation, route }) => {
               <View style={styles.trayTitleRow}>
                 <Lucide.ClipboardList size={22} color="#F5B235" />
                 <View>
-                  <Text style={styles.modalTitle}>Mission History</Text>
-                  <Text style={styles.modalSubtitle}>{myReports.length} INTEL PACKETS SYNCED</Text>
+                  <Text style={styles.modalTitle}>Mission history</Text>
+                  <Text style={styles.modalSubtitle}>{myReports.length} intel packets synced</Text>
                 </View>
               </View>
               <TouchableOpacity 
@@ -1066,30 +1131,43 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                   <Text style={styles.listEmptyText}>NO DATA IN SECTOR</Text>
                 </View>
               ) : (
-                filteredReports.map((report) => (
-                  <TouchableOpacity 
-                    key={report.id}
-                    activeOpacity={0.8}
-                    onPress={() => handleReportClick(report)}
-                    style={styles.reportCard}
-                  >
-                    <View style={styles.reportCardHeader}>
-                      <View>
-                        <Text style={styles.reportType}>{report.type}</Text>
-                        <Text style={styles.reportTime}>{new Date(report.time).toLocaleString()}</Text>
+                filteredReports.map((report) => {
+                  const severity = String(report.severity || 'Moderate').toLowerCase();
+                  let color = '#3B82F6';
+                  if (severity === 'moderate' || severity === 'warning') color = '#F5B235';
+                  if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444';
+                  
+                  const typeInfo = INCIDENT_TYPES.find(t => t.id === report.type) || { icon: 'AlertCircle' };
+                  const Icon = Lucide[typeInfo.icon] || Lucide.AlertCircle;
+
+                  return (
+                    <TouchableOpacity 
+                      key={report.id}
+                      activeOpacity={0.8}
+                      onPress={() => handleReportClick(report)}
+                      style={styles.reportCard}
+                    >
+                      <View style={[styles.reportIconBox, { backgroundColor: color + '15', borderColor: color + '30' }]}>
+                        <Icon size={20} color={color} strokeWidth={2.2} />
                       </View>
-                      <View style={[styles.statusBadge, { 
-                        backgroundColor: 
-                          report.status?.toLowerCase() === 'resolved' ? '#10B981' :
-                          report.status?.toLowerCase() === 'active' ? '#3B82F6' :
-                          report.status?.toLowerCase() === 'rejected' ? '#EF4444' : '#F5B235'
-                      }]}>
-                        <Text style={styles.statusBadgeText}>{(report.status || 'PENDING').toUpperCase()}</Text>
+                      
+                      <View style={{ flex: 1 }}>
+                        <Row justify="space-between" align="center">
+                          <Text style={styles.reportType}>{report.type || 'Intel packet'}</Text>
+                          <Text style={styles.reportTime}>{formatRelativeTime(report.time)}</Text>
+                        </Row>
+                        <Row align="center" gap={8} style={{ marginTop: 4 }}>
+                           <View style={[styles.statusBadgeCompact, { backgroundColor: color + '20', borderColor: color + '30' }]}>
+                             <Text style={[styles.statusBadgeTextCompact, { color: color }]}>{(report.status || 'Pending').toUpperCase()}</Text>
+                           </View>
+                           <Text style={styles.reportAddress} numberOfLines={1}>{report.barangay || 'Unknown Sector'}</Text>
+                        </Row>
                       </View>
-                    </View>
-                    <Text style={styles.reportAddress} numberOfLines={1}>{report.location_text || report.barangay || 'Field Intelligence'}</Text>
-                  </TouchableOpacity>
-                ))
+                      
+                      <Lucide.ChevronRight size={16} color="rgba(255,255,255,0.2)" />
+                    </TouchableOpacity>
+                  );
+                })
               )}
             </ScrollView>
           </MotiView>
@@ -1130,7 +1208,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                  </View>
 
                  <View style={styles.confHeader}>
-                   <Text style={styles.confTitle}>Report Details</Text>
+                   <Text style={styles.confTitle}>Report details</Text>
                  </View>
 
                    <View style={styles.confDetailList}>
@@ -1139,7 +1217,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                          <Lucide.AlertCircle size={22} color="#F5B235" />
                        </View>
                        <View style={styles.confItemContent}>
-                         <Text style={styles.confItemLabel}>Incident Type</Text>
+                         <Text style={styles.confItemLabel}>Incident type</Text>
                          <Text style={styles.confItemValue}>{incidentType}</Text>
                        </View>
                      </View>
@@ -1149,7 +1227,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                          <Lucide.Shield size={22} color={SEVERITIES.find(s => s.id === severity)?.tone || '#F5B235'} />
                        </View>
                        <View style={styles.confItemContent}>
-                         <Text style={styles.confItemLabel}>Severity Level</Text>
+                         <Text style={styles.confItemLabel}>Severity level</Text>
                          <Text style={[styles.confItemValue, { color: SEVERITIES.find(s => s.id === severity)?.tone || '#FFF' }]}>{severity}</Text>
                        </View>
                      </View>
@@ -1159,7 +1237,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                          <Lucide.MapPin size={22} color="#94A3B8" />
                        </View>
                        <View style={styles.confItemContent}>
-                         <Text style={styles.confItemLabel}>Location Target</Text>
+                         <Text style={styles.confItemLabel}>Location target</Text>
                          <Text style={styles.confItemValue} numberOfLines={2}>{address || 'Situation defined area'}</Text>
                        </View>
                      </View>
@@ -1169,9 +1247,9 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                          <Lucide.Activity size={22} color={(user?.role === 'resident' || !user?.role) ? '#F59E0B' : '#679949'} />
                        </View>
                        <View style={styles.confItemContent}>
-                         <Text style={styles.confItemLabel}>Approval Status</Text>
+                         <Text style={styles.confItemLabel}>Approval status</Text>
                          <Text style={[styles.confItemValue, { color: (user?.role === 'resident' || !user?.role) ? '#F59E0B' : '#679949' }]}>
-                           {(user?.role === 'resident' || !user?.role) ? 'Pending Verification' : 'Tactical Approved'}
+                           {(user?.role === 'resident' || !user?.role) ? 'Pending verification' : 'Tactical approved'}
                          </Text>
                        </View>
                      </View>
@@ -1179,7 +1257,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
 
                    {details ? (
                      <View style={styles.confObsCard}>
-                       <Text style={styles.confObsLabel}>Field Observations</Text>
+                       <Text style={styles.confObsLabel}>Field observations</Text>
                        <Text style={styles.confObsText}>{details}</Text>
                      </View>
                    ) : null}
@@ -1200,7 +1278,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                       }}
                      style={[styles.confCloseBtn, { marginBottom: Math.max(insets.bottom, 24) + 20 }]}
                   >
-                    <Text style={styles.confCloseBtnText}>ACKNOWLEDGE MISSION</Text>
+                    <Text style={styles.confCloseBtnText}>Acknowledge mission</Text>
                   </TouchableOpacity>
                  </ScrollView>
             </SafeAreaView>
@@ -1251,7 +1329,16 @@ const styles = {
   vehicleBtnActive: { backgroundColor: '#F5B235' },
   vehicleBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: '700', marginLeft: 10, fontFamily: DS_FONT_UI },
   vehicleBtnTextActive: { color: '#000' },
-  detailsInput: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 16, color: '#FFF', fontSize: 14, minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', fontFamily: DS_FONT_INPUT },
+  reportCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', padding: 14, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  reportIconBox: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1 },
+  reportType: { color: '#FFF', fontSize: 15, fontWeight: '700', fontFamily: DS_FONT_UI },
+  reportTime: { color: 'rgba(255,255,255,0.3)', fontSize: 10, fontFamily: DS_FONT_INPUT },
+  reportAddress: { color: 'rgba(255,255,255,0.4)', fontSize: 12, flex: 1, fontFamily: DS_FONT_UI },
+  statusBadgeCompact: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, borderWidth: 1 },
+  statusBadgeTextCompact: { fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
+  exitViewWrapper: { position: 'absolute', top: 120, alignSelf: 'center', zIndex: 1000 },
+  exitViewBtn: { height: 44, paddingHorizontal: 20, backgroundColor: '#F5B235', borderRadius: 22, flexDirection: 'row', alignItems: 'center', gap: 10, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  exitViewText: { color: '#000', fontSize: 14, fontWeight: '700' },
   mediaRow: { flexDirection: 'row', gap: 12 },
   addMediaBtn: { width: 68, height: 68, borderRadius: 16, backgroundColor: 'rgba(245, 178, 53, 0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#F5B235' },
   mediaPreview: { width: 68, height: 68, borderRadius: 16, overflow: 'hidden' },
@@ -1268,8 +1355,8 @@ const styles = {
     paddingTop: 12,
     zIndex: 20
   },
-  submitBtn: { height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, shadowColor: '#F5B235', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 5 },
-  submitBtnText: { color: '#000', fontSize: 15, fontWeight: '900', letterSpacing: 1, fontFamily: DS_FONT_UI },
+  submitBtn: { height: 56, borderRadius: 12, backgroundColor: '#F5B235', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  submitBtnText: { color: '#000', fontSize: 16, fontWeight: '700', fontFamily: DS_FONT_UI },
   confirmationOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#080808', zIndex: 1000 },
   confirmationContent: { flex: 1, padding: 0 },
   confMapWrapper: { width: '100%', height: 320, overflow: 'hidden' },
@@ -1292,8 +1379,8 @@ const styles = {
   confObsText: { color: '#FFF', fontSize: 15, lineHeight: 24, fontWeight: '500' },
   confStatusCard: { marginHorizontal: 24, flexDirection: 'row', alignItems: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 4, marginTop: 16 },
   confStatusText: { flex: 1, color: 'rgba(255,255,255,0.4)', fontSize: 12, lineHeight: 20, fontWeight: '500' },
-  confCloseBtn: { marginHorizontal: 24, height: 64, backgroundColor: '#F5B235', borderRadius: 4, alignItems: 'center', justifyContent: 'center', marginTop: 32 },
-  confCloseBtnText: { color: '#000', fontSize: 15, fontWeight: '900', letterSpacing: 1, fontFamily: DS_FONT_UI },
+  confCloseBtn: { marginHorizontal: 24, height: 56, backgroundColor: '#F5B235', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 32 },
+  confCloseBtnText: { color: '#000', fontSize: 16, fontWeight: '700', fontFamily: DS_FONT_UI },
 
   // My Reports Modal Styles
   historyModal: {

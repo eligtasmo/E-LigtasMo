@@ -1,367 +1,138 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IoWarningOutline as WarningIcon } from "react-icons/io5";
-import { FiAlertCircle, FiBell, FiUser, FiActivity, FiShield, FiUsers } from "react-icons/fi";
-import { FaPhone, FaUser, FaMapMarkerAlt, FaRoute } from "react-icons/fa";
-import { BsShieldShaded as ShelterIcon } from "react-icons/bs";
-import { GoLocation as RouteIcon } from "react-icons/go";
-import { TiWeatherPartlySunny as WeatherIcon } from "react-icons/ti";
-
-// Assume these icons are imported from an icon library
-import {
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-} from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { 
+  DashboardIcon, 
+  ManagementIcon, 
+  RouteIcon, 
+  IntelIcon, 
+  HazardIcon, 
+  ShelterIcon, 
+  ResidentsIcon, 
+  BellIcon, 
+  PhoneIcon, 
+  HotlineIcon, 
+  ProfileIcon, 
+  BookIcon 
+} from "../components/TacticalIcons";
 
 type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  icon: (active: boolean) => React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-// Local Command Center
 const localCommandItems: NavItem[] = [
-  {
-    icon: <GridIcon className="w-5 h-5" />,
-    name: "Barangay Dashboard",
-    path: "/brgy",
-  },
+  { icon: (active) => <DashboardIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Dashboard", path: "/brgy" },
 ];
 
-// SafeRoute & Emergency Response
 const safeRouteItems: NavItem[] = [
-  {
-    icon: <FaMapMarkerAlt size={20} />,
-    name: "Barangay Management",
-    path: "/brgy/barangay-map",
-  },
-  {
-    icon: <RouteIcon size={20} />,
-    name: "Route Planner",
-    path: "/brgy/safe-routes",
-  },
-  {
-    icon: <FiAlertCircle size={20} />,
-    name: "Environmental Intel",
-    path: "/brgy/flood-reports",
-  },
-  {
-    icon: <WarningIcon size={20} />,
-    name: "Hazard Management",
-    path: "/brgy/report-incident",
-  },
-  {
-    icon: <ShelterIcon size={20} />,
-    name: "Shelter Management",
-    path: "/brgy/shelters",
-  },
+  { icon: (active) => <ManagementIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Barangay Management", path: "/brgy/brgy-map" },
+  { icon: (active) => <RouteIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Route Planner", path: "/brgy/safe-routes" },
+  { icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Environmental Intel", path: "/brgy/flood-reports" },
+  { icon: (active) => <HazardIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-red-500'}`} />, name: "Hazard Management", path: "/brgy/report-incident" },
+  { icon: (active) => <ShelterIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Shelter Management", path: "/brgy/shelters" },
 ];
 
-// Community Management
 const communityItems: NavItem[] = [
-  {
-    icon: <FiUsers size={20} />,
-    name: "Resident Directory",
-    path: "/brgy/residents",
-  },
-  {
-    icon: <FiBell size={20} />,
-    name: "Community Alerts",
-    path: "/brgy/announcements",
-  },
-  {
-    icon: <FaPhone size={18} />,
-    name: "Manage Contacts",
-    path: "/brgy/contacts",
-  },
-  {
-    icon: <FiAlertCircle size={18} />,
-    name: "Emergency Hotlines",
-    path: "/brgy/hotlines",
-  },
+  { icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Resident Directory", path: "/brgy/residents" },
+  { icon: (active) => <BellIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-orange-400'}`} />, name: "Community Alerts", path: "/brgy/announcements" },
+  { icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Manage Contacts", path: "/brgy/contacts" },
+  { icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Emergency Hotlines", path: "/brgy/hotlines" },
 ];
 
-// Monitoring & Support
 const monitoringItems: NavItem[] = [
-  {
-    icon: <FiUser size={20} />,
-    name: "Profile & Settings",
-    path: "/brgy/profile",
-  },
-  {
-    icon: <FaPhone size={20} />,
-    name: "Emergency Guides",
-    path: "/brgy/resources",
-  },
+  { icon: (active) => <ProfileIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Profile & Settings", path: "/brgy/profile" },
+  { icon: (active) => <BookIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Emergency Guides", path: "/brgy/resources" },
 ];
 
 const BrgySidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const location = useLocation();
 
-  const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main";
-    index: number;
-  } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const isActive = useCallback((path: string) => location.pathname === path, [location.pathname]);
 
-  // const isActive = (path: string) => location.pathname === path;
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
-
-  useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? [...localCommandItems, ...safeRouteItems, ...communityItems, ...monitoringItems] : [];
-      items.forEach((nav: NavItem, index: number) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem: { name: string; path: string; pro?: boolean; new?: boolean }) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
-
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive]);
-
-  useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
-      }
-    }
-  }, [openSubmenu]);
-
-  const handleSubmenuToggle = (index: number, menuType: "main") => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
-  };
-
-  const renderMenuItems = (items: NavItem[], menuType: "main") => (
+  const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-1">
-      {items.map((nav, index) => (
-        <li key={nav.name}>
-          {nav.subItems ? (
-            <button
-              data-slot="button"
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`group transition-all duration-200 ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "is-active"
-                  : ""
-              } ${
-                !isExpanded && !isHovered && !isMobileOpen
-                  ? "lg:justify-center"
-                  : "lg:justify-start"
-              }`}
-            >
-              <span
-                className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "sentinelx-glow"
-                    : ""
-                }`}
-              >
-                {nav.icon}
-              </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="font-medium text-sm flex-1 text-left truncate">{nav.name}</span>
-              )}
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
-                />
-              )}
-            </button>
-          ) : (
-            nav.path && (
+      {items.map((nav) => {
+        const active = isActive(nav.path || "");
+        return (
+          <li key={nav.name}>
+            {nav.path && (
               <Link
                 to={nav.path}
-                data-slot="button"
-                className={`group transition-all duration-200 ${
-                  isActive(nav.path) ? "is-active" : ""
-                } ${
-                  !isExpanded && !isHovered && !isMobileOpen
-                    ? "lg:justify-center"
-                    : "lg:justify-start"
-                }`}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${
+                  active 
+                    ? "bg-white text-[#1e1b4b] shadow-xl shadow-black/20 scale-[1.02]" 
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                } ${!isExpanded && !isHovered && !isMobileOpen ? "justify-center" : ""}`}
               >
-                <span
-                  className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
-                    isActive(nav.path) ? "sentinelx-glow" : ""
-                  }`}
-                >
-                  {nav.icon}
+                <span className={`flex-shrink-0 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>
+                  {nav.icon(active)}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="font-medium text-sm flex-1 text-left truncate">{nav.name}</span>
+                  <span className={`text-sm font-medium flex-1 truncate tracking-tight ${active ? "text-[#1e1b4b]" : "text-inherit"}`}>
+                    {nav.name}
+                  </span>
                 )}
               </Link>
-            )
-          )}
-          {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-            <div
-              ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
-              }}
-              className="overflow-hidden transition-all duration-300"
-              style={{
-                height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
-              }}
-            >
-              <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </li>
-      ))}
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 
   return (
     <>
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-[1100] transition-opacity lg:hidden"
-          onClick={toggleMobileSidebar}
-          aria-label="Close sidebar"
-        />
-      )}
       <aside
-        className={`sx-sidebar bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-100 dark:border-gray-800 fixed flex flex-col top-[64px] left-0 h-[calc(100vh-64px)] transition-transform duration-300 ease-in-out z-[1200] font-outfit ${
-          isExpanded || isHovered || isMobileOpen ? "w-[278px]" : "w-[80px]"
-        } ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 shadow-sm`}
+        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-jetbrains shadow-2xl relative ${
+          isExpanded || isHovered || isMobileOpen ? "w-[260px]" : "w-[80px]"
+        } ${isMobileOpen ? "fixed inset-y-0 left-0 translate-x-0" : "hidden lg:flex"}`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar mt-4 px-3">
-          <nav className="mb-6">
-            <div className="flex flex-col gap-6">
-              {/* Local Command Center */}
-              <div>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[11px] font-semibold text-blue-600 tracking-wide mb-3 px-1 flex items-center">
-                    <FiActivity size={12} className="mr-2" />
-                    Local Command Center
-                  </div>
-                )}
-                {renderMenuItems(localCommandItems, "main")}
-              </div>
-              
-              {/* Tactical Response Unit */}
-              <div>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[11px] font-semibold text-red-500 tracking-wide mb-3 px-1 flex items-center">
-                    <FiShield size={12} className="mr-2" />
-                    Tactical Response Unit
-                  </div>
-                )}
-                {renderMenuItems(safeRouteItems, "main")}
-              </div>
-              
-              {/* Community Operations */}
-              <div>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[11px] font-semibold text-green-600 tracking-wide mb-3 px-1 flex items-center">
-                    <FiUsers size={12} className="mr-2" />
-                    Community Operations
-                  </div>
-                )}
-                {renderMenuItems(communityItems, "main")}
-              </div>
-              
-              {/* Account & Meta */}
-              <div>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <div className="text-[11px] font-semibold text-purple-600 tracking-wide mb-3 px-1 flex items-center">
-                    <WeatherIcon size={12} className="mr-2" />
-                    Account & Support
-                  </div>
-                )}
-                {renderMenuItems(monitoringItems, "main")}
-              </div>
+        <div className="h-[70px] flex items-center px-6 mb-4">
+          <Link to="/brgy" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 active:scale-95">
+               <img src="/images/logo/logo-icon.png" alt="Logo" className="w-7 h-7" />
             </div>
-          </nav>
+            {(isExpanded || isHovered || isMobileOpen) && (
+              <div className="flex flex-col leading-none">
+                <span className="text-lg font-bold tracking-tight text-white italic">E-LigtasMo</span>
+                <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">Brgy Node</span>
+              </div>
+            )}
+          </Link>
         </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-2">
+          {renderMenuItems(localCommandItems)}
+          {renderMenuItems(safeRouteItems)}
+          {renderMenuItems(communityItems)}
+          {renderMenuItems(monitoringItems)}
+        </div>
+
+        {(isExpanded || isHovered || isMobileOpen) && (
+          <div className="p-4 border-t border-white/5">
+            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">EOC Brgy Live</span>
+              </div>
+              <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">v.1.0.0 Stable</div>
+            </div>
+          </div>
+        )}
       </aside>
+
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1100] lg:hidden transition-opacity duration-300" 
+          onClick={toggleMobileSidebar} 
+        />
+      )}
     </>
   );
 };

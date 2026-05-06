@@ -203,11 +203,11 @@ const EmergencyRequestManagement: React.FC = () => {
         <div className="w-full">
           <h2 className="text-lg font-semibold mb-4">Emergency Request Form</h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
+            <div className="lg:col-span-1 bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Type of Emergency</label>
-                  <select className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  <select className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     value={type} onChange={e => setType(e.target.value)}>
                     <option>Accident</option>
                     <option>Fire</option>
@@ -218,7 +218,7 @@ const EmergencyRequestManagement: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Severity</label>
-                  <select className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={severity} onChange={e => setSeverity(e.target.value)}>
+                  <select className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={severity} onChange={e => setSeverity(e.target.value)}>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -229,7 +229,7 @@ const EmergencyRequestManagement: React.FC = () => {
                     <label className="block text-sm font-medium mb-1">Caller Name</label>
                     <div className="flex items-center gap-2">
                       <FiUser className="text-gray-500" />
-                      <input className={`flex-1 rounded-md bg-white dark:bg-gray-900 px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
+                      <input className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                         value={callerName} onChange={e => setCallerName(e.target.value)} />
                     </div>
                   </div>
@@ -237,7 +237,7 @@ const EmergencyRequestManagement: React.FC = () => {
                     <label className="block text-sm font-medium mb-1">Caller Contact</label>
                     <div className="flex items-center gap-2">
                       <FiPhone className="text-gray-500" />
-                      <input type="tel" className={`flex-1 rounded-md bg-white dark:bg-gray-900 px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerContact ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
+                      <input type="tel" className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerContact ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                         value={callerContact} onChange={e => setCallerContact(e.target.value)} placeholder="09xxxxxxxxx or +639xxxxxxxxx" />
                     </div>
                   </div>
@@ -245,11 +245,11 @@ const EmergencyRequestManagement: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Patient Details</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <input placeholder="Name" className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    <input placeholder="Name" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       value={patientName} onChange={e => setPatientName(e.target.value)} />
-                    <input placeholder="Age" type="number" className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    <input placeholder="Age" type="number" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       value={patientAge} onChange={e => setPatientAge(e.target.value ? Number(e.target.value) : '')} />
-                    <select className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    <select className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       value={patientGender} onChange={e => setPatientGender(e.target.value)}>
                       <option value="">Gender</option>
                       <option>Male</option>
@@ -263,7 +263,7 @@ const EmergencyRequestManagement: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Location Address</label>
                   <div className="flex items-center gap-2">
                     <FiMapPin className="text-gray-500" />
-                    <input className={`flex-1 rounded-md bg-white dark:bg-gray-900 px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.address ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
+                    <input className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.address ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                       value={address} onChange={e => setAddress(e.target.value)} />
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
@@ -289,7 +289,7 @@ const EmergencyRequestManagement: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Short Description</label>
-                  <textarea rows={4} className={`w-full rounded-md bg-white dark:bg-gray-900 px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.description ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
+                  <textarea rows={4} className={`w-full rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.description ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
                     value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
                 
@@ -300,7 +300,7 @@ const EmergencyRequestManagement: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 hover:shadow-md transition-shadow animate-pop">
+            <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow animate-pop">
               <div className="h-[360px] rounded-md overflow-hidden">
                 <MapContainer center={coords || [14.5995, 120.9842]} zoom={coords ? 15 : 12} zoomControl={false} style={{ height: '100%', width: '100%' }}>
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
@@ -327,7 +327,7 @@ const EmergencyRequestManagement: React.FC = () => {
             <h2 className="text-lg font-semibold">Emergency Requests</h2>
             {loading && <span className="text-sm text-gray-500">Loading…</span>}
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:shadow-md transition-shadow animate-pop">
+          <div className="bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow animate-pop">
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {incidents.length === 0 && (
                 <div className="p-4 text-sm text-gray-500">No requests found.</div>

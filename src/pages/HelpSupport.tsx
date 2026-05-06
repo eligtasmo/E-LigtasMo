@@ -5,11 +5,11 @@ import { FaQuestionCircle, FaEnvelope, FaPhone, FaExclamationTriangle } from 're
 const faqs = [
   {
     question: 'How do I report an incident?',
-    answer: 'Go to the Safe Route Planner or Incident Reporting section, fill out the form, and submit your report. Your barangay or admin will review it.'
+    answer: 'Go to the Safe Route Planner or Incident Reporting section, fill out the form, and submit your report. Your brgy or admin will review it.'
   },
   {
     question: 'How do I add or edit a shelter?',
-    answer: 'Admins and authorized barangay users can use the Shelter Management page to add, edit, or remove shelters. Residents can view available shelters only.'
+    answer: 'Admins and authorized brgy users can use the Shelter Management page to add, edit, or remove shelters. Residents can view available shelters only.'
   },
   {
     question: 'How do I export data?',
@@ -96,7 +96,7 @@ const HelpSupport: React.FC = () => (
       {/* Footer */}
       <div className="text-center">
         <div className="text-xs text-gray-500">
-          E-LIGTASMO &copy; {new Date().getFullYear()} | For urgent help, contact your barangay or admin.
+          E-LIGTASMO &copy; {new Date().getFullYear()} | For urgent help, contact your brgy or admin.
         </div>
       </div>
     </div>

@@ -61,7 +61,7 @@ const MiniMapPreview: React.FC<MiniMapPreviewProps> = ({ height = 220 }) => {
             longitude: 120.9842,
             zoom: 12
           }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapStyle="mapbox://styles/mapbox/light-v11"
           mapboxAccessToken={MAPBOX_TOKEN}
           style={{ height: "100%", width: "100%" }}
         >

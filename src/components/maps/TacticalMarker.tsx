@@ -39,7 +39,7 @@ export default function TacticalMarker({ latitude, longitude, type, status, onCl
   } else if (t === 'shelter') {
     bgColor = status === 'full' ? '#EF4444' : '#059669';
     icon = <FaShieldAlt className="text-white text-[12px]" />;
-  } else if (t === 'barangay' || t === 'hall' || t === 'outpost') {
+  } else if (t === 'brgy' || t === 'hall' || t === 'outpost') {
     bgColor = '#3B82F6';
     icon = <FaHome className="text-white text-[12px]" />;
   } else if (t === 'fire') {

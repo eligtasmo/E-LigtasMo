@@ -196,7 +196,7 @@ export default function ResidentHome() {
   const fetchAnnouncements = async () => {
     try {
       const role = (user?.role || 'resident').toLowerCase();
-      const brgy = (user as any)?.brgy_name || (user as any)?.barangay || '';
+      const brgy = (user as any)?.brgy_name || (user as any)?.brgy || '';
       let url = `list-announcements.php?audience=residents&limit=5`;
       if (brgy) {
         url += `&brgy=${encodeURIComponent(brgy)}`;
@@ -371,36 +371,41 @@ export default function ResidentHome() {
         </div>
 
         {/* Announcements Bar */}
-        <div className="bg-gray-900 p-3 sm:p-4 border-t border-gray-800 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-amber-200">Announcements</h2>
+        <div className="bg-white p-6 border border-gray-100 rounded-3xl shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+            <FaBullhorn size={80} />
+          </div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em]">Announcements</h2>
             {((auth?.user?.role || '').toLowerCase() === 'admin' || (auth?.user?.role || '').toLowerCase() === 'brgy') ? (
-              <Link to={(auth?.user?.role || '').toLowerCase() === 'admin' ? '/admin/announcements' : '/announcements'} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-md text-xs font-medium">
+              <Link to={(auth?.user?.role || '').toLowerCase() === 'admin' ? '/admin/announcements' : '/announcements'} className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all shadow-lg shadow-blue-600/20">
                 <FaBullhorn size={14} /> Manage
               </Link>
             ) : (
-              <Link to="/announcements" className="inline-flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 px-2.5 py-1.5 rounded-md text-xs font-medium">
+              <Link to="/announcements" className="inline-flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all border border-gray-200">
                 <FaBullhorn size={14} /> View All
               </Link>
             )}
           </div>
-          <div className="mt-2 space-y-1.5">
+          <div className="space-y-3">
             {(announcements && announcements.length > 0) ? (
               (() => {
                 const a = announcements[0];
                 return (
-                  <div className="flex items-start gap-2 bg-amber-900/30 border border-amber-700 rounded-lg p-2">
-                    <FaBullhorn className="text-amber-300" size={14} />
-                    <div className="flex-1">
-                      <div className="text-xs font-semibold text-amber-100">{a.title}</div>
-                      <div className="text-[11px] text-amber-100/90 line-clamp-2">{a.message}</div>
+                  <div className="flex items-start gap-4 bg-gray-50 border border-gray-100 rounded-2xl p-5 group hover:bg-white hover:shadow-lg transition-all duration-300">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100 shrink-0">
+                      <FaBullhorn className="text-blue-600" size={16} />
                     </div>
-                    <div className="text-[10px] text-amber-200/70 mt-0.5 whitespace-nowrap">{new Date(a.created_at || a.date).toLocaleString()}</div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-gray-900">{a.title}</div>
+                      <div className="text-xs text-gray-500 font-medium mt-1 line-clamp-2">{a.message}</div>
+                    </div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 whitespace-nowrap">{new Date(a.created_at || a.date).toLocaleDateString()}</div>
                   </div>
                 );
               })()
             ) : (
-              <div className="text-xs text-amber-100/80">No announcements yet.</div>
+              <div className="text-xs text-gray-400 font-bold uppercase tracking-widest text-center py-4">No announcements yet.</div>
             )}
           </div>
         </div>
@@ -544,25 +549,32 @@ export default function ResidentHome() {
 
           <div className="lg:col-span-4 space-y-6">
             <h3 className="text-xl font-black text-black">Risk Analysis</h3>
-            <div className="bento-card p-8 bg-black text-white border-0 shadow-2xl shadow-black/20">
-              <div className="flex items-center justify-between mb-8">
-                <span className="text-sm font-bold opacity-60 uppercase tracking-widest leading-none">Overall Risk</span>
-                <span className="text-xs font-black bg-white/20 px-3 py-1.5 rounded-full uppercase tracking-widest">{riskLevel.label}</span>
+            <div className="bento-card p-8 bg-white border border-gray-100 shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white opacity-50 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-8">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Overall Risk</span>
+                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${
+                    riskLevel.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : 
+                    riskLevel.color === 'amber' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                    'bg-green-50 text-green-600 border-green-100'
+                  }`}>{riskLevel.label}</span>
+                </div>
+                <div className="text-7xl font-black tracking-tighter mb-4 text-gray-900 group-hover:scale-105 transition-transform duration-500">{riskScore}</div>
+                <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden mb-6 relative">
+                   <div 
+                     className={`h-full transition-all duration-1000 ease-out ${
+                       riskLevel.color === 'red' ? 'bg-red-500' : 
+                       riskLevel.color === 'amber' ? 'bg-orange-500' : 
+                       'bg-green-500'
+                     }`}
+                     style={{ width: `${riskScore}%` }}
+                   />
+                </div>
+                <p className="text-sm font-bold text-gray-600 leading-relaxed">
+                  {riskDrivers || 'Your area is currently safe with low reported activity.'}
+                </p>
               </div>
-              <div className="text-7xl font-black tracking-tighter mb-4">{riskScore}</div>
-              <div className="h-4 w-full bg-white/10 rounded-full overflow-hidden mb-6 relative">
-                 <div 
-                   className={`h-full transition-all duration-1000 ease-out ${
-                     riskLevel.color === 'red' ? 'bg-red-500' : 
-                     riskLevel.color === 'amber' ? 'bg-orange-500' : 
-                     'bg-green-500'
-                   }`}
-                   style={{ width: `${riskScore}%` }}
-                 />
-              </div>
-              <p className="text-sm font-medium opacity-80 leading-relaxed">
-                {riskDrivers || 'Your area is currently safe with low reported activity.'}
-              </p>
             </div>
           </div>
         </div>

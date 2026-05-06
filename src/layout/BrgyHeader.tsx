@@ -18,12 +18,12 @@ const BrgyHeader: React.FC = () => {
   };
 
   const navigationItems = [
-    { name: 'Dashboard', path: '/barangay', icon: <FiHome size={18} /> },
-    { name: 'Shelters', path: '/barangay/shelters', icon: <FiShield size={18} /> },
-    { name: 'Residents', path: '/barangay/residents', icon: <FiUsers size={18} /> },
-    { name: 'Reports', path: '/barangay/reports', icon: <FiBarChart size={18} /> },
-    { name: 'Incidents', path: '/barangay/incidents', icon: <FiAlertTriangle size={18} /> },
-    { name: 'Routes', path: '/barangay/routes', icon: <FiMap size={18} /> }
+    { name: 'Dashboard', path: '/brgy', icon: <FiHome size={18} /> },
+    { name: 'Shelters', path: '/brgy/shelters', icon: <FiShield size={18} /> },
+    { name: 'Residents', path: '/brgy/residents', icon: <FiUsers size={18} /> },
+    { name: 'Reports', path: '/brgy/reports', icon: <FiBarChart size={18} /> },
+    { name: 'Incidents', path: '/brgy/incidents', icon: <FiAlertTriangle size={18} /> },
+    { name: 'Routes', path: '/brgy/routes', icon: <FiMap size={18} /> }
   ];
 
   return (
@@ -44,7 +44,7 @@ const BrgyHeader: React.FC = () => {
             </button>
             
             {/* Logo for mobile */}
-            <Link to="/barangay" className="lg:hidden">
+            <Link to="/brgy" className="lg:hidden">
               <img className="h-8 dark:hidden" src="./images/logo/logo.svg" alt="E-LigtasMo" />
               <img className="h-8 hidden dark:block" src="./images/logo/logo-dark.svg" alt="E-LigtasMo" />
             </Link>

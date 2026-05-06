@@ -100,7 +100,7 @@ const emergencyContacts: EmergencyContact[] = [
 // Interface is kept for reference but wrapped in comments to avoid linter warnings.
 /* interface BarangayCoordinator {
   id: number;
-  barangay_name: string;
+  brgy_name: string;
   city: string;
   province: string;
   coordinator_name: string;
@@ -116,10 +116,10 @@ const emergencyContacts: EmergencyContact[] = [
 
 // NOTE: Barangay coordinators are displayed in their dedicated page/sidebar now.
 // Keeping the type for potential future imports, but removing the unused dataset.
-/* const barangayCoordinators: BarangayCoordinator[] = [
+/* const brgyCoordinators: BarangayCoordinator[] = [
   {
     id: 1,
-    barangay_name: "Bagumbayan",
+    brgy_name: "Bagumbayan",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Juan Dela Cruz",
@@ -134,7 +134,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 2,
-    barangay_name: "Bambang",
+    brgy_name: "Bambang",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Maria Santos",
@@ -149,7 +149,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 3,
-    barangay_name: "Calzada",
+    brgy_name: "Calzada",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Pedro Reyes",
@@ -164,7 +164,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 4,
-    barangay_name: "Hagonoy",
+    brgy_name: "Hagonoy",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Ana Garcia",
@@ -179,7 +179,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 5,
-    barangay_name: "Ibayo-Tipas",
+    brgy_name: "Ibayo-Tipas",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Roberto Mendoza",
@@ -194,7 +194,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 6,
-    barangay_name: "Ligid-Tipas",
+    brgy_name: "Ligid-Tipas",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Carmen Lopez",
@@ -209,7 +209,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 7,
-    barangay_name: "Lower Bicutan",
+    brgy_name: "Lower Bicutan",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Fernando Torres",
@@ -224,7 +224,7 @@ const emergencyContacts: EmergencyContact[] = [
   },
   {
     id: 8,
-    barangay_name: "New Lower Bicutan",
+    brgy_name: "New Lower Bicutan",
     city: "Taguig",
     province: "Metro Manila",
     coordinator_name: "Isabel Rodriguez",

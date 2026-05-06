@@ -17,8 +17,8 @@ import HazardManagementPanel from './HazardManagementPanel';
 import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
-const MAPBOX_NAV_DAY = 'mapbox://styles/mapbox/navigation-day-v1';
-const MAPBOX_NAV_NIGHT = 'mapbox://styles/mapbox/navigation-night-v1';
+const MAPBOX_NAV_DAY = 'mapbox://styles/mapbox/light-v11';
+const MAPBOX_NAV_NIGHT = 'mapbox://styles/mapbox/light-v11';
 
 function bearingDegrees(from: [number, number], to: [number, number]) {
   const [lng1, lat1] = from;
@@ -172,7 +172,7 @@ const speedMps: Record<string, number> = {
 type AccessPolygon = {
   id: number;
   name?: string | null;
-  barangay?: string | null;
+  brgy?: string | null;
   polygon: Array<[number, number]>; // [lat,lng] points forming a polygon
   allowedVehicles: string[] | string; // e.g., ['driving-car','cycling-regular','driving-hgv','foot-walking'] or "car,bike"
   status?: 'active' | 'inactive';
@@ -802,7 +802,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
   const { viewport: viewState, setViewport: setViewState, updateViewport } = useGlobalMapContext();
   const [mapStyle, setMapStyle] = useState<string>(MAPBOX_NAV_DAY);
   const [navMode, setNavMode] = useState(false);
-  const [enable3d, setEnable3d] = useState(false);
+  const [enable3d, setEnable3d] = useState(true);
   const [state, dispatch] = useReducer(routeReducer, initialState);
   const { status, data: route, error } = state;
   const [speedKmh, setSpeedKmh] = useState<number>(0);
@@ -958,7 +958,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
         reporter: (h as any).reporter || (h as any).reported_by,
         contact: (h as any).contact,
         email: (h as any).email,
-        barangay: (h as any).barangay,
+        brgy: (h as any).brgy,
         allowed_modes: (h as any).allowed_modes,
       };
       if (a.type === 'Feature' && a.geometry) {
@@ -983,7 +983,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
       try {
         const [dzRes, apRes, shRes] = await Promise.all([
           apiFetch('list-danger-zones.php'),
-          apiFetch(`list-access-polygons.php?status=active${user?.role === 'brgy' ? `&barangay=${user.brgy_name}` : ''}`),
+          apiFetch(`list-access-polygons.php?status=active${user?.role === 'brgy' ? `&brgy=${user.brgy_name}` : ''}`),
           apiFetch('shelters-list.php')
         ]);
         const dzData = await dzRes.json();
@@ -1222,7 +1222,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
     const coords = route?.routes?.[selectedRouteIndex]?.geometry?.coordinates;
     if (!coords || coords.length < 2) return;
     const b = bearingDegrees(coords[0], coords[1]);
-    updateViewport({ bearing: b, pitch: enable3d ? 60 : 0, zoom: Math.max(viewState.zoom, 16) });
+    updateViewport({ bearing: b, pitch: 0, zoom: Math.max(viewState.zoom, 16) });
     setMapStyle(MAPBOX_NAV_DAY);
   }, [navMode, route, selectedRouteIndex, enable3d]);
 
@@ -1279,7 +1279,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
           latitude: lat,
           longitude: lng,
           bearing: h,
-          pitch: enable3d ? 60 : 0,
+          pitch: 0,
           zoom: Math.max(viewState.zoom, 16),
         });
       },
@@ -1593,7 +1593,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
                         ...hazard,
                         severity: severityDb,
                         area_geojson: area,
-                        barangay: user?.brgy_name || '',
+                        brgy: user?.brgy_name || '',
                         reportedBy: hazard.reportedBy || user?.full_name || user?.username || 'Barangay',
                         reporter: hazard.reporter || user?.full_name || user?.username || 'Barangay',
                         location: hazard.location || user?.brgy_name || '',
@@ -1797,23 +1797,10 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
             {...viewState}
             onMove={(e: any) => setViewState(e.viewState)}
             onLoad={(e: any) => {
-              try {
-                const map = e?.target?.getMap?.();
-                if (!map) return;
-                if (enable3d) {
-                  if (!map.getSource('mapbox-dem')) {
-                    map.addSource('mapbox-dem', {
-                      type: 'raster-dem',
-                      url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                      tileSize: 512,
-                      maxzoom: 14,
-                    } as any);
-                  }
-                  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.25 } as any);
-                } else {
-                  map.setTerrain(null as any);
-                }
-              } catch {}
+              const map = e?.target?.getMap?.();
+              if (map) {
+                map.setTerrain(null);
+              }
             }}
             onIdle={(e: any) => {
               try {
@@ -2154,33 +2141,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
 
             {null}
 
-            {enable3d ? (
-              <Layer
-                id="3d-buildings"
-                source="composite"
-                source-layer="building"
-                filter={['==', 'extrude', 'true']}
-                type="fill-extrusion"
-                minzoom={15}
-                paint={{
-                  'fill-extrusion-color': '#9ca3af',
-                  'fill-extrusion-height': ['get', 'height'],
-                  'fill-extrusion-base': ['get', 'min_height'],
-                  'fill-extrusion-opacity': 0.55,
-                }}
-              />
-            ) : null}
-            {enable3d ? (
-              <Layer
-                id="sky"
-                type="sky"
-                paint={{
-                  'sky-type': 'atmosphere',
-                  'sky-atmosphere-sun': [0, 0],
-                  'sky-atmosphere-sun-intensity': 15,
-                }}
-              />
-            ) : null}
+            {/* 3D layers removed for unified 2D light theme */}
 
             {/* Start Marker */}
             {panelTab === 'planner' && start ? (

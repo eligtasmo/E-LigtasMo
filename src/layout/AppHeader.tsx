@@ -57,28 +57,12 @@ const AppHeader: React.FC = () => {
   const role = (user?.role || 'resident').toLowerCase();
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[64px] flex items-center z-[1300] bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm font-outfit">
+    <header className="h-[64px] flex items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm font-jetbrains w-full">
       <div className="w-full px-4 lg:px-6">
         <div className="flex items-center justify-between h-full">
-          {/* Left side - Logo & Tactical Toggle */}
+          {/* Left side - Tactical Toggle (Removed per user request) */}
           <div className="flex items-center gap-5">
-            <button
-              onClick={toggleSidebar}
-              className="group flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-black dark:hover:bg-white transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-black dark:hover:border-white"
-            >
-              <FiMenu className="w-5 h-5 text-gray-500 group-hover:text-white dark:group-hover:text-black transition-colors" />
-              <span className="hidden sm:inline text-[10px] font-bold tracking-wider text-gray-400 group-hover:text-white dark:group-hover:text-black">Menu</span>
-            </button>
-            
-            <Link to={role === 'admin' ? '/admin' : role === 'brgy' ? '/brgy' : '/'} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg shadow-blue-600/20 flex items-center justify-center transition-transform group-hover:scale-105 active:scale-95">
-                <img src="/images/logo/logo-icon.png" alt="Logo" className="w-7 h-7 brightness-0 invert" />
-              </div>
-              <div className="hidden md:flex flex-col leading-none">
-                <span className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">E-LigtasMo</span>
-                <span className="text-[10px] font-semibold text-blue-500 tracking-wide">{role === 'admin' ? 'MDRRMO HQ' : 'Brgy Command'}</span>
-              </div>
-            </Link>
+            {/* Menu and branding removed */}
           </div>
 
           {/* Center: PH Time Clock */}

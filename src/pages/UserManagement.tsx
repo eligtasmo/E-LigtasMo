@@ -17,8 +17,8 @@ interface User {
 }
 
 interface BrgyAccountRow {
-  barangay_id: number;
-  barangay_name: string;
+  brgy_id: number;
+  brgy_name: string;
   lat: any;
   lng: any;
   address: string;
@@ -97,7 +97,7 @@ const UserManagement: React.FC = () => {
   };
 
   const fetchBrgyAccounts = async () => {
-    if (isBrgy) return; // Don't fetch for barangay users
+    if (isBrgy) return; // Don't fetch for brgy users
     setBrgyLoading(true);
     setBrgyError("");
     try {
@@ -120,10 +120,10 @@ const UserManagement: React.FC = () => {
         setBrgyLoading(false);
         return;
       }
-      if (data.success && Array.isArray(data.barangays)) {
-        setBrgyAccounts(data.barangays);
+      if (data.success && Array.isArray(data.brgys)) {
+        setBrgyAccounts(data.brgys);
       } else {
-        setBrgyError(data.message || "Failed to fetch barangay accounts");
+        setBrgyError(data.message || "Failed to fetch brgy accounts");
       }
     } catch (err) {
       setBrgyError("Server error. Please try again later.");
@@ -164,8 +164,8 @@ const UserManagement: React.FC = () => {
   const pendingUsers = users.filter(u => u.status === "pending");
   const otherUsers = users.filter(u => u.status !== "pending");
 
-  // Get unique barangays, roles, statuses for dropdowns
-  const barangays = Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean)));
+  // Get unique brgys, roles, statuses for dropdowns
+  const brgys = Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean)));
   const roles = Array.from(new Set(users.map(u => u.role).filter(Boolean)));
   const statuses = Array.from(new Set(users.map(u => u.status).filter(Boolean)));
 
@@ -182,7 +182,7 @@ const UserManagement: React.FC = () => {
   });
 
   return (
-    <div className="w-full font-outfit">
+    <div className="w-full font-jetbrains">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -207,20 +207,20 @@ const UserManagement: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
               <div className="flex gap-2">
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'approvals' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'approvals' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                   onClick={() => setActiveTab('approvals')}
                 >
                   Approvals {pendingUsers.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full">{pendingUsers.length}</span>}
                 </button>
 
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'users' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'users' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                   onClick={() => setActiveTab('users')}
                 >
                   All Users
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium text-sm focus:outline-none transition-all duration-200 ${activeTab === 'brgyAccounts' ? 'bg-[#1E3A8A] text-white shadow-lg shadow-blue-900/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'brgyAccounts' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                   onClick={() => setActiveTab('brgyAccounts')}
                 >
                   Barangay Accounts
@@ -356,7 +356,7 @@ const UserManagement: React.FC = () => {
                 disabled={isBrgy}
               >
                 <option value="">{isBrgy ? filterBrgy : 'All Barangays'}</option>
-                {!isBrgy && barangays.map(b => <option key={b} value={b}>{b}</option>)}
+                {!isBrgy && brgys.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               {!isBrgy && (
                 <>
@@ -386,7 +386,7 @@ const UserManagement: React.FC = () => {
             <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-semibold text-[#0A192F]">Pending Approvals</h2>
-                <p className="text-xs text-gray-500">Accounts waiting for validation from {isBrgy ? user?.brgy_name : 'all barangays'}.</p>
+                <p className="text-xs text-gray-500">Accounts waiting for validation from {isBrgy ? user?.brgy_name : 'all brgys'}.</p>
               </div>
               <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
                 {filteredUsers.length} total
@@ -540,7 +540,7 @@ const UserManagement: React.FC = () => {
           <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
             <div className="p-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Barangay Accounts</h2>
-              <p className="text-xs text-gray-500 mt-1">List of barangays and their linked barangay user accounts.</p>
+              <p className="text-xs text-gray-500 mt-1">List of brgys and their linked brgy user accounts.</p>
             </div>
             <div className="overflow-x-auto">
               {brgyError && (
@@ -565,11 +565,11 @@ const UserManagement: React.FC = () => {
                   {brgyLoading ? (
                     <tr><td colSpan={8} className="text-center p-4 text-gray-500">Loading...</td></tr>
                   ) : brgyAccounts.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center p-4 text-gray-500">No barangays found.</td></tr>
+                    <tr><td colSpan={8} className="text-center p-4 text-gray-500">No brgys found.</td></tr>
                   ) : (
                     brgyAccounts.map(row => (
-                      <tr key={row.barangay_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.barangay_name || "N/A"}</td>
+                      <tr key={row.brgy_id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 text-sm text-gray-900">{row.brgy_name || "N/A"}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{row.address || "N/A"}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">{row.contact || "-"}</td>
                         <td className="px-4 py-3 text-sm text-gray-900">

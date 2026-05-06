@@ -23,7 +23,7 @@ const SANTA_CRUZ_BOUNDS: L.LatLngBoundsExpression = [
   [14.35, 121.50]  // Northeast coordinates
 ];
 
-const barangays = [
+const brgys = [
   "Alipit", "Bagumbayan", "Bubukal", "Calios", "Duhat", 
   "Gatid", "Jasaan", "Labuin", "Malinao", "Oogong", 
   "Pagsawitan", "Palasan", "Patimbao", "Poblacion I", 
@@ -102,7 +102,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    barangay: "",
+    brgy: "",
     city: "Santa Cruz",
     province: "Laguna",
     fullName: "",
@@ -215,7 +215,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
   /* ── Step navigation ── */
   const handleNextFromLocation = () => {
     setError("");
-    if (!form.barangay) { setError("Please select a Barangay."); return; }
+    if (!form.brgy) { setError("Please select a Barangay."); return; }
     if (!form.city) { setError("Please select a City/Municipality."); return; }
     setStep(step + 1);
   };
@@ -245,7 +245,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
       username: form.username,
       password: form.password,
       full_name: form.fullName,
-      brgy_name: mode === 'brgy' ? form.barangay : (form.barangay || ''),
+      brgy_name: mode === 'brgy' ? form.brgy : (form.brgy || ''),
       city: mode === 'brgy' ? form.city : (form.city || ''),
       province: mode === 'brgy' ? form.province : (form.province || ''),
       email: form.email,
@@ -305,7 +305,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
           </h1>
           <p className="text-sm text-gray-400 dark:text-gray-400 leading-relaxed">
             {isEmailStep && "Fill in the registration data. It will take a couple of minutes. All you need is your e-mail."}
-            {isLocationStep && "Select your barangay and location details."}
+            {isLocationStep && "Select your brgy and location details."}
             {isMapStep && "Pin the exact location of your Barangay Hall on the map."}
             {isAccountStep && "Create your account credentials."}
           </p>
@@ -440,10 +440,10 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
               <div className="flex gap-2">
                 <div className="w-1/2">
                   <Label>Barangay <span className="text-error-500">*</span></Label>
-                  <select name="barangay" value={form.barangay} onChange={handleChange} required
+                  <select name="brgy" value={form.brgy} onChange={handleChange} required
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
                     <option value="">Select Barangay</option>
-                    {barangays.map(b => <option key={b} value={b}>{b}</option>)}
+                    {brgys.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div className="w-1/2">

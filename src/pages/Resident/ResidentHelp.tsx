@@ -17,7 +17,7 @@ const residentFaqs = [
   },
   {
     question: 'How do I see public announcements?',
-    answer: 'Visit the Announcements page to read official alerts and updates from admins and barangay.'
+    answer: 'Visit the Announcements page to read official alerts and updates from admins and brgy.'
   },
 ];
 
@@ -131,7 +131,7 @@ const ResidentHelp = () => {
         {/* Footer */}
         <div className="text-center">
           <div className="text-xs text-gray-500">
-            E-LIGTASMO &copy; {new Date().getFullYear()} | For urgent help, contact your barangay or admin.
+            E-LIGTASMO &copy; {new Date().getFullYear()} | For urgent help, contact your brgy or admin.
           </div>
         </div>
       </div>

@@ -12,9 +12,9 @@ const ResidentProtectedRoute = ({ children }: { children: ReactNode }) => {
   const role = user.role?.toLowerCase();
   
   if (role === "admin") return <Navigate to="/admin" replace />;
-  if (role === "brgy") return <Navigate to="/barangay" replace />;
+  if (role === "brgy") return <Navigate to="/brgy" replace />;
   
-  // If role is resident, restrict web access
+  // If role is resident, restrict web access entirely for the browser version
   return <Navigate to="/access-restricted" replace />;
 };
 

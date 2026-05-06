@@ -8,7 +8,7 @@ const SignIn = () => {
     <>
       <PageMeta
         title="Sign In | E-LigtasMo Tactical"
-        description="Secure access for E-LigtasMo administrators and barangay personnel."
+        description="Secure access for E-LigtasMo administrators and brgy personnel."
       />
       <div className="w-full max-w-lg mx-auto">
         <div className="w-full mt-2">

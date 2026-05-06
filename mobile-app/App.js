@@ -466,7 +466,12 @@ const linking = {
       Shelters: 'shelters',
       HazardMap: 'hazard-map',
       FloodHistory: 'flood-history',
-      ReportDetails: 'report-details',
+      ReportDetails: {
+        path: 'report-details/:reportId',
+        parse: {
+          reportId: (id) => id
+        }
+      },
       Settings: 'settings',
       Weather: 'weather',
       EditProfile: 'edit-profile',

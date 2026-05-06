@@ -24,7 +24,7 @@ interface UnifiedIncident {
   status: string;
   description: string;
   time: string;
-  barangay: string;
+  brgy: string;
   reporter: string;
   location_text: string;
   media_urls: string[];
@@ -84,7 +84,7 @@ const TacticalApprovalDashboard: React.FC = () => {
       
       const data = await res.json();
       if (data.success || data.id) {
-        toast.success(`SEVERITY_TRIAGE: ${newSeverity.toUpperCase()}`);
+        toast.success(`Severity Updated: ${newSeverity}`);
         setIsEditingSeverity(false);
         fetchIncidents();
         if (selectedIncident) setSelectedIncident({...selectedIncident, severity: newSeverity});
@@ -92,7 +92,7 @@ const TacticalApprovalDashboard: React.FC = () => {
         toast.error(data.error || "Update rejected");
       }
     } catch (err) {
-      toast.error("Comms failure during triage");
+      toast.error("Comms failure during update");
     } finally {
       setActionLoading(null);
     }
@@ -192,7 +192,7 @@ const TacticalApprovalDashboard: React.FC = () => {
 
   return (
     <MapProvider>
-      <div className="h-[calc(100vh-72px)] w-full bg-[#0f0f11] text-white overflow-hidden font-mono flex">
+      <div className="h-[calc(100vh-72px)] w-full bg-white text-gray-900 overflow-hidden font-jetbrains flex">
         {/* Main View: Map (Left) */}
         <div className="flex-1 relative h-full">
           <MapboxMap
@@ -200,7 +200,9 @@ const TacticalApprovalDashboard: React.FC = () => {
             onMove={(evt: any) => setViewState(evt.viewState)}
             onLoad={(e: any) => setMapInstance(e.target)}
             mapboxAccessToken={MAPBOX_TOKEN}
-            mapStyle="mapbox://styles/mapbox/streets-v12"
+            mapStyle="mapbox://styles/mapbox/light-v11"
+            pitch={0}
+            bearing={0}
             style={{ width: '100%', height: '100%' }}
           >
             {incidents.filter(inc => (inc.status || '').toUpperCase() !== 'REJECTED').map(inc => (
@@ -222,31 +224,31 @@ const TacticalApprovalDashboard: React.FC = () => {
 
           {/* Overlay Branding */}
           <div className="absolute top-6 left-6 z-10">
-            <div className="px-4 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 flex items-center gap-3">
+            <div className="px-4 py-2 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 flex items-center gap-3 shadow-xl">
               <div className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">TACTICAL_OVERSIGHT_ACTIVE</span>
+              <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">TACTICAL_OVERSIGHT_ACTIVE</span>
             </div>
           </div>
         </div>
 
         {/* Unified Command Sidebar (Right) */}
-        <div className="w-[400px] flex flex-col bg-[#1c1c1e] z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)] h-full shrink-0 border-l border-white/5 overflow-hidden">
+        <div className="w-[400px] flex flex-col bg-gray-50 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] h-full shrink-0 border-l border-gray-100 overflow-hidden">
           {selectedIncident ? (
             /* Inspection Node View (Replaces Feed) */
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-              <div className="p-4 border-b border-white/5 relative bg-[#2c2c2e]">
+              <div className="p-4 border-b border-gray-100 relative bg-gray-50">
                 <button 
                   onClick={() => setSelectedIncident(null)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition-all border border-white/5"
+                  className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-all border border-gray-200 shadow-sm"
                 >
                   <FaTimes size={14} />
                 </button>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
-                  <h2 className="text-[#f59e0b] font-black text-base tracking-tighter uppercase italic">Inspection_Node</h2>
+                  <h2 className="text-[#f59e0b] font-bold text-base tracking-tight">Inspection Node</h2>
                 </div>
-                <p className="text-gray-500 text-[8px] tracking-[0.2em] font-black uppercase mt-0.5">
-                  Ref_ID: {selectedIncident.id}
+                <p className="text-gray-400 text-[8px] tracking-tight font-bold mt-0.5">
+                  Ref Id: {selectedIncident.id}
                 </p>
               </div>
 
@@ -254,7 +256,7 @@ const TacticalApprovalDashboard: React.FC = () => {
                 {/* Evidence Carousel */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-[8px] text-gray-500 uppercase font-black tracking-[0.2em]">Evidence_Visuals</span>
+                    <span className="text-[8px] text-gray-500 font-bold tracking-tight uppercase">Evidence Visuals</span>
                     <div className="flex gap-1">
                       <button 
                         onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : selectedIncident.media_urls.length - 1))}
@@ -272,7 +274,7 @@ const TacticalApprovalDashboard: React.FC = () => {
                   </div>
                   
                   {selectedIncident.media_urls.length > 0 ? (
-                    <div className="aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/5 relative group shadow-2xl">
+                    <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative group shadow-lg">
                       <img 
                         src={selectedIncident.media_urls[currentImageIndex].startsWith('data:') 
                           ? selectedIncident.media_urls[currentImageIndex] 
@@ -280,12 +282,12 @@ const TacticalApprovalDashboard: React.FC = () => {
                         alt="Incident Evidence" 
                         className="w-full h-full object-cover" 
                       />
-                      <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-[#f59e0b] border border-white/10">
+                      <div className="absolute bottom-3 right-3 px-2 py-1 bg-white/80 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-[#f59e0b] border border-gray-200 shadow-sm">
                         {currentImageIndex + 1}/{selectedIncident.media_urls.length}
                       </div>
                     </div>
                   ) : (
-                    <div className="aspect-video rounded-2xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center text-gray-700">
+                    <div className="aspect-video rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
                       <FaCamera size={24} className="mb-2 opacity-10" />
                       <span className="text-[9px] font-black tracking-widest uppercase opacity-40">Zero_Visual_Intel</span>
                     </div>
@@ -294,9 +296,9 @@ const TacticalApprovalDashboard: React.FC = () => {
 
                 {/* Data Grid */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner group relative">
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm group relative">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block">Severity</span>
+                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block">Severity</span>
                       <button 
                         onClick={() => setIsEditingSeverity(!isEditingSeverity)}
                         className="text-[8px] text-[#f59e0b] hover:underline font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
@@ -313,7 +315,7 @@ const TacticalApprovalDashboard: React.FC = () => {
                             className={`flex-1 py-1 rounded text-[8px] font-black uppercase transition-all ${
                               selectedIncident.severity === s 
                               ? getSeverityStyle(s)
-                              : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                              : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
                             }`}
                           >
                             {s}
@@ -326,26 +328,26 @@ const TacticalApprovalDashboard: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
-                    <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block mb-1">Type</span>
-                    <p className="text-xs font-black text-white uppercase">{selectedIncident.type}</p>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                    <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block mb-1">Type</span>
+                    <p className="text-xs font-black text-gray-900 uppercase">{selectedIncident.type}</p>
                   </div>
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/5 col-span-2 flex items-center gap-4 shadow-inner">
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 col-span-2 flex items-center gap-4 shadow-sm">
                     <div className="w-10 h-10 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center border border-[#f59e0b]/20 shrink-0">
                       <FaUser className="text-[#f59e0b] text-sm" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
-                      <p className="text-xs font-black text-white uppercase truncate">{selectedIncident.reporter || 'Anonymous'}</p>
+                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
+                      <p className="text-xs font-black text-gray-900 uppercase truncate">{selectedIncident.reporter || 'Anonymous'}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Field Notes */}
-                <div className="p-5 bg-white/5 rounded-2xl border border-white/5 relative overflow-hidden shadow-inner">
+                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden shadow-sm">
                   <div className="absolute top-0 left-0 w-1 h-full bg-[#f59e0b] opacity-40" />
-                  <span className="text-[7px] text-gray-500 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
-                  <p className="text-[11px] text-gray-400 leading-relaxed font-medium italic">
+                  <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
+                  <p className="text-[11px] text-gray-600 leading-relaxed font-bold italic">
                     "{selectedIncident.description || 'No additional field intelligence recorded for this sector.'}"
                   </p>
                 </div>
@@ -356,7 +358,7 @@ const TacticalApprovalDashboard: React.FC = () => {
                     <div className="flex bg-[#f59e0b] rounded-2xl overflow-hidden divide-x divide-black/10 border border-[#f59e0b] shadow-2xl">
                       <button 
                         onClick={() => {
-                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/barangay/report-incident';
+                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
                           navigate(path, { state: { prefill: selectedIncident, isVerify: true } });
                         }}
                         className="flex-1 py-5 flex flex-col items-center justify-center hover:bg-black/5 transition-all group"
@@ -389,18 +391,18 @@ const TacticalApprovalDashboard: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => {
-                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/barangay/report-incident';
+                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
                           navigate(path, { state: { prefill: selectedIncident, isEdit: true } });
                         }}
-                        className="px-6 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all flex flex-col items-center justify-center gap-1 group border border-white/5 shadow-xl"
+                        className="px-6 py-5 bg-white hover:bg-gray-50 text-gray-700 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all flex flex-col items-center justify-center gap-1 group border border-gray-200 shadow-lg"
                       >
-                        <FiMaximize2 className="text-white text-xl group-hover:scale-110 transition-transform" />
-                        MODIFY
+                        <FiMaximize2 className="text-gray-400 text-xl group-hover:scale-110 transition-transform" />
+                        Modify Severity
                       </button>
                     </div>
                   ) : (
-                    <div className="py-5 text-center border border-white/5 rounded-2xl bg-white/5 shadow-inner">
-                      <span className="text-[9px] text-gray-500 uppercase font-black tracking-[0.3em]">ARCHIVED_LOG</span>
+                    <div className="py-5 text-center border border-gray-100 rounded-2xl bg-gray-50 shadow-inner">
+                      <span className="text-[9px] text-gray-500 font-bold tracking-tight">Archived Log</span>
                     </div>
                   )}
                 </div>
@@ -409,18 +411,19 @@ const TacticalApprovalDashboard: React.FC = () => {
           ) : (
             /* Tactical Feed View */
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-              <div className="p-6 space-y-4 shrink-0">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 relative bg-gray-100/50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-xl font-black tracking-tighter text-[#f59e0b]">OPERATIONAL_COMMAND</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-[#f59e0b]">Operational Command</h1>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Live Tactical Stream</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-[10px] text-gray-400 tracking-tight font-bold">Live Tactical Stream</span>
                     </div>
                   </div>
                   <button 
                     onClick={fetchIncidents}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all active:scale-90"
+                    className="p-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 transition-all active:scale-90 shadow-sm"
                     disabled={loading}
                   >
                     <FiRefreshCw className={`text-gray-400 ${loading ? 'animate-spin' : ''}`} />
@@ -428,43 +431,43 @@ const TacticalApprovalDashboard: React.FC = () => {
                 </div>
 
                 <div className="relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
                   <input 
                     type="text" 
-                    placeholder="SEARCH_TACTICAL_DATA..."
-                    className="w-full bg-[#2c2c2e] border-0 rounded-2xl py-3 pl-12 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/20 placeholder-gray-600 transition-all"
+                    placeholder="Search tactical data..."
+                    className="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/10 placeholder-gray-400 transition-all font-bold"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
 
-                <div className="flex p-1 bg-black/20 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+                <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-200 overflow-x-auto no-scrollbar">
                   {(['PENDING', 'ACTIVE', 'RESOLVED', 'REJECTED'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-[9px] font-black tracking-widest transition-all whitespace-nowrap ${
+                      className={`flex-1 py-2 px-3 rounded-xl text-[9px] font-bold tracking-tight transition-all whitespace-nowrap ${
                         activeTab === tab 
                         ? 'bg-[#f59e0b] text-black shadow-lg shadow-[#f59e0b]/20' 
-                        : 'text-gray-500 hover:text-gray-300'
+                        : 'text-gray-400 hover:text-gray-600'
                       }`}
                     >
-                      {tab}
+                      {tab.charAt(0) + tab.slice(1).toLowerCase()}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-black/10">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-gray-50/50">
                 {loading && incidents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-600 gap-4">
                     <FaSpinner className="animate-spin text-xl" />
-                    <span className="text-[9px] tracking-widest uppercase">Syncing Tactical Link...</span>
+                    <span className="text-[9px] font-bold tracking-tight">Syncing tactical link...</span>
                   </div>
                 ) : filteredIncidents.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-700 opacity-30">
                     <FaInfoCircle className="text-3xl mb-3" />
-                    <span className="text-[10px] font-black tracking-widest uppercase text-center px-6">Zero_Target_Matches_In_Current_Sector</span>
+                    <span className="text-[10px] font-bold tracking-tight text-center px-6">No matches found in this sector</span>
                   </div>
                 ) : (
                   filteredIncidents.map(inc => (
@@ -476,8 +479,8 @@ const TacticalApprovalDashboard: React.FC = () => {
                       }}
                       className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl mb-2 ${
                         (selectedIncident as any)?.id === inc.id && (selectedIncident as any)?.source_table === inc.source_table
-                        ? 'bg-[#f59e0b]/10 border-[#f59e0b] shadow-[inset_0_0_20px_rgba(245,158,11,0.05)]' 
-                        : 'bg-white/5 border-transparent border-b border-white/[0.02] hover:bg-white/[0.08]'
+                        ? 'bg-white border-[#f59e0b] shadow-xl ring-1 ring-black/5' 
+                        : 'bg-white border-transparent hover:border-gray-200 hover:bg-gray-50 shadow-sm border border-gray-100'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1.5">
@@ -487,14 +490,14 @@ const TacticalApprovalDashboard: React.FC = () => {
                         <span className="text-[8px] text-gray-600 font-mono">#{inc.id.toString().slice(-4)}</span>
                       </div>
                       
-                      <h3 className="text-sm font-black text-white uppercase tracking-tight truncate mb-1">{inc.type}</h3>
+                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">{inc.type}</h3>
                       
-                      <div className="flex items-center gap-1.5 text-gray-500 mb-2">
+                      <div className="flex items-center gap-1.5 text-gray-400 mb-2">
                         <FaMapMarkerAlt className="text-[9px] shrink-0" />
                         <span className="text-[10px] truncate uppercase font-bold tracking-tighter">{inc.location_text}</span>
                       </div>
 
-                      <div className="flex items-center justify-between text-[9px] opacity-40 font-bold uppercase">
+                      <div className="flex items-center justify-between text-[9px] text-gray-400 font-bold uppercase">
                         <div className="flex items-center gap-1.5">
                           <FaClock className="shrink-0" />
                           <span>{new Date(inc.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -515,8 +518,8 @@ const TacticalApprovalDashboard: React.FC = () => {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.1); }
         .sentinelx-glow { filter: drop-shadow(0 0 4px #f59e0b); }
       `}</style>
     </MapProvider>

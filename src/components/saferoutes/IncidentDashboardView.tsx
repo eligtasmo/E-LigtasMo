@@ -48,7 +48,7 @@ const resolvedIncidentIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.4/images/marker-shadow.png', shadowSize: [41, 41]
 });
-const barangayIcon = new L.Icon({
+const brgyIcon = new L.Icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // house icon
   iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
 });
@@ -74,7 +74,7 @@ export default function IncidentDashboardView() {
   const [actionLoading, setActionLoading] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const { user } = useAuth();
-  const [barangays, setBarangays] = useState<Barangay[]>([]);
+  const [brgys, setBarangays] = useState<Barangay[]>([]);
   const [addingBrgy, setAddingBrgy] = useState(false);
   const [newBrgy, setNewBrgy] = useState<{lat: number, lng: number} | null>(null);
   const [brgyForm, setBrgyForm] = useState({ name: '', address: '', contact: '', type: 'Hall' });
@@ -117,9 +117,9 @@ export default function IncidentDashboardView() {
 
   const fetchBarangays = async () => {
     try {
-      const res = await fetch('/api/list-barangays.php');
+      const res = await fetch('/api/list-brgys.php');
       const data = await res.json();
-      if (data.success) setBarangays(data.barangays || []);
+      if (data.success) setBarangays(data.brgys || []);
       else setBarangays([]);
     } catch { setBarangays([]); }
   };
@@ -169,7 +169,7 @@ export default function IncidentDashboardView() {
     e.preventDefault();
     if (!newBrgy) return;
     try {
-      const res = await fetch('/api/add-barangay.php', {
+      const res = await fetch('/api/add-brgy.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...brgyForm, ...newBrgy, added_by: user?.full_name || user?.username || 'unknown' })
@@ -182,7 +182,7 @@ export default function IncidentDashboardView() {
         fetchBarangays();
         alert('Barangay added!');
       } else {
-        alert('Failed to add barangay: ' + (data.error || 'Unknown error'));
+        alert('Failed to add brgy: ' + (data.error || 'Unknown error'));
       }
     } catch {
       alert('Network error');
@@ -438,8 +438,8 @@ export default function IncidentDashboardView() {
             );
           })}
           {/* Barangay Markers */}
-          {barangays.map((brgy) => (
-            <Marker key={brgy.id} position={[brgy.lat, brgy.lng]} icon={barangayIcon}>
+          {brgys.map((brgy) => (
+            <Marker key={brgy.id} position={[brgy.lat, brgy.lng]} icon={brgyIcon}>
               <Popup>
                 <strong>{brgy.name}</strong><br/>
                 {brgy.type && <span>Type: {brgy.type}<br/></span>}
@@ -453,7 +453,7 @@ export default function IncidentDashboardView() {
           {user && (user.role === 'admin' || user.role === 'brgy') && addingBrgy && <MapClickHandler />}
           {/* New brgy marker preview */}
           {newBrgy && (
-            <Marker position={[newBrgy.lat, newBrgy.lng]} icon={barangayIcon}>
+            <Marker position={[newBrgy.lat, newBrgy.lng]} icon={brgyIcon}>
               <Popup>New Barangay Location</Popup>
             </Marker>
           )}

@@ -21,11 +21,11 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
     switch (role) {
       case 'admin':
         configs = [
-          { route: 'Dashboard', icon: 'LayoutGrid', label: 'Hub' },
+          { route: 'Dashboard', icon: 'LayoutGrid', label: 'Home' },
           { route: 'Report', icon: 'ShieldAlert', label: 'Report' },
           { route: 'AdminAction', icon: 'Radar', label: 'Field', isCenter: true },
           { route: 'Users', icon: 'Users', label: 'Users' },
-          { route: 'Settings', icon: 'Settings2', label: 'System' },
+          { route: 'Settings', icon: 'Settings2', label: 'Settings' },
         ];
         break;
       case 'coordinator':
@@ -34,25 +34,25 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
           { route: 'Report', icon: 'ShieldAlert', label: 'Report' },
           { route: 'CoordinatorAction', icon: 'Route', label: 'Routes', isCenter: true },
           { route: 'Reports', icon: 'FileStack', label: 'Reports' },
-          { route: 'Profile', icon: 'ShieldCheck', label: 'Ops' },
+          { route: 'Profile', icon: 'Settings2', label: 'Settings' },
         ];
         break;
       case 'brgy':
         configs = [
-          { route: 'Dashboard', icon: 'LayoutGrid', label: 'Hub' },
+          { route: 'Dashboard', icon: 'LayoutGrid', label: 'Home' },
           { route: 'Report', icon: 'ShieldAlert', label: 'Report' },
           { route: 'BrgyAction', icon: 'Navigation', label: 'Evac', isCenter: true },
-          { route: 'Verify', icon: 'ClipboardCheck', label: 'Verify' },
-          { route: 'Alerts', icon: 'RadioTower', label: 'Alerts' },
+          { route: 'Verify', icon: 'ClipboardCheck', label: 'Settings' },
+          { route: 'Alerts', icon: 'Settings2', label: 'Alerts' },
         ];
         break;
       default: // resident
         configs = [
-          { route: 'Home', icon: 'LayoutGrid', label: 'Hub' },
+          { route: 'Home', icon: 'LayoutGrid', label: 'Home' },
           { route: 'Report', icon: 'ShieldAlert', label: 'Report' },
           { route: 'SafeRoutes', icon: 'Route', label: 'Routes', isCenter: true },
-          { route: 'Donations', icon: 'HeartPulse', label: 'Missions' },
-          { route: 'Profile', icon: 'Fingerprint', label: 'Identity' },
+          { route: 'Donations', icon: 'HeartPulse', label: 'Donation' },
+          { route: 'Profile', icon: 'Settings2', label: 'Settings' },
         ];
         break;
     }
@@ -93,6 +93,7 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
           };
 
           const IconComp = Lucide[config.icon] || Lucide.Home;
+          const isRoute = config.icon === 'Route' || config.icon === 'Navigation' || config.icon === 'Radar';
 
           if (config.isCenter) {
             return (
@@ -106,13 +107,13 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
                   animate={{ scale: isFocused ? 1.05 : 1 }}
                   style={[
                     styles.centerCircle, 
-                    { backgroundColor: config.isTacticalOverride ? '#EF4444' : theme.primary },
+                    { backgroundColor: config.isTacticalOverride ? '#EF4444' : '#FFFFFF' },
                     config.isTacticalOverride && { shadowColor: '#EF4444' }
                   ]}
                 >
-                  <IconComp size={28} color="#fff" strokeWidth={3} />
+                  <IconComp size={28} color={isRoute ? '#000000' : '#000000'} strokeWidth={3} />
                 </MotiView>
-                <Text style={[styles.tabLabel, { color: isFocused ? theme.primary : 'rgba(255,255,255,0.85)', textAlign: 'center' }]}>
+                <Text style={[styles.tabLabel, { color: '#FFFFFF', textAlign: 'center' }]}>
                   {config.label}
                 </Text>
               </TouchableOpacity>
@@ -127,17 +128,17 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
               activeOpacity={0.7}
             >
               <MotiView 
-                animate={{ translateY: isFocused ? -2 : 0, opacity: isFocused ? 1 : 0.6 }}
+                animate={{ opacity: isFocused ? 1 : 0.7 }}
                 style={{ alignItems: 'center', justifyContent: 'center' }}
               >
                 <IconComp 
                   size={24} 
-                  color={isFocused ? theme.primary : 'rgba(255,255,255,0.7)'} 
-                  strokeWidth={2.2} 
+                  color="#FFFFFF" 
+                  strokeWidth={isFocused ? 2.8 : 2.2} 
                 />
                 <Text style={[styles.tabLabel, { 
-                  fontWeight: isFocused ? '700' : '600', 
-                  color: isFocused ? theme.primary : 'rgba(255,255,255,0.85)',
+                  fontWeight: isFocused ? '800' : '600', 
+                  color: '#FFFFFF',
                 }]}>
                   {config.label}
                 </Text>

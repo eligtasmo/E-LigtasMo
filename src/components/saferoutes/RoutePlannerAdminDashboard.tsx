@@ -98,7 +98,7 @@ export default function RoutePlannerAdminDashboard() {
         });
         setRecent(approvedList.slice(0, 5));
 
-        // Compute Top affected barangays across statuses
+        // Compute Top affected brgys across statuses
         const allIncidents = [
           ...approvedList,
           ...resolvedList,
@@ -107,7 +107,7 @@ export default function RoutePlannerAdminDashboard() {
         ];
         const countsByBrgy: Record<string, number> = {};
         allIncidents.forEach((inc: any) => {
-          const brgy = inc?.barangay || inc?.brgy_name || inc?.barangay_name || inc?.address_barangay;
+          const brgy = inc?.brgy || inc?.brgy_name || inc?.brgy_name || inc?.address_brgy;
           if (brgy && typeof brgy === 'string') {
             const key = brgy.trim();
             countsByBrgy[key] = (countsByBrgy[key] || 0) + 1;

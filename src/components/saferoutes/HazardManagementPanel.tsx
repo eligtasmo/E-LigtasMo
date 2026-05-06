@@ -29,7 +29,7 @@ interface Hazard {
   contact?: string;
   email?: string;
   photo_url?: string;
-  barangay?: string;
+  brgy?: string;
   allowed_modes?: string[] | null;
 }
 

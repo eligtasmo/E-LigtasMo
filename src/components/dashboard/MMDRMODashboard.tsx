@@ -318,7 +318,7 @@ const MMDRMODashboard: React.FC = () => {
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [dangerZones, setDangerZones] = useState<DangerZone[]>([]);
   const [enhancedShelters, setEnhancedShelters] = useState<EnhancedShelter[]>([]);
-  const [barangays, setBarangays] = useState<any[]>([]);
+  const [brgys, setBarangays] = useState<any[]>([]);
   
   // Filter states for map markers
   const [showIncidents, setShowIncidents] = useState(true);
@@ -697,7 +697,7 @@ const MMDRMODashboard: React.FC = () => {
            return {
               id: `flood-${report.id}`,
               type: 'Flood',
-              location: report.barangay || 'Unknown Location',
+              location: report.brgy || 'Unknown Location',
               severity: (report.severity as 'Low' | 'Medium' | 'High' | 'Critical') || 'Medium',
               status,
               time: timeAgo,
@@ -941,13 +941,13 @@ const MMDRMODashboard: React.FC = () => {
 
   const fetchBarangays = async () => {
     try {
-      const response = await apiFetch('list-barangays.php');
+      const response = await apiFetch('list-brgys.php');
       const data = await response.json();
-      if (data.success && Array.isArray(data.barangays)) {
-        setBarangays(data.barangays);
+      if (data.success && Array.isArray(data.brgys)) {
+        setBarangays(data.brgys);
       }
     } catch (error) {
-      console.error('Error fetching barangays:', error);
+      console.error('Error fetching brgys:', error);
     }
   };
 
@@ -1076,7 +1076,7 @@ const MMDRMODashboard: React.FC = () => {
           type: 'Flood',
           lat: Number(row.lat),
           lng: Number(row.lng),
-          address: row.location_text || row.barangay || incident.location || 'Flood report',
+          address: row.location_text || row.brgy || incident.location || 'Flood report',
           datetime: row.time || new Date().toISOString(),
           description: row.description || '',
           severity: row.severity || severity,
@@ -1084,7 +1084,7 @@ const MMDRMODashboard: React.FC = () => {
           contact: row.reporter_contact || 'N/A',
           email: row.reporter_email || '',
           photoUrl: row.media_path || '',
-          barangay: row.barangay || '',
+          brgy: row.brgy || '',
           area_geojson: area,
           allowedVehicles: [],
         };
@@ -1105,7 +1105,7 @@ const MMDRMODashboard: React.FC = () => {
           reporter: row.reporter || row.reported_by || 'MDRRMO',
           contact: row.contact || 'N/A',
           email: row.email || '',
-          barangay: row.barangay || '',
+          brgy: row.brgy || '',
           area_geojson: area,
           allowedVehicles: [],
         };
@@ -1241,65 +1241,62 @@ const MMDRMODashboard: React.FC = () => {
         `
       }} />
       
-      <div className="min-h-screen bg-gray-50 text-gray-900 relative z-10 font-outfit">
+      <div className="min-h-screen bg-white text-gray-900 relative z-10 font-jetbrains">
       {/* Simplified Header */}
       <div className="mb-0">
-        <div className="bg-gray-800 rounded-t-lg p-3 sm:p-4 border border-gray-700">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <FiActivity className="text-lg sm:text-xl text-white" />
+        <div className="bg-gray-50 rounded-t-xl p-4 sm:p-6 border border-gray-200 border-b-0 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                <FiActivity className="text-xl sm:text-2xl text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                   MMDRMO Emergency Operations Center
                 </h1>
-                <p className="text-gray-400 text-xs sm:text-sm">Real-time disaster monitoring and emergency response</p>
+                <p className="text-gray-500 text-xs sm:text-sm font-semibold tracking-tight mt-0.5">Real-time disaster monitoring and response</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               {/* System Status */}
-              <div className="bg-gray-700 rounded-lg p-2 sm:p-3 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px]">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-gray-300">API Online</span>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                    <span className="text-gray-600 font-bold uppercase tracking-wider">API_STABLE</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">Users:</span>
-                    <span className="text-yellow-400 font-semibold">12</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-300">Refresh:</span>
-                    <span className="text-blue-400 font-semibold">30s</span>
+                  <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                    <span className="text-gray-400 font-medium">SESSIONS:</span>
+                    <span className="text-blue-600 font-black">12</span>
                   </div>
                 </div>
               </div>
-              {/* Metrics Range - affects Key Metrics only */}
-              <div className="bg-gray-700 rounded-lg p-2 sm:p-3 w-full sm:w-auto">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-300 text-xs sm:text-sm">Metrics Range:</span>
+              
+              {/* Metrics Range */}
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 w-full sm:w-auto">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-500 text-[11px] font-black uppercase tracking-widest">Timeframe:</span>
                   <select
-                    className="text-xs sm:text-sm bg-gray-800 text-white border border-gray-600 rounded px-2 py-1"
+                    className="text-[13px] bg-white text-gray-900 border border-gray-200 rounded-lg px-3 py-1 font-bold outline-none focus:ring-2 focus:ring-blue-600/20 transition-all cursor-pointer"
                     value={metricsRange}
                     onChange={(e) => setMetricsRange(e.target.value as '24h' | '7d' | '30d' | '90d')}
                   >
-                    <option value="24h">24h</option>
-                    <option value="7d">7d</option>
-                    <option value="30d">30d</option>
-                    <option value="90d">90d</option>
+                    <option value="24h">24 Hours</option>
+                    <option value="7d">7 Days</option>
+                    <option value="30d">30 Days</option>
+                    <option value="90d">90 Days</option>
                   </select>
-                  <span className="text-gray-300 text-xs sm:text-sm">{metricsDates.label}</span>
                 </div>
               </div>
+
               {/* Timer */}
-              <div className="text-left sm:text-right bg-gray-700 rounded-lg p-2 sm:p-3 w-full sm:w-auto">
-                <div className="text-lg sm:text-xl font-mono font-bold text-blue-400">{currentTime.toLocaleTimeString()}</div>
-                <div className="text-gray-300 text-xs">{currentTime.toLocaleDateString()}</div>
+              <div className="text-left sm:text-right bg-blue-600 rounded-xl p-3 sm:p-4 w-full sm:w-auto shadow-xl shadow-blue-600/20 flex flex-col justify-center">
+                <div className="text-xl sm:text-2xl font-black text-white leading-none tracking-tight">{currentTime.toLocaleTimeString()}</div>
+                <div className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{currentTime.toLocaleDateString()}</div>
                 {loading && (
-                  <div className="flex items-center justify-start sm:justify-end gap-1 text-xs text-blue-400 mt-1">
-                    <div className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
-                    Updating...
+                  <div className="flex items-center justify-start sm:justify-end gap-1 text-[9px] text-white/80 font-black uppercase tracking-widest mt-1.5">
+                    <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                    Syncing...
                   </div>
                 )}
               </div>
@@ -1311,24 +1308,27 @@ const MMDRMODashboard: React.FC = () => {
       {/* API Health & Quick Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-3">
-           <div className="bg-white/50 border border-gray-200 rounded-xl p-4 flex items-center justify-center text-gray-500 text-sm italic">
-             Tactical Data Feed Operational • Standardized 24/7 Monitoring
+           <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 flex items-center justify-center text-gray-400 text-xs font-bold shadow-premium-sm transition-all hover:shadow-premium-md">
+             <div className="flex items-center gap-4">
+               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+               Tactical data feed operational • Standardized 24/7 monitoring
+             </div>
            </div>
         </div>
         
         {/* API Health Widget */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+        <div className="bento-card overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-100/30">
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              API Connectivity
+              Api Connectivity
             </h3>
             <button 
               onClick={checkApiHealth}
-              className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+              className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm"
               title="Refresh Health Status"
             >
-              <FiRefreshCw className="w-3.5 h-3.5 text-gray-500" />
+              <FiRefreshCw className="w-3.5 h-3.5 text-gray-400" />
             </button>
           </div>
           <div className="p-4 flex-1 space-y-3">
@@ -1640,12 +1640,14 @@ const MMDRMODashboard: React.FC = () => {
                   pitch: 0,
                   bearing: 0
                 }}
-                maxPitch={0}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle="mapbox://styles/mapbox/streets-v12"
+                mapStyle="mapbox://styles/mapbox/light-v11"
                 mapboxAccessToken={MAPBOX_TOKEN}
-                onLoad={() => {
-                  // Standard 2D view - no terrain exaggeration
+                onLoad={(e: any) => {
+                  const map = e?.target?.getMap?.();
+                  if (map) {
+                    map.setTerrain(null);
+                  }
                 }}
               >
                 <NavigationControl position="top-right" />
@@ -1654,29 +1656,7 @@ const MMDRMODashboard: React.FC = () => {
                 {/* Santa Cruz Outline */}
                 <SantaCruzMapboxOutline />
 
-                <Layer
-                  id="sky"
-                  type="sky"
-                  paint={{
-                    'sky-type': 'atmosphere',
-                    'sky-atmosphere-sun': [0.0, 0.0],
-                    'sky-atmosphere-sun-intensity': 10,
-                  }}
-                />
-                <Layer
-                  id="3d-buildings"
-                  source="composite"
-                  source-layer="building"
-                  filter={['==', 'extrude', 'true']}
-                  type="fill-extrusion"
-                  minzoom={14}
-                  paint={{
-                    'fill-extrusion-color': '#cbd5e1',
-                    'fill-extrusion-height': ['coalesce', ['get', 'height'], 6],
-                    'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0],
-                    'fill-extrusion-opacity': 0.55,
-                  }}
-                />
+                {/* 3D layers removed for unified 2D light theme */}
 
                 {/* Incident Markers */}
                 {showIncidents && activeIncidents
@@ -1723,7 +1703,7 @@ const MMDRMODashboard: React.FC = () => {
                   ))}
 
                 {/* Barangay Markers */}
-                {barangays.map((b) => (
+                {brgys.map((b) => (
                   <Marker
                     key={`brgy-pin-${b.id}`}
                     latitude={Number(b.lat)}

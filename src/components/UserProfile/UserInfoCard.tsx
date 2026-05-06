@@ -222,7 +222,7 @@ export default function UserInfoCard() {
                       type="text" 
                       value={formData.brgy_name}
                       onChange={(e) => handleInputChange("brgy_name", e.target.value)}
-                      placeholder="Enter your barangay"
+                      placeholder="Enter your brgy"
                     />
                   </div>
 

@@ -90,6 +90,6 @@ export const ResourceTypes = {
   SHELTER: 'shelter',
   ANNOUNCEMENT: 'announcement',
   EMERGENCY_CONTACT: 'emergency_contact',
-  BARANGAY_COORDINATOR: 'barangay_coordinator',
+  BARANGAY_COORDINATOR: 'brgy_coordinator',
   SYSTEM: 'system'
 }; 

@@ -23,7 +23,7 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
 
-  const profilePath = user?.role === 'brgy' ? '/barangay/profile' : user?.role === 'admin' ? '/admin/profile' : '/profile';
+  const profilePath = user?.role === 'brgy' ? '/brgy/profile' : user?.role === 'admin' ? '/admin/profile' : '/profile';
 
   return (
     <div className="relative">

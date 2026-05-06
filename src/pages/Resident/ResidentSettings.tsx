@@ -3,7 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 
 const ResidentSettings: React.FC = () => {
   const [homeMode, setHomeMode] = useState<string>(() => localStorage.getItem('resident_home_mode') || 'action-first');
-  const [weatherPref, setWeatherPref] = useState<string>(() => localStorage.getItem('resident_weather_loc_pref') || 'barangay');
+  const [weatherPref, setWeatherPref] = useState<string>(() => localStorage.getItem('resident_weather_loc_pref') || 'brgy');
   const [showEmergency, setShowEmergency] = useState<string>(() => localStorage.getItem('resident_show_emergency_button') || 'true');
 
   useEffect(() => { localStorage.setItem('resident_home_mode', homeMode); }, [homeMode]);
@@ -38,8 +38,8 @@ const ResidentSettings: React.FC = () => {
             <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Location Mode</h2>
             <div className="flex bg-gray-100 p-1.5 rounded-[1.5rem]">
               <button
-                className={`flex-1 py-3 px-4 rounded-[1.2rem] text-sm font-bold transition-all ${weatherPref === 'barangay' ? "bg-black text-white shadow-lg" : "text-gray-500"}`}
-                onClick={() => setWeatherPref('barangay')}
+                className={`flex-1 py-3 px-4 rounded-[1.2rem] text-sm font-bold transition-all ${weatherPref === 'brgy' ? "bg-black text-white shadow-lg" : "text-gray-500"}`}
+                onClick={() => setWeatherPref('brgy')}
               >Barangay</button>
               <button
                 className={`flex-1 py-3 px-4 rounded-[1.2rem] text-sm font-bold transition-all ${weatherPref === 'geolocation' ? "bg-black text-white shadow-lg" : "text-gray-500"}`}
@@ -71,7 +71,7 @@ const ResidentSettings: React.FC = () => {
                 localStorage.removeItem('resident_weather_loc_pref');
                 localStorage.removeItem('resident_show_emergency_button');
                 setHomeMode('action-first');
-                setWeatherPref('barangay');
+                setWeatherPref('brgy');
                 setShowEmergency('true');
               }}
             >Reset All Preferences</button>

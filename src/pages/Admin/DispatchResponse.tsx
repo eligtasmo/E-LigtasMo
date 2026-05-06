@@ -1275,7 +1275,7 @@ const AdminDispatchResponse: React.FC = () => {
           <h2 className="text-lg font-semibold mb-4">RESPONSE TRACKING AND SAFETY</h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* PPE Checklist */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
+            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
               <div className="flex items-center gap-2 mb-3">
                 <FiCheckSquare />
                 <span className="font-medium">PPE Checklist</span>
@@ -1290,7 +1290,7 @@ const AdminDispatchResponse: React.FC = () => {
               </div>
             </div>
             {/* Equipment Tracker */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
+            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
               <div className="flex items-center gap-2 mb-3">
                 <FiList />
                 <span className="font-medium">Equipment / Supply Tracker</span>
@@ -1305,7 +1305,7 @@ const AdminDispatchResponse: React.FC = () => {
               </div>
             </div>
             {/* Responder Roster */}
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow">
+            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <FiUsers />
                 <span className="font-medium">Responder Roster</span>
@@ -1332,7 +1332,7 @@ const AdminDispatchResponse: React.FC = () => {
 
       {isPickerOpen && (
         <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsPickerOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsPickerOpen(false)} />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-3xl bg-white rounded-xl border border-gray-200 shadow-2xl transition-transform duration-200 origin-center scale-95">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="text-base font-semibold">Select Team or Responder</div>
@@ -1379,7 +1379,7 @@ const AdminDispatchResponse: React.FC = () => {
 
       {confirmOpen && (
         <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-lg bg-white rounded-xl border border-gray-200 shadow-2xl">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="text-base font-semibold">Confirm Dispatch</div>
@@ -1418,7 +1418,7 @@ const AdminDispatchResponse: React.FC = () => {
 
       {shareOpen && (
         <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShareOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShareOpen(false)} />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-lg bg-white rounded-xl border border-gray-200 shadow-2xl">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="text-base font-semibold">Dispatch Created</div>
@@ -1473,7 +1473,7 @@ const AdminDispatchResponse: React.FC = () => {
       {activeTab === 'records' && (
         <div className="w-full">
           <h2 className="text-lg font-semibold mb-4">DISPATCH RECORDS</h2>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+          <div className="bg-white border border-gray-100 rounded-xl p-3">
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <div className="flex items-center gap-2">
                 <label className="text-xs text-gray-500">Incident ID</label>
@@ -1490,7 +1490,7 @@ const AdminDispatchResponse: React.FC = () => {
             </div>
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
+                <tr className="border-b border-gray-100">
                   <th className="text-left p-2"><input type="checkbox" onChange={e => {
                     const checked = e.target.checked;
                     const next: Record<string, boolean> = {};
@@ -1514,7 +1514,7 @@ const AdminDispatchResponse: React.FC = () => {
                   </tr>
                 )}
                 {filteredRecords.map((r, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="p-2"><input type="checkbox" checked={!!selectedRows[String((r as any).run_id || (r as any).id || idx)]} onChange={e => {
                       const key = String((r as any).run_id || (r as any).id || idx);
                       setSelectedRows(prev => ({ ...prev, [key]: e.target.checked }));
@@ -1614,7 +1614,7 @@ const AdminDispatchResponse: React.FC = () => {
       )}
       {detailsOpen && detailsRecord && (
         <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setDetailsOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailsOpen(false)} />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[96%] max-w-3xl bg-white rounded-xl border border-gray-200 shadow-2xl">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="text-base font-semibold">Run Details</div>
@@ -1796,7 +1796,7 @@ const AdminDispatchResponse: React.FC = () => {
 
       {statusConfirmOpen && (
         <div className="fixed inset-0 z-[1000]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setStatusConfirmOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setStatusConfirmOpen(false)} />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-md bg-white rounded-xl border border-gray-200 shadow-2xl">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div className="text-base font-semibold">Confirm Status Change</div>
@@ -1880,7 +1880,7 @@ const HealthCoordinationForm: React.FC<{ runId: string; incidentId: string; setR
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
+    <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <div className="text-xs text-gray-600">Run: <span className="font-semibold text-gray-900">{runId || '—'}</span></div>
         <button
@@ -1936,27 +1936,27 @@ const HealthCoordinationForm: React.FC<{ runId: string; incidentId: string; setR
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">MHO/MESU Contacted (Name)</label>
-          <input className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={mhoName} onChange={e => setMhoName(e.target.value)} />
+          <input className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={mhoName} onChange={e => setMhoName(e.target.value)} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">MHO/MESU Contact Number</label>
-          <input className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={mhoContact} onChange={e => setMhoContact(e.target.value)} />
+          <input className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={mhoContact} onChange={e => setMhoContact(e.target.value)} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">MHO Nurse Assigner</label>
-          <input className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={nurseAssigner} onChange={e => setNurseAssigner(e.target.value)} />
+          <input className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={nurseAssigner} onChange={e => setNurseAssigner(e.target.value)} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Patient Transfer Hospital</label>
-          <input className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={hospital} onChange={e => setHospital(e.target.value)} />
+          <input className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={hospital} onChange={e => setHospital(e.target.value)} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Time of Departure</label>
-          <input type="datetime-local" className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={departure} onChange={e => setDeparture(e.target.value)} />
+          <input type="datetime-local" className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={departure} onChange={e => setDeparture(e.target.value)} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Time of Arrival</label>
-          <input type="datetime-local" className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={arrival} onChange={e => setArrival(e.target.value)} />
+          <input type="datetime-local" className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={arrival} onChange={e => setArrival(e.target.value)} />
         </div>
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium mb-1">Attached Images (replaces referral record)</label>

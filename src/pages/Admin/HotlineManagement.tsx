@@ -129,7 +129,7 @@ const HotlineManagement: React.FC = () => {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
                         <form onSubmit={handleSave} className="p-8">
                             <div className="flex justify-between items-center mb-6">

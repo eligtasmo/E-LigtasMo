@@ -33,7 +33,7 @@ const SANTA_CRUZ_BOUNDS: [[number, number], [number, number]] = [
 
 export default function BarangayMapView() {
   const { user } = useAuth();
-  const [barangays, setBarangays] = useState<Barangay[]>([]);
+  const [brgys, setBarangays] = useState<Barangay[]>([]);
   const [addingBrgy, setAddingBrgy] = useState(false);
   const [editingBrgy, setEditingBrgy] = useState<Barangay | null>(null);
   const [newBrgy, setNewBrgy] = useState<{lat: number, lng: number} | null>(null);
@@ -45,18 +45,18 @@ export default function BarangayMapView() {
 
   const fetchBarangays = async () => {
     try {
-      const res = await apiFetch('list-barangays.php');
+      const res = await apiFetch('list-brgys.php');
       const data = await res.json();
-      if (data.success) setBarangays(data.barangays || []);
+      if (data.success) setBarangays(data.brgys || []);
       else setBarangays([]);
     } catch { setBarangays([]); }
   };
   useEffect(() => { fetchBarangays(); }, []);
 
-  // Center map on user's barangay when available
+  // Center map on user's brgy when available
   useEffect(() => {
-    if (user?.brgy_name && barangays.length > 0) {
-      const match = barangays.find(b => (b.name || '').toLowerCase() === (user.brgy_name || '').toLowerCase());
+    if (user?.brgy_name && brgys.length > 0) {
+      const match = brgys.find(b => (b.name || '').toLowerCase() === (user.brgy_name || '').toLowerCase());
       if (match) {
         updateViewport({
           latitude: Number(match.lat),
@@ -65,7 +65,7 @@ export default function BarangayMapView() {
         });
       }
     }
-  }, [barangays, user?.brgy_name]);
+  }, [brgys, user?.brgy_name]);
 
   const handleMapClick = (e: any) => {
     if (user && (user.role === 'admin' || user.role === 'brgy') && addingBrgy) {
@@ -86,7 +86,7 @@ export default function BarangayMapView() {
         ...((newBrgy && { lat: newBrgy.lat, lng: newBrgy.lng }) || (editingBrgy && { lat: editingBrgy.lat, lng: editingBrgy.lng })),
         id: editingBrgy?.id,
       };
-      const endpoint = editingBrgy ? 'update-barangay.php' : 'add-barangay.php';
+      const endpoint = editingBrgy ? 'update-brgy.php' : 'add-brgy.php';
       const res = await apiFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -109,7 +109,7 @@ export default function BarangayMapView() {
 
   const handleDeleteBrgy = async (id: number) => {
     try {
-      const res = await apiFetch('delete-barangay.php', {
+      const res = await apiFetch('delete-brgy.php', {
         method: 'POST',
         body: JSON.stringify({ id })
       });
@@ -129,13 +129,15 @@ export default function BarangayMapView() {
   const [selectedBrgy, setSelectedBrgy] = useState<Barangay | null>(null);
 
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full overflow-hidden bg-[#0a0a0a] font-mono">
+    <div className="flex flex-col lg:flex-row h-full w-full overflow-hidden bg-gray-50 font-jetbrains">
       {/* Map Section */}
       <div className="flex-1 relative min-h-[400px] lg:h-full z-0 overflow-hidden">
         <MapboxMap
           {...viewState}
           onMove={(evt: any) => setViewState(evt.viewState)}
-          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapStyle="mapbox://styles/mapbox/light-v11"
+          pitch={0}
+          bearing={0}
           mapboxAccessToken={MAPBOX_TOKEN}
           onClick={handleMapClick}
           style={{ width: '100%', height: '100%' }}
@@ -147,12 +149,12 @@ export default function BarangayMapView() {
           <SantaCruzMapboxOutline />
           
           {/* Barangay Markers */}
-          {barangays.map((brgy) => (
+          {brgys.map((brgy) => (
             <TacticalMarker
               key={brgy.id}
               latitude={Number(brgy.lat)}
               longitude={Number(brgy.lng)}
-              type={brgy.type || 'barangay'}
+              type={brgy.type || 'brgy'}
               onClick={e => {
                 e.originalEvent.stopPropagation();
                 setSelectedBrgy(brgy);
@@ -171,18 +173,16 @@ export default function BarangayMapView() {
               anchor="bottom"
               offset={[0, -32]}
             >
-              <div className="w-[180px] font-mono">
+              <div className="w-[180px] font-jetbrains">
                 <div className="w-full h-24 bg-gray-100 rounded-lg mb-3 overflow-hidden shadow-sm">
                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&q=80" alt="Location Preview" className="w-full h-full object-cover" />
                 </div>
                 <strong className="text-[13px] block mb-1 text-gray-900 leading-tight">{selectedBrgy.name}</strong>
-                {selectedBrgy.type && <div className="text-[10px] text-gray-500 font-bold tracking-wide uppercase">{selectedBrgy.type}</div>}
+                {selectedBrgy.type && <div className="text-[10px] text-gray-500 font-black tracking-wide uppercase">{selectedBrgy.type}</div>}
                 <div className="text-[10px] text-gray-400 mt-1 leading-tight">{selectedBrgy.address}</div>
-                {selectedBrgy.contact && <div className="text-[10px] text-gray-600 mt-3 pt-2 border-t border-gray-100">TEL: <span className="font-semibold text-gray-900">{selectedBrgy.contact}</span></div>}
-                {selectedBrgy.head && <div className="text-[10px] text-gray-600 mt-0.5">HEAD: <span className="font-semibold text-gray-900">{selectedBrgy.head}</span></div>}
-                <div className="text-[9px] text-[#f59e0b] mt-3 border-t border-gray-100 pt-2 tracking-widest font-bold">
-                   LAT: {Number(selectedBrgy.lat).toFixed(6)}<br />
-                   LNG: {Number(selectedBrgy.lng).toFixed(6)}
+                {selectedBrgy.contact && <div className="text-[10px] text-gray-600 mt-3 pt-2 border-t border-gray-100">TEL: <span className="font-bold text-blue-600">{selectedBrgy.contact}</span></div>}
+                <div className="text-[9px] text-blue-600 mt-3 border-t border-gray-100 pt-2 tracking-widest font-black uppercase">
+                   COORD: {Number(selectedBrgy.lat).toFixed(4)}, {Number(selectedBrgy.lng).toFixed(4)}
                 </div>
               </div>
             </Popup>
@@ -200,30 +200,36 @@ export default function BarangayMapView() {
       </div>
 
       {/* Right Panel Section */}
-      <div className="w-full lg:w-[420px] h-[500px] lg:h-full bg-[#1c1c1e] p-6 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col z-20 shadow-2xl overflow-y-auto custom-scrollbar font-mono shrink-0 animate-in slide-in-from-bottom lg:slide-in-from-right duration-500">
+      <div className="w-full lg:w-[400px] h-[500px] lg:h-full bg-gray-50 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.02)] overflow-y-auto custom-scrollbar font-jetbrains shrink-0 animate-in slide-in-from-right duration-500">
         <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-[#f59e0b] font-bold text-xl tracking-tight">Barangay Map</h2>
-              <p className="text-[#8e8e93] text-[12px] mt-0.5 font-medium">Location Operations</p>
+              <h2 className="text-[#f59e0b] font-bold text-xl tracking-tight">Barangay Assets</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
+                <span className="text-[10px] text-gray-400 tracking-tight font-bold">Tactical Oversight</span>
+              </div>
             </div>
             {user && (user.role === 'admin' || user.role === 'brgy') && !addingBrgy && !editingBrgy && (
-                <div className="w-10 h-10 rounded-xl bg-[#2c2c2e] border border-white/5 flex items-center justify-center cursor-pointer hover:bg-[#3a3a3c] transition-all hover:scale-105" onClick={() => setAddingBrgy(true)} title="Add Pin">
-                    <FaPlus className="text-[#f59e0b] text-sm" />
-                </div>
+                <button 
+                  className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95" 
+                  onClick={() => setAddingBrgy(true)}
+                >
+                    <FaPlus className="text-white text-sm" />
+                </button>
             )}
         </div>
         
         {/* Persistent instruction if no pins */}
-        {barangays.length === 0 && !addingBrgy && !editingBrgy && (
-          <div className="bg-[#2c2c2e] rounded-2xl border border-[#3a3a3c] p-6 mb-6">
-            <div className="mb-2 text-[10px] text-[#8e8e93] font-semibold tracking-wide">Asset Inventory</div>
-            <div className="text-white text-[13px] leading-relaxed">
+        {brgys.length === 0 && !addingBrgy && !editingBrgy && (
+          <div className="bg-gray-50 rounded-3xl border border-gray-200 p-6 mb-6 shadow-sm">
+            <div className="mb-2 text-[8px] text-gray-400 font-black uppercase tracking-[0.2em]">Asset Inventory</div>
+            <p className="text-gray-600 text-xs font-bold leading-relaxed">
               No tactical assets deployed. Initiate pin placement to establish monitoring zones.
-            </div>
+            </p>
             {user && (user.role === 'admin' || user.role === 'brgy') && (
               <button
                 type="button"
-                className="w-full bg-[#f59e0b] hover:bg-[#d97706] text-black font-bold py-3 rounded-xl transition-all mt-6 text-[11px] tracking-wider shadow-lg shadow-amber-950/20"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all mt-6 text-[10px] tracking-widest uppercase shadow-xl shadow-blue-500/20"
                 onClick={() => setAddingBrgy(true)}
               >
                 Initialize Pin
@@ -231,25 +237,26 @@ export default function BarangayMapView() {
             )}
           </div>
         )}
+
         {/* Add/Edit Form */}
         {(addingBrgy || editingBrgy) && (
-          <div className="bg-[#2c2c2e] rounded-2xl border border-white/5 overflow-hidden mb-6 animate-in zoom-in-95 duration-300">
-            <div className="p-4 border-b border-white/5 bg-[#1c1c1e]">
-              <h3 className="font-bold text-[11px] tracking-wide text-white flex items-center gap-3">
-                <div className="bg-amber-500/10 p-2 rounded-lg">
-                  {editingBrgy ? <FaEdit className="text-[#f59e0b]" /> : <FaPlus className="text-[#f59e0b]" />} 
+          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden mb-6 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-4 border-b border-gray-100 bg-gray-50">
+              <h3 className="font-black text-[10px] tracking-widest text-gray-900 uppercase flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
+                  {editingBrgy ? <FaEdit className="text-white" /> : <FaPlus className="text-white" />} 
                 </div>
-                {editingBrgy ? 'Modify Deployment' : 'New Asset Deployment'}
+                {editingBrgy ? 'Modify_Deployment' : 'New_Deployment'}
               </h3>
             </div>
             {addingBrgy && !newBrgy && (
               <div className="p-6">
-                <div className="mb-2 text-[10px] text-[#8e8e93] font-bold tracking-wide">Target Acquisition</div>
-                <div className="text-[#f59e0b] font-bold text-[14px] mb-2 animate-pulse">Awaiting map selection...</div>
-                <div className="text-gray-400 mb-6 text-[12px] leading-relaxed">Engage the map viewport to pinpoint the strategic location of the new asset.</div>
+                <div className="mb-2 text-[8px] text-blue-600 font-black tracking-widest uppercase">Target Acquisition</div>
+                <div className="text-gray-900 font-black text-sm mb-2 animate-pulse uppercase">Awaiting map selection...</div>
+                <p className="text-gray-500 mb-6 text-[11px] leading-relaxed font-bold">Engage the map viewport to pinpoint the strategic location of the new asset.</p>
                 <button
                   type="button"
-                  className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all text-[11px] tracking-wide border border-white/10"
+                  className="w-full bg-gray-50 hover:bg-gray-100 text-gray-500 font-black py-4 rounded-2xl transition-all text-[10px] tracking-widest uppercase border border-gray-200"
                   onClick={() => { setAddingBrgy(false); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }}
                 >
                   Abort Deployment
@@ -258,14 +265,14 @@ export default function BarangayMapView() {
             )}
             {(newBrgy || editingBrgy) && (
               <form onSubmit={handleBrgyFormSubmit} className="flex flex-col">
-                <div className="p-4 border-b border-white/5">
-                  <label className="block text-[10px] font-bold text-[#8e8e93] tracking-wide mb-2">Identifier Name</label>
-                  <input required placeholder="Enter asset name..." className="w-full bg-[#1c1c1e] text-white border border-white/5 rounded-xl px-4 py-3 text-[13px] outline-none focus:border-amber-500/50 transition-colors" value={brgyForm.name} onChange={e => setBrgyForm(f => ({...f, name: e.target.value}))} />
+                <div className="p-4 border-b border-gray-50">
+                  <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Identifier Name</label>
+                  <input required placeholder="Enter asset name..." className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-4 py-3.5 text-xs font-bold outline-none focus:border-blue-500/50 transition-colors" value={brgyForm.name} onChange={e => setBrgyForm(f => ({...f, name: e.target.value}))} />
                 </div>
-                <div className="grid grid-cols-2 divide-x divide-white/5 border-b border-white/5">
+                <div className="grid grid-cols-2 divide-x divide-gray-50 border-b border-gray-50">
                   <div className="p-4">
-                    <label className="block text-[10px] font-bold text-[#8e8e93] tracking-wide mb-2">Asset Type</label>
-                    <select className="w-full bg-[#1c1c1e] text-white border border-white/5 rounded-xl px-3 py-3 text-[12px] outline-none cursor-pointer focus:border-amber-500/50 transition-colors" value={brgyForm.type} onChange={e => setBrgyForm(f => ({...f, type: e.target.value}))}>
+                    <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Asset Type</label>
+                    <select className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-3 py-3.5 text-[10px] font-black uppercase outline-none cursor-pointer focus:border-blue-500/50 transition-colors" value={brgyForm.type} onChange={e => setBrgyForm(f => ({...f, type: e.target.value}))}>
                       <option>Hall</option>
                       <option>Outpost</option>
                       <option>Evacuation Center</option>
@@ -273,106 +280,89 @@ export default function BarangayMapView() {
                     </select>
                   </div>
                   <div className="p-4">
-                    <label className="block text-[10px] font-bold text-[#8e8e93] tracking-wide mb-2">Comms Line</label>
-                    <input placeholder="Phone / Radio" className="w-full bg-[#1c1c1e] text-white border border-white/5 rounded-xl px-4 py-3 text-[12px] outline-none focus:border-amber-500/50 transition-colors" value={brgyForm.contact} onChange={e => setBrgyForm(f => ({...f, contact: e.target.value}))} />
+                    <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Comms Line</label>
+                    <input placeholder="Phone / Radio" className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-4 py-3.5 text-xs font-bold outline-none focus:border-blue-500/50 transition-colors" value={brgyForm.contact} onChange={e => setBrgyForm(f => ({...f, contact: e.target.value}))} />
                   </div>
                 </div>
-                <div className="flex divide-x divide-white/5 bg-[#1c1c1e]">
-                  <button type="button" className="flex-1 py-4 text-[#8e8e93] hover:text-white hover:bg-white/5 transition-all text-[11px] font-bold" onClick={() => { setAddingBrgy(false); setEditingBrgy(null); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }}>Cancel</button>
-                  <button type="submit" className="flex-1 py-4 text-[#34c759] hover:bg-emerald-500/10 transition-all text-[11px] font-bold">{editingBrgy ? 'Update Data' : 'Confirm Pin'}</button>
+                <div className="flex divide-x divide-gray-100 bg-gray-50">
+                  <button type="button" className="flex-1 py-5 text-gray-400 hover:text-gray-900 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest" onClick={() => { setAddingBrgy(false); setEditingBrgy(null); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }}>Cancel</button>
+                  <button type="submit" className="flex-1 py-5 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest">{editingBrgy ? 'Update_Data' : 'Confirm_Pin'}</button>
                 </div>
               </form>
             )}
           </div>
         )}
+
         {/* Barangay List or Detail View */}
-        <div className="flex-1 overflow-y-auto pt-2 custom-scrollbar pr-1">
+        <div className="flex-1 overflow-y-auto pt-2 custom-scrollbar">
           {selectedBrgy && isViewingDetails ? (
             <div className="flex flex-col animate-in slide-in-from-right duration-300">
               {/* Back Header */}
               <button 
                 onClick={() => setIsViewingDetails(false)}
-                className="flex items-center gap-2 text-[#8e8e93] hover:text-white transition-colors mb-6 group"
+                className="flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors mb-6 group"
               >
-                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center group-hover:bg-white/10">
+                <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-gray-100">
                   <FaPlus className="rotate-45 text-[10px]" />
                 </div>
-                <span className="text-[10px] font-semibold tracking-wide">Exit Focus Mode</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Exit_Focus_Mode</span>
               </button>
 
               {/* Detail Header */}
-              <div className="relative h-48 rounded-2xl overflow-hidden mb-6 border border-white/5">
+              <div className="relative h-48 rounded-3xl overflow-hidden mb-6 border border-gray-100 shadow-xl">
                 <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" alt="Barangay" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1c1c1e] to-transparent"></div>
-                <div className="absolute bottom-4 left-4">
-                  <span className="px-2 py-1 rounded-md bg-amber-500/20 text-amber-500 text-[10px] font-bold tracking-wide border border-amber-500/30 mb-2 inline-block">
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+                <div className="absolute bottom-5 left-5">
+                  <span className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[8px] font-black tracking-widest uppercase mb-2 inline-block shadow-lg shadow-blue-500/20">
                     {selectedBrgy.type || 'Hall'}
                   </span>
-                  <h3 className="text-xl font-bold text-white tracking-tight leading-none">{selectedBrgy.name}</h3>
+                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{selectedBrgy.name}</h3>
                 </div>
               </div>
 
               {/* Data Matrix */}
               <div className="space-y-4">
-                <div className="bg-[#2c2c2e] rounded-2xl border border-white/5 p-4">
-                   <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center">
-                        <FaMapMarkerAlt className="text-amber-500" />
+                <div className="bg-gray-50 rounded-3xl border border-gray-100 p-5 shadow-sm">
+                   <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                        <FaMapMarkerAlt className="text-blue-600 text-xl" />
                       </div>
                       <div>
-                        <div className="text-[10px] font-semibold text-[#8e8e93] tracking-wide">Tactical Location</div>
-                        <div className="text-white text-[13px] font-medium leading-tight mt-0.5">{selectedBrgy.address}</div>
+                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Tactical Location</div>
+                        <div className="text-gray-900 text-sm font-bold leading-tight mt-0.5">{selectedBrgy.address}</div>
                       </div>
                    </div>
-                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                   <div className="grid grid-cols-2 gap-4 pt-5 border-t border-gray-200/50">
                       <div>
-                        <div className="text-[10px] font-semibold text-[#8e8e93] tracking-wide">Latitude</div>
-                        <div className="text-white text-[13px] font-mono mt-1">{Number(selectedBrgy.lat).toFixed(6)}</div>
+                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Latitude</div>
+                        <div className="text-blue-600 text-xs font-black mt-1 uppercase">{Number(selectedBrgy.lat).toFixed(6)}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] font-semibold text-[#8e8e93] tracking-wide">Longitude</div>
-                        <div className="text-white text-[13px] font-mono mt-1">{Number(selectedBrgy.lng).toFixed(6)}</div>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="bg-[#2c2c2e] rounded-2xl border border-white/5 p-4">
-                   <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center">
-                        <FaPhoneAlt className="text-amber-500" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-semibold text-[#8e8e93] tracking-wide">Comms Channel</div>
-                        <div className="text-white text-[13px] font-medium leading-tight mt-0.5">{selectedBrgy.contact || 'Secure line pending'}</div>
+                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Longitude</div>
+                        <div className="text-blue-600 text-xs font-black mt-1 uppercase">{Number(selectedBrgy.lng).toFixed(6)}</div>
                       </div>
                    </div>
                 </div>
 
-                <div className="bg-[#2c2c2e] rounded-2xl border border-white/5 p-4">
-                   <div className="text-[10px] font-semibold text-[#8e8e93] tracking-wide mb-3">Operational Metadata</div>
-                   <div className="flex flex-col gap-2">
-                      <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-[11px] text-white/60 font-bold">Asset ID</span>
-                        <span className="text-[11px] text-white font-mono bg-white/5 px-2 py-0.5 rounded">BRGY-{selectedBrgy.id}</span>
+                <div className="bg-gray-50 rounded-3xl border border-gray-100 p-5 shadow-sm">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                        <FaPhoneAlt className="text-blue-600 text-lg" />
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-[11px] text-white/60 font-bold">Added By</span>
-                        <span className="text-[11px] text-white">{selectedBrgy.added_by || 'System Init'}</span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-[11px] text-white/60 font-bold">Deployed</span>
-                        <span className="text-[11px] text-white">{selectedBrgy.added_at || 'Unknown'}</span>
+                      <div>
+                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Comms Channel</div>
+                        <div className="text-gray-900 text-sm font-black mt-0.5">{selectedBrgy.contact || 'Secure line pending'}</div>
                       </div>
                    </div>
                 </div>
 
                 {user && (user.role === 'admin' || (user.role === 'brgy' && user.brgy_name === selectedBrgy.name)) && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-3 pt-2">
                     <button 
                       onClick={() => { setEditingBrgy(selectedBrgy); setBrgyForm({ name: selectedBrgy.name, contact: selectedBrgy.contact || '', type: selectedBrgy.type || 'Hall' }); setIsViewingDetails(false); }}
-                      className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-xl font-bold text-[10px] tracking-wide transition-all"
+                      className="flex-1 bg-gray-900 hover:bg-black text-white py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl"
                     >
-                      Edit Tactical Data
+                      Modify Tactical Data
                     </button>
                     <button 
                       onClick={() => {
@@ -380,7 +370,7 @@ export default function BarangayMapView() {
                           handleDeleteBrgy(selectedBrgy.id);
                         }
                       }}
-                      className="w-12 h-12 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl flex items-center justify-center transition-all"
+                      className="w-14 h-14 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-2xl flex items-center justify-center transition-all shadow-sm"
                     >
                       <FaPlus className="rotate-45" />
                     </button>
@@ -388,16 +378,16 @@ export default function BarangayMapView() {
                 )}
                 
                 {/* Audit Trail */}
-                <div className="mt-8 pt-6 border-t border-white/5">
-                   <div className="flex flex-col gap-2">
-                      <div className="flex justify-between items-center text-[9px] tracking-wide">
-                         <span className="text-[#8e8e93]">Registered By</span>
-                         <span className="text-white">{selectedBrgy.added_by || 'Archival'}</span>
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                   <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-center text-[9px] tracking-widest uppercase font-black">
+                         <span className="text-gray-400">Registered By</span>
+                         <span className="text-gray-900">{selectedBrgy.added_by || 'Archival'}</span>
                       </div>
                       {selectedBrgy.updated_by && (
-                        <div className="flex justify-between items-center text-[9px] tracking-wide">
-                           <span className="text-[#8e8e93]">Last Update By</span>
-                           <span className="text-amber-500">{selectedBrgy.updated_by}</span>
+                        <div className="flex justify-between items-center text-[9px] tracking-widest uppercase font-black">
+                           <span className="text-gray-400">Last Update By</span>
+                           <span className="text-blue-600">{selectedBrgy.updated_by}</span>
                         </div>
                       )}
                    </div>
@@ -406,48 +396,52 @@ export default function BarangayMapView() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-[1px] flex-1 bg-white/5"></div>
-                <span className="text-[10px] font-bold text-[#3a3a3c] tracking-widest">Deployed Assets</span>
-                <div className="h-[1px] flex-1 bg-white/5"></div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-[1px] flex-1 bg-gray-100"></div>
+                <span className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase">Deployed Assets</span>
+                <div className="h-[1px] flex-1 bg-gray-100"></div>
               </div>
-              {barangays.length === 0 ? (
-                <div className="text-[#8e8e93] text-[12px] font-medium text-center py-10 italic">No assets registered in the database.</div>
+              {brgys.length === 0 ? (
+                <div className="text-gray-400 text-xs font-bold text-center py-10 italic">No assets registered in the database.</div>
               ) : (
-                <ul className="space-y-3">
-                  {barangays.map(brgy => (
-                    <li key={brgy.id} className="group rounded-2xl flex flex-col bg-[#2c2c2e] border border-white/5 hover:border-amber-500/30 transition-all overflow-hidden shadow-xl">
-                      <div className="p-4">
-                        <div className="flex items-center gap-4 w-full cursor-pointer" onClick={() => {
+                <div className="space-y-4">
+                  {brgys.map(brgy => (
+                    <div 
+                      key={brgy.id} 
+                      className="group rounded-3xl flex flex-col bg-white border border-gray-100 hover:border-blue-600/30 transition-all overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5 duration-300"
+                    >
+                      <div className="p-5">
+                        <div className="flex items-center gap-5 w-full cursor-pointer" onClick={() => {
                           setSelectedBrgy(brgy);
                           setIsViewingDetails(true);
                           updateViewport({ latitude: Number(brgy.lat), longitude: Number(brgy.lng), zoom: 15 });
                         }}>
-                          <div className="w-12 h-12 rounded-xl bg-[#1c1c1e] border border-white/5 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                            <FaHome className="text-[#f59e0b] text-xl" />
+                          <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                            <FaHome className="text-blue-600 text-2xl" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-[14px] text-white tracking-wide truncate">{brgy.name}</h3>
-                            <p className="text-[#8e8e93] text-[11px] mt-1 truncate font-medium">{brgy.address}</p>
+                            <h3 className="font-black text-sm text-gray-900 tracking-tight uppercase truncate">{brgy.name}</h3>
+                            <p className="text-gray-500 text-[11px] mt-1 truncate font-bold">{brgy.address}</p>
                           </div>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center px-4 py-2 bg-[#1c1c1e]/50 text-[9px] text-[#8e8e93] font-bold tracking-wide border-t border-white/5">
-                        <div className="truncate pr-2">Comms: <span className="text-white ml-1">{brgy.contact || 'N/A'}</span></div>
-                        <div className="truncate text-amber-500/70">{brgy.type || 'Hall'}</div>
+                      <div className="flex justify-between items-center px-5 py-3 bg-gray-50/50 text-[9px] text-gray-400 font-black tracking-widest uppercase border-t border-gray-50">
+                        <div className="truncate pr-2">Comms: <span className="text-gray-900 ml-1">{brgy.contact || 'N/A'}</span></div>
+                        <div className="truncate text-blue-600">{brgy.type || 'Hall'}</div>
                       </div>
-                      <div className="flex bg-[#1c1c1e]">
-                        <button className="flex-1 py-3 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white transition-all text-[10px] font-bold tracking-wide" onClick={() => { 
+                      <button 
+                        className="w-full py-4 flex items-center justify-center gap-3 bg-white hover:bg-blue-600 hover:text-white text-gray-900 transition-all text-[10px] font-black uppercase tracking-widest border-t border-gray-50" 
+                        onClick={() => { 
                           setSelectedBrgy(brgy);
                           setIsViewingDetails(true);
                           updateViewport({ latitude: Number(brgy.lat), longitude: Number(brgy.lng), zoom: 15 });
-                        }}>
-                          <FaEdit className="text-[#f59e0b]" /> View Tactical Data
-                        </button>
-                      </div>
-                    </li>
+                        }}
+                      >
+                        <FaEdit className="group-hover:text-white" /> View Tactical Data
+                      </button>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </>
           )}

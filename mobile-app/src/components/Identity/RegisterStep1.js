@@ -10,9 +10,8 @@ import {
 } from '../Auth/AuthUI';
 
 const GENDER_OPTIONS = [
-  { value: 'Male', label: 'Male', icon: Lucide.Mars },
-  { value: 'Female', label: 'Female', icon: Lucide.Venus },
-  { value: 'Prefer not to say', label: 'Prefer not', icon: Lucide.UserRound },
+  { id: 'Male', label: 'Male', icon: Lucide.Mars },
+  { id: 'Female', label: 'Female', icon: Lucide.Venus },
 ];
 
 export const RegisterStep1 = ({
@@ -30,90 +29,96 @@ export const RegisterStep1 = ({
 
   return (
     <View>
-      <AuthField label="Username" icon={Lucide.AtSign} hint="Use letters, numbers, or underscores." error={fieldErrors.username}>
+      <AuthField label="Username" required error={fieldErrors.username}>
         <AuthTextInput
           value={formData.username}
           onChangeText={(text) => updateField('username', text)}
+          onClear={() => updateField('username', '')}
           autoCapitalize="none"
-          placeholder="juan_delacruz"
+          placeholder="Enter a username"
         />
       </AuthField>
 
       <View style={{ flexDirection: stackNames ? 'column' : 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <AuthField label="First Name" icon={Lucide.UserRound} error={fieldErrors.firstName}>
+          <AuthField label="First Name" required error={fieldErrors.firstName}>
             <AuthTextInput
               value={formData.firstName}
               onChangeText={(text) => updateField('firstName', text)}
-              placeholder="Juan"
+              onClear={() => updateField('firstName', '')}
+              placeholder="First name"
             />
           </AuthField>
         </View>
         <View style={{ flex: 1 }}>
-          <AuthField label="Last Name" icon={Lucide.BadgeCheck} error={fieldErrors.lastName}>
+          <AuthField label="Last Name" required error={fieldErrors.lastName}>
             <AuthTextInput
               value={formData.lastName}
               onChangeText={(text) => updateField('lastName', text)}
-              placeholder="Dela Cruz"
+              onClear={() => updateField('lastName', '')}
+              placeholder="Last name"
             />
           </AuthField>
         </View>
       </View>
 
-      <AuthField label="Gender" icon={Lucide.Users} error={fieldErrors.gender}>
-        <AuthChoiceGrid compact options={GENDER_OPTIONS} value={formData.gender} onChange={(value) => updateField('gender', value)} />
-      </AuthField>
-
-      <AuthField label="Email Address" icon={Lucide.Mail} error={fieldErrors.email}>
-        <AuthTextInput
-          value={formData.email}
-          onChangeText={(text) => updateField('email', text)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholder="juan@example.com"
+      <AuthField label="Gender" required error={fieldErrors.gender} noContainer={true}>
+        <AuthChoiceGrid 
+          options={GENDER_OPTIONS} 
+          selected={formData.gender} 
+          onSelect={(value) => updateField('gender', value)} 
+          row={true}
         />
       </AuthField>
 
-      <AuthField label="Mobile Number" icon={Lucide.Smartphone} error={fieldErrors.phone}>
+      <AuthField label="Mobile Number" required error={fieldErrors.phone}>
         <AuthTextInput
           value={formData.phone}
           onChangeText={(text) => updateField('phone', text)}
+          onClear={() => updateField('phone', '')}
           keyboardType="phone-pad"
           placeholder="09123456789"
         />
       </AuthField>
 
-      <AuthField label="Password" icon={Lucide.LockKeyhole} hint="At least 10 characters with upper, lower, number, and symbol." error={fieldErrors.password}>
+      <AuthField 
+        label="Password" 
+        required 
+        hint="Password must be at least 10 characters with upper, lower, number, and special character."
+        error={fieldErrors.password}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AuthTextInput
             value={formData.password}
             onChangeText={(text) => updateField('password', text)}
             secureTextEntry={!showPassword}
-            placeholder="Create a strong password"
+            placeholder="Create a password"
             style={{ flex: 1 }}
           />
           <TouchableOpacity onPress={() => setShowPassword?.(!showPassword)} style={{ padding: 8 }}>
-            {showPassword ? <Lucide.EyeOff size={18} color="#64748B" /> : <Lucide.Eye size={18} color="#64748B" />}
+            {showPassword ? <Lucide.EyeOff size={22} color="#FFFFFF" /> : <Lucide.Eye size={22} color="#FFFFFF" />}
           </TouchableOpacity>
         </View>
       </AuthField>
 
-      <AuthField label="Confirm Password" icon={Lucide.ShieldCheck} error={fieldErrors.confirmPassword}>
+      <AuthField label="Confirm Password" required error={fieldErrors.confirmPassword}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AuthTextInput
             value={formData.confirmPassword}
             onChangeText={(text) => updateField('confirmPassword', text)}
             secureTextEntry={!showConfirmPassword}
-            placeholder="Repeat your password"
+            placeholder="Repeat password"
             style={{ flex: 1 }}
           />
           <TouchableOpacity onPress={() => setShowConfirmPassword?.(!showConfirmPassword)} style={{ padding: 8 }}>
-            {showConfirmPassword ? <Lucide.EyeOff size={18} color="#64748B" /> : <Lucide.Eye size={18} color="#64748B" />}
+            {showConfirmPassword ? <Lucide.EyeOff size={22} color="#FFFFFF" /> : <Lucide.Eye size={22} color="#FFFFFF" />}
           </TouchableOpacity>
         </View>
       </AuthField>
 
-      <AuthPrimaryAction title="Continue" icon={Lucide.ArrowRight} onPress={onNext} />
+      <AuthPrimaryAction title="Next" onPress={onNext} />
     </View>
   );
 };
+
+

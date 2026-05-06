@@ -300,7 +300,7 @@ const Weather: React.FC = () => {
         description="Current weather conditions and forecast for emergency preparedness"
       />
       
-      <div className="w-full font-outfit">
+      <div className="w-full font-jetbrains">
         {/* Header */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -375,14 +375,14 @@ const Weather: React.FC = () => {
         {weatherData && location && !loading && (
           <div className="space-y-4">
             {showRadar && (
-              <div className="w-full h-[600px] bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative">
+              <div className="w-full h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100 relative">
                 <iframe 
                   src={`https://embed.windy.com/embed2.html?lat=${location.lat}&lon=${location.lon}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
                   className="w-full h-full border-none"
                   title="Windy Radar"
                 />
-                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
-                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Live_Radar_Feed</span>
+                <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                   <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Live_Radar_Feed</span>
                 </div>
               </div>
             )}

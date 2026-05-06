@@ -28,7 +28,7 @@ export default function ForgotPassword() {
     <>
       <PageMeta
         title="Forgot Password | Eligtasmo"
-        description="Reset your barangay account password via email or phone."
+        description="Reset your brgy account password via email or phone."
       />
       <div className="w-full max-w-lg mx-auto">
         <div className="w-full mt-2">
@@ -42,7 +42,7 @@ export default function ForgotPassword() {
                 Forgot Password
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Enter your barangay account email or phone number to recover your password.
+                Enter your brgy account email or phone number to recover your password.
               </p>
             </div>
             <div>

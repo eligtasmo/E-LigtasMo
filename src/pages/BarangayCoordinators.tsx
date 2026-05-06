@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 
 interface BarangayAccount {
-  barangay_id: number;
-  barangay_name: string;
+  brgy_id: number;
+  brgy_name: string;
   lat: number;
   lng: number;
   address: string;
@@ -21,7 +21,7 @@ interface BarangayAccount {
 // Mapped interface for display
 interface DisplayCoordinator {
   id: number;
-  barangay_name: string;
+  brgy_name: string;
   coordinator_name: string;
   coordinator_position: string;
   phone: string;
@@ -42,15 +42,15 @@ const BarangayCoordinators: React.FC = () => {
     try {
       const response = await apiFetch('list-brgy-accounts.php');
       const data = await response.json();
-      if (data.success && Array.isArray(data.barangays)) {
+      if (data.success && Array.isArray(data.brgys)) {
         // Filter only those with valid users if we only want "registered accounts"
-        // User said "visible all the account of the registered barangay accounts".
+        // User said "visible all the account of the registered brgy accounts".
         // So we filter where user_id is not null.
-        const accounts = data.barangays
+        const accounts = data.brgys
           .filter((b: BarangayAccount) => b.user_id !== null)
           .map((b: BarangayAccount) => ({
             id: b.user_id!,
-            barangay_name: b.barangay_name,
+            brgy_name: b.brgy_name,
             coordinator_name: b.username || 'Unknown',
             coordinator_position: 'Barangay Official', // Default
             phone: b.contact || 'N/A',
@@ -64,7 +64,7 @@ const BarangayCoordinators: React.FC = () => {
         setCoordinators(accounts);
       }
     } catch (error) {
-      console.error("Failed to fetch barangay accounts", error);
+      console.error("Failed to fetch brgy accounts", error);
     } finally {
       setLoading(false);
     }
@@ -108,16 +108,16 @@ const BarangayCoordinators: React.FC = () => {
     <>
       <PageMeta
         title="Barangay Coordinators | E-LigtasMo"
-        description="Directory of registered barangay coordinators."
+        description="Directory of registered brgy coordinators."
       />
       <div className="w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-1">Registered Barangay Coordinators</h1>
-          <p className="text-gray-500">Directory of all registered barangay accounts and their locations.</p>
+          <p className="text-gray-500">Directory of all registered brgy accounts and their locations.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coordinators.length === 0 && (
-            <div className="col-span-full text-gray-400 text-center py-12 text-lg">No registered barangay coordinators found.</div>
+            <div className="col-span-full text-gray-400 text-center py-12 text-lg">No registered brgy coordinators found.</div>
           )}
           {coordinators.map(coordinator => (
             <div key={coordinator.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 h-full flex flex-col">
@@ -130,7 +130,7 @@ const BarangayCoordinators: React.FC = () => {
                     </div>
                     <div>
                       <div className="font-bold text-lg text-gray-900">{coordinator.coordinator_name}</div>
-                      <div className="text-sm text-gray-500">{coordinator.barangay_name} - {coordinator.coordinator_position}</div>
+                      <div className="text-sm text-gray-500">{coordinator.brgy_name} - {coordinator.coordinator_position}</div>
                     </div>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${

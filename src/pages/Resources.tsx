@@ -194,8 +194,8 @@ const Tabs = ({ value, onChange }: { value: string; onChange: (v: string) => voi
   const btn = (v: string, label: string) => (
     <button
       onClick={() => onChange(v)}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-        value === v ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+      className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+        value === v ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
       }`}
     >
       {label}
@@ -399,7 +399,7 @@ export default function Resources() {
                   <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">{guide.category}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => openGuide(guide.id)} className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-sm px-3 py-2 rounded-lg hover:bg-black">
+                  <button onClick={() => openGuide(guide.id)} className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-600/10 transition-all">
                     <FaBookOpen />
                     Read Guide
                   </button>
@@ -471,8 +471,8 @@ export default function Resources() {
                     <div className="text-xs text-gray-500">{c.description}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold tracking-wide">{c.number}</span>
-                    <a href={`tel:${c.number}`} className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-black">
+                    <span className="font-bold tracking-tighter text-gray-900">{c.number}</span>
+                    <a href={`tel:${c.number}`} className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md shadow-blue-600/10 transition-all">
                       <FaPhone />
                       Call
                     </a>
@@ -509,7 +509,7 @@ export default function Resources() {
             <div className="border-2 border-dashed rounded-lg p-4 text-gray-500 text-sm">Add your emergency contacts</div>
             {isAdmin && (
               <div className="mt-3">
-                <button className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-black">
+                <button className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md shadow-blue-600/10 transition-all">
                   <FaPhone />
                   Add Contact
                 </button>
@@ -519,22 +519,22 @@ export default function Resources() {
         </section>
       )}
       {openGuideId && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={closeGuide} />
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeGuide} />
           <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl border border-gray-200">
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="text-lg font-semibold">{getGuideDetail(openGuideId)?.title}</div>
+            <div className="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden relative z-10">
+              <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                <div className="text-lg font-black text-gray-900 uppercase tracking-tighter">{getGuideDetail(openGuideId)?.title}</div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => downloadGuide(openGuideId)} className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <button onClick={() => downloadGuide(openGuideId)} className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-all shadow-sm">
                     <FaDownload />
                     Download
                   </button>
-                  <button onClick={() => printGuide(openGuideId)} className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <button onClick={() => printGuide(openGuideId)} className="inline-flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-all shadow-sm">
                     <FaPrint />
                     Print/PDF
                   </button>
-                  <button onClick={closeGuide} className="inline-flex items-center px-3 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-black">Close</button>
+                  <button onClick={closeGuide} className="inline-flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 font-bold">Close</button>
                 </div>
               </div>
               <div className="p-4 space-y-4">

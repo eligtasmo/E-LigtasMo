@@ -8,7 +8,7 @@ export default function BrgyProfile() {
     <>
       <PageMeta
         title="Barangay Profile | E-LIGTASMO"
-        description="Manage your barangay profile information and settings"
+        description="Manage your brgy profile information and settings"
       />
       
       <div className="w-full">
@@ -19,7 +19,7 @@ export default function BrgyProfile() {
               Barangay Profile
             </h1>
             <p className="text-sm text-gray-600">
-              Manage your barangay information and account settings
+              Manage your brgy information and account settings
             </p>
           </div>
         </div>

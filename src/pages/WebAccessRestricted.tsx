@@ -8,20 +8,20 @@ const WebAccessRestricted: React.FC = () => {
 
   // If user is admin or brgy, they shouldn't be here
   if (user && (user.role === 'admin' || user.role === 'brgy')) {
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/barangay'} replace />;
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/brgy'} replace />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-jetbrains">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-        <div className="bg-black p-8 flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-            <FiShield className="text-white w-8 h-8" />
+        <div className="bg-white p-8 flex flex-col items-center text-center border-b border-gray-100">
+          <div className="w-16 h-16 bg-blue-600/5 rounded-2xl flex items-center justify-center mb-6 border border-blue-600/10">
+            <FiShield className="text-blue-600 w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-2">
-            Tactical Access Restricted
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase mb-2 italic">
+            Access Restricted
           </h1>
-          <p className="text-gray-400 text-sm font-medium">
+          <p className="text-gray-500 text-sm font-bold">
             The E-LigtasMo Web Portal is reserved for command-level operations only.
           </p>
         </div>
@@ -38,7 +38,7 @@ const WebAccessRestricted: React.FC = () => {
           <div className="space-y-4 w-full">
             <button
               onClick={() => logout()}
-              className="w-full py-4 bg-black text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-lg shadow-black/10 hover:bg-gray-900 transition-all active:scale-95"
+              className="w-full py-4 bg-blue-600 text-white rounded-xl font-black tracking-widest uppercase text-xs shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95"
             >
               Sign Out and Switch Account
             </button>

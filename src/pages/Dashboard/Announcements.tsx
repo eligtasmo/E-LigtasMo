@@ -15,7 +15,7 @@ const CATEGORIES = [
 export default function Announcements() {
   const { user } = useAuth();
   const role = (user?.role || 'resident').toLowerCase();
-  const brgyName = (user as any)?.brgy_name || (user as any)?.barangay || '';
+  const brgyName = (user as any)?.brgy_name || (user as any)?.brgy || '';
   const canSend = role === 'admin' || role === 'brgy' || role === 'brgy_chair';
   
   const [showModal, setShowModal] = useState(false);
@@ -39,7 +39,7 @@ export default function Announcements() {
   const loadAnnouncements = async () => {
     setIsLoading(true);
     try {
-      const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'barangay' : 'residents');
+      const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'brgy' : 'residents');
       const brgyParam = brgyName && aud !== 'all' ? `&brgy=${encodeURIComponent(brgyName)}` : '';
       const res = await apiFetch(`list-announcements.php?audience=${encodeURIComponent(aud)}&limit=100${brgyParam}`, { headers: { 'X-Role': role } });
       const data = await res.json();
@@ -67,7 +67,7 @@ export default function Announcements() {
     }
 
     try {
-      const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
+      const audience = form.audience === 'Barangay Only' ? 'brgy' : (form.audience === 'All Residents' ? 'residents' : 'all');
       
       // If it's an urgent alert, we also create a notification
       const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
@@ -110,7 +110,7 @@ export default function Announcements() {
   const confirmUpdate = async () => {
     if (!existing) return;
     try {
-      const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
+      const audience = form.audience === 'Barangay Only' ? 'brgy' : (form.audience === 'All Residents' ? 'residents' : 'all');
       const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
       
       const payload = { 
@@ -165,24 +165,24 @@ export default function Announcements() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto font-outfit">
+    <div className="max-w-5xl mx-auto font-jetbrains">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-black p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-8 rounded-[2.5rem] text-gray-900 shadow-xl border border-gray-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-10 text-blue-600">
           <FiBell size={100} />
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-[10px] font-semibold tracking-wide text-blue-500">Communication Hub Active</span>
+            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="text-[10px] font-bold tracking-tight text-blue-600">Communication hub active</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Community Alerts</h1>
-          <p className="text-gray-400 text-sm font-medium">Broadcast operational updates, typhoon warnings, and relief schedules to residents.</p>
+          <h1 className="text-3xl font-black tracking-tight mb-2">Community Alerts</h1>
+          <p className="text-gray-500 text-sm font-bold">Broadcast operational updates, typhoon warnings, and relief schedules to residents.</p>
         </div>
         {canSend && (
           <button 
             onClick={() => setShowModal(true)}
-            className="relative z-10 px-6 py-3 bg-white text-black rounded-xl font-bold tracking-wide text-xs shadow-lg hover:bg-gray-100 transition-all active:scale-95 flex items-center gap-2"
+            className="relative z-10 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-2"
           >
             <FiPlus /> New Broadcast
           </button>
@@ -202,7 +202,7 @@ export default function Announcements() {
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map(n => (
-                <div key={n} className="h-32 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-3xl" />
+                <div key={n} className="h-32 bg-gray-50 animate-pulse rounded-3xl" />
               ))}
             </div>
           ) : filteredAnnouncements.length > 0 ? (
@@ -210,7 +210,7 @@ export default function Announcements() {
               {filteredAnnouncements.map((a: any) => (
                 <div 
                   key={a.id} 
-                  className={`bg-white dark:bg-gray-900 rounded-3xl border ${a.is_urgent ? 'border-red-500/20 shadow-lg shadow-red-500/5' : 'border-gray-100 dark:border-gray-800'} p-6 transition-all hover:shadow-md group`}
+                  className={`bg-white rounded-3xl border ${a.is_urgent ? 'border-red-500/20 shadow-lg shadow-red-500/5' : 'border-gray-100'} p-6 transition-all hover:shadow-md group`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -224,7 +224,7 @@ export default function Announcements() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-gray-900 dark:text-white tracking-tight leading-none">{a.title}</h3>
+                          <h3 className="font-bold text-gray-900 tracking-tight leading-none">{a.title}</h3>
                           {a.is_urgent === 1 && (
                             <span className="px-2 py-0.5 bg-red-600 text-white text-[8px] font-bold tracking-wide rounded-md">Urgent</span>
                           )}
@@ -235,7 +235,7 @@ export default function Announcements() {
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
                     {a.message}
                   </p>
                   {a.external_link && (
@@ -243,7 +243,7 @@ export default function Announcements() {
                       href={a.external_link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline"
+                      className="inline-flex items-center gap-2 text-[10px] font-bold text-blue-600 tracking-tight hover:underline"
                     >
                       <FiLink /> Source Intelligence
                     </a>
@@ -252,25 +252,25 @@ export default function Announcements() {
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 p-12 text-center">
-              <FiBell className="mx-auto text-gray-300 mb-4" size={40} />
-              <p className="text-gray-500 font-bold tracking-wide text-xs">No active broadcasts found</p>
+            <div className="bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 p-12 text-center">
+              <FiBell className="mx-auto text-gray-200 mb-4" size={40} />
+              <p className="text-gray-400 font-bold tracking-tight text-xs">No active broadcasts found</p>
             </div>
           )}
         </div>
 
         {/* Categories / Side Info */}
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+          <div className="bento-card p-6">
             <h2 className="text-xs font-bold text-gray-500 tracking-wide mb-6">Dispatch Filters</h2>
             <div className="space-y-3">
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${!selectedCategory ? 'bg-black text-white border-black' : 'border-gray-50 dark:border-gray-800 hover:bg-gray-50'}`}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${!selectedCategory ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
               >
                 <div className="flex items-center gap-3">
-                  <FiLayers className={!selectedCategory ? 'text-blue-400' : 'text-gray-400'} />
-                  <span className={`text-xs font-bold tracking-wide ${!selectedCategory ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`}>All Broadcasts</span>
+                  <FiLayers className={!selectedCategory ? 'text-white' : 'text-gray-400'} />
+                  <span className={`text-xs font-bold tracking-wide ${!selectedCategory ? 'text-white' : 'text-gray-700'}`}>All Broadcasts</span>
                 </div>
                 <FiChevronRight className={!selectedCategory ? 'text-white' : 'text-gray-300'} />
               </button>
@@ -278,11 +278,11 @@ export default function Announcements() {
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${selectedCategory === cat.id ? 'bg-black text-white border-black' : 'border-gray-50 dark:border-gray-800 hover:bg-gray-50'}`}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${selectedCategory === cat.id ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={`text-lg ${selectedCategory === cat.id ? 'text-white' : `text-${cat.color}-600`}`}>{cat.icon}</span>
-                    <span className={`text-xs font-bold tracking-wide ${selectedCategory === cat.id ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`}>{cat.name}</span>
+                    <span className={`text-xs font-bold tracking-wide ${selectedCategory === cat.id ? 'text-white' : 'text-gray-700'}`}>{cat.name}</span>
                   </div>
                   <FiChevronRight className={selectedCategory === cat.id ? 'text-white' : 'text-gray-300'} />
                 </button>
@@ -307,7 +307,7 @@ export default function Announcements() {
       {showModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetForm} />
-          <div className="relative bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[40px] shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+          <div className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden">
             {phase === 'compose' ? (
               <div className="p-8">
                 <div className="flex items-center justify-between mb-8">
@@ -405,7 +405,7 @@ export default function Announcements() {
                           onClick={() => setForm(f => ({ ...f, audience: target }))}
                           className={`flex-1 py-3 rounded-xl border text-[10px] font-bold tracking-wide transition-all ${
                             form.audience === target 
-                            ? 'border-black bg-black text-white' 
+                            ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
                             : 'border-gray-100 text-gray-400 hover:bg-gray-50'
                           }`}
                         >
@@ -439,7 +439,7 @@ export default function Announcements() {
                   <button onClick={() => setPhase('compose')} className="flex-1 py-4 text-xs font-bold tracking-wide text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Back to Edit</button>
                   <button 
                     onClick={confirmUpdate}
-                    className="flex-1 py-4 bg-black text-white rounded-2xl text-xs font-bold tracking-wide shadow-xl hover:bg-gray-900 transition-all active:scale-95"
+                    className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-xs font-bold tracking-wide shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95"
                   >
                     Overwrite Sync
                   </button>

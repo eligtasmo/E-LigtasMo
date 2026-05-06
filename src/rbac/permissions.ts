@@ -15,7 +15,7 @@ export type Permission =
 
 type PermissionMap = Record<Role, Set<Permission>>;
 
-// Baseline, can be extended to granular barangay scopes later
+// Baseline, can be extended to granular brgy scopes later
 const rolePermissions: PermissionMap = {
   admin: new Set([
     'users.view',

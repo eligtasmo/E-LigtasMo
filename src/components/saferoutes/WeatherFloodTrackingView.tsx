@@ -1064,7 +1064,7 @@ export default function WeatherFloodTrackingView() {
         }
         const pass = deriveIncidentPassability(inc);
         const ringColors = ringColorsForIncident(inc);
-        const label = inc.address || inc.location || inc.barangay || `${inc.lat?.toFixed?.(4)}, ${inc.lng?.toFixed?.(4)}`;
+        const label = inc.address || inc.location || inc.brgy || `${inc.lat?.toFixed?.(4)}, ${inc.lng?.toFixed?.(4)}`;
         batch.push({ id: inc.id, path, polygons, pass, ringColors, label, type: (inc.type || 'Incident'), severity: (inc.severity || 'Unknown'), status: (inc.status || '') });
       }
       if (batch.length) {
@@ -1317,7 +1317,7 @@ export default function WeatherFloodTrackingView() {
             zoom: 12
           }}
           style={{ width: '100%', height: '100%' }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapStyle="mapbox://styles/mapbox/light-v11"
           mapboxAccessToken={MAPBOX_TOKEN}
           onMove={(evt: any) => {
             const c = evt.viewState;

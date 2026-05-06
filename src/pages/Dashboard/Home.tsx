@@ -151,7 +151,7 @@ export default function Home() {
   const [loadingHazards, setLoadingHazards] = useState(true);
   const [incidentsError, setIncidentsError] = useState<string | null>(null);
   const [hazardsError, setHazardsError] = useState<string | null>(null);
-  const [barangayLevels, setBarangayLevels] = useState<any[]>([]);
+  const [brgyLevels, setBarangayLevels] = useState<any[]>([]);
   const [loadingLevels, setLoadingLevels] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
@@ -187,7 +187,7 @@ export default function Home() {
           apiFetch('list-hazards.php'),
           apiFetch('shelters-stats.php'),
           apiFetch('list-users.php'),
-          apiFetch('barangay-status.php')
+          apiFetch('brgy-status.php')
         ]);
 
         let incidents: any[] = [];
@@ -290,7 +290,7 @@ export default function Home() {
         title="Admin Command Center - E-LigtasMo"
         description="Real-time disaster risk management and emergency response coordination dashboard."
       />
-      <div className="flex flex-col font-outfit">
+      <div className="flex flex-col font-jetbrains">
         {/* Header */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -316,21 +316,22 @@ export default function Home() {
           </div>
         </div>
         {/* Merged Emergency Command Center & Hotlines - Single Container */}
-        <div className="bg-[#0f172a] rounded-2xl shadow-2xl overflow-hidden mb-6 border border-slate-800 relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-red-600/10 opacity-50 group-hover:opacity-70 transition-opacity" />
+        {/* Merged Emergency Command Center & Hotlines - Single Container */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100 relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-red-50 opacity-50 group-hover:opacity-70 transition-opacity" />
           
           {/* Emergency Command Center Header Section */}
-          <div className="p-6 text-white relative z-10 border-b border-slate-800/50">
+          <div className="p-6 text-gray-900 relative z-10 border-b border-gray-100">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg shadow-red-900/20 border border-red-500/30">
+                <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg shadow-red-600/20 border border-red-500/30">
                   <FaShieldAlt className="text-white text-2xl" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-                    MDRRMO <span className="text-red-500">Command Center</span>
+                    MDRRMO <span className="text-red-600">Command Center</span>
                   </h1>
-                  <p className="text-slate-400 font-mono text-xs flex items-center gap-2 mt-1">
+                  <p className="text-gray-500 font-bold text-xs flex items-center gap-2 mt-1 uppercase tracking-widest">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     SYSTEM_PROTOCOL_ACTIVE // {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
@@ -338,27 +339,27 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <div className="text-3xl font-bold font-mono tracking-tighter text-white">
+                  <div className="text-3xl font-bold tracking-tighter text-gray-900">
                     {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                    <span className="text-red-500 animate-pulse">:</span>
+                    <span className="text-red-600 animate-pulse">:</span>
                     {new Date().toLocaleTimeString('en-US', { second: '2-digit' })}
                   </div>
-                  <div className="text-[10px] font-semibold text-slate-500 tracking-wide">Live Tactical Clock</div>
+                  <div className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Live Tactical Clock</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Emergency Hotlines Section */}
-          <div className="p-6 bg-slate-900/50 relative z-10">
+          <div className="p-6 bg-gray-50/50 relative z-10">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="bg-slate-800 text-slate-300 rounded-xl p-3 border border-slate-700 shadow-inner">
+                <div className="bg-white text-gray-400 rounded-xl p-3 border border-gray-200 shadow-sm">
                   <FaBullhorn className="text-lg" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-sm text-slate-200 tracking-wide">Tactical Hotlines</h2>
-                  <p className="text-slate-500 text-[10px] font-medium tracking-tight">Direct channel authorization required</p>
+                  <h2 className="font-bold text-sm text-gray-900 tracking-wide">Tactical Hotlines</h2>
+                  <p className="text-gray-500 text-[10px] font-bold tracking-tight uppercase">Direct channel authorization required</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -370,14 +371,14 @@ export default function Home() {
                   <button
                     key={h.num}
                     onClick={() => window.open(`tel:${h.num}`, '_self')}
-                    className="bg-slate-800/50 hover:bg-slate-700/80 border border-slate-700 p-3 rounded-xl transition-all group flex items-center gap-4"
+                    className="bg-white hover:bg-gray-50 border border-gray-200 p-3 rounded-xl transition-all group flex items-center gap-4 shadow-sm"
                   >
-                    <div className={`w-10 h-10 rounded-lg bg-${h.color}-500/10 flex items-center justify-center text-${h.color}-500 group-hover:bg-${h.color}-500 group-hover:text-white transition-all`}>
+                    <div className={`w-10 h-10 rounded-lg bg-${h.color}-50 flex items-center justify-center text-${h.color}-600 group-hover:bg-${h.color}-600 group-hover:text-white transition-all`}>
                       {h.icon}
                     </div>
                     <div className="text-left">
-                      <div className="text-lg font-bold text-white font-mono leading-none mb-1">{h.num}</div>
-                      <div className="text-[9px] font-semibold text-slate-500 tracking-wide">{h.label.replace(/_/g, ' ')}</div>
+                      <div className="text-lg font-bold text-gray-900 leading-none mb-1">{h.num}</div>
+                      <div className="text-[9px] font-bold text-gray-400 tracking-wide uppercase">{h.label.replace(/_/g, ' ')}</div>
                     </div>
                   </button>
                 ))}
@@ -474,16 +475,16 @@ export default function Home() {
         </div>
 
         {/* Barangay Flood Levels Section */}
-        <div className="mb-6 bg-[#0f172a] rounded-2xl shadow-2xl p-6 border border-slate-800">
+        <div className="mb-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-3">
-              <div className="bg-blue-600/20 text-blue-400 rounded-xl p-2.5 border border-blue-500/20">
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
+              <div className="bg-blue-100 text-blue-600 rounded-xl p-2.5 border border-blue-200">
                 <FaWater className="text-lg" />
               </div>
               Barangay Tactical Status
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Update_Frequency: 1M</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Update_Frequency: 1M</span>
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             </div>
           </div>
@@ -496,7 +497,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {barangayLevels.map((brgy, idx) => {
+              {brgyLevels.map((brgy, idx) => {
                 const status = (brgy.status_level || 'safe').toLowerCase();
                 let colorClass = 'emerald';
                 if (status === 'critical') colorClass = 'red';
@@ -504,23 +505,23 @@ export default function Home() {
                 else if (status === 'monitor') colorClass = 'yellow';
 
                 return (
-                  <div key={`brgy-status-${brgy.id || idx}`} className={`rounded-2xl p-4 border bg-slate-900/50 border-${colorClass}-500/20 hover:border-${colorClass}-500/50 transition-all duration-300 group`}>
+                  <div key={`brgy-status-${brgy.id || idx}`} className={`rounded-2xl p-4 border bg-gray-50 border-${colorClass}-500/20 hover:border-${colorClass}-500/50 transition-all duration-300 group shadow-sm`}>
                     <div className="flex items-center justify-between mb-3">
-                       <div className={`p-1.5 rounded-lg bg-${colorClass}-500/10 text-${colorClass}-500`}>
+                       <div className={`p-1.5 rounded-lg bg-${colorClass}-50 text-${colorClass}-600 border border-${colorClass}-100`}>
                          <FaShieldAlt className="text-sm" />
                        </div>
                        {Number(brgy.flood_depth_cm) > 0 && (
-                         <span className="text-[10px] font-black bg-white/5 px-2 py-1 rounded text-white border border-white/10 font-mono">
+                         <span className="text-[10px] font-black bg-white px-2 py-1 rounded text-gray-900 border border-gray-200 font-mono shadow-sm">
                            {brgy.flood_depth_cm}CM
                          </span>
                        )}
                     </div>
-                    <div className="font-bold text-sm mb-1 text-white truncate tracking-tight" title={brgy.barangay_name}>
-                      {brgy.barangay_name}
+                    <div className="font-bold text-sm mb-1 text-gray-900 truncate tracking-tight" title={brgy.brgy_name}>
+                       {brgy.brgy_name}
                     </div>
-                    <div className={`text-[9px] text-${colorClass}-400 font-bold tracking-wide flex items-center justify-between`}>
-                      <span className="capitalize">{status}</span>
-                      {brgy.message && <FaInfoCircle className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity" title={brgy.message} />}
+                    <div className={`text-[9px] text-${colorClass}-600 font-bold tracking-wide flex items-center justify-between uppercase`}>
+                       <span className="capitalize">{status}</span>
+                       {brgy.message && <FaInfoCircle className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity" title={brgy.message} />}
                     </div>
                   </div>
                 );
@@ -574,10 +575,10 @@ export default function Home() {
           </div>
 
           {/* Live Map - Enhanced */}
-          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full bg-[#0f172a] order-1 lg:order-1 relative group">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-3">
-                <div className="bg-red-600/20 text-red-500 rounded-xl p-2.5 border border-red-500/20">
+          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full bg-white order-1 lg:order-1 relative group border border-gray-100 rounded-2xl overflow-hidden shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 p-6 bg-gray-50 border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
+                <div className="bg-red-100 text-red-600 rounded-xl p-2.5 border border-red-200">
                   <FaMapMarkerAlt className="text-sm" />
                 </div>
                 Geospatial Tactical Map
@@ -588,11 +589,11 @@ export default function Home() {
             {/* Map Section Content continues... */}
 
             {/* Weather Controls Overlay (Admin) */}
-            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 mt-16">
-              <div className="flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-white/10 shadow-2xl">
+            <div className="absolute top-24 left-4 z-20 flex flex-col gap-2">
+              <div className="flex bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-gray-200 shadow-xl">
                 <button 
                   onClick={() => setShowWindyRadar(!showWindyRadar)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wide transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wide transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-blue-600'}`}
                 >
                   <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
                   Windy Radar
@@ -639,9 +640,12 @@ export default function Home() {
               <MapboxMap
                 {...viewState}
                 onMove={(evt: any) => setViewState(evt.viewState)}
-                mapStyle="mapbox://styles/mapbox/dark-v11"
+                pitch={0}
+                bearing={0}
+                mapStyle="mapbox://styles/mapbox/light-v11"
                 mapboxAccessToken={MAPBOX_TOKEN}
-                style={{ height: '100%', width: '100%' }}
+                style={{ width: '100%', height: '100%' }}
+                onLoad={() => {}}
               >
                 <SantaCruzOutline />
                 {weatherLayer !== 'none' && OWM_KEY && (
@@ -659,23 +663,23 @@ export default function Home() {
                   </Source>
                 )}
                 {/* Layer Controls Widget */}
-                <div className="absolute right-4 top-4 z-10 bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-4 min-w-[180px]">
-                  <div className="text-[10px] font-semibold text-slate-500 tracking-wide mb-4 border-b border-slate-800 pb-2">Tactical Layers</div>
+                <div className="absolute right-4 top-24 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 p-4 min-w-[180px]">
+                  <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-4 border-b border-gray-100 pb-2">Tactical Layers</div>
                   <div className="space-y-3">
                     <label className="flex items-center justify-between cursor-pointer group">
-                      <span className="text-[11px] font-bold text-slate-300 group-hover:text-red-500 transition-colors tracking-tight">Active Incidents</span>
+                      <span className="text-[11px] font-bold text-gray-600 group-hover:text-red-600 transition-colors tracking-tight">Active Incidents</span>
                       <input 
                         type="checkbox" 
-                        className="rounded border-slate-700 bg-slate-800 text-red-600 focus:ring-red-500/50 w-4 h-4"
+                        className="rounded border-gray-300 bg-gray-50 text-red-600 focus:ring-red-500/50 w-4 h-4"
                         checked={mapLayers.showIncidents} 
                         onChange={(e) => setMapLayers(v => ({ ...v, showIncidents: e.target.checked }))} 
                       />
                     </label>
                     <label className="flex items-center justify-between cursor-pointer group">
-                      <span className="text-[11px] font-bold text-slate-300 group-hover:text-emerald-500 transition-colors tracking-tight">Shelter Network</span>
+                      <span className="text-[11px] font-bold text-gray-600 group-hover:text-emerald-500 transition-colors tracking-tight">Shelter Network</span>
                       <input 
                         type="checkbox" 
-                        className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-emerald-500/50 w-4 h-4"
+                        className="rounded border-gray-300 bg-gray-50 text-emerald-600 focus:ring-emerald-500/50 w-4 h-4"
                         checked={mapLayers.showShelters} 
                         onChange={(e) => setMapLayers(v => ({ ...v, showShelters: e.target.checked }))} 
                       />
@@ -940,10 +944,10 @@ const ReportDetailsOverlay = ({ incident, onClose }: any) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0a0a0a] flex flex-col md:flex-row animate-in fade-in duration-300 font-mono text-white">
+    <div className="fixed inset-0 z-[100] bg-white flex flex-col md:flex-row animate-in fade-in duration-300 font-jetbrains text-gray-900">
       <button 
         onClick={onClose}
-        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-[110] transition-all"
+        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shadow-sm z-[110] transition-all"
       >
         <FaTimes className="text-xl" />
       </button>

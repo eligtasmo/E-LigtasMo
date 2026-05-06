@@ -3,12 +3,14 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import * as Lucide from 'lucide-react-native';
 
 import { AuthService } from '../services/AuthService';
+import { API_URL } from '../config';
 import {
   AuthScreenShell,
   AuthField,
   AuthTextInput,
   AuthPrimaryAction,
   AuthChoiceGrid,
+  AuthStepDots,
   AuthGlassCard,
   AUTH_COLORS,
   AUTH_FONTS,
@@ -52,7 +54,7 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
 
   const fetchBarangays = async () => {
     try {
-      const res = await fetch(`${AuthService.API_URL}/list-barangays.php`);
+      const res = await fetch(`${API_URL}/list-barangays.php`);
       const data = await res.json();
       if (data.success && data.barangays) {
         setBarangays(data.barangays.map(b => b.name));
@@ -130,21 +132,17 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
   };
 
   return (
-    <AuthScreenShell title="Complete Profile" onBack={() => step === 1 ? navigation.goBack() : setStep(1)}>
+    <AuthScreenShell 
+      title="Create Account" 
+      onBack={() => step === 1 ? navigation.goBack() : setStep(1)}
+      step={step + 2}
+      totalSteps={4}
+    >
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: TEXT_MAIN, fontFamily: FONT_HEADING }}>
-                Step {step} of 2
-            </Text>
-            <Text style={{ fontSize: 13, color: TEXT_MUTED, marginTop: 4, fontFamily: FONT_INPUT }}>
-                {step === 1 ? 'Personal Information' : 'Address & Location'}
-            </Text>
-        </View>
-
         {errorText ? (
-            <AuthGlassCard style={{ padding: 12, marginBottom: 20, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{errorText}</Text>
-            </AuthGlassCard>
+          <View style={{ padding: 12, marginBottom: 24, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 4, borderWidth: 1, borderColor: '#EF4444' }}>
+              <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{errorText}</Text>
+          </View>
         ) : null}
 
         {step === 1 ? (
@@ -175,5 +173,7 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
     </AuthScreenShell>
   );
 };
+
+
 
 export default RegisterDetailsScreen;

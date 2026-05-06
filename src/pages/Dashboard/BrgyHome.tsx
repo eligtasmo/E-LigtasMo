@@ -18,7 +18,7 @@ const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefine
 const BrgyHome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [barangayLocation, setBarangayLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
+  const [brgyLocation, setBarangayLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
 
   useEffect(() => {
     if (user && (user as any).lat && (user as any).lng) {
@@ -55,7 +55,7 @@ const BrgyHome = () => {
     try {
       setLoadingData(true);
       const brgyName = user?.brgy_name || '';
-      // Fetch all announcements for barangay
+      // Fetch all announcements for brgy
       const annUrl = `list-announcements.php?audience=all&limit=1000${brgyName ? `&brgy=${encodeURIComponent(brgyName)}` : ''}`;
       const resAnnouncements = await apiFetch(annUrl, { headers: { 'X-Role': 'brgy' } });
       const dataAnnouncements = await resAnnouncements.json();
@@ -105,8 +105,8 @@ const BrgyHome = () => {
 
       // Load Barangay Status for Audit
       try {
-        const brgyName = user?.brgy_name || user?.barangay || 'Poblacion I';
-        const resStatus = await apiFetch(`barangay-status.php?barangay=${encodeURIComponent(brgyName)}`);
+        const brgyName = user?.brgy_name || user?.brgy || 'Poblacion I';
+        const resStatus = await apiFetch(`brgy-status.php?brgy=${encodeURIComponent(brgyName)}`);
         const dataStatus = await resStatus.json();
         if (dataStatus.status === 'success' && dataStatus.data) {
           setMetrics(prev => ({
@@ -245,7 +245,7 @@ const BrgyHome = () => {
       const term = searchTerm.toLowerCase();
       const match = (
         (incident.description || '').toLowerCase().includes(term) ||
-        (incident.barangay || '').toLowerCase().includes(term) ||
+        (incident.brgy || '').toLowerCase().includes(term) ||
         (incident.location_text || '').toLowerCase().includes(term) ||
         (incident.type || 'Flood').toLowerCase().includes(term) ||
         String(incident.id).includes(term)
@@ -283,16 +283,16 @@ const BrgyHome = () => {
     showHazards: true
   });
 
-  // Center on barangay location if available
+  // Center on brgy location if available
   useEffect(() => {
-    if (barangayLocation) {
+    if (brgyLocation) {
       updateViewport({
-        latitude: barangayLocation.lat,
-        longitude: barangayLocation.lng,
+        latitude: brgyLocation.lat,
+        longitude: brgyLocation.lng,
         zoom: 14
       });
     }
-  }, [barangayLocation]);
+  }, [brgyLocation]);
 
   const incidentGeoJSON = useMemo(() => ({
     type: 'FeatureCollection' as const,
@@ -442,28 +442,28 @@ const BrgyHome = () => {
         title="Command Center - E-LigtasMo"
         description="Barangay Tactical Operations Dashboard."
       />
-      <div className="flex flex-col font-outfit">
+      <div className="flex flex-col font-jetbrains">
         {/* Tactical Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-black p-6 text-white shadow-2xl border-b border-white/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 text-gray-900 shadow-xl border-b border-gray-100 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
             <FaExclamationTriangle size={120} />
           </div>
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-semibold tracking-wide text-red-500">Live Operations Active</span>
+              <span className="text-[10px] font-bold tracking-tight text-red-500">Live Operations Active</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight mb-2">
-              {user?.brgy_name || 'Barangay'} <span className="text-gray-400 text-xl font-medium tracking-normal italic">MDRRMO Console</span>
+              {user?.brgy_name || 'Barangay'} <span className="text-blue-600/60 text-xl font-medium tracking-normal italic">MDRRMO Console</span>
             </h1>
-            <p className="text-gray-400 text-sm font-medium max-w-xl">
+            <p className="text-gray-500 text-sm font-medium max-w-xl">
               Real-time disaster risk reduction and management oversight for the local command sector.
             </p>
           </div>
           <div className="flex items-center gap-3 relative z-10">
             <button 
               onClick={loadData}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all flex items-center gap-2 text-xs font-bold tracking-wide"
+              className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all flex items-center gap-2 text-xs font-bold tracking-wide text-gray-700"
             >
               <FiRefreshCw className={loadingData ? 'animate-spin' : ''} /> Refresh Sync
             </button>
@@ -478,13 +478,13 @@ const BrgyHome = () => {
 
         {/* Tactical Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 lg:px-8 mt-6">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative group overflow-hidden">
+          <div className="bento-card p-6 relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-500/10 rounded-2xl">
-                <FaWater className="text-yellow-600 dark:text-yellow-500 w-6 h-6" />
+              <div className="p-3 bg-yellow-50 rounded-2xl">
+                <FaWater className="text-yellow-600 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-500 tracking-wide bg-yellow-50 dark:bg-yellow-500/10 px-2 py-1 rounded-md">Live</span>
+              <span className="text-[10px] font-bold text-yellow-600 tracking-wide bg-yellow-50 px-2 py-1 rounded-md">Live</span>
             </div>
             <div className="relative z-10">
               <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.activeIncidents}</div>
@@ -492,7 +492,7 @@ const BrgyHome = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative group overflow-hidden">
+          <div className="bento-card p-6 relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-2xl">
@@ -506,7 +506,7 @@ const BrgyHome = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative group overflow-hidden">
+          <div className="bento-card p-6 relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-2xl">
@@ -520,7 +520,7 @@ const BrgyHome = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm relative group overflow-hidden">
+          <div className="bento-card p-6 relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
               <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-2xl">
@@ -565,7 +565,7 @@ const BrgyHome = () => {
         <div className="px-4 lg:px-8 flex flex-col lg:flex-row min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)] mb-6">
           
           {/* Operational Command Panel (Right side) */}
-          <div className="w-full lg:w-1/3 flex flex-col h-[500px] lg:h-full bg-white shadow-xl border-l border-gray-100 overflow-hidden order-2 lg:order-2 relative">
+          <div className="w-full lg:w-1/3 tactical-panel order-2 lg:order-2 relative">
             {!selectedIncident ? (
               <>
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
@@ -681,17 +681,17 @@ const BrgyHome = () => {
                 </div>
               </>
             ) : (
-              <div className="flex flex-col h-full bg-[#0a0a0a] text-white animate-in slide-in-from-right duration-300">
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-[#111111]">
-                  <button onClick={() => setSelectedBrgyIncident(null)} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
+              <div className="flex flex-col h-full bg-white text-gray-900 animate-in slide-in-from-right duration-300">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                  <button onClick={() => setSelectedBrgyIncident(null)} className="flex items-center gap-2 text-[10px] font-bold tracking-tight text-gray-500 hover:text-blue-600 transition-colors">
                     <FiChevronRight className="rotate-180" />
-                    Back_to_Matrix
+                    Back to Matrix
                   </button>
-                  <div className="text-[10px] font-mono text-red-500">TACTICAL_DETAIL_VIEW</div>
+                  <div className="text-[10px] font-bold text-red-600 tracking-tight">Incident Details</div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar-dark">
-                  <div className="aspect-video bg-black relative overflow-hidden group">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="aspect-video bg-gray-100 relative overflow-hidden group">
                     {selectedIncident.media ? (
                       <img 
                         src={`${import.meta.env.VITE_API_URL || 'http://localhost/eligtasmo-backend/'}${selectedIncident.media}`} 
@@ -699,89 +699,89 @@ const BrgyHome = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gray-900/50">
-                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-gray-200/30">
+                        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm">
                           <FaWater className="text-2xl text-blue-500 animate-pulse" />
                         </div>
-                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">No_Tactical_Imagery</span>
+                        <span className="text-[10px] font-bold text-gray-400">No Tactical Imagery</span>
                       </div>
                     )}
                     <div className="absolute top-4 left-4">
-                      <span className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest shadow-2xl ${getSeverityColor(selectedIncident.severity)}`}>
-                        {selectedIncident.severity}_THREAT
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-lg tracking-tight shadow-lg ${getSeverityColor(selectedIncident.severity)}`}>
+                        {selectedIncident.severity} Threat
                       </span>
                     </div>
                   </div>
 
                   <div className="p-8 space-y-8">
                     <div>
-                      <div className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em] mb-2">Operational_Report</div>
-                      <h3 className="text-2xl font-black uppercase tracking-tight mb-2">{selectedIncident.type || 'Flood_Event'}</h3>
-                      <div className="flex items-center gap-4 text-[11px] font-mono text-gray-500">
+                      <div className="text-[10px] font-bold text-red-600 tracking-tight mb-2">Operational Report</div>
+                      <h3 className="text-2xl font-bold tracking-tight mb-2 text-gray-900">{selectedIncident.type || 'Flood Event'}</h3>
+                      <div className="flex items-center gap-4 text-[11px] font-bold text-gray-500">
                         <div className="flex items-center gap-2">
                           <FiClockIcon className="text-red-500" />
                           {formatTime(selectedIncident.time || selectedIncident.created_at)}
                         </div>
                         <div className="flex items-center gap-2">
                           <FiMapPin className="text-blue-500" />
-                          {selectedIncident.barangay || 'Area_Alpha'}
+                          {selectedIncident.brgy || 'Area_Alpha'}
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Status_Registry</div>
-                        <div className={`text-[11px] font-black uppercase ${selectedIncident.status === 'Pending' ? 'text-yellow-500' : 'text-emerald-500'}`}>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="text-[9px] font-bold text-gray-400 tracking-tight mb-1">Status Registry</div>
+                        <div className={`text-[11px] font-bold ${selectedIncident.status === 'Pending' ? 'text-yellow-600' : 'text-emerald-600'}`}>
                           {selectedIncident.status}
                         </div>
                       </div>
-                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <div className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Report_Source</div>
-                        <div className="text-[11px] font-black uppercase text-white truncate">
-                          {selectedIncident.reporter_name || 'Citizen_Report'}
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="text-[9px] font-bold text-gray-400 tracking-tight mb-1">Report Source</div>
+                        <div className="text-[11px] font-bold text-gray-900 truncate">
+                          {selectedIncident.reporter_name || 'Citizen Report'}
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <div className="text-[10px] font-bold text-gray-400 tracking-tight mb-3 flex items-center gap-2">
                         <div className="w-4 h-[1px] bg-red-600" />
-                        Sitrep_Narrative
+                        Situation Narrative
                       </div>
-                      <p className="text-xs text-gray-300 leading-relaxed font-medium bg-white/5 p-5 rounded-2xl border border-white/5">
+                      <p className="text-xs text-gray-600 leading-relaxed font-bold bg-gray-50 p-5 rounded-2xl border border-gray-100">
                         {selectedIncident.description || 'No additional tactical data provided for this event.'}
                       </p>
                     </div>
 
                     <div>
-                      <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <div className="text-[10px] font-bold text-gray-400 tracking-tight mb-3 flex items-center gap-2">
                         <div className="w-4 h-[1px] bg-blue-600" />
-                        Target_Coordinates
+                        Target Coordinates
                       </div>
-                      <div className="text-xs text-gray-400 font-mono flex items-center gap-3">
-                        <div className="p-3 bg-blue-600/10 rounded-xl">
+                      <div className="text-xs text-gray-700 font-bold flex items-center gap-3">
+                        <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
                           <FiMapPin className="text-blue-500" />
                         </div>
-                        {selectedIncident.location_text || 'Global_Positioning_Restricted'}
+                        {selectedIncident.location_text || 'Global Positioning Restricted'}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 bg-[#111111] border-t border-white/5">
+                <div className="p-6 bg-gray-50 border-t border-gray-100">
                   <div className="grid grid-cols-2 gap-3">
                     {selectedIncident.status === 'Pending' ? (
                       <>
                         <button 
                           onClick={() => handleApprove(selectedIncident.id)}
-                          className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
+                          className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl text-[10px] font-bold tracking-tight transition-all shadow-lg shadow-emerald-600/20"
                         >
                           <FaCheckCircle /> Verify
                         </button>
                         <button 
                           onClick={() => handleReject(selectedIncident.id)}
-                          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-900/20"
+                          className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white py-3 rounded-xl text-[10px] font-bold tracking-tight transition-all shadow-lg shadow-red-600/20"
                         >
                           <FaTimes /> Reject
                         </button>
@@ -789,19 +789,19 @@ const BrgyHome = () => {
                     ) : (selectedIncident.status === 'Verified' || selectedIncident.status === 'Approved' || selectedIncident.status === 'Active') ? (
                       <button 
                         onClick={() => handleResolve(selectedIncident.id)}
-                        className="col-span-2 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
+                        className="col-span-2 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-[10px] font-bold tracking-tight transition-all shadow-lg shadow-blue-600/20"
                       >
-                        <FaCheckCircle /> Mark_Resolved
+                        <FaCheckCircle /> Mark Resolved
                       </button>
                     ) : (
-                      <div className="col-span-2 py-3 text-center text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/5 rounded-xl border border-white/5">
-                        Operational_Complete
+                      <div className="col-span-2 py-3 text-center text-[10px] font-bold tracking-tight text-gray-400 bg-gray-100 rounded-xl border border-gray-200">
+                        Operational Complete
                       </div>
                     )}
                     {(selectedIncident.status !== 'Resolved' && selectedIncident.status !== 'Rejected') && (
                       <button 
-                        onClick={() => navigate('/barangay/report-incident', { state: { prefill: selectedIncident, isEdit: true } })}
-                        className="col-span-2 flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        onClick={() => navigate('/brgy/report-incident', { state: { prefill: selectedIncident, isEdit: true } })}
+                        className="col-span-2 flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl text-[10px] font-bold tracking-tight transition-all"
                       >
                         Modify Intel
                       </button>
@@ -813,25 +813,25 @@ const BrgyHome = () => {
           </div>
 
           {/* Tactical Map Viewport (Main Center/Left) */}
-          <div className="flex-1 min-h-[400px] lg:h-full bg-[#0f172a] overflow-hidden relative order-1 lg:order-1 group">
+          <div className="flex-1 min-h-[400px] lg:h-full bg-white overflow-hidden relative order-1 lg:order-1 group border-r border-gray-100">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent pointer-events-none z-10" />
             
             {/* Map Header Overlay */}
             <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
-              <h2 className="text-lg font-black text-white tracking-wide flex items-center gap-3 drop-shadow-lg">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
+              <h2 className="text-lg font-black text-gray-900 tracking-wide flex items-center gap-3 drop-shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.4)]" />
                 Live Tactical Map
               </h2>
-              <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+              <div className="flex items-center gap-3 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm">
               </div>
             </div>
 
             {/* Weather Controls Overlay */}
             <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
-              <div className="flex bg-black/60 backdrop-blur-xl rounded-2xl p-1 border border-white/10 shadow-2xl">
+              <div className="flex bg-white/80 backdrop-blur-xl rounded-2xl p-1 border border-gray-200 shadow-xl">
                 <button 
                   onClick={() => setShowWindyRadar(!showWindyRadar)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-blue-600'}`}
                 >
                   <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
                   Windy Radar
@@ -839,8 +839,8 @@ const BrgyHome = () => {
               </div>
 
               {!showWindyRadar && (
-                <div className="flex flex-col bg-black/60 backdrop-blur-xl rounded-2xl p-2 border border-white/10 shadow-2xl gap-1">
-                  <span className="text-[8px] font-black text-gray-500 tracking-widest px-2 mb-1">Weather Layers</span>
+                <div className="flex flex-col bg-white/80 backdrop-blur-xl rounded-2xl p-2 border border-gray-200 shadow-xl gap-1">
+                  <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest px-2 mb-1">Weather Layers</span>
                   {[
                     { id: 'none', label: 'None', icon: <FaTimes /> },
                     { id: 'wind_new', label: 'Wind', icon: <FaWind /> },
@@ -863,7 +863,7 @@ const BrgyHome = () => {
             {showWindyRadar && (
               <div className="absolute inset-0 z-30 bg-black animate-in fade-in duration-500">
                 <iframe 
-                  src={`https://embed.windy.com/embed2.html?lat=${barangayLocation?.lat || 14.28}&lon=${barangayLocation?.lng || 121.41}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
+                  src={`https://embed.windy.com/embed2.html?lat=${brgyLocation?.lat || 14.28}&lon=${brgyLocation?.lng || 121.41}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
                   className="w-full h-full border-none"
                   title="Windy Radar"
                 />
@@ -880,25 +880,15 @@ const BrgyHome = () => {
               ref={mapRef}
               {...viewState}
               onMove={(evt: any) => setViewState(evt.viewState)}
-              mapStyle="mapbox://styles/mapbox/dark-v11"
+              pitch={0}
+              bearing={0}
+              mapStyle="mapbox://styles/mapbox/light-v11"
               mapboxAccessToken={MAPBOX_TOKEN}
               style={{ width: '100%', height: '100%' }}
-              maxPitch={85}
               onLoad={(e: any) => {
-                try {
-                  const map = e?.target?.getMap?.();
-                  if (!map) return;
-                  if (!map.getSource('mapbox-dem')) {
-                    map.addSource('mapbox-dem', {
-                      type: 'raster-dem',
-                      url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                      tileSize: 512,
-                      maxzoom: 14,
-                    } as any);
-                  }
-                  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.2 } as any);
-                } catch (err) {
-                  console.error("Terrain load error:", err);
+                const map = e?.target?.getMap?.();
+                if (map) {
+                   map.setTerrain(null);
                 }
               }}
             >
@@ -922,32 +912,32 @@ const BrgyHome = () => {
               )}
               
               {/* Layer Controls Widget */}
-              <div className="absolute right-6 top-6 z-20 bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-4 min-w-[180px]">
-                <div className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 border-b border-white/5 pb-2">Visual_Parameters</div>
+              <div className="absolute right-6 top-6 z-20 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 p-4 min-w-[180px]">
+                <div className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-4 border-b border-gray-100 pb-2">Visual_Parameters</div>
                 <div className="space-y-3">
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-[10px] font-black text-slate-300 group-hover:text-red-500 transition-colors uppercase tracking-tight">Threat_Overlay</span>
+                    <span className="text-[10px] font-black text-gray-600 group-hover:text-red-500 transition-colors uppercase tracking-tight">Threat_Overlay</span>
                     <input 
                       type="checkbox" 
-                      className="rounded border-slate-700 bg-slate-800 text-red-600 focus:ring-red-500/50 w-3.5 h-3.5 transition-all"
+                      className="rounded border-gray-300 bg-gray-50 text-red-600 focus:ring-red-500/50 w-3.5 h-3.5 transition-all"
                       checked={mapLayers.showHazards} 
                       onChange={(e) => setMapLayers(v => ({ ...v, showHazards: e.target.checked }))} 
                     />
                   </label>
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-[10px] font-black text-slate-300 group-hover:text-red-500 transition-colors uppercase tracking-tight">Incident_Vectors</span>
+                    <span className="text-[10px] font-black text-gray-600 group-hover:text-red-500 transition-colors uppercase tracking-tight">Incident_Vectors</span>
                     <input 
                       type="checkbox" 
-                      className="rounded border-slate-700 bg-slate-800 text-red-600 focus:ring-red-500/50 w-3.5 h-3.5 transition-all"
+                      className="rounded border-gray-300 bg-gray-50 text-red-600 focus:ring-red-500/50 w-3.5 h-3.5 transition-all"
                       checked={mapLayers.showIncidents} 
                       onChange={(e) => setMapLayers(v => ({ ...v, showIncidents: e.target.checked }))} 
                     />
                   </label>
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-[10px] font-black text-slate-300 group-hover:text-emerald-500 transition-colors uppercase tracking-tight">Shelter_Network</span>
+                    <span className="text-[10px] font-black text-gray-600 group-hover:text-emerald-500 transition-colors uppercase tracking-tight">Shelter_Network</span>
                     <input 
                       type="checkbox" 
-                      className="rounded border-slate-700 bg-slate-800 text-emerald-600 focus:ring-emerald-500/50 w-3.5 h-3.5 transition-all"
+                      className="rounded border-gray-300 bg-gray-50 text-emerald-600 focus:ring-emerald-500/50 w-3.5 h-3.5 transition-all"
                       checked={mapLayers.showShelters} 
                       onChange={(e) => setMapLayers(v => ({ ...v, showShelters: e.target.checked }))} 
                     />
@@ -956,11 +946,11 @@ const BrgyHome = () => {
               </div>
 
               {/* Barangay Center Marker */}
-              {barangayLocation && (
+              {brgyLocation && (
                 <TacticalMarker
-                  latitude={barangayLocation.lat}
-                  longitude={barangayLocation.lng}
-                  type="barangay"
+                  latitude={brgyLocation.lat}
+                  longitude={brgyLocation.lng}
+                  type="brgy"
                 />
               )}
 
@@ -1090,7 +1080,7 @@ const BrgyHome = () => {
                       {selectedShelter.status || 'Available'}
                     </div>
                     <div className="text-[10px] text-gray-400 mb-4 font-medium">{selectedShelter.address}</div>
-                    <Link to={`/barangay/shelters/${selectedShelter.id}`} className="block w-full text-center bg-blue-600 text-white text-[10px] font-black py-2 rounded-xl uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20">
+                    <Link to={`/brgy/shelters/${selectedShelter.id}`} className="block w-full text-center bg-blue-600 text-white text-[10px] font-black py-2 rounded-xl uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20">
                       Manage_Asset
                     </Link>
                   </div>

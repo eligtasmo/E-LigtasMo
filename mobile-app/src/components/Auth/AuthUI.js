@@ -14,16 +14,16 @@ import { StatusBar } from 'expo-status-bar';
 import * as Lucide from 'lucide-react-native';
 import { Screen, Row, useResponsive, DS_FONT_UI, DS_FONT_INPUT } from '../DesignSystem';
 
-const ACCENT = '#FF9D01';
-const AUTH_BG = '#000000';
+const ACCENT = '#FFFFFF'; 
+const AUTH_BG = '#0F0F0F'; // Lighter black
 
 export const AUTH_COLORS = {
-  ACCENT: '#FF9D01',
-  BG: '#000000',
-  FIELD: 'rgba(255,255,255,0.06)',
-  BORDER: 'rgba(255,255,255,0.1)',
+  ACCENT: '#FFFFFF',
+  BG: '#0F0F0F',
+  FIELD: 'transparent',
+  BORDER: 'rgba(255,255,255,0.2)',
   TEXT_MAIN: '#FFFFFF',
-  TEXT_MUTED: 'rgba(255,255,255,0.5)',
+  TEXT_MUTED: '#9CA3AF',
 };
 
 export const AUTH_FONTS = {
@@ -32,68 +32,97 @@ export const AUTH_FONTS = {
 };
 
 const styles = StyleSheet.create({
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  header: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingRight: 16,
+  },
+  backText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '400',
+    marginLeft: 2,
+    fontFamily: DS_FONT_UI,
   },
   shellTitle: { 
+    fontSize: 30, 
+    fontWeight: '700', 
+    color: '#FFFFFF', 
+    fontFamily: DS_FONT_UI,
+    letterSpacing: -0.5,
+    marginBottom: 24,
+    marginTop: 20,
+  },
+  fieldLabel: { 
     fontSize: 16, 
     fontWeight: '600', 
     color: '#FFFFFF', 
-    fontFamily: DS_FONT_UI,
-  },
-  fieldLabel: { 
-    fontSize: 14, 
-    fontWeight: '500', 
-    color: '#FFFFFF', 
-    marginBottom: 8, 
+    marginBottom: 10, 
     fontFamily: DS_FONT_UI, 
-    marginLeft: 2
   },
   fieldContainer: {
     height: 54,
-    borderRadius: 27,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 4,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.2)',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
   },
   textInput: { 
     flex: 1, 
-    fontSize: 15, 
-    color: '#FFF', 
+    fontSize: 16, 
+    color: '#FFFFFF', 
     fontFamily: DS_FONT_UI 
   },
   errorText: { 
     fontSize: 12, 
-    color: '#FF4B4B', 
+    color: '#EF4444', 
     marginTop: 6, 
     fontWeight: '500', 
     fontFamily: DS_FONT_UI, 
-    marginLeft: 10 
   },
   primaryAction: {
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: ACCENT,
+    height: 52,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     marginTop: 20,
   },
   primaryActionText: { 
-    color: '#000', 
-    fontSize: 16, 
+    color: '#000000', 
+    fontSize: 17, 
     fontWeight: '700', 
     fontFamily: DS_FONT_UI 
   },
 });
+
+export const AuthProgressBar = ({ currentStep, totalSteps = 4 }) => (
+  <View style={{ height: 2, backgroundColor: 'rgba(255,255,255,0.1)', width: '100%', flexDirection: 'row' }}>
+    {Array.from({ length: totalSteps }).map((_, i) => (
+      <View
+        key={i}
+        style={{
+          flex: 1,
+          height: '100%',
+          backgroundColor: i < currentStep ? '#FFFFFF' : 'transparent',
+          marginHorizontal: 0.5,
+        }}
+      />
+    ))}
+  </View>
+);
 
 export const AuthScreenShell = ({
   children,
@@ -101,85 +130,80 @@ export const AuthScreenShell = ({
   onBack,
   footer,
   scroll = true,
+  step,
+  totalSteps = 4,
 }) => {
   const { safeTop } = useResponsive();
   const safeInsetsTop = safeTop || 0;
 
-  const body = (
-    <View style={{ 
-      flex: 1, 
-      paddingTop: safeInsetsTop + 10,
-      paddingHorizontal: 24,
-    }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-        {onBack && (
-          <TouchableOpacity 
-            onPress={onBack}
-            style={styles.backBtn}
-          >
-            <Lucide.ChevronLeft size={24} color="#FFFFFF" strokeWidth={2.5} />
-          </TouchableOpacity>
-        )}
-        <View style={{ flex: 1, alignItems: 'center', marginRight: onBack ? 40 : 0 }}>
-            <Text style={styles.shellTitle}>{title}</Text>
-        </View>
-      </View>
-
-      <View style={{ flex: 1 }}>
-        {children}
-      </View>
-      
-      {footer && <View style={{ paddingVertical: 20 }}>{footer}</View>}
-    </View>
-  );
-
   return (
-    <Screen withOrnament={false} style={{ backgroundColor: AUTH_BG }}>
-      {/* Background Glow Effect from image */}
-      <View style={{ 
-          position: 'absolute', 
-          top: -50, 
-          left: 0, 
-          right: 0, 
-          height: 350, 
-          backgroundColor: 'rgba(255, 157, 1, 0.12)', 
-          borderRadius: 200,
-          transform: [{ scaleX: 2 }],
-          opacity: 0.4
-      }} />
-      
+    <View style={{ flex: 1, backgroundColor: AUTH_BG }}>
       <StatusBar style="light" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <View style={{ paddingTop: safeInsetsTop }}>
+        {onBack && (
+          <View style={styles.header}>
+              <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+                  <Lucide.ChevronLeft size={28} color="#FFFFFF" strokeWidth={2.5} />
+                  <Text style={styles.backText}>Back</Text>
+              </TouchableOpacity>
+          </View>
+        )}
+        {step ? (
+          <View style={{ paddingBottom: 10 }}>
+            <AuthProgressBar currentStep={step} totalSteps={totalSteps} />
+          </View>
+        ) : null}
+      </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={onBack ? 60 : 0}
+      >
         {scroll ? (
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-            {body}
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            keyboardShouldPersistTaps="handled" 
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 40, paddingHorizontal: 20 }}
+          >
+            {title ? <Text style={styles.shellTitle}>{title}</Text> : null}
+            {children}
+            {footer ? <View style={{ paddingVertical: 20 }}>{footer}</View> : null}
           </ScrollView>
-        ) : body}
+        ) : (
+          <View style={{ flex: 1, paddingHorizontal: 20 }}>
+            {title ? <Text style={styles.shellTitle}>{title}</Text> : null}
+            {children}
+            {footer ? <View style={{ paddingVertical: 20 }}>{footer}</View> : null}
+          </View>
+        )}
       </KeyboardAvoidingView>
-    </Screen>
+    </View>
   );
 };
 
-export const AuthField = ({ label, icon: Icon, children, error }) => {
+
+export const AuthField = ({ label, icon: Icon, children, error, hint, required, noContainer }) => {
   const [isFocused, setIsFocused] = React.useState(false);
 
   return (
-    <View style={{ marginBottom: 20 }}>
+    <View style={{ marginBottom: 28 }}>
       {label && (
-        <Text style={[styles.fieldLabel, isFocused && { color: ACCENT }]}>
-          {label}
+        <Text style={styles.fieldLabel}>
+          {label}{required ? ' *' : ''}
         </Text>
       )}
-      <View
-        style={[
-          styles.fieldContainer,
-          error ? { borderColor: '#FF4B4B' } : isFocused ? { borderColor: ACCENT } : null
-        ]}
-      >
-        {Icon && <Icon size={20} color={isFocused ? ACCENT : 'rgba(255,255,255,0.4)'} strokeWidth={1.5} />}
-        <View style={{ flex: 1, marginLeft: Icon ? 12 : 0 }}>
-          {React.Children.map(children, child => {
-            if (React.isValidElement(child)) {
+      {noContainer ? (
+        <View>{children}</View>
+      ) : (
+        <View
+          style={[
+            styles.fieldContainer,
+            error ? { borderColor: '#EF4444' } : isFocused ? { borderColor: '#FFFFFF' } : null
+          ]}
+        >
+          <View style={{ flex: 1 }}>
+            {React.Children.map(children, child => {
+              if (!React.isValidElement(child)) return null;
               return React.cloneElement(child, {
                 onFocus: (e) => {
                   setIsFocused(true);
@@ -188,44 +212,57 @@ export const AuthField = ({ label, icon: Icon, children, error }) => {
                 onBlur: (e) => {
                   setIsFocused(false);
                   child.props.onBlur && child.props.onBlur(e);
-                }
+                },
               });
-            }
-            return child;
-          })}
+            })}
+          </View>
+          {Icon && <Icon size={20} color="#FFFFFF" strokeWidth={2} style={{ marginLeft: 12 }} />}
         </View>
-      </View>
+      )}
+      {hint && (
+        <Text style={{ fontSize: 15, color: '#FFFFFF', marginTop: 10, lineHeight: 22, fontWeight: '600', fontFamily: DS_FONT_UI }}>
+           {hint}
+        </Text>
+      )}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };
 
-export const AuthTextInput = React.forwardRef(({ style, editable = true, ...props }, ref) => (
-  <TextInput
-    ref={ref}
-    editable={editable}
-    placeholderTextColor="rgba(255,255,255,0.3)"
-    selectionColor={ACCENT}
-    style={[
-      styles.textInput,
-      { color: editable ? '#FFF' : 'rgba(255,255,255,0.4)' },
-      style,
-    ]}
-    {...props}
-  />
+export const AuthTextInput = React.forwardRef(({ style, editable = true, onClear, value, ...props }, ref) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+    <TextInput
+      ref={ref}
+      editable={editable}
+      placeholderTextColor="rgba(255,255,255,0.4)"
+      selectionColor="#FFFFFF"
+      value={value}
+      style={[
+        styles.textInput,
+        { color: editable ? '#FFFFFF' : '#9CA3AF' },
+        style,
+      ]}
+      {...props}
+    />
+    {onClear && value && value.length > 0 && (
+      <TouchableOpacity onPress={onClear} style={{ padding: 4 }}>
+        <Lucide.X size={20} color="#FFFFFF" strokeWidth={2} />
+      </TouchableOpacity>
+    )}
+  </View>
 ));
 
 export const AuthGlassCard = ({ children, style }) => (
-  <View style={[{ width: '100%' }, style]}>
+  <View style={[{ width: '100%', paddingVertical: 16 }, style]}>
     {children}
   </View>
 );
 
 export const AuthTextLink = ({ prefix, linkLabel, onPress }) => (
-  <Row justify="center" align="center" style={{ marginTop: 20 }}>
-    {prefix && <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: DS_FONT_UI }}>{prefix} </Text>}
+  <Row justify="center" align="center" style={{ marginTop: 24 }}>
+    {prefix && <Text style={{ color: '#9CA3AF', fontSize: 14, fontFamily: DS_FONT_UI }}>{prefix} </Text>}
     <TouchableOpacity onPress={onPress}>
-      <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700', fontFamily: DS_FONT_UI }}>{linkLabel}</Text>
+      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600', fontFamily: DS_FONT_UI, textDecorationLine: 'underline' }}>{linkLabel}</Text>
     </TouchableOpacity>
   </Row>
 );
@@ -241,7 +278,7 @@ export const AuthPrimaryAction = ({ title, onPress, loading, disabled }) => (
     ]}
   >
     {loading ? (
-       <ActivityIndicator color="#000" size="small" />
+       <ActivityIndicator color="#000000" size="small" />
     ) : (
       <Text style={styles.primaryActionText}>{title}</Text>
     )}
@@ -254,58 +291,74 @@ export const AuthStepDots = ({ currentStep, totalSteps }) => (
       <View
         key={i}
         style={{
-          width: i === currentStep - 1 ? 24 : 8,
+          width: 8,
           height: 8,
           borderRadius: 4,
-          backgroundColor: i === currentStep - 1 ? ACCENT : 'rgba(255,255,255,0.15)',
+          backgroundColor: i === currentStep - 1 ? '#FFFFFF' : 'rgba(255,255,255,0.2)',
         }}
       />
     ))}
   </View>
 );
 
-export const AuthChoiceGrid = ({ options, selected, onSelect }) => (
-  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-    {options.map((opt) => (
-      <TouchableOpacity
-        key={opt.id}
-        onPress={() => onSelect(opt.id)}
-        style={{
-          flex: 1,
-          minWidth: '45%',
-          height: 64,
-          borderRadius: 32,
-          backgroundColor: selected === opt.id ? 'rgba(255,157,1,0.1)' : 'rgba(255,255,255,0.06)',
-          borderWidth: 1,
-          borderColor: selected === opt.id ? ACCENT : 'rgba(255,255,255,0.1)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          flexDirection: 'row'
-        }}
-      >
-        {opt.icon && <opt.icon size={20} color={selected === opt.id ? ACCENT : 'rgba(255,255,255,0.4)'} />}
-        <Text style={{ fontSize: 13, fontWeight: '600', color: selected === opt.id ? ACCENT : '#FFF', fontFamily: DS_FONT_UI }}>{opt.label}</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+export const AuthChoiceGrid = ({ options, selected, onSelect, value, onChange, row = true }) => {
+  const activeValue = selected || value;
+  const handlePress = onSelect || onChange || (() => {});
+  return (
+    <View style={{ flexDirection: row ? 'row' : 'column', gap: 10 }}>
+      {options.map((option) => {
+        const isActive = activeValue === option.id;
+        const Icon = option.icon;
+        return (
+          <TouchableOpacity
+            key={option.id}
+            onPress={() => handlePress(option.id)}
+            activeOpacity={0.7}
+            style={{
+              flex: 1,
+              height: 52, // Same as textbox
+              borderRadius: 8,
+              backgroundColor: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.05)',
+              borderWidth: 1,
+              borderColor: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.1)',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {Icon && <Icon size={18} color={isActive ? '#000000' : '#FFFFFF'} style={{ marginRight: 8 }} />}
+            <Text style={{ 
+              color: isActive ? '#000000' : '#FFFFFF', 
+              fontSize: 15, 
+              fontWeight: isActive ? '700' : '600',
+              fontFamily: DS_FONT_UI 
+            }}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
 
 export const AuthSelect = ({ value, label, onPress, error }) => (
-  <View style={{ marginBottom: 20 }}>
+  <View style={{ marginBottom: 28 }}>
     {label && <Text style={styles.fieldLabel}>{label}</Text>}
     <TouchableOpacity
       onPress={onPress}
       style={[
         styles.fieldContainer,
-        error ? { borderColor: '#FF4B4B' } : null
+        error ? { borderColor: '#EF4444' } : null
       ]}
     >
-      <Text style={{ flex: 1, fontSize: 15, color: value ? '#FFF' : 'rgba(255,255,255,0.3)', fontFamily: DS_FONT_UI }}>
+      <Text style={{ flex: 1, fontSize: 16, color: value ? '#FFFFFF' : 'rgba(255,255,255,0.4)', fontFamily: DS_FONT_UI }}>
         {value || 'Select option'}
       </Text>
-      <Lucide.ChevronDown size={18} color="rgba(255,255,255,0.4)" />
+      <Lucide.ChevronDown size={20} color="#FFFFFF" />
     </TouchableOpacity>
     {error ? <Text style={styles.errorText}>{error}</Text> : null}
   </View>
 );
+
+

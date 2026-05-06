@@ -10,7 +10,7 @@ interface User {
   email: string;
   full_name: string;
   brgy_name: string;
-  barangay?: string;
+  brgy?: string;
   city: string;
   province: string;
   contact_number: string;
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: data.email,
           full_name: data.full_name,
           brgy_name: data.brgy_name,
-          barangay: data.barangay ?? data.brgy_name,
+          brgy: data.brgy ?? data.brgy_name,
           city: data.city,
           province: data.province,
           contact_number: data.contact_number,
@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const adminRestricted =
           path.startsWith("/admin") ||
           path.startsWith("/brgy") ||
-          path.startsWith("/barangay");
+          path.startsWith("/brgy");
         setUser(null);
         if (adminRestricted) {
           navigate('/signin');
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: data.email,
           full_name: data.full_name,
           brgy_name: data.brgy_name,
-          barangay: data.barangay ?? data.brgy_name,
+          brgy: data.brgy ?? data.brgy_name,
           city: data.city,
           province: data.province,
           contact_number: data.contact_number,
@@ -154,11 +154,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data.role === "admin") {
           navigate("/admin");
         } else if (data.role === "brgy") {
-          navigate("/barangay");
+          navigate("/brgy");
         } else if (String(data.role || '').toLowerCase() === 'resident') {
-          alert("Residents must use the mobile application.");
+          // Residents are restricted from the web portal entirely
+          alert("Access Denied: Residents must use the mobile application.");
           setUser(null);
           await fetch(`${API_BASE}/logout.php`, { credentials: "include" });
+          navigate("/access-restricted");
           return;
         }
       } else {
@@ -169,9 +171,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ResourceTypes.USER,
           undefined,
           'error',
-          data.message || "Login failed"
+          data.message || "Wrong username or password"
         );
-        alert(data.message || "Login failed");
+        alert("Wrong username or password");
       }
     } catch (error: any) {
       alert(error?.message || "Error logging in. Please try again.");
