@@ -89,132 +89,6 @@ const router = createBrowserRouter([
         element: <PublicRouteShare />,
       },
       {
-        path: "/",
-        element: <ResidentLayout />,
-        children: [
-          {
-            index: true,
-            element: (
-              <ResidentProtectedRoute>
-                <ResidentHome />
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "safe-routes",
-            element: (
-              <ResidentProtectedRoute>
-                <ResidentSafeRoutes />
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "route-planner",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading planner…</div>}>
-                  <ResidentSafeRoutePlanner />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "shelters",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading shelters…</div>}>
-                  <ResidentShelterView />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "weather",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading weather…</div>}>
-                  <ResidentWeather />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "settings",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading settings…</div>}>
-                  <ResidentSettings />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "hazard-map",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading hazard map…</div>}>
-                  <ResidentHazardMap />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "report-incident",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading report form…</div>}>
-                  <ResidentReportIncident />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "reports",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading reports…</div>}>
-                  <ResidentReports />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "help",
-            element: (
-              <ResidentProtectedRoute>
-                <Suspense fallback={<div className="p-6">Loading help…</div>}>
-                  <ResidentHelp />
-                </Suspense>
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "announcements",
-            element: (
-              <ResidentProtectedRoute>
-                <Announcements />
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "resources",
-            element: (
-              <ResidentProtectedRoute>
-                <Resources />
-              </ResidentProtectedRoute>
-            ),
-          },
-          {
-            path: "coordinators",
-            element: (
-              <ResidentProtectedRoute>
-                <BarangayCoordinators />
-              </ResidentProtectedRoute>
-            ),
-          },
-        ],
-      },
-      {
         path: "/admin",
         element: <AppLayout />,
         children: [
@@ -589,6 +463,16 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: "/signin",
+        element: <AuthPageLayout />,
+        children: [
+          {
+            index: true,
+            element: <SignIn />,
+          },
+        ],
+      },
+      {
         path: "/residents",
         element: <ResidentLayout />,
         children: [
@@ -649,19 +533,128 @@ const router = createBrowserRouter([
         ],
       },
       {
-        element: <AuthPageLayout />,
+        path: "/",
+        element: <ResidentLayout />,
         children: [
           {
-            path: "/auth/signin",
-            element: <SignIn />,
+            index: true,
+            element: (
+              <ResidentProtectedRoute>
+                <ResidentHome />
+              </ResidentProtectedRoute>
+            ),
           },
           {
-            path: "/signin",
-            element: <SignIn />,
+            path: "safe-routes",
+            element: (
+              <ResidentProtectedRoute>
+                <ResidentSafeRoutes />
+              </ResidentProtectedRoute>
+            ),
           },
           {
-            path: "/auth/forgot-password",
-            element: <ForgotPassword />,
+            path: "route-planner",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading planner…</div>}>
+                  <ResidentSafeRoutePlanner />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "shelters",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading shelters…</div>}>
+                  <ResidentShelterView />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "weather",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading weather…</div>}>
+                  <ResidentWeather />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "settings",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading settings…</div>}>
+                  <ResidentSettings />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "hazard-map",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading hazard map…</div>}>
+                  <ResidentHazardMap />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "report-incident",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading report form…</div>}>
+                  <ResidentReportIncident />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "reports",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading reports…</div>}>
+                  <ResidentReports />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "help",
+            element: (
+              <ResidentProtectedRoute>
+                <Suspense fallback={<div className="p-6">Loading help…</div>}>
+                  <ResidentHelp />
+                </Suspense>
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "announcements",
+            element: (
+              <ResidentProtectedRoute>
+                <Announcements />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "resources",
+            element: (
+              <ResidentProtectedRoute>
+                <Resources />
+              </ResidentProtectedRoute>
+            ),
+          },
+          {
+            path: "coordinators",
+            element: (
+              <ResidentProtectedRoute>
+                <BarangayCoordinators />
+              </ProtectedRoute>
+            ),
           },
         ],
       },
