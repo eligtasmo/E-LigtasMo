@@ -188,26 +188,37 @@ const EmergencyRequestManagement: React.FC = () => {
   
 
   return (
-    <div className="w-full">
+    <div className="w-full font-jetbrains">
       <AdminEmergencyNavBar active={activeTab} onChange={setActiveTab} counts={counts} />
       {toast && (
-        <div className={`mx-4 lg:mx-6 mt-3 rounded-lg border px-3 py-2 text-sm flex items-center gap-2 ${
-          toast.kind === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : toast.kind === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'
+        <div className={`mx-4 lg:mx-6 mt-4 p-4 rounded-xl border flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-300 ${
+          toast.kind === 'success' ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-600/20' : 
+          toast.kind === 'error' ? 'bg-red-600 border-red-500 text-white shadow-red-600/20' : 
+          'bg-slate-900 border-slate-800 text-white'
         }`}>
-          <span>{toast.text}</span>
-          <button className="ml-auto text-xs underline" onClick={() => setToast(null)}>Dismiss</button>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="text-[11px] font-black uppercase tracking-widest">{toast.text}</span>
+          </div>
+          <button className="text-[10px] font-black uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity" onClick={() => setToast(null)}>Dismiss</button>
         </div>
       )}
 
       {activeTab === 'create' && (
-        <div className="w-full">
-          <h2 className="text-lg font-semibold mb-4">Emergency Request Form</h2>
+        <div className="w-full p-4 lg:p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
+              Emergency Request Form
+            </h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1.5 opacity-70">Log_Field_Incident • Primary_Intake_Module</p>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
-              <div className="space-y-4">
+            <div className="lg:col-span-1 bg-white tactical-container border-gray-100 p-5 shadow-xl shadow-slate-900/5 animate-pop">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Type of Emergency</label>
-                  <select className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Emergency_Type</label>
+                  <select className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
                     value={type} onChange={e => setType(e.target.value)}>
                     <option>Accident</option>
                     <option>Fire</option>
@@ -217,130 +228,182 @@ const EmergencyRequestManagement: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Severity</label>
-                  <select className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={severity} onChange={e => setSeverity(e.target.value)}>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Threat_Level</label>
+                  <div className="flex gap-2">
+                    {['low', 'medium', 'high'].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSeverity(s)}
+                        className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                          severity === s 
+                          ? s === 'high' ? 'bg-red-600 text-white border-red-600 shadow-lg shadow-red-600/20' :
+                            s === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' :
+                            'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/20'
+                          : 'bg-white text-slate-400 border-gray-100 hover:bg-gray-50'
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-4 pt-2">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Caller Name</label>
-                    <div className="flex items-center gap-2">
-                      <FiUser className="text-gray-500" />
-                      <input className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerName ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
-                        value={callerName} onChange={e => setCallerName(e.target.value)} />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Caller_Identification</label>
+                    <div className="relative">
+                      <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                      <input className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.callerName ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
+                        value={callerName} onChange={e => setCallerName(e.target.value)} placeholder="Full_Name" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Caller Contact</label>
-                    <div className="flex items-center gap-2">
-                      <FiPhone className="text-gray-500" />
-                      <input type="tel" className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.callerContact ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
-                        value={callerContact} onChange={e => setCallerContact(e.target.value)} placeholder="09xxxxxxxxx or +639xxxxxxxxx" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Comm_Link</label>
+                    <div className="relative">
+                      <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                      <input type="tel" className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.callerContact ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
+                        value={callerContact} onChange={e => setCallerContact(e.target.value)} placeholder="09XX-XXX-XXXX" />
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Patient Details</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input placeholder="Name" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                <div className="pt-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Patient_Profile</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    <input placeholder="Name" className="col-span-3 h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                       value={patientName} onChange={e => setPatientName(e.target.value)} />
-                    <input placeholder="Age" type="number" className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    <input placeholder="Age" type="number" className="col-span-2 h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                       value={patientAge} onChange={e => setPatientAge(e.target.value ? Number(e.target.value) : '')} />
-                    <select className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                      value={patientGender} onChange={e => setPatientGender(e.target.value)}>
-                      <option value="">Gender</option>
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Other</option>
-                    </select>
-                    
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Location Address</label>
-                  <div className="flex items-center gap-2">
-                    <FiMapPin className="text-gray-500" />
-                    <input className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.address ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
-                      value={address} onChange={e => setAddress(e.target.value)} />
+                <div className="pt-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Sector_Location</label>
+                  <div className="relative mb-3">
+                    <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                    <input className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.address ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
+                      value={address} onChange={e => setAddress(e.target.value)} placeholder="Physical_Address_Reference" />
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                    <div>{coords ? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}` : 'Pick a point on the map'}</div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50/50 rounded-xl border border-gray-100">
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                      {coords ? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}` : 'Wait_For_Map_Pick'}
+                    </div>
                     <div className="flex items-center gap-2">
-                      <button className="px-2 py-1 rounded-md border border-gray-300" onClick={() => {
+                      <button className="px-2 py-1 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all" onClick={() => {
                         if (!navigator.geolocation) return;
                         navigator.geolocation.getCurrentPosition((pos) => {
                           const { latitude, longitude } = pos.coords;
                           setCoords([latitude, longitude]);
                         });
-                      }}>Use my location</button>
-                      <button className="px-2 py-1 rounded-md border border-gray-300" onClick={() => setCoords(null)}>Clear</button>
+                      }}>GPS_Sync</button>
+                      <button className="px-2 py-1 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all" onClick={() => setCoords(null)}>Reset</button>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Time of Incident</label>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FiClock className="text-gray-500" />
-                    <span>{datetime}</span>
+                <div className="pt-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Mission_Timeline</label>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50/30 rounded-xl border border-blue-100/50">
+                    <FiClock className="text-blue-600 text-sm" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">{datetime}</span>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Short Description</label>
-                  <textarea rows={4} className={`w-full rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && requiredMissing.description ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
-                    value={description} onChange={e => setDescription(e.target.value)} />
+                <div className="pt-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Incident_Intelligence</label>
+                  <textarea rows={4} className={`w-full rounded-xl bg-gray-50/50 px-4 py-3 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.description ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
+                    value={description} onChange={e => setDescription(e.target.value)} placeholder="Field_Intelligence_Summary..." />
                 </div>
                 
-                <div className="flex justify-end gap-2">
-                  <button onClick={handleSubmit} disabled={!canSubmit} className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm ${canSubmit ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}>
-                    <FiEdit2 size={16} /> Submit Request
+                <div className="pt-4">
+                  <button 
+                    onClick={handleSubmit} 
+                    disabled={!canSubmit} 
+                    className={`w-full flex items-center justify-center gap-3 h-14 rounded-xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-xl ${
+                      canSubmit 
+                      ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 hover:scale-[1.02]' 
+                      : 'bg-gray-100 text-slate-300 cursor-not-allowed border border-gray-100'
+                    }`}
+                  >
+                    <FiEdit2 className="text-lg" /> Initiate_Emergency_Log
                   </button>
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow animate-pop">
-              <div className="h-[360px] rounded-md overflow-hidden">
-                <MapContainer center={coords || [14.5995, 120.9842]} zoom={coords ? 15 : 12} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+            <div className="lg:col-span-2 bg-white tactical-container border-gray-100 p-3 shadow-xl shadow-slate-900/5 animate-pop flex flex-col">
+              <div className="flex-1 rounded-xl overflow-hidden border border-gray-50">
+                <MapContainer center={coords || [14.28, 121.41]} zoom={coords ? 17 : 13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
                   <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
                   {coords && (
-                    <Marker position={coords} icon={getMarkerIcon('#ef4444')}>
-                      <Popup>Selected Location</Popup>
+                    <Marker position={coords} icon={getMarkerIcon('#dc2626')}>
+                      <Popup>Sector_Reference</Popup>
                     </Marker>
                   )}
                   <MapClickSetter onPick={(ll) => setCoords(ll)} />
                   <ZoomControl position="bottomright" />
                 </MapContainer>
               </div>
-              {submitAttempted && requiredMissing.coords && (
-                <div className="px-3 py-2 mt-2 rounded-md bg-red-50 text-red-700 border border-red-200 text-xs">Select a location on the map</div>
-              )}
+              <div className="mt-3 px-4 py-3 bg-gray-50/50 rounded-xl flex items-center justify-between border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${coords ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`} />
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    {coords ? 'Coordinate_Reference_Set' : 'Select_Mission_Point_On_Map'}
+                  </span>
+                </div>
+                {submitAttempted && requiredMissing.coords && (
+                  <div className="text-[10px] font-black text-red-600 uppercase tracking-widest flex items-center gap-2">
+                    <FiAlertTriangle /> Mandatory_Selection
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {activeTab === 'requests' && (
-        <div className="w-full">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Emergency Requests</h2>
-            {loading && <span className="text-sm text-gray-500">Loading…</span>}
+        <div className="w-full p-4 lg:p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
+                Emergency Registry
+              </h2>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1.5 opacity-70">Log_Field_Database • Tactical_Overview</p>
+            </div>
+            {loading && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Syncing...</span>
+              </div>
+            )}
           </div>
-          <div className="bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow animate-pop">
+          <div className="bg-white tactical-container border-gray-100 overflow-hidden shadow-xl shadow-slate-900/5 animate-pop">
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {incidents.length === 0 && (
-                <div className="p-4 text-sm text-gray-500">No requests found.</div>
+                <div className="p-12 text-center">
+                  <span className="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Zero_Target_Matches_In_Registry</span>
+                </div>
               )}
               {incidents.map((i) => (
-                <div key={i.id} className="p-4 flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">#{i.id} • {i.type}</div>
-                    <div className="text-xs text-gray-600">{i.address}</div>
-                    <div className="text-xs text-gray-500">{i.datetime}</div>
+                <div key={i.id} className="p-5 flex items-center gap-6 hover:bg-gray-50/50 transition-colors group">
+                  <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-900/20 group-hover:bg-blue-600 transition-colors">
+                    <FiAlertTriangle className="text-lg" />
                   </div>
-                  <div className="text-xs flex items-center gap-2">
-                    <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-700">{i.status || 'Pending'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <span className="text-[12px] font-black text-slate-900 uppercase tracking-tight">REF_{i.id}</span>
+                      <span className="w-1 h-1 rounded-full bg-slate-200" />
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{i.type}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 font-black uppercase tracking-tight truncate opacity-80 mb-1">{i.address}</div>
+                    <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
+                      <FiClock className="text-[10px]" /> {i.datetime}
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                      (i.status || '').toLowerCase() === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                      (i.status || '').toLowerCase() === 'responding' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                      'bg-blue-50 text-blue-600 border-blue-100'
+                    }`}>
+                      {i.status || 'Received'}
+                    </span>
                   </div>
                 </div>
               ))}

@@ -166,8 +166,8 @@ const FloodReport: React.FC = () => {
   return (
     <div className="h-[calc(100vh-72px)] w-full bg-white overflow-hidden font-jetbrains">
       <PageMeta 
-        title="Tactical Flood Oversight" 
-        description="Monitor and manage flood reports across all brgys." 
+        title="Tactical Environmental Oversight" 
+        description="Monitor and manage environmental hazards across all sectors." 
       />
       <MapProvider>
         <div className="flex h-full w-full overflow-hidden">
@@ -203,21 +203,21 @@ const FloodReport: React.FC = () => {
             </MapboxMap>
 
             {/* Map Legend/Overlay */}
-            <div className="absolute bottom-6 left-6 p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 z-10 select-none shadow-xl">
-              <div className="text-[10px] font-bold text-blue-600 tracking-tight mb-3 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                Live Monitor
+            <div className="absolute bottom-6 left-6 p-4 bg-white/90 backdrop-blur-md tactical-container border-gray-100 z-10 select-none shadow-2xl min-w-[180px]">
+              <div className="text-[10px] font-black text-blue-600 tracking-[0.2em] mb-3 flex items-center gap-2 uppercase">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
+                Live_Monitor
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
-                  { label: 'Critical_Zone', color: 'bg-red-500' },
-                  { label: 'High_Alert', color: 'bg-orange-500' },
-                  { label: 'Moderate_Flood', color: 'bg-yellow-500' },
-                  { label: 'Minor_Water', color: 'bg-green-500' }
+                  { label: 'Critical_Zone', color: 'bg-red-600' },
+                  { label: 'High_Alert', color: 'bg-orange-600' },
+                  { label: 'Moderate_Flood', color: 'bg-amber-600' },
+                  { label: 'Minor_Water', color: 'bg-emerald-600' }
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">{item.label}</span>
+                    <div className={`w-2 h-2 rounded-full ${item.color} shadow-[0_0_5px_currentColor]`} />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -229,84 +229,86 @@ const FloodReport: React.FC = () => {
             {selectedReport ? (
               /* Inspection Node View */
               <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-                <div className="p-4 border-b border-gray-100 relative bg-gray-100/50">
+                <div className="tactical-card-header bg-gray-50/50 p-4! border-b!">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      <h2 className="text-slate-900 font-black text-sm uppercase tracking-widest">Environmental Intel</h2>
+                    </div>
+                    <p className="text-slate-400 text-[9px] tracking-widest font-black uppercase mt-1 opacity-70">
+                      Sector_Ref: {selectedReport.id}
+                    </p>
+                  </div>
                   <button 
                     onClick={() => setSelectedReport(null)}
-                    className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-all border border-gray-200 shadow-sm"
+                    className="w-8 h-8 rounded-lg bg-white hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-slate-400 transition-all border border-gray-100 shadow-sm"
                   >
-                    <FaTimes size={14} />
+                    <FaTimes size={12} />
                   </button>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
-                    <h2 className="text-[#f59e0b] font-bold text-base tracking-tight">Environmental Intel</h2>
-                  </div>
-                  <p className="text-gray-400 text-[8px] tracking-tight font-bold mt-0.5">
-                    Ref Id: {selectedReport.id}
-                  </p>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
                   {/* Evidence Carousel */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between px-1">
-                      <span className="text-[8px] text-gray-500 uppercase font-black tracking-[0.2em]">Intel_Visuals</span>
-                      <div className="flex gap-1">
+                      <span className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em]">Visual_Evidence</span>
+                      <div className="flex gap-1.5">
                         <button 
                           onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : getMediaUrls(selectedReport).length - 1))}
-                          className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-gray-500"
+                          className="w-7 h-7 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-slate-400 border border-gray-100 shadow-sm transition-all"
                         >
-                          <FiChevronRight className="rotate-180" />
+                          <FiChevronRight className="rotate-180 text-xs" />
                         </button>
                         <button 
                           onClick={() => setCurrentImageIndex(prev => (prev < getMediaUrls(selectedReport).length - 1 ? prev + 1 : 0))}
-                          className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-gray-500"
+                          className="w-7 h-7 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-slate-400 border border-gray-100 shadow-sm transition-all"
                         >
-                          <FiChevronRight />
+                          <FiChevronRight className="text-xs" />
                         </button>
                       </div>
                     </div>
                     
                     {getMediaUrls(selectedReport).length > 0 ? (
-                      <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative group shadow-lg">
+                      <div className="aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200 relative group shadow-inner">
                         <img 
                           src={getMediaUrls(selectedReport)[currentImageIndex]} 
                           alt="Flood Evidence" 
                           className="w-full h-full object-cover" 
                         />
-                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-white/80 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-blue-600 border border-gray-200 shadow-sm">
+                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-slate-900/80 backdrop-blur-md rounded-lg text-[9px] font-black tracking-widest text-white border border-white/10">
                           {currentImageIndex + 1}/{getMediaUrls(selectedReport).length}
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-video rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-                        <FaCamera size={24} className="mb-2 opacity-10" />
-                        <span className="text-[9px] font-black tracking-widest uppercase opacity-40">Zero_Visual_Intel</span>
+                      <div className="aspect-video rounded-xl bg-gray-50/50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-slate-300">
+                        <FaCamera size={20} className="mb-2 opacity-20" />
+                        <span className="text-[9px] font-black tracking-[0.3em] uppercase opacity-40">Zero_Visual_Intel</span>
                       </div>
                     )}
                   </div>
 
                   {/* Data Grid */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm group relative">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block">Severity</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 bg-white tactical-container border-gray-100 shadow-sm group relative">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[8px] text-slate-400 uppercase font-black tracking-widest block">Threat_Level</span>
                         <button 
                           onClick={() => setIsEditingSeverity(!isEditingSeverity)}
-                          className="text-[8px] text-blue-600 hover:underline font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-[8px] text-blue-600 hover:text-blue-700 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           {isEditingSeverity ? 'Cancel' : 'Triage'}
                         </button>
                       </div>
                       {isEditingSeverity ? (
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex flex-col gap-1.5 mt-1">
                           {['Low', 'Moderate', 'High'].map((s) => (
                             <button
                               key={s}
                               onClick={() => handleUpdateSeverity(selectedReport.id, s)}
-                              className={`flex-1 py-1 rounded text-[8px] font-black uppercase transition-all ${
+                              className={`w-full py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border ${
                                 selectedReport.severity === s 
-                                ? getSeverityStyle(s)
-                                : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
+                                ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
+                                : 'bg-white text-slate-400 hover:bg-gray-50 border-gray-100'
                               }`}
                             >
                               {s}
@@ -314,65 +316,66 @@ const FloodReport: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <p className={`text-xs font-black uppercase ${getSeverityStyle(selectedReport.severity).split(' ')[0]}`}>
+                        <p className={`text-[11px] font-black uppercase tracking-widest ${getSeverityStyle(selectedReport.severity).split(' ')[0]}`}>
                           {selectedReport.severity}
                         </p>
                       )}
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block mb-1">Status</span>
-                      <p className="text-xs font-black text-gray-900 uppercase">{selectedReport.status}</p>
+                    <div className="p-4 bg-white tactical-container border-gray-100 shadow-sm">
+                      <span className="text-[8px] text-slate-400 uppercase font-black tracking-widest block mb-2">Mission_Status</span>
+                      <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{selectedReport.status}</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 col-span-2 flex items-center gap-4 shadow-sm">
-                      <div className="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center border border-blue-600/20 shrink-0">
-                        <FaUser className="text-blue-600 text-sm" />
+                    <div className="p-4 bg-white tactical-container border-gray-100 col-span-2 flex items-center gap-4 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
+                        <FaUser className="text-sm" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
-                        <p className="text-xs font-black text-gray-900 uppercase truncate">{selectedReport.reporter_name || 'Anonymous'}</p>
+                        <span className="text-[8px] text-slate-400 uppercase font-black tracking-widest block leading-none mb-1.5">Intel_Source</span>
+                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{selectedReport.reporter_name || 'Anonymous_Unit'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Field Notes */}
-                  <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden shadow-sm">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-40" />
-                    <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
-                    <p className="text-[11px] text-gray-600 leading-relaxed font-bold italic">
-                      "{selectedReport.description || 'No additional field intelligence recorded for this sector.'}"
+                  <div className="p-5 bg-white tactical-container border-gray-100 relative overflow-hidden shadow-sm">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600 opacity-20" />
+                    <span className="text-[8px] text-slate-400 uppercase font-black tracking-[0.2em] mb-3 block">Sector_Intelligence</span>
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-black uppercase tracking-tight italic opacity-90">
+                      "{selectedReport.description || 'No_Additional_Tactical_Notes_Recorded_For_This_Sector'}"
                     </p>
                   </div>
 
                   {/* Actions Area */}
                   <div className="pt-2 pb-6">
                     {selectedReport.status === 'Pending' ? (
-                      <div className="flex bg-blue-600 rounded-2xl overflow-hidden divide-x divide-black/10 border border-blue-600 shadow-2xl">
+                      <div className="flex bg-slate-900 rounded-xl overflow-hidden border border-white/5 shadow-2xl">
                         <button 
                           onClick={() => handleAction(selectedReport.id, 'approve')}
-                          className="flex-1 py-5 flex flex-col items-center justify-center hover:bg-black/5 transition-all group"
+                          className="flex-1 py-4 flex flex-col items-center justify-center hover:bg-emerald-600 transition-all group"
                         >
-                          <FaCheckCircle className="text-white text-xl mb-1 group-hover:scale-110 transition-transform" />
-                          <span className="text-white font-black text-[10px] tracking-widest uppercase">VERIFY</span>
+                          <FaCheckCircle className="text-white text-lg mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-white font-black text-[9px] tracking-[0.3em] uppercase">Verify_Intel</span>
                         </button>
+                        <div className="w-[1px] bg-white/10" />
                         <button 
                           onClick={() => handleAction(selectedReport.id, 'reject')}
-                          className="flex-1 py-5 flex flex-col items-center justify-center hover:bg-black/5 transition-all group"
+                          className="flex-1 py-4 flex flex-col items-center justify-center hover:bg-red-600 transition-all group"
                         >
-                          <FaTimes className="text-white text-xl mb-1 group-hover:scale-110 transition-transform" />
-                          <span className="text-white font-black text-[10px] tracking-widest uppercase">REJECT</span>
+                          <FaTimes className="text-white text-lg mb-1.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-white font-black text-[9px] tracking-[0.3em] uppercase">Decline_Report</span>
                         </button>
                       </div>
                     ) : selectedReport.status === 'Verified' ? (
                       <button 
                         onClick={() => handleAction(selectedReport.id, 'resolve')}
-                        className="w-full py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black text-[11px] tracking-[0.4em] uppercase shadow-2xl transition-all flex flex-col items-center justify-center gap-1 group"
+                        className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-[10px] tracking-[0.4em] uppercase shadow-2xl transition-all flex flex-col items-center justify-center gap-1.5 group border border-emerald-500/20"
                       >
                         <FaCheckCircle className="text-white text-xl group-hover:scale-110 transition-transform" />
-                        RESOLVE_EVENT
+                        Resolve_Sector_Mission
                       </button>
                     ) : (
-                      <div className="py-5 text-center border border-gray-100 rounded-2xl bg-gray-50 shadow-sm">
-                        <span className="text-[9px] text-gray-400 uppercase font-black tracking-[0.3em]">ARCHIVED_LOG</span>
+                      <div className="py-5 text-center border border-gray-100 rounded-xl bg-gray-50 shadow-inner">
+                        <span className="text-[9px] text-slate-400 uppercase font-black tracking-[0.4em]">Archived_Mission_Log</span>
                       </div>
                     )}
                   </div>
@@ -381,29 +384,29 @@ const FloodReport: React.FC = () => {
             ) : (
               /* Tactical Feed View */
               <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-                <div className="p-6 border-b border-gray-100 bg-white flex justify-between items-center">
+                <div className="tactical-card-header bg-white p-6! border-b!">
                   <div>
-                    <h1 className="text-gray-900 font-bold text-xl tracking-tight flex items-center gap-2">
-                      <div className="w-1.5 h-6 bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.3)]" />
+                    <h1 className="text-slate-900 font-black text-lg tracking-tighter flex items-center gap-3 uppercase">
+                      <div className="w-1.5 h-6 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]" />
                       Environmental Intel
                     </h1>
-                    <p className="text-gray-400 text-[9px] tracking-tight mt-1 font-bold">Multi-Hazard Monitor</p>
+                    <p className="text-slate-400 text-[10px] tracking-[0.2em] mt-1.5 font-black uppercase opacity-70">Mission_Threat_Monitor</p>
                   </div>
                   <button 
                     onClick={() => fetchReports()}
-                    className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-blue-600 border border-gray-200 group transition-all"
+                    className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-white flex items-center justify-center text-blue-600 border border-gray-100 group transition-all shadow-sm hover:shadow-md"
                   >
-                    <FiRefreshCw className={`group-hover:rotate-180 transition-transform duration-500 ${loading ? 'animate-spin' : ''}`} />
+                    <FiRefreshCw className={`text-sm group-hover:rotate-180 transition-transform duration-500 ${loading ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-5 p-1 bg-gray-50 border-b border-gray-100">
+                <div className="grid grid-cols-5 p-1 bg-gray-50/50 border-b border-gray-100">
                   {(['All', 'Pending', 'Verified', 'Rejected', 'Resolved'] as const).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setFilterStatus(tab)}
-                      className={`py-3 text-[7px] font-black uppercase tracking-widest transition-all ${
-                        filterStatus === tab ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-gray-600'
+                      className={`py-3 text-[8px] font-black uppercase tracking-widest transition-all ${
+                        filterStatus === tab ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
                       {tab.slice(0, 4)}
@@ -440,29 +443,29 @@ const FloodReport: React.FC = () => {
                             flyToReport(Number(r.lat), Number(r.lng));
                           }
                         }}
-                        className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl ${
+                        className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative tactical-container ${
                           (selectedReport as any)?.id === r.id
-                          ? 'bg-white border-blue-600 shadow-xl ring-1 ring-black/5' 
+                          ? 'bg-white border-blue-600 shadow-xl ring-1 ring-blue-600/10' 
                           : 'bg-white border-transparent hover:border-gray-200 hover:bg-gray-50 shadow-sm border border-gray-100'
                         }`}
                       >
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${getSeverityStyle(r.severity)}`}>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${getSeverityStyle(r.severity)}`}>
                             {r.severity}
                           </span>
-                          <span className="text-[8px] text-gray-600 font-mono">#{r.id}</span>
+                          <span className="text-[9px] text-slate-400 font-black tracking-widest opacity-60">REF_{r.id}</span>
                         </div>
-                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">Flood_Event</h3>
-                        <div className="flex items-center gap-1.5 text-gray-400 mb-2">
-                          <FaMapMarkerAlt className="text-[9px] shrink-0" />
-                          <span className="text-[10px] truncate uppercase font-bold tracking-tighter">{r.location_text || `${r.lat.toFixed(4)}, ${r.lng.toFixed(4)}`}</span>
+                        <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate mb-2">Flood_Detection_Event</h3>
+                        <div className="flex items-center gap-2 text-slate-500 mb-3">
+                          <FaMapMarkerAlt className="text-[10px] shrink-0 text-blue-600" />
+                          <span className="text-[10px] truncate uppercase font-black tracking-tight">{r.location_text || `COORD_${r.lat.toFixed(4)}_${r.lng.toFixed(4)}`}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[9px] text-gray-400 font-bold uppercase">
-                          <div className="flex items-center gap-1.5">
-                            <FaClock className="shrink-0" />
-                            <span>{new Date(r.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="flex items-center justify-between text-[9px] text-slate-400 font-black uppercase tracking-widest border-t border-gray-50 pt-3">
+                          <div className="flex items-center gap-2">
+                            <FaClock className="shrink-0 text-slate-300" />
+                            <span>{new Date(r.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                           </div>
-                          <span className="text-blue-600 font-black">{r.brgy}</span>
+                          <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded font-black tracking-tighter">{r.brgy}</span>
                         </div>
                       </div>
                     ))

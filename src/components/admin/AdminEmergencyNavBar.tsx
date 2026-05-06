@@ -16,29 +16,29 @@ const AdminEmergencyNavBar: React.FC<AdminEmergencyNavBarProps> = ({ active, onC
   ];
 
   return (
-    <div className="sticky top-16 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-      <div className="px-4 lg:px-6">
-        <div className="flex items-center justify-between h-12">
-          <div className="flex gap-1">
+    <div className="sticky top-[72px] z-40 bg-white border-b border-gray-100 font-jetbrains">
+      <div className="px-4 lg:px-8">
+        <div className="flex items-center justify-between h-14">
+          <div className="flex gap-2">
             {items.map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => onChange(key)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                className={`flex items-center gap-2.5 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all border ${
                   active === key
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20'
+                    : 'text-slate-400 hover:text-slate-900 hover:bg-gray-50 border-transparent'
                 }`}
               >
-                {icon}
-                <span className="font-medium">{label}</span>
+                <span className="text-xs">{icon}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-              <FiRefreshCw size={16} />
-              <span>Refresh</span>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 border border-transparent transition-all">
+              <FiRefreshCw className="text-xs" />
+              <span>Refresh_Ops</span>
             </button>
           </div>
         </div>

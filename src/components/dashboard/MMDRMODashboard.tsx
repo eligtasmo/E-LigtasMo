@@ -1244,59 +1244,64 @@ const MMDRMODashboard: React.FC = () => {
       <div className="min-h-screen bg-white text-gray-900 relative z-10 font-jetbrains">
       {/* Simplified Header */}
       <div className="mb-0">
-        <div className="bg-gray-50 rounded-t-xl p-4 sm:p-6 border border-gray-200 border-b-0 shadow-sm">
+        <div className="bg-gray-50/50 rounded-t-xl p-4 sm:p-6 border border-gray-100 border-b-0 shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+            <div className="flex items-center space-x-5">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-600/20 border border-red-500/20">
                 <FiActivity className="text-xl sm:text-2xl text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-                  MMDRMO Emergency Operations Center
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tighter uppercase">
+                  MMDRMO <span className="text-red-600">Operations Center</span>
                 </h1>
-                <p className="text-gray-500 text-xs sm:text-sm font-semibold tracking-tight mt-0.5">Real-time disaster monitoring and response</p>
+                <p className="text-gray-500 text-[11px] sm:text-xs font-black uppercase tracking-widest mt-1 opacity-80">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-2 animate-pulse" />
+                  Mission_Monitoring_Protocol_Active
+                </p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               {/* System Status */}
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 w-full sm:w-auto">
-                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-[13px]">
+              <div className="bg-white rounded-xl p-3 border border-gray-100 w-full sm:w-auto shadow-sm">
+                <div className="flex flex-wrap items-center gap-4 text-[10px] sm:text-[11px]">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
-                    <span className="text-gray-600 font-bold uppercase tracking-wider">API_STABLE</span>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                    <span className="text-slate-600 font-black uppercase tracking-widest">Link_Established</span>
                   </div>
-                  <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                    <span className="text-gray-400 font-medium">SESSIONS:</span>
-                    <span className="text-blue-600 font-black">12</span>
+                  <div className="flex items-center gap-2 border-l border-gray-100 pl-4">
+                    <span className="text-gray-400 font-black">OPS_READY</span>
+                    <span className="text-blue-600 font-black">v4.0</span>
                   </div>
                 </div>
               </div>
               
               {/* Metrics Range */}
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 w-full sm:w-auto">
+              <div className="bg-white rounded-xl p-3 border border-gray-100 w-full sm:w-auto shadow-sm">
                 <div className="flex items-center gap-3">
-                  <span className="text-gray-500 text-[11px] font-black uppercase tracking-widest">Timeframe:</span>
+                  <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Intel_Scope:</span>
                   <select
-                    className="text-[13px] bg-white text-gray-900 border border-gray-200 rounded-lg px-3 py-1 font-bold outline-none focus:ring-2 focus:ring-blue-600/20 transition-all cursor-pointer"
+                    className="text-[11px] bg-gray-50 text-slate-900 border border-gray-100 rounded-lg px-3 py-1 font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-600/20 transition-all cursor-pointer"
                     value={metricsRange}
                     onChange={(e) => setMetricsRange(e.target.value as '24h' | '7d' | '30d' | '90d')}
                   >
-                    <option value="24h">24 Hours</option>
-                    <option value="7d">7 Days</option>
-                    <option value="30d">30 Days</option>
-                    <option value="90d">90 Days</option>
+                    <option value="24h">Today</option>
+                    <option value="7d">Week</option>
+                    <option value="30d">Month</option>
+                    <option value="90d">Quarter</option>
                   </select>
                 </div>
               </div>
 
               {/* Timer */}
-              <div className="text-left sm:text-right bg-blue-600 rounded-xl p-3 sm:p-4 w-full sm:w-auto shadow-xl shadow-blue-600/20 flex flex-col justify-center">
-                <div className="text-xl sm:text-2xl font-black text-white leading-none tracking-tight">{currentTime.toLocaleTimeString()}</div>
-                <div className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{currentTime.toLocaleDateString()}</div>
+              <div className="text-left sm:text-right bg-slate-900 rounded-xl p-3 sm:p-4 w-full sm:w-auto shadow-xl shadow-slate-900/20 flex flex-col justify-center border border-white/5">
+                <div className="text-xl sm:text-2xl font-black text-white leading-none tracking-tighter tabular-nums">
+                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                </div>
+                <div className="text-blue-400/80 text-[9px] font-black uppercase tracking-[0.2em] mt-1">{currentTime.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</div>
                 {loading && (
-                  <div className="flex items-center justify-start sm:justify-end gap-1 text-[9px] text-white/80 font-black uppercase tracking-widest mt-1.5">
+                  <div className="flex items-center justify-start sm:justify-end gap-1 text-[8px] text-white/50 font-black uppercase tracking-widest mt-1.5">
                     <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
-                    Syncing...
+                    Syncing_Intel...
                   </div>
                 )}
               </div>
@@ -1308,27 +1313,27 @@ const MMDRMODashboard: React.FC = () => {
       {/* API Health & Quick Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-3">
-           <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 flex items-center justify-center text-gray-400 text-xs font-bold shadow-premium-sm transition-all hover:shadow-premium-md">
+           <div className="bg-gray-50/50 tactical-container border-gray-100 p-6 flex items-center justify-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-none">
              <div className="flex items-center gap-4">
-               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-               Tactical data feed operational • Standardized 24/7 monitoring
+               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
+               Tactical_Intel_Stream_Active • 24/7_Operations_Secure
              </div>
            </div>
         </div>
         
         {/* API Health Widget */}
-        <div className="bento-card overflow-hidden flex flex-col">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-100/30">
-            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              Api Connectivity
+        <div className="tactical-container flex flex-col">
+          <div className="tactical-card-header bg-gray-50/50">
+            <h3 className="text-[10px] font-black text-slate-900 flex items-center gap-2 uppercase tracking-widest">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              API_Connectivity
             </h3>
             <button 
               onClick={checkApiHealth}
-              className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm"
+              className="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-gray-100"
               title="Refresh Health Status"
             >
-              <FiRefreshCw className="w-3.5 h-3.5 text-gray-400" />
+              <FiRefreshCw className="w-3.5 h-3.5 text-slate-400" />
             </button>
           </div>
           <div className="p-4 flex-1 space-y-3">
@@ -1336,16 +1341,16 @@ const MMDRMODashboard: React.FC = () => {
               <div key={name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 
-                    status === 'offline' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 
-                    'bg-yellow-400'
+                    status === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
+                    status === 'offline' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+                    'bg-amber-400'
                   }`}></div>
-                  <span className="text-xs font-medium text-gray-700">{name}</span>
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{name}</span>
                 </div>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                  status === 'online' ? 'text-green-600' : 
+                <span className={`text-[9px] font-black uppercase tracking-widest ${
+                  status === 'online' ? 'text-emerald-600' : 
                   status === 'offline' ? 'text-red-600' : 
-                  'text-yellow-600'
+                  'text-amber-600'
                 }`}>
                   {status}
                 </span>
@@ -1361,40 +1366,40 @@ const MMDRMODashboard: React.FC = () => {
           const IconComponent = metric.icon;
           const getCardColor = (color: string) => {
             switch(color) {
-              case 'red': return 'border-red-200 bg-white';
-              case 'blue': return 'border-blue-200 bg-white';
-              case 'green': return 'border-green-200 bg-white';
-              case 'yellow': return 'border-yellow-200 bg-white';
-              case 'orange': return 'border-orange-200 bg-white';
-              case 'purple': return 'border-purple-200 bg-white';
-              default: return 'border-gray-200 bg-white';
+              case 'red': return 'border-red-500/20';
+              case 'blue': return 'border-blue-500/20';
+              case 'green': return 'border-emerald-500/20';
+              case 'yellow': return 'border-amber-500/20';
+              case 'orange': return 'border-orange-500/20';
+              case 'purple': return 'border-purple-500/20';
+              default: return 'border-gray-100';
             }
           };
           
           const getIconColor = (color: string) => {
             switch(color) {
-              case 'red': return 'text-red-500';
-              case 'blue': return 'text-blue-500';
-              case 'green': return 'text-green-500';
-              case 'yellow': return 'text-yellow-500';
-              case 'orange': return 'text-orange-500';
-              case 'purple': return 'text-purple-500';
-              default: return 'text-gray-500';
+              case 'red': return 'text-red-600';
+              case 'blue': return 'text-blue-600';
+              case 'green': return 'text-emerald-600';
+              case 'yellow': return 'text-amber-600';
+              case 'orange': return 'text-orange-600';
+              case 'purple': return 'text-purple-600';
+              default: return 'text-slate-600';
             }
           };
           
           const getTrendColor = (trend: string) => {
             switch(trend) {
-              case 'up': return 'text-green-600';
+              case 'up': return 'text-emerald-600';
               case 'down': return 'text-red-600';
-              default: return 'text-gray-600';
+              default: return 'text-slate-600';
             }
           };
           
           return (
             <div
               key={index}
-              className={`${getCardColor(metric.color)} rounded-lg p-2 sm:p-4 border hover:shadow-lg transition-all duration-200 flex flex-col min-h-[220px] sm:min-h-[240px] overflow-hidden`}
+              className={`tactical-container p-2 sm:p-4 hover:shadow-xl transition-all duration-300 flex flex-col min-h-[220px] sm:min-h-[240px] overflow-hidden ${getCardColor(metric.color)}`}
             >
               {(() => {
                 const rangePill = (() => {
@@ -1409,7 +1414,7 @@ const MMDRMODashboard: React.FC = () => {
                 return (
                   <div className="flex items-center justify-between h-7 sm:h-8 mb-2 sm:mb-3">
                     {/* Title label on the left */}
-                    <div className="text-[11px] sm:text-xs font-medium text-gray-700">
+                    <div className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-widest">
                       {metric.title}
                     </div>
                     <div className="flex flex-col items-end gap-1">
@@ -1417,7 +1422,7 @@ const MMDRMODashboard: React.FC = () => {
                       <div className="relative">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white/80 px-2 py-1 text-[10px] sm:text-xs text-gray-700 shadow-sm hover:bg-white focus:outline-none"
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-100 bg-white/80 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-700 shadow-sm hover:bg-white focus:outline-none"
                           onClick={() => setMetricsRangeMenuOpen(metricsRangeMenuOpen === metric.title ? null : metric.title)}
                           aria-haspopup="listbox"
                           aria-expanded={metricsRangeMenuOpen === metric.title}
@@ -1431,7 +1436,7 @@ const MMDRMODashboard: React.FC = () => {
                               <button
                                 key={opt}
                                 type="button"
-                                className={`w-full px-3 py-1.5 text-left text-[11px] sm:text-xs hover:bg-gray-100 ${metricsRange === opt ? 'text-gray-900 font-medium' : 'text-gray-700'}`}
+                                className={`w-full px-3 py-1.5 text-left text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${metricsRange === opt ? 'text-blue-600' : 'text-slate-700'}`}
                                 onClick={() => { setMetricsRange(opt); setMetricsRangeMenuOpen(null); }}
                               >
                                 {getRangeLabel(opt)}
@@ -1441,10 +1446,10 @@ const MMDRMODashboard: React.FC = () => {
                         )}
                       </div>
                       {/* Percent change below dropdown */}
-                      <div className="flex items-center gap-1 text-xs leading-none h-3 sm:h-4">
-                        {metric.trend === 'up' ? <FiTrendingUp className="text-green-500" /> : metric.trend === 'down' ? <FiTrendingDown className="text-red-500" /> : null}
+                      <div className="flex items-center gap-1 text-[10px] leading-none h-3 sm:h-4">
+                        {metric.trend === 'up' ? <FiTrendingUp className="text-emerald-500" /> : metric.trend === 'down' ? <FiTrendingDown className="text-red-500" /> : null}
                         {metric.change !== 0 && (
-                          <span className={`font-semibold ${getTrendColor(metric.trend)}`}>
+                          <span className={`font-black ${getTrendColor(metric.trend)}`}>
                             {Math.abs(metric.change)}%
                           </span>
                         )}
@@ -1453,10 +1458,10 @@ const MMDRMODashboard: React.FC = () => {
                   </div>
                 );
               })()}
-              <div className="flex flex-col justify-center h-[72px] sm:h-[84px]">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 leading-tight truncate">{metric.value}</div>
+               <div className="flex flex-col justify-center h-[72px] sm:h-[84px]">
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 mb-1 leading-none tracking-tighter tabular-nums">{metric.value}</div>
                 {/* Keep a placeholder caption so heights are uniform */}
-                <div className="text-xs text-gray-500 hidden sm:block mt-0 h-4 sm:h-5">
+                <div className="text-[10px] text-gray-500 hidden sm:block mt-0 h-4 sm:h-5 font-bold uppercase tracking-tight">
                   {metric.description ? metric.description : <span className="opacity-0 select-none">placeholder</span>}
                 </div>
               </div>
@@ -1529,55 +1534,55 @@ const MMDRMODashboard: React.FC = () => {
 
       {/* Flood Details Modal */}
       {showFloodDetails && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="tactical-container w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col bg-white shadow-2xl">
+            <div className="tactical-card-header bg-gray-50/50 p-4!">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-3 uppercase tracking-widest">
                 <FiMap className="text-blue-600" />
                 Flood Affected Areas Detail
               </h3>
-              <button onClick={() => setShowFloodDetails(false)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setShowFloodDetails(false)} className="text-slate-400 hover:text-red-600 transition-colors">
                 <FiX className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 overflow-y-auto">
+            <div className="p-4 overflow-y-auto custom-scrollbar">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barangay</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flood Incidents</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Severity</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Barangay</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Reports</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Severity</th>
+                      <th className="px-6 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-50">
                     {allFloodData.length > 0 ? (
                       allFloodData.map((area, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{area.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{area.count}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-[11px] font-black text-slate-900 uppercase">{area.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-[11px] font-black text-slate-500">{area.count}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <div className="w-16 bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div className="w-16 bg-gray-100 rounded-full h-1.5 overflow-hidden shadow-inner">
                                 <div 
                                   className={`h-full rounded-full ${
                                     area.avgSeverity >= 3.5 ? 'bg-red-600' :
                                     area.avgSeverity >= 2.5 ? 'bg-orange-500' :
-                                    area.avgSeverity >= 1.5 ? 'bg-yellow-500' : 'bg-green-500'
+                                    area.avgSeverity >= 1.5 ? 'bg-amber-500' : 'bg-emerald-500'
                                   }`}
                                   style={{ width: `${(area.avgSeverity / 4) * 100}%` }}
                                 ></div>
                               </div>
-                              <span className="text-xs font-semibold">{area.avgSeverity.toFixed(1)}</span>
+                              <span className="text-[10px] font-black text-slate-900">{area.avgSeverity.toFixed(1)}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              area.severityLevel === 'Critical' ? 'bg-red-100 text-red-800' :
-                              area.severityLevel === 'High' ? 'bg-orange-100 text-orange-800' :
-                              area.severityLevel === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
+                            <span className={`px-2 py-0.5 inline-flex text-[9px] font-black rounded-full uppercase tracking-widest border ${
+                              area.severityLevel === 'Critical' ? 'bg-red-50 text-red-700 border-red-100' :
+                              area.severityLevel === 'High' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                              area.severityLevel === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              'bg-emerald-50 text-emerald-700 border-emerald-100'
                             }`}>
                               {area.severityLevel}
                             </span>
@@ -1586,19 +1591,19 @@ const MMDRMODashboard: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">No flood incidents reported.</td>
+                        <td colSpan={4} className="px-6 py-8 text-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">No mission data available</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
               <button
                 onClick={() => setShowFloodDetails(false)}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="tactical-btn-secondary"
               >
-                Close
+                Close_Intel
               </button>
             </div>
           </div>
@@ -1610,22 +1615,19 @@ const MMDRMODashboard: React.FC = () => {
         {/* Center Panel - Live Incident Map (Takes 70% of Space) */}
         <div className="xl:col-span-7">
           {/* Interactive Map */}
-          <div className="bg-white h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] relative border-r border-gray-200 flex flex-col">
+          <div className="bg-white h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] relative border-r border-gray-200 flex flex-col pr-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
-              <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                  <FiMap className="text-blue-600 text-xs sm:text-sm" />
+              <h2 className="text-base sm:text-lg font-black flex items-center gap-2 uppercase tracking-tighter text-slate-900">
+                <div className="w-8 h-8 bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-600/20">
+                  <FiMap className="text-sm" />
                 </div>
-                <span className="text-gray-900">
-                  Live Incident Map
-                </span>
+                Live Tactical Map
               </h2>
-              {/* Removed date filter from map header per user preference */}
               <Link 
                 to="/map"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-lg text-sm flex items-center gap-1 font-medium transition-colors border border-gray-300"
+                className="tactical-btn-secondary py-1.5 px-3!"
               >
-                Full Map <FiExternalLink className="text-xs" />
+                Full_Screen <FiExternalLink className="text-[10px]" />
               </Link>
             </div>
             
@@ -1987,37 +1989,23 @@ const MMDRMODashboard: React.FC = () => {
               </MapboxMap>
               {/* Legend Overlay */}
               <div className="absolute top-3 left-3 z-30 pointer-events-auto">
-                <div className="bg-white/95 backdrop-blur rounded-md shadow p-3 text-xs min-w-[180px] border border-gray-200">
-                  <div className="font-semibold text-gray-800 mb-2">Legend</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
-                          <defs>
-                            <linearGradient id="leg_floodGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#3b82f6" />
-                              <stop offset="100%" stopColor="#1d4ed8" />
-                            </linearGradient>
-                          </defs>
-                          <path d="M12 2C9 6 6 8.8 6 12.5A6 6 0 0018 12.5C18 8.8 15 6 12 2z" fill="url(#leg_floodGradient)"/>
-                          <circle cx="12" cy="12.5" r="5" fill="rgba(255,255,255,0.12)"/>
-                          <path d="M4 19c1 .7 2 .9 3 .9s2-.2 3-.9c1 .7 2 .9 3 .9s2-.2 3-.9c1 .7 2 .9 3 .9" fill="none" stroke="#0ea5e9" strokeWidth="1.2" strokeLinecap="round"/>
-                        </svg>
+                <div className="bg-white/95 backdrop-blur-md tactical-container p-3 min-w-[180px] border-gray-200 shadow-xl">
+                  <div className="text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2">Tactical_Legend</div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 flex items-center justify-center bg-blue-50 rounded-lg border border-blue-100/50">
+                        <FaWater className="text-blue-600 text-[10px]" />
                       </div>
-                      <span className="text-gray-700">Flood</span>
-                      <span className="ml-auto text-gray-500">{activeIncidents.filter(i => i.type === 'Flood').length}</span>
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Flood_Report</span>
+                      <span className="ml-auto text-[10px] font-black text-blue-600 bg-blue-50 px-1.5 rounded">{activeIncidents.filter(i => i.type === 'Flood').length}</span>
                     </div>
 
-                    <div className="border-t border-gray-100 my-1"></div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3b82f6" width="20" height="20">
-                          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                        </svg>
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 flex items-center justify-center bg-amber-50 rounded-lg border border-amber-100/50">
+                        <FiHome className="text-amber-600 text-[10px]" />
                       </div>
-                      <span className="text-gray-700">Shelter</span>
-                      <span className="ml-auto text-gray-500">{shelters.length}</span>
+                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Safe_Shelter</span>
+                      <span className="ml-auto text-[10px] font-black text-amber-600 bg-amber-50 px-1.5 rounded">{shelters.length}</span>
                     </div>
                   </div>
                 </div>
@@ -2032,74 +2020,74 @@ const MMDRMODashboard: React.FC = () => {
         {/* Right Panel - Compact Emergency Resources (Takes 30% of Space) */}
         <div className="xl:col-span-3 flex flex-col gap-3 sm:gap-4 h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)]">
           {/* Emergency Resources - Professional List */}
-          <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm sm:text-base font-semibold text-gray-800">Emergency Resources</h2>
+          <div className="tactical-container flex flex-col">
+            <div className="tactical-section-header">
+              <span>Emergency_Resources</span>
             </div>
             {/* Neutral list style with right chevrons */}
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-50">
               <Link
                 to="/emergency"
-                className="flex items-center gap-3 px-2 py-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all group"
               >
-                <div className="w-7 h-7 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-                  <FiAlertTriangle className="text-red-600 text-sm" />
+                <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/20">
+                  <FiAlertTriangle className="text-white text-xs" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">Emergency</div>
-                  <div className="text-[11px] text-gray-500 truncate">Quick access to emergency actions</div>
+                  <div className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-red-600 transition-colors">Emergency_Comms</div>
+                  <div className="text-[9px] text-slate-400 font-bold uppercase">Priority_Action_Portal</div>
                 </div>
-                <FiChevronRight className="text-gray-400" />
+                <FiChevronRight className="text-slate-300 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 to="/admin/flood-report"
-                className="flex items-center gap-3 px-2 py-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all group"
               >
-                <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center">
-                  <FaWater className="text-blue-600 text-sm" />
+                <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                  <FaWater className="text-white text-xs" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">Flood</div>
-                  <div className="text-[11px] text-gray-500 truncate">Flood reports and status</div>
+                  <div className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-blue-600 transition-colors">Flood_Intel</div>
+                  <div className="text-[9px] text-slate-400 font-bold uppercase">Hydrological_Data_Feed</div>
                 </div>
-                <FiChevronRight className="text-gray-400" />
+                <FiChevronRight className="text-slate-300 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 to="/admin/shelters"
-                className="flex items-center gap-3 px-2 py-2 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all group"
               >
-                <div className="w-7 h-7 rounded-full bg-green-50 border border-green-200 flex items-center justify-center">
-                  <FiHome className="text-green-600 text-sm" />
+                <div className="w-8 h-8 rounded-xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-600/20">
+                  <FiHome className="text-white text-xs" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">Shelters</div>
-                  <div className="text-[11px] text-gray-500 truncate">Shelter availability and details</div>
+                  <div className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-amber-600 transition-colors">Shelter_Hub</div>
+                  <div className="text-[9px] text-slate-400 font-bold uppercase">Logistics_&_Availability</div>
                 </div>
-                <FiChevronRight className="text-gray-400" />
+                <FiChevronRight className="text-slate-300 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
 
           {/* Incident Types - Chart left, counts right */}
-          <div className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex-1 min-h-0 flex flex-col">
-            <h2 className="text-sm sm:text-base font-semibold text-gray-800 mb-2 sm:mb-2">Flood Levels</h2>
-            <div className="flex-1 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch justify-between">
+          <div className="tactical-container flex-1 min-h-0 flex flex-col bg-white">
+            <div className="tactical-section-header">
+              <span>Operational_Threat_Index</span>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center p-6">
               {/* Chart (left) with center label */}
-              <div className="sm:w-1/2 w-full flex items-center justify-center">
-                <div className="relative w-44 h-44 sm:w-56 sm:h-56">
+              <div className="w-full flex items-center justify-center mb-6">
+                <div className="relative w-48 h-48">
                   <Doughnut 
                   data={{
                     ...incidentData,
                     datasets: [{
                       ...incidentData.datasets[0],
                       borderColor: '#FFFFFF',
-                      borderWidth: 2,
-                      spacing: 3,
-                      hoverBorderWidth: 3,
-                      hoverBorderColor: '#374151',
-                      hoverOffset: 6,
+                      borderWidth: 4,
+                      spacing: 4,
+                      hoverOffset: 8,
                     }]
                   }}
                   options={{
@@ -2109,55 +2097,52 @@ const MMDRMODashboard: React.FC = () => {
                     plugins: {
                       legend: { display: false },
                       tooltip: {
-                        backgroundColor: '#FFFFFF',
-                        titleColor: '#374151',
-                        bodyColor: '#6B7280',
-                        borderColor: '#D1D5DB',
-                        borderWidth: 1,
-                        cornerRadius: 8,
+                        backgroundColor: '#1e293b',
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#cbd5e1',
+                        padding: 12,
+                        cornerRadius: 12,
                         displayColors: true,
-                        boxPadding: 6
+                        boxPadding: 8
                       }
                     },
-                    cutout: '55%',
-                    elements: { arc: { borderRadius: 6 } },
+                    cutout: '65%',
+                    elements: { arc: { borderRadius: 8 } },
                     animation: { animateRotate: true, animateScale: true }
                   }}
                   style={{ width: '100%', height: '100%' }}
                 />
                   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-center">
-                    <div>
-                      <div className="text-lg sm:text-xl font-bold text-gray-900">
-                        {incidentData.datasets[0].data.reduce((a:number,b:number)=>a+b,0)}
-                      </div>
-                      <div className="text-[10px] sm:text-[11px] text-gray-500">Reports</div>
+                    <div className="text-2xl font-black text-slate-900 tracking-tighter">
+                      {incidentData.datasets[0].data.reduce((a:number,b:number)=>a+b,0)}
                     </div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total_Intel</div>
                   </div>
                 </div>
               </div>
               {/* Counts (right) with color dots and percentage */}
-              <div className="sm:w-1/2 w-full flex h-full items-center">
-                <div className="w-full grid grid-cols-1 gap-3">
+              <div className="w-full">
+                <div className="grid grid-cols-2 gap-2">
                   {incidentData.labels.map((label, i) => {
                     const val = incidentData.datasets[0].data[i];
                     const total = incidentData.datasets[0].data.reduce((a:number,b:number)=>a+b,0) || 1;
                     const pct = Math.round((val/total)*100);
                     const colors = incidentData.datasets[0].backgroundColor as string[];
                     return (
-                      <div key={label} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md px-2 py-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[i] }} />
-                          <span className="text-[11px] sm:text-xs text-gray-700 font-medium truncate">{label}</span>
+                      <div key={label} className="flex flex-col bg-gray-50/50 border border-gray-100 rounded-xl px-3 py-2 transition-all hover:bg-white hover:shadow-md">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-block w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: colors[i], color: colors[i] }} />
+                          <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest truncate">{label}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-900 font-semibold">{val}</span>
-                          <span className="text-[10px] text-gray-600">{pct}%</span>
+                        <div className="flex items-end justify-between">
+                          <span className="text-[13px] text-slate-900 font-black tracking-tighter">{val}</span>
+                          <span className="text-[9px] text-blue-600 font-black">{pct}%</span>
                         </div>
                       </div>
                     );
                   })}
                   {incidentData.labels.length === 0 && (
-                    <div className="text-center text-xs text-gray-500">No reports</div>
+                    <div className="text-center text-[10px] text-slate-400 font-black uppercase tracking-widest py-4 col-span-2">No_Intel_Available</div>
                   )}
                 </div>
               </div>

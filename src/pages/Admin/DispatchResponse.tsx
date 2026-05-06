@@ -914,7 +914,7 @@ const AdminDispatchResponse: React.FC = () => {
   }, [incidentId, page, pageSize]);
 
   return (
-    <div className="w-full px-4 lg:px-6">
+    <div className="w-full font-jetbrains">
       <Toaster
         position="top-right"
         gutter={8}
@@ -939,330 +939,219 @@ const AdminDispatchResponse: React.FC = () => {
       <AdminDispatchNavBar active={activeTab} onChange={setActiveTab} counts={counts} />
 
       {activeTab === 'dispatch' && (
-        <div className="w-full">
-          <h2 className="text-lg font-semibold mb-4">DISPATCH AND RESPONSE</h2>
-          <div className="grid grid-cols-12 gap-6">
+        <div className="w-full p-4 lg:p-8 animate-in fade-in duration-500">
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]" />
+              Dispatch_Control_Center
+            </h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 opacity-70">Unit_Coordination • Sector_Deployment • Tactical_Relay</p>
+          </div>
+          <div className="grid grid-cols-12 gap-8">
             {/* Summary cards removed for cleaner aligned layout */}
 
-            <div className="col-span-12 lg:col-span-7">
-              <div className="bg-white border border-gray-200 rounded-xl p-5 relative h-[640px] flex flex-col">
+            <div className="col-span-12 lg:col-span-4 space-y-8">
+              <div className="bg-white tactical-container p-6 shadow-xl shadow-slate-900/5 relative overflow-hidden group">
                 {locked && (
-                  <div className="absolute -top-3 left-5 right-5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-                    Dispatch run exists. Form is locked. You may update notes and status only.
+                  <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+                    <FiAlertTriangle className="text-amber-600 mt-0.5" />
+                    <div>
+                      <div className="text-[10px] font-black text-amber-900 uppercase tracking-widest">System_Lock_Active</div>
+                      <p className="text-[9px] font-bold text-amber-700/80 uppercase tracking-tight mt-1 leading-relaxed">Mission_Active. Telemetry_Only.</p>
+                    </div>
                   </div>
                 )}
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Team Assigned</label>
-                      <div className="flex items-center gap-2">
-                        <input disabled={locked} className={`flex-1 rounded-md bg-white px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${submitAttempted && !teamAssigned.trim() ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'} disabled:bg-gray-100 disabled:text-gray-500`} placeholder="Alpha Team / Rescue Team A" value={teamAssigned} onChange={e => setTeamAssigned(e.target.value)} />
-                        <button type="button" disabled={locked} className="px-3 py-2 rounded-md text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 disabled:opacity-60" onClick={async () => {
-                          setIsPickerOpen(true);
-                          try {
-                            const [tRes, rRes] = await Promise.all([
-                              apiFetch('list-teams.php'),
-                              apiFetch('list-responder-availability.php')
-                            ]);
-                            const tData = await tRes.json();
-                            const rData = await rRes.json();
-                            let teams = Array.isArray(tData.teams) ? tData.teams : [];
-                            let responders = Array.isArray(rData.responders) ? rData.responders : [];
-                            if (teams.length === 0 && responders.length === 0) {
-                              await apiFetch('seed-teams-responders.php');
-                              const [t2, r2] = await Promise.all([
-                                apiFetch('list-teams.php'),
-                                apiFetch('list-responder-availability.php')
-                              ]);
-                              const td = await t2.json(); const rd = await r2.json();
-                              teams = Array.isArray(td.teams) ? td.teams : [];
-                              responders = Array.isArray(rd.responders) ? rd.responders : [];
-                            }
-                            setAvailableTeams(teams);
-                            setAvailableResponders(responders);
-                          } catch (e) { console.error(e); }
-                        }}>Choose</button>
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block">Response_Unit</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <FiUsers className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                        <input disabled={locked} className={`w-full h-12 pl-11 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border transition-all ${submitAttempted && !teamAssigned.trim() ? 'border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/5'} disabled:bg-gray-100 disabled:text-gray-400`} placeholder="ALPHA_UNIT" value={teamAssigned} onChange={e => setTeamAssigned(e.target.value)} />
                       </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-1">PPE Required</label>
-                      <div className="flex flex-wrap gap-2">
-                        {defaultPPE.map(item => (
-                          <button key={item} type="button" disabled={locked} aria-pressed={selectedPPE.includes(item)} className={`px-2.5 py-1.5 rounded-md text-xs border ${selectedPPE.includes(item) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-700 border-gray-300'} disabled:opacity-60`} onClick={() => toggleArrayValue(selectedPPE, item, setSelectedPPE)}>
-                            {item}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Equipment Planned</label>
-                      <div className="flex flex-wrap gap-2">
-                        {defaultEquipment.map(item => (
-                          <button key={item} type="button" disabled={locked} aria-pressed={equipmentUsed.includes(item)} className={`px-2.5 py-1.5 rounded-md text-xs border ${equipmentUsed.includes(item) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300'} disabled:opacity-60`} onClick={() => toggleArrayValue(equipmentUsed, item, setEquipmentUsed)}>
-                            {item}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Inform Other Agencies (OPTIONAL)</label>
-                      <div className="flex flex-wrap gap-2">
-                        {(['police','fire','health','coast-guard','dpwh'] as Agency[]).map(ag => (
-                          <button key={ag} type="button" disabled={locked} aria-pressed={agencyTags.includes(ag)} className={`px-2.5 py-1.5 rounded-md text-xs border ${agencyTags.includes(ag) ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-gray-700 border-gray-300'} disabled:opacity-60`} onClick={() => toggleAgency(ag)}>
-                            {ag.replace('-', ' ').toUpperCase()}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <label className="block text-sm font-medium mb-1">Notes</label>
-                      <textarea className="w-full h-28 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" value={notes} onChange={e => setNotes(e.target.value)} />
+                      <button type="button" disabled={locked} className="h-12 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 transition-all shadow-lg" onClick={async () => {
+                        setIsPickerOpen(true);
+                        try {
+                          const [tRes, rRes] = await Promise.all([ apiFetch('list-teams.php'), apiFetch('list-responder-availability.php') ]);
+                          const tData = await tRes.json(); const rData = await rRes.json();
+                          let teams = Array.isArray(tData.teams) ? tData.teams : [];
+                          let responders = Array.isArray(rData.responders) ? rData.responders : [];
+                          setAvailableTeams(teams); setAvailableResponders(responders);
+                        } catch (e) { console.error(e); }
+                      }}>Roster</button>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-4">
-                    <div className="text-sm font-medium mb-1">Health Coordination (optional)</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">MHO/MESU Contacted (Name)</label>
-                        <input disabled={locked} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value={hcMhoName} onChange={e => setHcMhoName(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">MHO/MESU Contact Number</label>
-                        <input disabled={locked} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value={hcMhoContact} onChange={e => setHcMhoContact(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">MHO Nurse Assigner</label>
-                        <input disabled={locked} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value={hcNurseAssigner} onChange={e => setHcNurseAssigner(e.target.value)} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Patient Transfer Hospital</label>
-                        <input disabled={locked} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" value={hcHospital} onChange={e => setHcHospital(e.target.value)} />
-                      </div>
-                      
-                      <div className="md:col-span-2 flex flex-col">
-                        <label className="block text-sm font-medium mb-1">Referral Record</label>
-                        <input ref={hcReferralInputRef} disabled={locked} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files && e.target.files[0] ? e.target.files[0] : null; setHcReferralFile(f); }} />
-                        <div className="h-28 rounded-md border border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center relative cursor-pointer" onClick={() => { if (hcReferralInputRef.current && !locked) hcReferralInputRef.current.click(); }}>
-                          <div className="flex items-center gap-2 text-xs text-gray-700">
-                            <FiImage className="text-gray-500" />
-                            <span>{hcReferralFile ? hcReferralFile.name : 'No file chosen'}</span>
-                            <span className="text-gray-400">{hcReferralFile ? (hcReferralFile.type || (hcReferralFile.name.includes('.') ? hcReferralFile.name.split('.').pop() as string : '')) : 'image/*'}</span>
-                          </div>
-                          <button type="button" disabled={locked} className="absolute bottom-2 right-2 px-2 py-1 rounded-md text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 disabled:opacity-60" onClick={(e) => { e.stopPropagation(); if (hcReferralInputRef.current) hcReferralInputRef.current.click(); }}>Choose File</button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-auto flex justify-end items-end">
-                      <button
-                        onClick={() => setConfirmOpen(true)}
-                        disabled={!teamAssigned.trim() || !!runId || hasExistingRunForIncident}
-                        className={`w-40 rounded-md py-2 font-semibold ${(!teamAssigned.trim() || !!runId || hasExistingRunForIncident) ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                      >
-                        { (!!runId || hasExistingRunForIncident) ? 'Run Exists' : 'Dispatch Team' }
-                      </button>
+                  
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block">Inventory_Status</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[...defaultPPE, ...defaultEquipment].map(item => (
+                        <button key={item} type="button" disabled={locked} className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${ (defaultPPE.includes(item) ? selectedPPE : equipmentUsed).includes(item) ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-gray-100 hover:bg-gray-50' } disabled:opacity-60`} onClick={() => defaultPPE.includes(item) ? toggleArrayValue(selectedPPE, item, setSelectedPPE) : toggleArrayValue(equipmentUsed, item, setEquipmentUsed)}>
+                          {item}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
+
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block">Mission_Intelligence</label>
+                    <textarea className="w-full h-24 rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all" value={notes} onChange={e => setNotes(e.target.value)} />
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      onClick={() => setConfirmOpen(true)}
+                      disabled={!teamAssigned.trim() || !!runId || hasExistingRunForIncident}
+                      className={`w-full h-14 rounded-xl font-black text-[12px] uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-2xl ${ (!teamAssigned.trim() || !!runId || hasExistingRunForIncident) ? 'bg-gray-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/30 hover:scale-[1.02]' }`}
+                    >
+                      <FiSend className="text-xl" />
+                      {(!!runId || hasExistingRunForIncident) ? 'LOCKED' : 'Initiate_Deployment'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-            <div className="col-span-12 lg:col-span-5">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-white border border-gray-200 rounded-xl p-0 overflow-hidden h-[640px] flex flex-col">
-                  <div className="flex items-center justify-between p-3 border-b">
-                    <div className="text-sm font-medium">Dispatch Map</div>
+              <div className="bg-white tactical-container p-5 shadow-xl shadow-slate-900/5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Deployment_Status</div>
+                  <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${statusPillClass}`}>{status}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select className="flex-1 h-10 rounded-xl border border-gray-100 bg-gray-50 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" value={statusDesired} onChange={e => setStatusDesired(e.target.value as any)}>
+                    {(statusOrder).map(s => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                  <button onClick={() => setRunStatus(statusDesired)} disabled={statusUpdating !== null} className="h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 transition-all">Update</button>
+                </div>
+                <div className="mt-4 flex items-center gap-1.5">
+                  {statusOrder.map((s, i) => (
+                    <div key={s} className={`flex-1 h-1.5 rounded-full transition-all duration-500 ${i <= currentIdx ? doneColorClass : 'bg-gray-100'}`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-12 lg:col-span-8">
+              <div className="bg-white tactical-container p-2 shadow-xl shadow-slate-900/5 relative flex flex-col h-[750px] animate-pop">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 bg-gray-50/30 rounded-t-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
+                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Geospatial_Intelligence</span>
                   </div>
-                  <div className="flex-1">
-                    <MapContainer
-                      center={[14.5995, 120.9842]}
-                      zoom={12}
-                      style={{ height: '100%', width: '100%' }}
-                      scrollWheelZoom
-                      zoomControl={false}
-                      preferCanvas={true}
-                      attributionControl={false}
-                      ref={dispatchMapRef as any}
-                    >
-                      <ZoomControl position="bottomright" />
-                      <TileLayer
-                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                        attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                      />
-                      <Polygon 
-                        positions={SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]])}
-                        pathOptions={{ color: '#3b82f6', weight: 2, dashArray: '5, 5', fillOpacity: 0 }}
-                      />
-                      {/* Heatmap and danger layers removed */}
-                      {incidentsForMap.map((i: any, idx) => {
-                        const hasSegment = Number.isFinite(Number(i.start_lat)) && Number.isFinite(Number(i.start_lng)) && Number.isFinite(Number(i.end_lat)) && Number.isFinite(Number(i.end_lng));
-                        if (!hasSegment) return null;
-                        const key = String(i.id ?? i.incident_code ?? idx);
-                        const positions: [number, number][] = (routeSegmentsById[key] && routeSegmentsById[key].length > 1) ? routeSegmentsById[key] : [[Number(i.start_lat), Number(i.start_lng)], [Number(i.end_lat), Number(i.end_lng)]];
-                        const mid: [number, number] = positions[Math.floor(positions.length / 2)];
-                        return (
-                          <Polyline key={`inc-${i.id}-${idx}`} positions={positions} pathOptions={{ color: '#f97316', weight: 5, opacity: 0.9 }} eventHandlers={{
-                            click: async () => {
-                              const start: [number, number] = [Number(i.start_lat), Number(i.start_lng)];
-                              const end: [number, number] = [Number(i.end_lat), Number(i.end_lng)];
-                              const seg = await getRouteSegment(start, end);
-                              setRouteSegmentsById(prev => ({ ...prev, [key]: seg }));
-                              const pick = seg[Math.floor(seg.length / 2)] || mid;
-                              setDispatchLocation(pick);
-                              setIncidentQuery(String(i.incident_code ?? i.id ?? ''));
-                              setSuggestedStart(start);
-                              setSuggestedEnd(end);
-                              computeSuggestedRoutes(start, end, suggestedMode);
-                            }
-                          }}>
-                            <Popup>
-                              <div className="text-xs">
-                                <div className="font-semibold">{String(i.type || 'Incident')}</div>
-                                <div>{String(i.severity || '—')}</div>
-                                <div>{String(i.address || i.location || '—')}</div>
-                              </div>
-                            </Popup>
-                          </Polyline>
-                        );
-                      })}
-                      {suggestedRoutes.map((r, i) => (
-                        <Polyline
-                          key={`suggested-${i}`}
-                          positions={r.coords}
-                          pathOptions={{
-                            color: i === selectedSuggestedIndex ? '#2563eb' : '#94a3b8',
-                            weight: i === selectedSuggestedIndex ? 7 : 5,
-                            opacity: i === selectedSuggestedIndex ? 0.95 : 0.65
-                          }}
-                          eventHandlers={{
-                            click: () => {
-                              setSelectedSuggestedIndex(i);
-                              if (r.coords && r.coords.length) {
-                                const mid = r.coords[Math.floor(r.coords.length / 2)];
-                                if (mid) setDispatchLocation(mid);
-                              }
-                            }
-                          }}
-                        />
-                      ))}
-                      {dispatchLocation && (
-                        <Marker position={dispatchLocation} icon={getMarkerIcon('#ef4444')}>
-                          <Popup>Selected Location</Popup>
-                        </Marker>
-                      )}
-                      <MapClickSelect onPick={(ll) => setDispatchLocation(ll)} />
-                    </MapContainer>
-                  </div>
-                  <div className="p-3 border-t text-xs text-gray-700">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        {dispatchLocation ? `${dispatchLocation[0].toFixed(5)}, ${dispatchLocation[1].toFixed(5)}` : 'Click map or an incident path to set location'}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button className="px-2 py-1 rounded-md border border-gray-300 text-xs" onClick={async () => {
-                          if (!dispatchLocation) return;
-                          setNotes(prev => `${prev ? prev + '\n' : ''}Dispatch to ${dispatchLocation[0].toFixed(5)}, ${dispatchLocation[1].toFixed(5)}`);
-                          try {
-                            if (runId) {
-                              const payload = { sop_run_id: Number(runId), destination_lat: dispatchLocation[0], destination_lng: dispatchLocation[1] };
-                              const res = await apiFetch('update-sop-run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                              await res.json().catch(() => ({}));
-                              toast.success('Destination saved to run.');
-                            } else {
-                              toast.success('Destination noted. It will be saved on dispatch.');
-                            }
-                          } catch (e) { console.error(e); toast.error('Failed to save destination'); }
-                        }}>Set Destination</button>
-                      </div>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2.5 cursor-pointer group">
+                        <input type="checkbox" checked={showHeatmap} onChange={e => setShowHeatmap(e.target.checked)} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20" />
+                        <span className="text-[9px] font-black text-slate-400 group-hover:text-slate-900 uppercase tracking-widest transition-colors">Heat_Map</span>
+                      </label>
                     </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <select
-                          className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
-                          value={suggestedMode}
-                          onChange={(e) => {
-                            const next = e.target.value as any;
-                            setSuggestedMode(next);
-                            if (suggestedStart && suggestedEnd) computeSuggestedRoutes(suggestedStart, suggestedEnd, next);
-                          }}
-                        >
+                    <div className="w-px h-4 bg-gray-200" />
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <FiRefreshCw className="text-xs animate-spin-slow" />
+                      <span className="text-[9px] font-black uppercase tracking-widest">Live_Relay</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex-1 relative rounded-b-xl overflow-hidden group/map">
+                  <MapContainer
+                    center={[14.5995, 120.9842]}
+                    zoom={12}
+                    style={{ height: '100%', width: '100%' }}
+                    scrollWheelZoom
+                    zoomControl={false}
+                    preferCanvas={true}
+                    attributionControl={false}
+                    ref={dispatchMapRef as any}
+                  >
+                    <ZoomControl position="bottomright" />
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
+                    <Polygon positions={SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]])} pathOptions={{ color: '#3b82f6', weight: 2, dashArray: '5, 5', fillOpacity: 0 }} />
+                    {incidentsForMap.map((i: any, idx) => {
+                      const hasSegment = Number.isFinite(Number(i.start_lat)) && Number.isFinite(Number(i.start_lng)) && Number.isFinite(Number(i.end_lat)) && Number.isFinite(Number(i.end_lng));
+                      if (!hasSegment) return null;
+                      const key = String(i.id ?? i.incident_code ?? idx);
+                      const positions: [number, number][] = (routeSegmentsById[key] && routeSegmentsById[key].length > 1) ? routeSegmentsById[key] : [[Number(i.start_lat), Number(i.start_lng)], [Number(i.end_lat), Number(i.end_lng)]];
+                      return (
+                        <Polyline key={`inc-${i.id}-${idx}`} positions={positions} pathOptions={{ color: '#f97316', weight: 5, opacity: 0.9 }} eventHandlers={{
+                          click: async () => {
+                            const start: [number, number] = [Number(i.start_lat), Number(i.start_lng)];
+                            const end: [number, number] = [Number(i.end_lat), Number(i.end_lng)];
+                            const seg = await getRouteSegment(start, end);
+                            setRouteSegmentsById(prev => ({ ...prev, [key]: seg }));
+                            const pick = seg[Math.floor(seg.length / 2)] || [Number(i.start_lat), Number(i.start_lng)];
+                            setDispatchLocation(pick);
+                            setIncidentQuery(String(i.incident_code ?? i.id ?? ''));
+                            setSuggestedStart(start); setSuggestedEnd(end);
+                            computeSuggestedRoutes(start, end, suggestedMode);
+                          }
+                        }}>
+                          <Popup className="font-jetbrains">
+                            <div className="p-2 min-w-[150px]">
+                              <div className="text-[11px] font-black text-slate-900 uppercase mb-1">{String(i.type || 'Incident')}</div>
+                              <div className="text-[9px] font-bold text-slate-500 uppercase leading-relaxed">{String(i.address || i.location || 'Sector_Coordinates')}</div>
+                            </div>
+                          </Popup>
+                        </Polyline>
+                      );
+                    })}
+                    {suggestedRoutes.map((r, i) => (
+                      <Polyline key={`suggested-${i}`} positions={r.coords} pathOptions={{ color: i === selectedSuggestedIndex ? '#2563eb' : '#94a3b8', weight: i === selectedSuggestedIndex ? 8 : 4, opacity: i === selectedSuggestedIndex ? 1 : 0.4 }} eventHandlers={{ click: () => { setSelectedSuggestedIndex(i); if (r.coords && r.coords.length) { const mid = r.coords[Math.floor(r.coords.length / 2)]; if (mid) setDispatchLocation(mid); } } }} />
+                    ))}
+                    {dispatchLocation && ( <Marker position={dispatchLocation} icon={getMarkerIcon('#dc2626')} /> )}
+                    <MapClickSelect onPick={(ll) => setDispatchLocation(ll)} />
+                  </MapContainer>
+
+                  {/* Sidebar on Map */}
+                  <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-3">
+                    <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl border border-gray-100 shadow-2xl min-w-[220px]">
+                      <div className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center justify-between">
+                        <span>Route_Logic</span>
+                        <FiRefreshCw className={`text-blue-600 ${suggestedLoading ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div className="space-y-4">
+                        <select className="w-full h-10 rounded-xl border border-gray-100 bg-gray-50 px-3 text-[10px] font-black uppercase tracking-widest focus:outline-none" value={suggestedMode} onChange={(e) => { const next = e.target.value as any; setSuggestedMode(next); if (suggestedStart && suggestedEnd) computeSuggestedRoutes(suggestedStart, suggestedEnd, next); }}>
                           <option value="driving-car">Car</option>
                           <option value="driving-hgv">Truck</option>
                           <option value="cycling-regular">Bike</option>
                           <option value="foot-walking">Walk</option>
                         </select>
-                        {suggestedLoading ? (
-                          <span className="text-xs text-gray-500">Routing…</span>
-                        ) : null}
+                        <div className="space-y-2">
+                          {suggestedRoutes.map((r, i) => (
+                            <button key={i} onClick={() => setSelectedSuggestedIndex(i)} className={`w-full p-3 rounded-xl border text-left transition-all ${ i === selectedSuggestedIndex ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-gray-50/50 border-gray-100 text-slate-600 hover:bg-white' }`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-black uppercase tracking-widest">Vector_{i + 1}</span>
+                                {r.intersectsBlocked && ( <div className="px-1.5 py-0.5 rounded bg-red-500 text-[7px] font-black text-white uppercase">Blocked</div> )}
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-xs font-black tabular-nums">{(r.distance / 1000).toFixed(1)}KM</span>
+                                <span className="ml-auto text-xs font-black tabular-nums">{Math.round(r.duration / 60)}MIN</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      {suggestedRoutes.length ? (
-                        <button
-                          className="px-2 py-1 rounded-md bg-blue-600 text-white text-xs flex items-center gap-1 hover:bg-blue-700"
-                          onClick={handleShareFacebook}
-                        >
-                          <FaFacebookF />
-                          Share
-                        </button>
-                      ) : null}
                     </div>
-                    {suggestedRoutes.length ? (
-                      <div className="mt-2 flex gap-2 overflow-x-auto">
-                        {suggestedRoutes.map((r, i) => (
-                          <button
-                            key={`sbtn-${i}`}
-                            className={`px-2 py-1 rounded-md border text-[11px] whitespace-nowrap ${
-                              i === selectedSuggestedIndex ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-gray-300 bg-white text-gray-700'
-                            }`}
-                            onClick={() => setSelectedSuggestedIndex(i)}
-                          >
-                            Route {i + 1}
-                            {r.distance ? ` • ${(r.distance / 1000).toFixed(1)} km` : ''}
-                            {r.duration ? ` • ${Math.round(r.duration / 60)} min` : ''}
-                            {r.intersectsBlocked ? ' • blocked' : ''}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
                   </div>
                 </div>
                 
-                <div className="bg-white border border-gray-200 rounded-xl p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm font-medium">Status</div>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${statusPillClass}`}>{status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <select className="text-xs border border-gray-300 rounded px-2 py-1" value={statusDesired} onChange={e => setStatusDesired(e.target.value as any)}>
-                      {(statusOrder).map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => setRunStatus(statusDesired)}
-                      disabled={statusUpdating !== null}
-                      className={`px-3 py-1 rounded text-xs ${statusUpdating !== null ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                    >
-                      Update
-                    </button>
-                  </div>
-                  <div className="mt-3">
-                    <div className="flex items-center gap-2">
-                      {statusOrder.map((s, i) => (
-                        <div key={s} className={`flex-1 h-2 rounded-full ${i <= currentIdx ? doneColorClass : 'bg-gray-200'}`} />
-                      ))}
-                    </div>
-                    <div className="flex justify-between text-[10px] mt-1 text-gray-500">
-                      {statusOrder.map(s => (<span key={s}>{s}</span>))}
+                <div className="mt-3 p-4 bg-gray-50/50 rounded-xl border border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${dispatchLocation ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-slate-300'}`} />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sector_Target: {dispatchLocation ? 'LOCKED' : 'AWAITING_INPUT'}</span>
                     </div>
                   </div>
-                  <div className="mt-3">
-                    <button
-                      onClick={() => setRunStatus('Completed')}
-                      className={`w-full px-3 py-2 rounded-md text-sm ${status === 'Completed' ? 'bg-green-600 text-white' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
-                    >
-                      {status === 'Completed' ? 'Completed' : 'Mark Completed'}
-                    </button>
-                  </div>
+                  <button className={`h-10 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${ !dispatchLocation ? 'bg-gray-100 text-slate-300 cursor-not-allowed border border-gray-100' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg' }`} onClick={async () => {
+                    if (!dispatchLocation) return;
+                    setNotes(prev => `${prev ? prev + '\n' : ''}Dispatch to ${dispatchLocation[0].toFixed(5)}, ${dispatchLocation[1].toFixed(5)}`);
+                    try {
+                      if (runId) {
+                        const payload = { sop_run_id: Number(runId), destination_lat: dispatchLocation[0], destination_lng: dispatchLocation[1] };
+                        await apiFetch('update-sop-run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        toast.success('Target synchronized.');
+                      } else { toast.success('Target noted.'); }
+                    } catch (e) { toast.error('Sync failed'); }
+                  }}>Lock_Target</button>
                 </div>
               </div>
             </div>
@@ -1270,146 +1159,177 @@ const AdminDispatchResponse: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'response' && (
-        <div className="w-full">
-          <h2 className="text-lg font-semibold mb-4">RESPONSE TRACKING AND SAFETY</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* PPE Checklist */}
-            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
-              <div className="flex items-center gap-2 mb-3">
-                <FiCheckSquare />
-                <span className="font-medium">PPE Checklist</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {defaultPPE.map(item => (
-                  <label key={item} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={selectedPPE.includes(item)} onChange={() => toggleArrayValue(selectedPPE, item, setSelectedPPE)} />
-                    {item}
-                  </label>
-                ))}
-              </div>
+        {activeTab === 'response' && (
+          <div className="w-full animate-in fade-in duration-500">
+            <div className="mb-8">
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.4)]" />
+                Response_Oversight
+              </h2>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 opacity-70">Asset_Tracking • Personnel_Log • Equipment_Registry</p>
             </div>
-            {/* Equipment Tracker */}
-            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow animate-pop">
-              <div className="flex items-center gap-2 mb-3">
-                <FiList />
-                <span className="font-medium">Equipment / Supply Tracker</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {defaultEquipment.map(item => (
-                  <label key={item} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={equipmentUsed.includes(item)} onChange={() => toggleArrayValue(equipmentUsed, item, setEquipmentUsed)} />
-                    {item}
-                  </label>
-                ))}
-              </div>
-            </div>
-            {/* Responder Roster */}
-            <div className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-2 mb-3">
-                <FiUsers />
-                <span className="font-medium">Responder Roster</span>
-              </div>
-              <div className="space-y-2">
-                {responderRoster.map((r, idx) => (
-                  <div key={`${r.name}-${idx}`} className="flex items-center gap-2">
-                    <input className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs" value={r.name} onChange={e => setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))} />
-                    <button className="px-2 py-1 text-xs rounded bg-green-600 text-white" onClick={() => { const t = new Date().toISOString(); setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, checkedIn: t } : it)); logResponderAction(r.name, 'login'); }}>Check-in</button>
-                    <button className="px-2 py-1 text-xs rounded bg-gray-600 text-white" onClick={() => { const t = new Date().toISOString(); setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, checkedOut: t } : it)); logResponderAction(r.name, 'logout'); }}>Check-out</button>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* PPE Checklist */}
+              <div className="bg-white tactical-container p-6 shadow-xl shadow-slate-900/5 transition-all hover:translate-y-[-2px]">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-emerald-50 rounded-lg">
+                    <FiCheckSquare className="text-emerald-600" />
                   </div>
-                ))}
-                <div className="pt-2">
-                  <button className="px-2 py-1 text-xs rounded border border-gray-300" onClick={() => setResponderRoster(prev => [...prev, { name: '' }])}>Add Responder</button>
+                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">SOP_PPE_Registry</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {defaultPPE.map(item => (
+                    <label key={item} className="flex items-center gap-3 p-3 rounded-xl border border-gray-50 bg-gray-50/30 cursor-pointer hover:bg-white hover:border-emerald-200 transition-all group">
+                      <input type="checkbox" checked={selectedPPE.includes(item)} onChange={() => toggleArrayValue(selectedPPE, item, setSelectedPPE)} className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500/20" />
+                      <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-900">{item}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Equipment Tracker */}
+              <div className="bg-white tactical-container p-6 shadow-xl shadow-slate-900/5 transition-all hover:translate-y-[-2px]">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <FiList className="text-blue-600" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Mission_Asset_Log</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {defaultEquipment.map(item => (
+                    <label key={item} className="flex items-center gap-3 p-3 rounded-xl border border-gray-50 bg-gray-50/30 cursor-pointer hover:bg-white hover:border-blue-200 transition-all group">
+                      <input type="checkbox" checked={equipmentUsed.includes(item)} onChange={() => toggleArrayValue(equipmentUsed, item, setEquipmentUsed)} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20" />
+                      <span className="text-[11px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-900">{item}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Responder Roster */}
+              <div className="bg-white tactical-container p-6 shadow-xl shadow-slate-900/5 transition-all hover:translate-y-[-2px]">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-slate-100 rounded-lg">
+                    <FiUsers className="text-slate-900" />
+                  </div>
+                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Personnel_Deployment</span>
+                </div>
+                <div className="space-y-4">
+                  {responderRoster.map((r, idx) => (
+                    <div key={`${r.name}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl border border-gray-50 bg-gray-50/30">
+                      <input className="flex-1 bg-transparent text-[11px] font-black text-slate-900 uppercase tracking-widest focus:outline-none" placeholder="IDENTIFY_RESPONDER" value={r.name} onChange={e => setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))} />
+                      <div className="flex gap-2">
+                        <button className="p-2 rounded-lg bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:scale-105 transition-transform" onClick={() => { const t = new Date().toISOString(); setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, checkedIn: t } : it)); logResponderAction(r.name, 'login'); }}><FiCheck size={12} /></button>
+                        <button className="p-2 rounded-lg bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:scale-105 transition-transform" onClick={() => { const t = new Date().toISOString(); setResponderRoster(prev => prev.map((it, i) => i === idx ? { ...it, checkedOut: t } : it)); logResponderAction(r.name, 'logout'); }}><FiClock size={12} /></button>
+                      </div>
+                    </div>
+                  ))}
+                  <button className="w-full h-11 rounded-xl border-2 border-dashed border-gray-200 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all" onClick={() => setResponderRoster(prev => [...prev, { name: '' }])}>
+                    Register_Unit
+                  </button>
                 </div>
               </div>
             </div>
+            
+            <div className="mt-8 flex justify-end">
+              <button 
+                onClick={saveResponseTracking} 
+                disabled={!runId || (selectedPPE.length === 0 && equipmentUsed.length === 0 && !notes.trim())} 
+                className={`h-14 px-10 rounded-xl font-black text-[11px] uppercase tracking-[0.3em] transition-all shadow-2xl ${ !runId || (selectedPPE.length === 0 && equipmentUsed.length === 0 && !notes.trim()) ? 'bg-gray-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/30 hover:scale-[1.02]' }`}
+              >
+                Sync_Mission_Logs
+              </button>
+            </div>
           </div>
-          <div className="mt-4">
-            <button onClick={saveResponseTracking} disabled={!runId || (selectedPPE.length === 0 && equipmentUsed.length === 0 && !notes.trim())} className={`rounded-md px-4 py-2 ${!runId || (selectedPPE.length === 0 && equipmentUsed.length === 0 && !notes.trim()) ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>Save Tracking</button>
-          </div>
-        </div>
-      )}
+        )}
 
       {isPickerOpen && (
-        <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsPickerOpen(false)} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-3xl bg-white rounded-xl border border-gray-200 shadow-2xl transition-transform duration-200 origin-center scale-95">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="text-base font-semibold">Select Team or Responder</div>
-              <button className="text-gray-600 hover:text-gray-900" onClick={() => setIsPickerOpen(false)}>Close</button>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => setIsPickerOpen(false)} />
+          <div className="relative w-full max-w-3xl bg-white tactical-container shadow-2xl overflow-hidden animate-pop">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Roster_Selector</h3>
+                <p className="text-[10px] text-slate-400 uppercase tracking-tight mt-1">Available_Personnel • Sector_Units</p>
+              </div>
+              <button className="p-2 hover:bg-white rounded-lg transition-colors" onClick={() => setIsPickerOpen(false)}><FiX className="text-slate-400" /></button>
             </div>
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg border border-gray-200">
-                <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium">Teams</div>
-                <div className="max-h-72 overflow-y-auto divide-y divide-gray-200">
-                  {availableTeams.length === 0 && <div className="p-3 text-xs text-gray-500">No teams found</div>}
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1 h-3 bg-blue-600" /> Tactical_Teams
+                </div>
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                  {availableTeams.length === 0 && <div className="p-8 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest border-2 border-dashed border-gray-50 rounded-xl">No_Teams_Active</div>}
                   {availableTeams.map((t, idx) => (
-                    <button key={idx} className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white" onClick={() => { setTeamAssigned(t.name); setIsPickerOpen(false); }}>
-                      <span className={`inline-block w-2.5 h-2.5 rounded-full ${t.status === 'available' ? 'bg-green-500' : 'bg-amber-500'}`} />
-                      <span className="flex-1 text-sm font-medium">{t.name}</span>
-                      <span className="text-xs text-gray-600">{t.status}</span>
+                    <button key={idx} className="w-full flex items-center gap-4 p-4 text-left bg-gray-50/50 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-xl transition-all group" onClick={() => { setTeamAssigned(t.name); setIsPickerOpen(false); }}>
+                      <div className={`w-2 h-2 rounded-full ${t.status === 'available' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-amber-500'}`} />
+                      <div className="flex-1">
+                        <div className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-blue-600 transition-colors">{t.name}</div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{t.status}</div>
+                      </div>
+                      <FiChevronRight className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-lg border border-gray-200">
-                <div className="px-3 py-2 border-b border-gray-200 text-sm font-medium">Responders</div>
-                <div className="max-h-72 overflow-y-auto divide-y divide-gray-200">
-                  {availableResponders.length === 0 && <div className="p-3 text-xs text-gray-500">No responders found</div>}
+              <div className="space-y-4">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1 h-3 bg-emerald-600" /> Active_Responders
+                </div>
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                  {availableResponders.length === 0 && <div className="p-8 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest border-2 border-dashed border-gray-50 rounded-xl">No_Personnel_Active</div>}
                   {availableResponders.map((r, idx) => (
-                    <button key={idx} className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white" onClick={() => {
-                      if (!responderRoster.some(x => x.name === r.name)) {
-                        setResponderRoster(prev => [...prev, { name: r.name }]);
-                      }
-                    }}>
-                      <span className={`inline-block w-2.5 h-2.5 rounded-full ${r.status === 'available' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="flex-1 text-sm font-medium">{r.name}</span>
-                      <span className="text-xs text-gray-600">{r.status}</span>
+                    <button key={idx} className="w-full flex items-center gap-4 p-4 text-left bg-gray-50/50 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 rounded-xl transition-all group" onClick={() => { if (!responderRoster.some(x => x.name === r.name)) setResponderRoster(prev => [...prev, { name: r.name }]); }}>
+                      <div className={`w-2 h-2 rounded-full ${r.status === 'available' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <div className="flex-1">
+                        <div className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">{r.name}</div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{r.status}</div>
+                      </div>
+                      <FiPlus className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
                     </button>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="p-3 border-t border-gray-200 flex items-center justify-end">
-              <button className="px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm" onClick={() => setIsPickerOpen(false)}>Done</button>
+            <div className="p-6 bg-gray-50/30 border-t border-gray-50 flex justify-end">
+              <button className="h-11 px-8 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg" onClick={() => setIsPickerOpen(false)}>Complete_Selection</button>
             </div>
           </div>
         </div>
       )}
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-lg bg-white rounded-xl border border-gray-200 shadow-2xl">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="text-base font-semibold">Confirm Dispatch</div>
-              <button className="text-gray-600 hover:text-gray-900" onClick={() => setConfirmOpen(false)}>Close</button>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setConfirmOpen(false)} />
+          <div className="relative w-full max-w-lg bg-white tactical-container shadow-2xl overflow-hidden animate-pop">
+            <div className="p-8 border-b border-gray-50 text-center">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <FiSend size={32} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">Authorize_Deployment?</h3>
+              <p className="text-[10px] text-slate-400 uppercase tracking-tight mt-2 leading-relaxed">System_Locked_Post_Deployment. Verify_Mission_Parameters.</p>
             </div>
-              <div className="p-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between"><span className="text-gray-500">Team</span><span className="font-medium">{teamAssigned || '—'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Dispatched</span><span className="font-medium">{(() => { const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date()); const o: any = {}; parts.forEach(p => o[p.type] = p.value); return `${o.year}-${o.month}-${o.day} ${o.hour}:${o.minute}:${o.second}`; })()}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">PPE</span><span className="font-medium truncate">{selectedPPE.length ? selectedPPE.join(', ') : 'None'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Equipment</span><span className="font-medium truncate">{equipmentUsed.length ? equipmentUsed.join(', ') : 'None'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Agencies</span><span className="font-medium truncate">{agencyTags.length ? agencyTags.map(a => a.replace('-', ' ').toUpperCase()).join(', ') : 'None'}</span></div>
-              {dispatchLocation && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-500 mb-1">Destination</div>
-                  <div className="h-40 rounded-lg overflow-hidden border">
-                    <MapContainer center={[dispatchLocation[0], dispatchLocation[1]]} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false}>
-                      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
-                      <Marker position={[dispatchLocation[0], dispatchLocation[1]]} />
-                    </MapContainer>
-                  </div>
+            <div className="p-8 space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-gray-50">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Unit</span>
+                <span className="text-[11px] font-black text-slate-900 uppercase">{teamAssigned || '—'}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-gray-50">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sector_Target</span>
+                <span className="text-[11px] font-black text-blue-600">{dispatchLocation ? `${dispatchLocation[0].toFixed(4)}, ${dispatchLocation[1].toFixed(4)}` : 'NULL'}</span>
+              </div>
+              {(!dispatchLocation) && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3">
+                  <FiAlertTriangle className="text-red-600" />
+                  <span className="text-[9px] font-black text-red-900 uppercase tracking-widest">Target_Coordinates_Required</span>
                 </div>
               )}
-              {!dispatchLocation && (
-                <div className="text-xs text-red-600">Dispatch destination is required. Click on the map to set it.</div>
-              )}
             </div>
-            <div className="p-3 border-t border-gray-200 flex items-center justify-end gap-2">
-              <button className="px-3 py-1.5 rounded-md border border-gray-300 text-sm" onClick={() => { setConfirmOpen(false); setConfirmAck(false); }}>Cancel</button>
-              <button className={`px-3 py-1.5 rounded-md text-sm ${(!dispatchLocation || confirmLoading) ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`} disabled={!dispatchLocation || confirmLoading} onClick={async () => { if (confirmLoading || !dispatchLocation) return; setConfirmLoading(true); await dispatchTeam(); setConfirmLoading(false); setConfirmOpen(false); }}>
-                {confirmLoading ? 'Dispatching…' : 'Confirm Dispatch'}
+            <div className="p-8 pt-0 flex gap-3">
+              <button className="flex-1 h-14 rounded-xl border-2 border-gray-100 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:bg-gray-50 transition-all" onClick={() => setConfirmOpen(false)}>Abort</button>
+              <button className={`flex-[2] h-14 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl ${(!dispatchLocation || confirmLoading) ? 'bg-gray-100 text-slate-300' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/30'}`} disabled={!dispatchLocation || confirmLoading} onClick={async () => { if (confirmLoading || !dispatchLocation) return; setConfirmLoading(true); await dispatchTeam(); setConfirmLoading(false); setConfirmOpen(false); }}>
+                {confirmLoading ? 'Relaying...' : 'Initiate_Deployment'}
               </button>
             </div>
           </div>
@@ -1417,52 +1337,30 @@ const AdminDispatchResponse: React.FC = () => {
       )}
 
       {shareOpen && (
-        <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShareOpen(false)} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-lg bg-white rounded-xl border border-gray-200 shadow-2xl">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="text-base font-semibold">Dispatch Created</div>
-              <button className="text-gray-600 hover:text-gray-900" onClick={() => setShareOpen(false)}>Close</button>
-            </div>
-            <div className="p-4 space-y-3 text-sm">
-              <div className="flex items-center justify-between"><span className="text-gray-500">Incident ID</span><span className="font-medium">{incidentCode || '—'}</span></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center justify-between"><span className="text-gray-500">Team</span><span className="font-medium truncate">{teamAssigned || '—'}</span></div>
-                <div className="flex items-center justify-between"><span className="text-gray-500">Dispatched</span><span className="font-medium truncate">{(() => { const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).formatToParts(new Date()); const o: any = {}; parts.forEach(p => o[p.type] = p.value); return `${o.year}-${o.month}-${o.day} ${o.hour}:${o.minute}:${o.second}`; })()}</span></div>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShareOpen(false)} />
+          <div className="relative w-full max-w-lg bg-white tactical-container shadow-2xl overflow-hidden animate-pop">
+            <div className="p-8 border-b border-gray-50 text-center bg-emerald-50/30">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <FiCheckCircle size={32} />
               </div>
-              {dispatchLocation && (
-                <div className="flex items-center justify-between"><span className="text-gray-500">Destination</span><span className="font-medium">{`${dispatchLocation[0].toFixed(5)}, ${dispatchLocation[1].toFixed(5)}`}</span></div>
-              )}
-              <div className="flex items-center justify-between"><span className="text-gray-500">PPE</span><span className="font-medium truncate">{selectedPPE.length ? selectedPPE.join(', ') : 'None'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Equipment</span><span className="font-medium truncate">{equipmentUsed.length ? equipmentUsed.join(', ') : 'None'}</span></div>
-              <div className="flex items-center justify-between"><span className="text-gray-500">Agencies</span><span className="font-medium truncate">{agencyTags.length ? agencyTags.map(a => a.replace('-', ' ').toUpperCase()).join(', ') : 'None'}</span></div>
-              {(hcNurseAssigner || hcHospital) && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between"><span className="text-gray-500">MHO Nurse</span><span className="font-medium truncate">{hcNurseAssigner || '—'}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-gray-500">Hospital</span><span className="font-medium truncate">{hcHospital || '—'}</span></div>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">Mission_Synchronized</h3>
+              <p className="text-[10px] text-slate-400 uppercase tracking-tight mt-2">Unit_Acknowledged • Live_Feed_Active</p>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sector_Access_Token</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-12 bg-gray-50 border border-gray-100 rounded-xl px-4 flex items-center text-[10px] font-black text-slate-600 truncate">{`${window.location.origin}/admin/dispatch-response?incidentId=${encodeURIComponent(incidentId || '')}`}</div>
+                  <button className="h-12 px-6 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg" onClick={async () => {
+                    const url = `${window.location.origin}/admin/dispatch-response?incidentId=${encodeURIComponent(incidentId || '')}`;
+                    try { await navigator.clipboard.writeText(url); toast.success('Token copied.'); } catch { toast.error('Copy failed.'); }
+                  }}>Copy</button>
                 </div>
-              )}
-              <div className="mt-2">
-                <div className="text-xs text-gray-500 mb-1">Run details</div>
-                {(() => { const inc = String(incidentId || (detailsRecord as any)?.incident_id || '').trim(); const url = `${window.location.origin}/admin/dispatch-response?incidentId=${encodeURIComponent(inc)}`; return (<a className="text-blue-600 underline text-xs" href={url} target="_self" rel="noopener">Open Run Details</a>); })()}
-              </div>
-              <div className="mt-2">
-                <div className="text-xs text-gray-500 mb-1">Share link (opens responder board)</div>
-                {(() => {
-                  const url = `${window.location.origin}/admin/dispatch-response?incidentId=${encodeURIComponent(incidentId || (detailsRecord as any)?.incident_id || '')}`;
-                  return (
-                    <div className="flex items-center gap-2">
-                      <input className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs" readOnly value={url} />
-                      <button className="px-2 py-1 rounded border border-gray-300 text-xs" onClick={async () => {
-                        try { await navigator.clipboard.writeText(url); toast.success('Share link copied'); } catch { toast.error('Copy failed'); }
-                      }}>Copy</button>
-                    </div>
-                  );
-                })()}
               </div>
             </div>
-            <div className="p-3 border-t border-gray-200 flex items-center justify-end">
-              <button className="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700" onClick={() => setShareOpen(false)}>Done</button>
+            <div className="p-8 pt-0">
+              <button className="w-full h-14 rounded-xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all shadow-xl" onClick={() => setShareOpen(false)}>Return_To_Command</button>
             </div>
           </div>
         </div>
@@ -1470,354 +1368,291 @@ const AdminDispatchResponse: React.FC = () => {
 
       {/* Health tab removed; health coordination merged into Dispatch */}
 
-      {activeTab === 'records' && (
-        <div className="w-full">
-          <h2 className="text-lg font-semibold mb-4">DISPATCH RECORDS</h2>
-          <div className="bg-white border border-gray-100 rounded-xl p-3">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500">Incident ID</label>
-                <input className="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm" value={incidentId} onChange={e => setIncidentId(e.target.value)} />
-              </div>
-              <input className="flex-1 min-w-[200px] rounded-md border border-gray-300 px-2 py-1 text-sm" placeholder="Search team, notes, or status" value={recordSearch} onChange={e => setRecordSearch(e.target.value)} />
-              <div className="ml-auto flex items-center gap-2">
-                <span className="text-xs text-gray-600">Selected: {Object.values(selectedRows).filter(Boolean).length}</span>
-                <select className="text-xs border border-gray-300 rounded px-2 py-1" value={bulkStatus} onChange={e => setBulkStatus(e.target.value as any)}>
-                  {(['Received','Dispatched','Responding','Arrived','Completed','Archived'] as const).map(s => (<option key={s} value={s}>{s}</option>))}
-                </select>
-                <button className="px-2 py-1 rounded text-xs bg-blue-600 text-white disabled:opacity-60" disabled={Object.values(selectedRows).filter(Boolean).length === 0} onClick={bulkUpdateRecordStatus}>Apply</button>
-              </div>
+        {activeTab === 'records' && (
+          <div className="w-full animate-in fade-in duration-500">
+            <div className="mb-8">
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-slate-900 shadow-[0_0_15px_rgba(15,23,42,0.4)]" />
+                Mission_Registry
+              </h2>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 opacity-70">Deployment_Archive • Response_History • Sector_Logs</p>
             </div>
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left p-2"><input type="checkbox" onChange={e => {
-                    const checked = e.target.checked;
-                    const next: Record<string, boolean> = {};
-                    filteredRecords.forEach((r, idx) => { const id = String((r as any).run_id || (r as any).id || idx); next[id] = checked; });
-                    setSelectedRows(next);
-                  }} /></th>
-                  <th className="text-left p-2">Run ID</th>
-                  <th className="text-left p-2">Incident ID</th>
-                  <th className="text-left p-2">Team</th>
-                  <th className="text-left p-2">Dispatched</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">MHO Nurse</th>
-                  <th className="text-left p-2">Hospital</th>
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.length === 0 && (
-                  <tr>
-                    <td className="p-4 text-center text-xs text-gray-500" colSpan={6}>No records found. Try dispatching a team.</td>
-                  </tr>
-                )}
-                {filteredRecords.map((r, idx) => (
-                  <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="p-2"><input type="checkbox" checked={!!selectedRows[String((r as any).run_id || (r as any).id || idx)]} onChange={e => {
-                      const key = String((r as any).run_id || (r as any).id || idx);
-                      setSelectedRows(prev => ({ ...prev, [key]: e.target.checked }));
-                    }} /></td>
-                    <td className="p-2">{r.run_id || r.id || '-'}</td>
-                    <td className="p-2">{(r as any).incident_code || (r as any).incident_id || '-'}</td>
-                    <td className="p-2">{r.team_assigned || '-'}</td>
-                    <td className="p-2">{formatPHDateTime(r.dispatched_at || (r as any).started_at || r.created_at)}</td>
-                    <td className="p-2">
-                      {(() => { const key = String((r as any).run_id || (r as any).id || idx); const current = (r as any).status_label || ((r as any).status === 'completed' ? 'Completed' : ( (r as any).status === 'archived' ? 'Archived' : 'Received')); const display = (rowStatusEdits[key] ?? current) as any; const isEditing = editingRowId === key; return (
-                        <div className="flex items-center gap-2">
-                          {!isEditing && (
-                            <button className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${pillClassFor(display)}`} onClick={() => setEditingRowId(key)}>
-                              {display}
-                            </button>
-                          )}
-                          {isEditing && (
-                            <select className="text-xs border border-gray-300 rounded px-2 py-1" autoFocus value={display} onBlur={() => setEditingRowId(null)} onChange={e => {
-                              const next = e.target.value as any;
-                              setRowStatusEdits(prev => ({ ...prev, [key]: next }));
-                              updateRecordStatus((r as any).run_id || (r as any).id, next, key);
-                              setEditingRowId(null);
-                            }}>
-                              {(['Received','Dispatched','Responding','Arrived','Completed','Archived'] as const).map(s => (<option key={s} value={s}>{s}</option>))}
-                            </select>
-                          )}
-                          {rowStatusUpdating === key && (<span className="text-[11px] text-gray-500">Updating…</span>)}
-                        </div>
-                      ); })()}
-                    </td>
-                    <td className="p-2">{(() => { let name = ''; try { const hc = JSON.parse((r as any).health_coordination || 'null'); if (hc) { name = hc.nurse_assigner || hc.mho_name || ''; } } catch {} return name || '—'; })()}</td>
-                    <td className="p-2">{(() => { let hosp = ''; try { const hc = JSON.parse((r as any).health_coordination || 'null'); if (hc) { hosp = hc.hospital || ''; } } catch {} return hosp || '—'; })()}</td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-3">
-                        <button className="text-blue-600 hover:underline" onClick={async () => {
-                          const runKey = String((r as any).run_id || (r as any).id || idx);
-                          setDetailsRecord(r);
-                          { const ds = ((r as any).status_label || ((r as any).status === 'completed' ? 'Completed' : ((r as any).status === 'archived' ? 'Archived' : 'Received'))) as any; setDetailsStatus(ds); setDetailsStatusOriginal(ds); }
-                          let a: string[] = []; let p: string[] = []; let eArr: string[] = [];
-                          try { const rawA = JSON.parse((r as any).agencies_tagged || '[]'); a = Array.isArray(rawA) ? rawA : []; } catch {}
-                          try { const rawP = JSON.parse((r as any).ppe_checklist || '[]'); p = Array.isArray(rawP) ? rawP : []; } catch {}
-                          try { const rawE = JSON.parse((r as any).equipment_used || '[]'); eArr = Array.isArray(rawE) ? rawE : []; } catch {}
-                          setDetailsAgencies(a);
-                          setDetailsPPE(p);
-                          setDetailsEquipment(eArr);
-                          setDetailsNotes(r.notes || '');
-                          const dlat = (r as any).destination_lat; const dlng = (r as any).destination_lng;
-                          if (dlat && dlng) { setDetailsDest([Number(dlat), Number(dlng)]); } else { setDetailsDest(null); }
-                          try {
-                            let arrival = '';
-                            try { const hc = JSON.parse((r as any).health_coordination || 'null'); if (hc && hc.arrival_at) arrival = hc.arrival_at; } catch {}
-                            arrival = arrival || (r as any).hc_arrival || '';
-                            setDetailsArrivalInput(arrival || '');
-                          } catch {}
-                          setDetailsOpen(true);
-                          try {
-                            const runIdToLoad = Number((r as any).run_id || (r as any).id);
-                            if (Number.isFinite(runIdToLoad)) {
-                              const aRes = await apiFetch(`list-health-attachments.php?sop_run_id=${encodeURIComponent(String(runIdToLoad))}`);
-                              const aData = await aRes.json().catch(() => ({} as any));
-                              setDetailsAttachments(Array.isArray(aData.attachments) ? aData.attachments : []);
-                            } else { setDetailsAttachments([]); }
-                          } catch { setDetailsAttachments([]); }
-                        }}>View Details</button>
-                        <button className="text-blue-600 hover:underline" onClick={() => {
-                          const dlat = (r as any).destination_lat; const dlng = (r as any).destination_lng;
-                          if (dlat && dlng) {
-                            const dest: [number, number] = [Number(dlat), Number(dlng)];
-                            setDispatchLocation(dest);
-                            if (dispatchMapRef.current) {
-                              dispatchMapRef.current.setView(dest as any, 15);
-                            }
-                            toast.success('Centered map to destination');
-                          } else {
-                            toast.error('No destination set on this run');
-                          }
-                        }}>View on Map</button>
-                        <a className="text-gray-700 hover:underline" href={`/admin/incident-report/${encodeURIComponent((r as any).run_id || (r as any).id || '')}`} target="_self" rel="noopener">Generate Report</a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-xs text-gray-600">Page {page} of {Math.max(1, Math.ceil(total / pageSize))} • {total} total</div>
-              <div className="flex items-center gap-2">
-                <button className="px-2 py-1 rounded border border-gray-300 text-xs disabled:opacity-50" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</button>
-                <button className="px-2 py-1 rounded border border-gray-300 text-xs disabled:opacity-50" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage(p => p + 1)}>Next</button>
-                <select className="text-xs border border-gray-300 rounded px-2 py-1" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
-                  {[10,20,50,100].map(s => <option key={s} value={s}>{s}/page</option>)}
-                </select>
+
+            <div className="bg-white tactical-container p-6 shadow-xl shadow-slate-900/5">
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <div className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-gray-100">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Incident_ID</span>
+                  <input className="w-32 h-10 rounded-lg border border-gray-100 bg-white px-3 text-[11px] font-black uppercase tracking-widest focus:outline-none" value={incidentId} onChange={e => setIncidentId(e.target.value)} />
+                </div>
+                <input className="flex-1 min-w-[200px] h-12 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:bg-white transition-all" placeholder="Filter_By_Unit_Or_Intel..." value={recordSearch} onChange={e => setRecordSearch(e.target.value)} />
+                <div className="ml-auto flex items-center gap-3">
+                  <select className="h-10 rounded-xl border border-gray-100 bg-gray-50 px-3 text-[10px] font-black uppercase tracking-widest" value={bulkStatus} onChange={e => setBulkStatus(e.target.value as any)}>
+                    {(['Received','Dispatched','Responding','Arrived','Completed','Archived'] as const).map(s => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                  <button className="h-10 px-6 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40" disabled={Object.values(selectedRows).filter(Boolean).length === 0} onClick={bulkUpdateRecordStatus}>Apply</button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="pb-4 pt-2 px-4 text-left">
+                        <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20" onChange={e => {
+                          const checked = e.target.checked;
+                          const next: Record<string, boolean> = {};
+                          filteredRecords.forEach((r, idx) => { const id = String((r as any).run_id || (r as any).id || idx); next[id] = checked; });
+                          setSelectedRows(next);
+                        }} />
+                      </th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">ID</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Sector</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Unit</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Deployment</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Status</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Medical_Relay</th>
+                      <th className="pb-4 pt-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredRecords.length === 0 && (
+                      <tr>
+                        <td className="p-12 text-center" colSpan={8}>
+                          <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">No_Active_Deployment_Records</p>
+                        </td>
+                      </tr>
+                    )}
+                    {filteredRecords.map((r, idx) => (
+                      <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-4">
+                          <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20" checked={!!selectedRows[String((r as any).run_id || (r as any).id || idx)]} onChange={e => {
+                            const key = String((r as any).run_id || (r as any).id || idx);
+                            setSelectedRows(prev => ({ ...prev, [key]: e.target.checked }));
+                          }} />
+                        </td>
+                        <td className="py-4 px-4 text-[11px] font-black text-slate-900 tabular-nums">#{r.run_id || r.id || '-'}</td>
+                        <td className="py-4 px-4 text-[11px] font-black text-blue-600 uppercase tracking-tighter">INC_{(r as any).incident_code || (r as any).incident_id || '-'}</td>
+                        <td className="py-4 px-4 text-[11px] font-black text-slate-900 uppercase tracking-widest">{r.team_assigned || '-'}</td>
+                        <td className="py-4 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-tight">{formatPHDateTime(r.dispatched_at || (r as any).started_at || r.created_at)}</td>
+                        <td className="py-4 px-4">
+                          {(() => { const key = String((r as any).run_id || (r as any).id || idx); const current = (r as any).status_label || ((r as any).status === 'completed' ? 'Completed' : ( (r as any).status === 'archived' ? 'Archived' : 'Received')); const display = (rowStatusEdits[key] ?? current) as any; const isEditing = editingRowId === key; return (
+                            <div className="flex items-center gap-3">
+                              {!isEditing && (
+                                <button className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${pillClassFor(display)} hover:scale-105`} onClick={() => setEditingRowId(key)}>
+                                  {display}
+                                </button>
+                              )}
+                              {isEditing && (
+                                <select className="h-8 rounded-lg border border-gray-100 bg-white text-[9px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/10" autoFocus value={display} onBlur={() => setEditingRowId(null)} onChange={e => {
+                                  const next = e.target.value as any;
+                                  setRowStatusEdits(prev => ({ ...prev, [key]: next }));
+                                  updateRecordStatus((r as any).run_id || (r as any).id, next, key);
+                                  setEditingRowId(null);
+                                }}>
+                                  {(['Received','Dispatched','Responding','Arrived','Completed','Archived'] as const).map(s => (<option key={s} value={s}>{s}</option>))}
+                                </select>
+                              )}
+                              {rowStatusUpdating === key && (<FiRefreshCw className="text-blue-500 text-xs animate-spin" />)}
+                            </div>
+                          ); })()}
+                        </td>
+                        <td className="py-4 px-4">
+                          {(() => { let name = ''; try { const hc = JSON.parse((r as any).health_coordination || 'null'); if (hc) { name = hc.nurse_assigner || hc.mho_name || ''; } } catch {} return <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{name || '—'}</span>; })()}
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <button className="h-8 px-4 rounded-lg bg-gray-50 text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all" onClick={async () => {
+                            const runKey = String((r as any).run_id || (r as any).id || idx);
+                            setDetailsRecord(r);
+                            { const ds = ((r as any).status_label || ((r as any).status === 'completed' ? 'Completed' : ((r as any).status === 'archived' ? 'Archived' : 'Received'))) as any; setDetailsStatus(ds); setDetailsStatusOriginal(ds); }
+                            let a: string[] = []; let p: string[] = []; let eArr: string[] = [];
+                            try { const rawA = JSON.parse((r as any).agencies_tagged || '[]'); a = Array.isArray(rawA) ? rawA : []; } catch {}
+                            try { const rawP = JSON.parse((r as any).ppe_checklist || '[]'); p = Array.isArray(rawP) ? rawP : []; } catch {}
+                            try { const rawE = JSON.parse((r as any).equipment_used || '[]'); eArr = Array.isArray(rawE) ? rawE : []; } catch {}
+                            setDetailsAgencies(a); setDetailsPPE(p); setDetailsEquipment(eArr); setDetailsNotes(r.notes || '');
+                            const dlat = (r as any).destination_lat; const dlng = (r as any).destination_lng;
+                            if (dlat && dlng) { setDetailsDest([Number(dlat), Number(dlng)]); } else { setDetailsDest(null); }
+                            try {
+                              let arrival = '';
+                              try { const hc = JSON.parse((r as any).health_coordination || 'null'); if (hc && hc.arrival_at) arrival = hc.arrival_at; } catch {}
+                              arrival = arrival || (r as any).hc_arrival || '';
+                              setDetailsArrivalInput(arrival || '');
+                            } catch {}
+                            setDetailsOpen(true);
+                            try {
+                              const runIdToLoad = Number((r as any).run_id || (r as any).id);
+                              if (Number.isFinite(runIdToLoad)) {
+                                const aRes = await apiFetch(`list-health-attachments.php?sop_run_id=${encodeURIComponent(String(runIdToLoad))}`);
+                                const aData = await aRes.json().catch(() => ({} as any));
+                                setDetailsAttachments(Array.isArray(aData.attachments) ? aData.attachments : []);
+                              } else { setDetailsAttachments([]); }
+                            } catch { setDetailsAttachments([]); }
+                          }}>Intel</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Page {page} of {Math.max(1, Math.ceil(total / pageSize))} • {total} Total</div>
+                <div className="flex items-center gap-3">
+                  <button className="h-9 px-4 rounded-lg bg-white border border-gray-100 text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-gray-50 disabled:opacity-30" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</button>
+                  <button className="h-9 px-4 rounded-lg bg-white border border-gray-100 text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-gray-50 disabled:opacity-30" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage(p => p + 1)}>Next</button>
+                  <select className="h-9 rounded-lg border border-gray-100 bg-white text-[10px] font-black text-slate-600 uppercase tracking-widest focus:ring-0" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
+                    {[10,20,50,100].map(s => <option key={s} value={s}>{s}/Page</option>)}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       {detailsOpen && detailsRecord && (
-        <div className="fixed inset-0 z-[999]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailsOpen(false)} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[96%] max-w-3xl bg-white rounded-xl border border-gray-200 shadow-2xl">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="text-base font-semibold">Run Details</div>
-              <button className="text-gray-600 hover:text-gray-900" onClick={() => setDetailsOpen(false)}>Close</button>
-              </div>
-              <div className="p-4 space-y-4 max-h-[85vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1 text-sm">
-                  <div className="text-gray-500">Incident ID</div>
-                  <div className="font-medium">{(detailsRecord as any).incident_id || '—'}</div>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setDetailsOpen(false)} />
+          <div className="relative w-full max-w-4xl bg-white tactical-container shadow-2xl overflow-hidden animate-pop max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30 shrink-0">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-3">
+                Mission_Intelligence_Report <span className="text-blue-600">#{(detailsRecord as any).run_id || (detailsRecord as any).id}</span>
+              </h3>
+              <button className="p-2 hover:bg-white rounded-lg transition-colors" onClick={() => setDetailsOpen(false)}><FiX className="text-slate-400" /></button>
+            </div>
+            <div className="p-8 overflow-y-auto custom-scrollbar space-y-10">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="p-4 rounded-xl bg-gray-50/50 border border-gray-50">
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sector_ID</div>
+                  <div className="text-[11px] font-black text-blue-600 uppercase">INC_{(detailsRecord as any).incident_id || '—'}</div>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div className="text-gray-500">Team</div>
-                  <div className="font-medium">{(detailsRecord as any).team_assigned || '—'}</div>
+                <div className="p-4 rounded-xl bg-gray-50/50 border border-gray-50">
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned_Unit</div>
+                  <div className="text-[11px] font-black text-slate-900 uppercase">{(detailsRecord as any).team_assigned || '—'}</div>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div className="text-gray-500">Completed</div>
-                  <div className="font-medium">{formatPHDateTime((detailsRecord as any).completed_at)}</div>
+                <div className="p-4 rounded-xl bg-gray-50/50 border border-gray-50">
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Deployment_Time</div>
+                  <div className="text-[11px] font-black text-slate-900 uppercase">{formatPHDateTime((detailsRecord as any).dispatched_at || (detailsRecord as any).created_at)}</div>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <div className="text-gray-500">Dispatched</div>
-                  <div className="font-medium">{formatPHDateTime((detailsRecord as any).dispatched_at || (detailsRecord as any).started_at || (detailsRecord as any).created_at)}</div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Status</div>
-                    <select className="text-sm border border-gray-300 rounded px-2 py-1" value={detailsStatus} onChange={e => setDetailsStatus(e.target.value as any)}>
+                <div className="p-4 rounded-xl bg-gray-50/50 border border-gray-50">
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-left">Mission_Status</div>
+                  <div className="flex items-center gap-2">
+                    <select className={`text-[10px] font-black uppercase tracking-widest border rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-500/10 ${pillClassFor(detailsStatus)}`} value={detailsStatus} onChange={e => setDetailsStatus(e.target.value as any)}>
                       {(['Received','Dispatched','Responding','Arrived','Completed','Archived'] as const).map(s => (<option key={s} value={s}>{s}</option>))}
                     </select>
-                    {(detailsRecord as any)?.status_updated_by && (
-                      <div className="mt-2 text-[11px] text-gray-500">Last change by {(detailsRecord as any).status_updated_by} at {(detailsRecord as any).status_updated_at || '—'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <div className="w-1 h-3 bg-blue-600" /> Tactical_Equipment
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {detailsPPE.map(item => ( <span key={item} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-widest border border-emerald-100">{item}</span> ))}
+                      {detailsEquipment.map(item => ( <span key={item} className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-widest border border-blue-100">{item}</span> ))}
+                      {detailsPPE.length === 0 && detailsEquipment.length === 0 && <span className="text-[9px] font-bold text-slate-300 uppercase italic">No_Registry_Entries</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <div className="w-1 h-3 bg-slate-900" /> Mission_Telemetry
+                    </h4>
+                    <div className="p-5 rounded-xl bg-gray-50 border border-gray-100 min-h-[120px] text-[11px] font-bold text-slate-600 uppercase leading-relaxed">
+                      {detailsNotes || 'No_Tactical_Notes_Recorded'}
+                    </div>
+                    {detailsStatus === 'Completed' && (
+                      <div className="mt-6 p-4 rounded-xl bg-blue-50/50 border border-blue-100">
+                        <label className="text-[9px] font-black text-blue-800 uppercase tracking-widest block mb-2">Final_Arrival_Timestamp</label>
+                        <input type="datetime-local" className="w-full h-10 rounded-lg border border-blue-100 bg-white px-3 text-[11px] font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/10" value={detailsArrivalInput} onChange={e => setDetailsArrivalInput(e.target.value)} />
+                      </div>
                     )}
                   </div>
+                </div>
+                <div className="space-y-8">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Agencies</div>
-                    <div className="flex flex-wrap gap-2">
-                      {(['police','fire','health','coast-guard','dpwh'] as Agency[]).map(ag => (
-                        <span key={ag} className={`px-2.5 py-1.5 rounded-md text-xs border ${detailsAgencies.includes(ag) ? 'bg-amber-600 text-white border-amber-600 font-semibold shadow-sm' : 'bg-white text-gray-400 border-gray-200'}`}>{ag.replace('-',' ').toUpperCase()}</span>
-                      ))}
-                    </div>
+                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <div className="w-1 h-3 bg-emerald-600" /> Medical_Relay
+                    </h4>
+                    {(() => { 
+                      let hc: any = null; try { hc = JSON.parse((detailsRecord as any).health_coordination || 'null'); } catch {}
+                      return (
+                        <div className="p-5 rounded-xl border border-emerald-50 bg-emerald-50/10 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest opacity-60">Nurse_Assigner</span>
+                            <span className="text-[11px] font-black text-emerald-900 uppercase">{hc?.nurse_assigner || '—'}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest opacity-60">Facility_Target</span>
+                            <span className="text-[11px] font-black text-emerald-900 uppercase">{hc?.hospital || 'FIELD_OPS'}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">PPE</div>
-                    <div className="flex flex-wrap gap-2">
-                      {defaultPPE.map(item => (
-                        <span key={item} className={`px-2.5 py-1.5 rounded-md text-xs border ${detailsPPE.includes(item) ? 'bg-emerald-600 text-white border-emerald-600 font-semibold shadow-sm' : 'bg-white text-gray-400 border-gray-200'}`}>{item}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Equipment</div>
-                    <div className="flex flex-wrap gap-2">
-                      {defaultEquipment.map(item => (
-                        <span key={item} className={`px-2.5 py-1.5 rounded-md text-xs border ${detailsEquipment.includes(item) ? 'bg-indigo-600 text-white border-indigo-600 font-semibold shadow-sm' : 'bg-white text-gray-400 border-gray-200'}`}>{item}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Notes</div>
-                    <textarea className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm" rows={4} value={detailsNotes} readOnly />
-                    {detailsAttachments && detailsAttachments.length > 0 && (
-                      <div className="mt-2 grid grid-cols-3 gap-2">
+                  {detailsAttachments && detailsAttachments.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <div className="w-1 h-3 bg-blue-600" /> Digital_Evidence
+                      </h4>
+                      <div className="grid grid-cols-3 gap-3">
                         {detailsAttachments.map(att => (
-                          <a key={att.id} href={att.url} target="_blank" rel="noopener" className="block border rounded overflow-hidden">
-                            <img src={att.url} alt={att.filename} className="w-full h-20 object-cover" />
+                          <a key={att.id} href={att.url} target="_blank" rel="noopener" className="aspect-square rounded-xl overflow-hidden border border-gray-100 hover:ring-4 hover:ring-blue-500/10 transition-all shadow-sm">
+                            <img src={att.url} alt={att.filename} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
                           </a>
                         ))}
                       </div>
-                    )}
-                  </div>
-                  
-              </div>
-              <div className="space-y-2">
-                <div className="text-xs text-gray-500">Destination</div>
-                  <div className="h-48 rounded-lg overflow-hidden border">
-                    <MapContainer center={detailsDest || [14.5995, 120.9842]} zoom={detailsDest ? 15 : 12} style={{ height: '100%', width: '100%' }}>
-                      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
-                      {detailsDest && <Marker position={[detailsDest[0], detailsDest[1]]} />}
-                      {/* Map is view-only in this modal for printed-style details */}
-                    </MapContainer>
-                  </div>
-                  {detailsDest && (
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
-                      <span>{detailsDest[0].toFixed(6)}, {detailsDest[1].toFixed(6)}</span>
-                      <button className="px-2 py-1 rounded border border-gray-300" onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(`${detailsDest[0].toFixed(6)}, ${detailsDest[1].toFixed(6)}`);
-                          toast.success('Coordinates copied');
-                        } catch {
-                          toast.error('Copy failed');
-                        }
-                      }}>Copy</button>
-                      <button className="px-2 py-1 rounded border border-gray-300" onClick={() => {
-                        try {
-                          if (detailsDest && dispatchMapRef.current) {
-                            dispatchMapRef.current.setView(detailsDest as any, 15);
-                            toast.success('Centered admin map');
-                          }
-                        } catch {}
-                      }}>Center Admin Map</button>
                     </div>
                   )}
-                  <div className="mt-2 text-xs">
-                    <div className="text-gray-500 mb-1">Run details</div>
-                    {(() => {
-                      const inc = String((detailsRecord as any).incident_id || '').trim();
-                      if (!inc) return null;
-                      const url = `${window.location.origin}/admin/dispatch-response?incidentId=${encodeURIComponent(inc)}`;
-                      return (
-                        <div className="flex items-center gap-2">
-                          <a className="text-blue-600 underline" href={url} target="_self" rel="noopener">Open Run Details</a>
-                          <button className="px-2 py-1 rounded border border-gray-300" onClick={async () => { try { await navigator.clipboard.writeText(url); toast.success('Link copied'); } catch { toast.error('Copy failed'); } }}>Copy link</button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="mt-3">
-                    <div className="text-xs text-gray-500 mb-1">Health Coordination</div>
-                    {(() => {
-                      const rec: any = detailsRecord || {};
-                      const h = rec.health_coordination || {};
-                      const mho = rec.hc_mho_name || h.mho_name || '';
-                      const mhoContact = rec.hc_mho_contact || h.mho_contact || '';
-                      const nurse = rec.hc_nurse_assigner || h.nurse_assigner || '';
-                      const hospital = rec.hc_hospital || h.hospital || '';
-                      const departure = formatPHDateTime(rec.hc_departure || h.departure_at || rec.dispatched_at || '');
-                      const arrival = formatPHDateTime(rec.hc_arrival || h.arrival_at || '');
-                      return (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                          <div>MHO Nurse: {nurse || '—'}</div>
-                          <div>Hospital: {hospital || '—'}</div>
-                          <div>MHO/MESU: {mho || '—'}</div>
-                          <div>Contact: {mhoContact || '—'}</div>
-                          <div>Departure: {departure || '—'}</div>
-                          <div>Arrival: {arrival || '—'}</div>
-                        </div>
-                      );
-                    })()}
-                  </div>
                 </div>
-                {detailsStatus === 'Completed' && (
-                  <div className="mt-3">
-                    <div className="text-xs text-gray-500 mb-1">Completion Documentation</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-500 mb-1">Time of Arrival</label>
-                        <input type="datetime-local" className="w-full rounded border border-gray-300 px-2 py-1 text-xs" value={detailsArrivalInput} onChange={e => setDetailsArrivalInput(e.target.value)} />
-                      </div>
-                    </div>
-                    <div className="text-[11px] text-gray-500 mt-1">This time will be saved when you click Save.</div>
-                  </div>
-                )}
               </div>
-              </div>
-              <div className="p-3 border-t border-gray-200 flex items-center justify-end gap-2">
-                <button className="px-3 py-1.5 rounded-md border border-gray-300 text-sm" onClick={() => setDetailsOpen(false)}>Close</button>
-                <button className="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700" onClick={() => {
+            </div>
+            <div className="p-8 bg-gray-50/30 border-t border-gray-50 flex justify-between shrink-0">
+              <a className="h-14 px-8 rounded-xl border-2 border-gray-100 flex items-center justify-center text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-white transition-all shadow-sm" href={`/admin/incident-report/${encodeURIComponent((detailsRecord as any).run_id || (detailsRecord as any).id)}`} target="_self">Generate_Operational_Report</a>
+              <div className="flex gap-3">
+                <button className="h-14 px-8 rounded-xl border-2 border-gray-100 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-white transition-all shadow-sm" onClick={() => setDetailsOpen(false)}>Close</button>
+                <button className={`h-14 px-10 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl ${(detailsStatus === detailsStatusOriginal && (detailsStatus !== 'Completed' || !detailsArrivalInput)) ? 'bg-gray-100 text-slate-300' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/30'}`} onClick={() => {
                   if (detailsStatus !== detailsStatusOriginal) { setStatusConfirmOpen(true); return; }
                   (async () => {
                     const rid = Number((detailsRecord as any).run_id || (detailsRecord as any).id);
                     const statusPayload = statusToServer(detailsStatus);
                     const payload: any = { sop_run_id: rid, status: statusPayload, status_label: detailsStatus };
-                    if (detailsArrivalInput && detailsStatus === 'Completed') {
-                      payload.health_coordination = { arrival_at: detailsArrivalInput };
-                    }
+                    if (detailsArrivalInput && detailsStatus === 'Completed') { payload.health_coordination = { arrival_at: detailsArrivalInput }; }
                     try {
                       const res = await apiFetch('update-sop-run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                       const data = await res.json().catch(() => ({} as any));
-                      if (data && data.success) { toast.success('Record updated'); setDetailsOpen(false); fetchRecords(); } else { toast.error('Update failed'); }
-                    } catch { toast.error('Server error'); }
+                      if (data && data.success) { toast.success('Telemetry updated.'); setDetailsOpen(false); fetchRecords(); } else { toast.error('Comms failure.'); }
+                    } catch { toast.error('Relay error.'); }
                   })();
-                }}>Save</button>
+                }}>Save_Updates</button>
               </div>
-              </div>
-              </div>
-            )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {statusConfirmOpen && (
-        <div className="fixed inset-0 z-[1000]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setStatusConfirmOpen(false)} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-md bg-white rounded-xl border border-gray-200 shadow-2xl">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="text-base font-semibold">Confirm Status Change</div>
-              <button className="text-gray-600 hover:text-gray-900" onClick={() => setStatusConfirmOpen(false)}>Close</button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setStatusConfirmOpen(false)} />
+          <div className="relative w-full max-w-md bg-white tactical-container shadow-2xl overflow-hidden animate-pop">
+            <div className="p-8 border-b border-gray-50 text-center">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FiRefreshCw size={32} className="animate-spin-slow" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">Update_Sector_Status?</h3>
+              <p className="text-[10px] text-slate-400 uppercase tracking-tight mt-2 leading-relaxed">Transition_Status From <span className="text-slate-900">{detailsStatusOriginal}</span> to <span className="text-blue-600">{detailsStatus}</span>.</p>
             </div>
-            <div className="p-4 space-y-2 text-sm">
-              <div>Change status from <span className={`px-2 py-0.5 rounded-full border ${pillClassFor(detailsStatusOriginal)}`}>{detailsStatusOriginal}</span> to <span className={`px-2 py-0.5 rounded-full border ${pillClassFor(detailsStatus)}`}>{detailsStatus}</span>?</div>
-              <div className="text-[11px] text-gray-500">This action records the staff account and timestamp.</div>
-            </div>
-            <div className="p-3 border-t border-gray-200 flex items-center justify-end gap-2">
-              <button className="px-3 py-1.5 rounded-md border border-gray-300 text-sm" onClick={() => setStatusConfirmOpen(false)}>Cancel</button>
-              <button className="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700" onClick={async () => {
+            <div className="p-8 pt-0 flex gap-3 mt-4">
+              <button className="flex-1 h-14 rounded-xl border-2 border-gray-100 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:bg-gray-50 transition-all" onClick={() => setStatusConfirmOpen(false)}>Cancel</button>
+              <button className="flex-[2] h-14 rounded-xl bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl" onClick={async () => {
                 const rid = Number((detailsRecord as any).run_id || (detailsRecord as any).id);
                 const statusPayload = statusToServer(detailsStatus);
                 const payload: any = { sop_run_id: rid, status: statusPayload, status_label: detailsStatus };
                 try {
                   const res = await apiFetch('update-sop-run.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                   const data = await res.json().catch(() => ({} as any));
-                  if (data && data.success) { toast.success('Status changed'); setStatusConfirmOpen(false); setDetailsOpen(false); fetchRecords(); } else { toast.error('Update failed'); }
-                } catch { toast.error('Server error'); }
-              }}>Confirm</button>
+                  if (data && data.success) { toast.success('Status synchronized.'); setStatusConfirmOpen(false); setDetailsOpen(false); fetchRecords(); } else { toast.error('Comms failure.'); }
+                } catch { toast.error('Relay error.'); }
+              }}>Confirm_Transition</button>
             </div>
           </div>
         </div>

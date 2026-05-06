@@ -125,6 +125,21 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
     return [lat, lng];
   };
 
+  const sortPointsForPolygon = (points: [number, number][]) => {
+    if (points.length < 3) return points;
+    // Calculate centroid specifically for the sorting
+    const latSum = points.reduce((s, p) => s + p[0], 0);
+    const lngSum = points.reduce((s, p) => s + p[1], 0);
+    const cLat = latSum / points.length;
+    const cLng = lngSum / points.length;
+
+    return [...points].sort((a, b) => {
+      const angleA = Math.atan2(a[0] - cLat, a[1] - cLng);
+      const angleB = Math.atan2(b[0] - cLat, b[1] - cLng);
+      return angleA - angleB;
+    });
+  };
+
   const [drawMode, setDrawMode] = useState<'pinpoint' | 'polygon'>('pinpoint');
   const [polygonPoints, setPolygonPoints] = useState<[number, number][]>([]);
   const [pinpointRadius, setPinpointRadius] = useState<number>(100);
@@ -348,7 +363,8 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
         
         payloadUrl = "add-hazard.php";
         const severityDb = form.severity; // Keep original severity (Critical, High, Moderate, Low)
-        const coordinates = [...polygonPoints.map(p => [p[1], p[0]]), [polygonPoints[0][1], polygonPoints[0][0]]];
+        const sorted = sortPointsForPolygon(polygonPoints);
+        const coordinates = [...sorted.map(p => [p[1], p[0]]), [sorted[0][1], sorted[0][0]]];
         
         let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
         polygonPoints.forEach(p => {
@@ -642,9 +658,12 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
               properties: {},
               geometry: {
                 type: polygonPoints.length < 3 ? 'LineString' : 'Polygon',
-                coordinates: polygonPoints.length < 3 
-                  ? polygonPoints.map(p => [p[1], p[0]])
-                  : [[...polygonPoints.map(p => [p[1], p[0]]), [polygonPoints[0][1], polygonPoints[0][0]]]]
+                coordinates: (() => {
+                  const sorted = sortPointsForPolygon(polygonPoints);
+                  return polygonPoints.length < 3 
+                    ? polygonPoints.map(p => [p[1], p[0]])
+                    : [[...sorted.map(p => [p[1], p[0]]), [sorted[0][1], sorted[0][0]]]];
+                })()
               } as any
             }}>
               {polygonPoints.length >= 3 && (
@@ -818,7 +837,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                     setDrawMode('pinpoint');
                     setPolygonPoints([]);
                   }}
-                  className={`flex-1 py-2 text-[11px] font-bold tracking-tight rounded-lg transition-all ${drawMode === 'pinpoint' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`flex-1 py-2 text-[11px] font-black tracking-widest uppercase rounded-lg transition-all ${drawMode === 'pinpoint' ? 'bg-white text-slate-900 shadow-md' : 'text-gray-500 hover:text-slate-900'}`}
                 >
                   Pinpoint
                 </button>
@@ -828,7 +847,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                     setDrawMode('polygon');
                     setForm(prev => ({ ...prev, latitude: null, longitude: null }));
                   }}
-                  className={`flex-1 py-2 text-[11px] font-bold tracking-tight rounded-lg transition-all ${drawMode === 'polygon' ? 'bg-white text-gray-900 shadow-md' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`flex-1 py-2 text-[11px] font-black tracking-widest uppercase rounded-lg transition-all ${drawMode === 'polygon' ? 'bg-white text-slate-900 shadow-md' : 'text-gray-500 hover:text-slate-900'}`}
                 >
                   Polygon
                 </button>
@@ -836,35 +855,35 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
             )}
 
             <form onSubmit={handleSubmit} className="space-y-3 flex-1 custom-scrollbar overflow-y-auto pr-1">
-              <div className="bg-white rounded-xl flex flex-col overflow-hidden border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between p-4 border-b border-gray-50">
+              <div className="tactical-container flex flex-col">
+                <div className="tactical-card-header">
                   <div className="text-center w-full">
-                    <div className="text-gray-900 text-[14px] font-bold tracking-tight truncate px-4">
+                    <div className="text-slate-900 text-[13px] font-black tracking-tight truncate px-4">
                       {locationName ? locationName.split(',')[0] : "Location"}
                     </div>
-                    <div className="text-gray-400 text-[10px] font-medium mt-0.5 truncate px-6">
+                    <div className="text-gray-400 text-[9px] font-medium mt-0.5 truncate px-6">
                       {locationName || "No location coordinates synchronized"}
                     </div>
                   </div>
                 </div>
 
                 {drawMode === 'pinpoint' ? (
-                  <div className="flex flex-col bg-gray-50 divide-y divide-gray-100">
-                    <div className="flex divide-x divide-gray-200 bg-gray-100 rounded-t-xl py-4 border-x border-t border-gray-200">
-                      <div className="flex-1 p-3 text-center flex flex-col items-center justify-center">
-                        <span className="text-gray-900 text-[13px] font-bold tracking-tight">{form.latitude ? form.latitude.toFixed(4) : '--'}</span>
-                        <span className="text-gray-500 text-[10px] font-bold">Lat</span>
+                  <div className="flex flex-col bg-white">
+                    <div className="flex divide-x divide-gray-100 bg-gray-50 border-b border-gray-100">
+                      <div className="flex-1 p-2.5 text-center flex flex-col items-center justify-center">
+                        <span className="tactical-stat-value">{form.latitude ? form.latitude.toFixed(4) : '--'}</span>
+                        <span className="tactical-stat-label">Lat</span>
                       </div>
-                      <div className="flex-1 p-3 text-center flex flex-col items-center justify-center">
-                        <span className="text-gray-900 text-[13px] font-bold tracking-tight">{form.longitude ? form.longitude.toFixed(4) : '--'}</span>
-                        <span className="text-gray-500 text-[10px] font-bold">Lng</span>
+                      <div className="flex-1 p-2.5 text-center flex flex-col items-center justify-center">
+                        <span className="tactical-stat-value">{form.longitude ? form.longitude.toFixed(4) : '--'}</span>
+                        <span className="tactical-stat-label">Lng</span>
                       </div>
                     </div>
                     {form.latitude && form.longitude && (
-                      <div className="px-4 py-4 bg-white border-x border-b border-gray-100 rounded-b-xl">
+                      <div className="px-4 py-3 bg-white">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-500 text-[10px] font-bold tracking-tight">Affected Radius</span>
-                          <span className="text-[#f59e0b] text-[12px] font-bold">{pinpointRadius}m</span>
+                          <span className="tactical-label">Affected Radius</span>
+                          <span className="text-[#f59e0b] text-[12px] font-black">{pinpointRadius}m</span>
                         </div>
                         <input
                           type="range"
@@ -882,18 +901,18 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                     )}
                   </div>
                 ) : (
-                  <div className="flex bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden divide-x divide-gray-50">
-                    <div className="flex-1 p-4 text-center flex flex-col items-center justify-center">
-                      <span className="text-[#f59e0b] text-lg font-bold">{polygonPoints.length}</span>
-                      <span className="text-gray-500 text-[10px] font-bold">Points Added</span>
+                  <div className="flex bg-white overflow-hidden divide-x divide-gray-100 border-t border-gray-50">
+                    <div className="flex-1 p-3 text-center flex flex-col items-center justify-center">
+                      <span className="text-[#f59e0b] text-base font-black tracking-tight">{polygonPoints.length}</span>
+                      <span className="tactical-stat-label">Points Added</span>
                     </div>
                     {polygonPoints.length > 0 && (
                       <button 
                         type="button"
                         onClick={() => setPolygonPoints(prev => prev.slice(0, -1))}
-                        className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-gray-50 transition-all text-red-500 font-bold"
+                        className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-gray-50 transition-all text-red-600 font-black"
                       >
-                        <span className="text-[10px]">Undo Point</span>
+                        <span className="text-[10px] tracking-widest uppercase">Undo</span>
                       </button>
                     )}
                     {polygonPoints.length > 0 && (
@@ -904,24 +923,24 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                           setForm(prev => ({ ...prev, latitude: null, longitude: null }));
                           setLocationName("");
                         }}
-                        className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-gray-50 transition-all text-gray-400 font-bold"
+                        className="flex-1 p-3 flex flex-col items-center justify-center hover:bg-gray-50 transition-all text-slate-500 font-black"
                       >
-                        <span className="text-[10px]">Clear All</span>
+                        <span className="text-[10px] tracking-widest uppercase">Clear</span>
                       </button>
                     )}
                   </div>
                 )}
               </div>
 
-              <div className="bg-white rounded-xl overflow-hidden relative border border-gray-100 shadow-sm">
-                <div className="p-3 border-b border-gray-50 bg-gray-50/50">
-                  <span className="text-gray-500 text-[10px] font-bold tracking-tight ml-1">Incident Type</span>
+               <div className="tactical-container relative">
+                <div className="tactical-section-header">
+                  <span>Incident Type</span>
                 </div>
                 <div className="relative">
                   <select
                     value={form.type}
                     onChange={(e) => setForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full bg-white text-gray-900 text-[12px] p-3 outline-none border-none appearance-none cursor-pointer pr-10 font-bold"
+                    className="w-full bg-white text-slate-900 text-[11px] p-2.5 outline-none border-none appearance-none cursor-pointer pr-10 font-black tracking-tight"
                   >
                     <option value="" disabled>Select an incident type</option>
                     {["Flood", "Road Accident", "Fire", "Medical Emergency", "Crime", "Structural Collapse", "Other"].map(t => (
@@ -934,11 +953,11 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                <div className="p-3 bg-gray-50/50 border-b border-gray-50 flex justify-between items-center">
-                  <span className="text-gray-500 text-[10px] font-bold tracking-tight ml-1">Road Passability</span>
+               <div className="tactical-container">
+                <div className="tactical-section-header flex justify-between items-center">
+                  <span>Road Passability</span>
                 </div>
-                <div className="grid grid-cols-4 divide-x divide-gray-50">
+                <div className="grid grid-cols-4 divide-x divide-gray-100 bg-white">
                   {[
                     { id: "Walking", icon: FaWalking },
                     { id: "Motorcycle", icon: FaMotorcycle },
@@ -958,45 +977,50 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                               : [...prev.allowedVehicles, id]
                           }));
                         }}
-                        className={`py-3 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 ${
-                          isAllowed ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+                        className={`flex-1 transition-all duration-300 ${
+                          isAllowed ? 'tactical-grid-btn-active' : 'tactical-grid-btn-inactive'
                         }`}
                       >
                         <Icon className="text-[14px]" />
-                        <span className="text-[8px] font-bold tracking-tight">{id}</span>
+                        <span className="text-[8px] font-black tracking-widest uppercase">{id}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                <div className="p-3 bg-gray-50/50 border-b border-gray-50">
-                  <span className="text-gray-500 text-[10px] font-bold tracking-tight ml-1">Severity Level</span>
+               <div className="tactical-container">
+                <div className="tactical-section-header">
+                  <span>Severity Level</span>
                 </div>
-                <div className="flex divide-x divide-gray-50">
+                <div className="flex divide-x divide-gray-100">
                   {severities.map(level => {
                     const isSelected = form.severity === level;
+                    const colorMap: Record<string, string> = {
+                      'Low': isSelected ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-emerald-600 hover:bg-emerald-50',
+                      'Moderate': isSelected ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'text-amber-600 hover:bg-amber-50',
+                      'High': isSelected ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'text-red-600 hover:bg-red-50'
+                    };
                     return (
                       <button
                         key={level}
                         type="button"
                         onClick={() => setForm(prev => ({ ...prev, severity: level }))}
-                        className={`flex-1 py-3 text-[12px] transition-all duration-200 font-bold ${
-                          isSelected ? 'bg-[#f59e0b] text-white shadow-inner' : 'hover:bg-gray-50 text-gray-400'
+                        className={`flex-1 py-2.5 text-[11px] transition-all duration-200 font-black tracking-tight ${
+                          isSelected ? colorMap[level] : `bg-white ${colorMap[level]} grayscale-[0.5]`
                         }`}
                       >
-                        {level}
+                        {level.toUpperCase()}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <label className="block text-[10px] font-bold text-gray-500 tracking-tight">Incident Evidence (Max 3)</label>
-                  <span className="text-[#f59e0b] text-[10px] font-bold">{(form.medias || []).length}/3</span>
+               <div className="tactical-container p-3">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="tactical-label-sm">Incident Evidence (Max 3)</label>
+                  <span className="text-[#f59e0b] text-[9px] font-black">{(form.medias || []).length}/3</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {(form.medias || []).map((m, idx) => (
@@ -1033,31 +1057,31 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
                 />
               </div>
 
-              <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-                <div className="p-3 bg-gray-50/50 border-b border-gray-50">
-                  <span className="text-gray-500 text-[10px] tracking-tight font-bold">Field Notes</span>
+               <div className="tactical-container">
+                <div className="tactical-section-header">
+                  <span>Field Notes</span>
                 </div>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full p-3 bg-white text-gray-900 text-[12px] placeholder-gray-400 resize-none outline-none font-medium"
+                  className="w-full p-2 bg-white text-slate-900 text-[11px] placeholder-gray-400 resize-none outline-none font-black tracking-tight"
                   placeholder="Enter operational details..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
-              <div className="mt-4">
+              <div className="mt-3">
                 <button
                   type="submit"
                   disabled={loading || (drawMode === 'pinpoint' ? !form.latitude : polygonPoints.length < 3) || !form.type}
-                  className="w-full py-4 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-all shadow-xl shadow-gray-900/10 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 text-[12px] tracking-tight"
+                  className="tactical-btn-primary w-full"
                 >
                   {loading ? (
                     <FaSpinner className="animate-spin text-lg" />
                   ) : (
                     <>
-                      <FaCheckCircle className="text-[#f59e0b] text-lg" />
-                      <span>Submit Report</span>
+                      <FaCheckCircle className="text-white text-lg" />
+                      <span>Submit Tactical Report</span>
                     </>
                   )}
                 </button>

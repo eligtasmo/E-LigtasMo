@@ -295,43 +295,41 @@ export default function Home() {
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-red-600/20">
                 <FaShieldAlt className="text-white text-xl" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Emergency Management Dashboard</h1>
-                <p className="text-sm text-gray-600">Real-time monitoring and response coordination</p>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Emergency Command Center</h1>
+                <p className="text-sm text-gray-500 font-bold">Real-time mission monitoring and coordination</p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <button className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <button className="tactical-btn-secondary">
                 Last 24 Hours
               </button>
-              <button className="px-3 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Live
+              <button className="px-3 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                Live_Feed
               </button>
             </div>
           </div>
         </div>
         {/* Merged Emergency Command Center & Hotlines - Single Container */}
-        {/* Merged Emergency Command Center & Hotlines - Single Container */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6 border border-gray-100 relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-red-50 opacity-50 group-hover:opacity-70 transition-opacity" />
+        {/* Merged Emergency Command Center & Hotlines - Single Contai        <div className="tactical-container mb-6 relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-red-50 opacity-30 group-hover:opacity-50 transition-opacity" />
           
-          {/* Emergency Command Center Header Section */}
-          <div className="p-6 text-gray-900 relative z-10 border-b border-gray-100">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="tactical-card-header relative z-10 p-6!">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 w-full">
               <div className="flex items-center gap-5">
                 <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg shadow-red-600/20 border border-red-500/30">
                   <FaShieldAlt className="text-white text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-                    MDRRMO <span className="text-red-600">Command Center</span>
+                  <h1 className="text-2xl font-black tracking-tighter flex items-center gap-3 text-slate-900">
+                    MDRRMO <span className="text-red-600 uppercase">Command</span>
                   </h1>
-                  <p className="text-gray-500 font-bold text-xs flex items-center gap-2 mt-1 uppercase tracking-widest">
+                  <p className="text-gray-500 font-black text-[10px] flex items-center gap-2 mt-1 uppercase tracking-widest">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     SYSTEM_PROTOCOL_ACTIVE // {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
@@ -339,7 +337,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <div className="text-3xl font-bold tracking-tighter text-gray-900">
+                  <div className="text-3xl font-black tracking-tighter text-slate-900">
                     {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                     <span className="text-red-600 animate-pulse">:</span>
                     {new Date().toLocaleTimeString('en-US', { second: '2-digit' })}
@@ -350,42 +348,41 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Emergency Hotlines Section */}
-          <div className="p-6 bg-gray-50/50 relative z-10">
+          <div className="p-6 bg-gray-50/30 relative z-10 border-t border-gray-50">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="bg-white text-gray-400 rounded-xl p-3 border border-gray-200 shadow-sm">
+                <div className="bg-white text-slate-400 rounded-xl p-3 border border-gray-200 shadow-sm">
                   <FaBullhorn className="text-lg" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-sm text-gray-900 tracking-wide">Tactical Hotlines</h2>
-                  <p className="text-gray-500 text-[10px] font-bold tracking-tight uppercase">Direct channel authorization required</p>
+                  <h2 className="font-black text-[11px] text-slate-900 tracking-widest uppercase">Tactical Hotlines</h2>
+                  <p className="text-gray-500 text-[10px] font-bold tracking-tight uppercase">Channel_Auth_Required</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { num: '911', label: 'NATIONAL_EMERGENCY', icon: <FaExclamationTriangle />, color: 'red' },
-                  { num: '143', label: 'RED_CROSS_DIRECT', icon: <FaAmbulance />, color: 'blue' },
-                  { num: '136', label: 'MMDA_METROBASE', icon: <FaMapMarkerAlt />, color: 'emerald' }
+                  { num: '911', label: 'NATIONAL_911', icon: <FaExclamationTriangle />, color: 'red' },
+                  { num: '143', label: 'RED_CROSS', icon: <FaAmbulance />, color: 'blue' },
+                  { num: '136', label: 'MMDA_DIRECT', icon: <FaMapMarkerAlt />, color: 'emerald' }
                 ].map(h => (
                   <button
                     key={h.num}
                     onClick={() => window.open(`tel:${h.num}`, '_self')}
-                    className="bg-white hover:bg-gray-50 border border-gray-200 p-3 rounded-xl transition-all group flex items-center gap-4 shadow-sm"
+                    className="tactical-container bg-white hover:bg-gray-50 p-3 transition-all group flex items-center gap-4 border-gray-100 shadow-none hover:shadow-lg"
                   >
                     <div className={`w-10 h-10 rounded-lg bg-${h.color}-50 flex items-center justify-center text-${h.color}-600 group-hover:bg-${h.color}-600 group-hover:text-white transition-all`}>
                       {h.icon}
                     </div>
                     <div className="text-left">
-                      <div className="text-lg font-bold text-gray-900 leading-none mb-1">{h.num}</div>
-                      <div className="text-[9px] font-bold text-gray-400 tracking-wide uppercase">{h.label.replace(/_/g, ' ')}</div>
+                      <div className="text-lg font-black text-slate-900 leading-none mb-1 tracking-tight">{h.num}</div>
+                      <div className="text-[9px] font-black text-gray-400 tracking-widest uppercase">{h.label.replace(/_/g, ' ')}</div>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </div>  </div>
 
         {/* Enhanced Key Metrics Cards - Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
@@ -397,16 +394,16 @@ export default function Home() {
               icon: <FaFire />, 
               color: 'red', 
               path: '/admin/incident-reports',
-              sub: 'Requires immediate dispatch'
+              sub: 'AWAITING_DISPATCH'
             },
             { 
-              label: 'Shelter Status', 
+              label: 'Shelter Network', 
               value: `${keyMetrics.sheltersAvailable.value}/${keyMetrics.sheltersAvailable.total}`, 
               occupancy: keyMetrics.sheltersAvailable.occupancy, 
               icon: <FaShieldAlt />, 
               color: 'blue', 
               path: '/admin/shelters',
-              sub: `${keyMetrics.sheltersAvailable.occupancy}% Occupancy`
+              sub: `${keyMetrics.sheltersAvailable.occupancy}%_UTILIZATION`
             },
             { 
               label: 'Hazard Zones', 
@@ -415,7 +412,7 @@ export default function Home() {
               icon: <FaSkullCrossbones />, 
               color: 'orange', 
               path: '/admin/hazards',
-              sub: `${keyMetrics.hazardZones.active} Active threats`
+              sub: `${keyMetrics.hazardZones.active}_ACTIVE_THREATS`
             },
             { 
               label: 'Population', 
@@ -423,7 +420,7 @@ export default function Home() {
               icon: <FaUsers />, 
               color: 'emerald', 
               path: '/admin/user-management',
-              sub: 'Registered citizens'
+              sub: 'REGISTERED_CITIZENS'
             },
             { 
               label: 'Response Time', 
@@ -431,7 +428,7 @@ export default function Home() {
               icon: <FiActivity />, 
               color: 'purple', 
               path: '/admin/analytics',
-              sub: 'Average verification speed'
+              sub: 'AVG_VERIFICATION'
             },
             { 
               label: 'Weather Alert', 
@@ -439,29 +436,29 @@ export default function Home() {
               icon: <FaWind />, 
               color: 'cyan', 
               path: '/admin/weather',
-              sub: `Level: ${keyMetrics.weatherAlert.level}`
+              sub: `LVL_${keyMetrics.weatherAlert.level.toUpperCase()}`
             }
           ].map((m, idx) => (
             <Link 
               key={idx} 
               to={m.path} 
-              className={`bg-white rounded-2xl shadow-sm p-4 border border-slate-100 hover:shadow-xl transition-all duration-300 group relative overflow-hidden`}
+              className="tactical-container p-4 bg-white hover:shadow-xl transition-all duration-300 group relative border-gray-50"
             >
               <div className={`absolute top-0 right-0 w-24 h-24 bg-${m.color}-500/5 rounded-full -mr-12 -mt-12 transition-all group-hover:scale-150`} />
               <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className={`bg-${m.color}-50 text-${m.color}-600 rounded-xl p-2.5 group-hover:bg-${m.color}-600 group-hover:text-white transition-all`}>
+                <div className={`bg-${m.color}-50 text-${m.color}-600 rounded-xl p-2.5 group-hover:bg-${m.color}-600 group-hover:text-white transition-all border border-${m.color}-100/50`}>
                   {m.icon}
                 </div>
                 {m.trend !== undefined && (
-                  <div className={`flex items-center gap-1 text-[10px] font-semibold tracking-wide ${m.trend < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`flex items-center gap-1 text-[10px] font-black tracking-wide ${m.trend < 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {m.trend < 0 ? <FaArrowDown /> : <FaArrowUp />}
                     {Math.abs(m.trend)}%
                   </div>
                 )}
               </div>
-              <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{m.value}</div>
-              <div className="text-slate-500 text-[11px] font-semibold tracking-wide mb-2">{m.label}</div>
-              <div className="text-[9px] text-slate-400 font-medium">{m.sub}</div>
+              <div className="text-2xl font-black text-slate-900 mb-1 tracking-tighter">{m.value}</div>
+              <div className="text-slate-500 text-[10px] font-black tracking-widest uppercase mb-1">{m.label}</div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">{m.sub}</div>
               {m.occupancy !== undefined && (
                 <div className="w-full bg-slate-100 rounded-full h-1 mt-3 overflow-hidden">
                   <div 
@@ -475,16 +472,16 @@ export default function Home() {
         </div>
 
         {/* Barangay Flood Levels Section */}
-        <div className="mb-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+        <div className="tactical-container mb-6 bg-white p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
-              <div className="bg-blue-100 text-blue-600 rounded-xl p-2.5 border border-blue-200">
+            <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <div className="bg-blue-600 text-white rounded-xl p-2.5 shadow-lg shadow-blue-600/20">
                 <FaWater className="text-lg" />
               </div>
               Barangay Tactical Status
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Update_Frequency: 1M</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Update_Frequency: 1M</span>
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             </div>
           </div>
@@ -505,22 +502,22 @@ export default function Home() {
                 else if (status === 'monitor') colorClass = 'yellow';
 
                 return (
-                  <div key={`brgy-status-${brgy.id || idx}`} className={`rounded-2xl p-4 border bg-gray-50 border-${colorClass}-500/20 hover:border-${colorClass}-500/50 transition-all duration-300 group shadow-sm`}>
+                  <div key={`brgy-status-${brgy.id || idx}`} className={`tactical-container p-4 bg-gray-50 border-${colorClass}-500/20 hover:border-${colorClass}-500/50 transition-all duration-300 group shadow-none`}>
                     <div className="flex items-center justify-between mb-3">
-                       <div className={`p-1.5 rounded-lg bg-${colorClass}-50 text-${colorClass}-600 border border-${colorClass}-100`}>
+                       <div className={`p-1.5 rounded-lg bg-${colorClass}-50 text-${colorClass}-600 border border-${colorClass}-100/50`}>
                          <FaShieldAlt className="text-sm" />
                        </div>
                        {Number(brgy.flood_depth_cm) > 0 && (
-                         <span className="text-[10px] font-black bg-white px-2 py-1 rounded text-gray-900 border border-gray-200 font-mono shadow-sm">
+                         <span className="text-[10px] font-black bg-white px-2 py-1 rounded text-slate-900 border border-gray-100 font-mono shadow-sm">
                            {brgy.flood_depth_cm}CM
                          </span>
                        )}
                     </div>
-                    <div className="font-bold text-sm mb-1 text-gray-900 truncate tracking-tight" title={brgy.brgy_name}>
+                    <div className="font-black text-[12px] mb-1 text-slate-900 truncate tracking-tight uppercase" title={brgy.brgy_name}>
                        {brgy.brgy_name}
                     </div>
-                    <div className={`text-[9px] text-${colorClass}-600 font-bold tracking-wide flex items-center justify-between uppercase`}>
-                       <span className="capitalize">{status}</span>
+                    <div className={`text-[9px] text-${colorClass}-600 font-black tracking-widest flex items-center justify-between uppercase`}>
+                       <span>{status}</span>
                        {brgy.message && <FaInfoCircle className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity" title={brgy.message} />}
                     </div>
                   </div>
@@ -533,21 +530,21 @@ export default function Home() {
         {/* Main Content Area - Enhanced Layout & Responsive */}
         <div className="flex flex-col lg:grid lg:grid-cols-4 min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)]">
           {/* Recent Incidents List - Enhanced */}
-          <div className="w-full lg:col-span-1 h-[400px] lg:h-full bg-white shadow-xl border-l border-slate-100 order-2 lg:order-2 overflow-hidden flex flex-col">
+          <div className="w-full lg:col-span-1 h-[400px] lg:h-full bg-white tactical-container border-y-0 border-r-0 rounded-none order-2 lg:order-2 overflow-hidden flex flex-col p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
                 <div className="bg-slate-900 text-white rounded-xl p-2.5">
                   <FaList className="text-sm" />
                 </div>
                 Live Reports
               </h3>
-              <Link to="/admin/incident-reports" className="text-[10px] font-bold text-blue-600 tracking-wide hover:text-blue-800 transition-colors">
-                View Matrix
+              <Link to="/admin/incident-reports" className="text-[10px] font-black text-blue-600 tracking-widest uppercase hover:text-blue-800 transition-colors">
+                Matrix_View
               </Link>
             </div>
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
               {recentIncidents.map((incident, index) => (
-                <div key={`incident-item-${incident.id || index}`} onClick={() => { setSelectedIncident(incident); setIsViewingDetails(true); }} className="group p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-all duration-300 cursor-pointer border border-transparent hover:border-slate-200 relative overflow-hidden">
+                <div key={`incident-item-${incident.id || index}`} onClick={() => { setSelectedIncident(incident); setIsViewingDetails(true); }} className="group p-4 bg-slate-50 tactical-container border-transparent hover:border-slate-200 shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden">
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                     incident.type === 'Flood' ? 'bg-blue-500' :
                     incident.type === 'Accident' ? 'bg-red-500' :
@@ -555,18 +552,18 @@ export default function Home() {
                   }`} />
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="font-bold text-slate-900 text-xs tracking-tight mb-1">{incident.type}</div>
-                      <div className="text-[11px] text-slate-500 mb-1 flex items-center gap-1 font-medium truncate">
+                      <div className="font-black text-slate-900 text-[11px] tracking-widest uppercase mb-1">{incident.type}</div>
+                      <div className="text-[10px] text-slate-500 mb-1 flex items-center gap-1 font-bold truncate">
                         <FaMapMarkerAlt className="text-[10px] text-slate-400" />
                         {incident.location}
                       </div>
-                      <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                        <FaCalendarAlt className="text-[10px]" />
-                        {incident.time}
+                      <div className="text-[9px] text-slate-400 flex items-center gap-1 font-black tracking-tight">
+                        <FiClockIcon className="text-[10px]" />
+                        {incident.time.toUpperCase()}
                       </div>
                     </div>
-                    <div className="text-[9px] font-black bg-white px-2.5 py-1 rounded-full text-slate-600 uppercase tracking-widest shadow-sm border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      Active
+                    <div className="text-[8px] font-black bg-white px-2.5 py-1 rounded-full text-slate-600 uppercase tracking-widest shadow-sm border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
+                      ACTIVE
                     </div>
                   </div>
                 </div>
@@ -575,13 +572,13 @@ export default function Home() {
           </div>
 
           {/* Live Map - Enhanced */}
-          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full bg-white order-1 lg:order-1 relative group border border-gray-100 rounded-2xl overflow-hidden shadow-xl">
+          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full tactical-container border-0 rounded-none order-1 lg:order-1 relative group bg-white">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 p-6 bg-gray-50 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
-                <div className="bg-red-100 text-red-600 rounded-xl p-2.5 border border-red-200">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
+                <div className="bg-red-600 text-white rounded-xl p-2.5 shadow-lg shadow-red-600/20">
                   <FaMapMarkerAlt className="text-sm" />
                 </div>
-                Geospatial Tactical Map
+                Tactical Intelligence Map
               </h3>
               <div className="flex items-center gap-4">
                 </div>
@@ -722,19 +719,19 @@ export default function Home() {
         {/* Enhanced Charts Section - Responsive */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
           {/* Incidents This Week - Bar Chart */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <div className="bg-purple-100 text-purple-600 rounded-lg p-2">
+        <div className="tactical-container bg-white p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-widest">
+                <div className="bg-purple-600 text-white rounded-xl p-2.5 shadow-lg shadow-purple-600/20">
                   <FaChartBar className="text-sm" />
                 </div>
-                Incidents This Week
+                Weekly Metrics
               </h3>
               <div className="flex items-center gap-2">
-                <select className="bg-gray-100 border border-gray-300 rounded-lg px-3 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                  <option>This Week</option>
-                  <option>This Month</option>
-                  <option>This Year</option>
+                <select className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-[10px] font-black tracking-widest uppercase text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <option>MISSION_WEEK</option>
+                  <option>MISSION_MONTH</option>
+                  <option>MISSION_YEAR</option>
                 </select>
               </div>
             </div>
@@ -784,13 +781,13 @@ export default function Home() {
           </div>
 
           {/* Incident Types - Doughnut Chart */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <div className="bg-orange-100 text-orange-600 rounded-lg p-2">
+        <div className="tactical-container bg-white p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-widest">
+                <div className="bg-orange-600 text-white rounded-xl p-2.5 shadow-lg shadow-orange-600/20">
                   <FaChartPie className="text-sm" />
                 </div>
-                Incident Types
+                Threat Distribution
               </h3>
             </div>
             <div className="h-64 md:h-72 flex items-center justify-center">
