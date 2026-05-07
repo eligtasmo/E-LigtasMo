@@ -111,7 +111,7 @@ const HotlineManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{isAdmin ? 'Configure and manage emergency communication channels.' : `${brgyName} hotlines visible in the mobile app.`}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{isAdmin ? 'Configure public emergency hotlines displayed to residents in the mobile application.' : `${brgyName} public hotlines visible in the mobile app.`}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={fetchHotlines} className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50 transition-colors">

@@ -72,7 +72,7 @@ import NotFound from "./pages/OtherPage/NotFound";
 import Blank from "./pages/Blank";
 import BrgyProfile from "./pages/BrgyProfile";
 import NavigationDemo from "./pages/NavigationDemo";
-const TacticalContactManager = React.lazy(() => import("./pages/TacticalContactManager"));
+const StrategicDirectory = React.lazy(() => import("./pages/StrategicDirectory"));
 const WebAccessRestricted = React.lazy(() => import("./pages/WebAccessRestricted"));
 
 const router = createBrowserRouter([
@@ -251,11 +251,19 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "contacts",
+            path: "report-incident",
             element: (
               <ProtectedRoute requiredRole="admin">
-                <Suspense fallback={<div className="p-6">Loading contacts…</div>}>
-                  <TacticalContactManager />
+                <IncidentReportingWrapper />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "directory",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <Suspense fallback={<div className="p-6">Loading directory…</div>}>
+                  <StrategicDirectory />
                 </Suspense>
               </ProtectedRoute>
             ),
@@ -404,14 +412,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-          {
-            path: "hotlines",
-            element: (
-              <ProtectedRoute requiredRole="admin">
-                <HotlineManagement />
-              </ProtectedRoute>
-            ),
-          },
+
           {
             path: "settings",
             element: (
@@ -543,11 +544,11 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "contacts",
+            path: "directory",
             element: (
               <ProtectedRoute requiredRole="brgy">
                 <Suspense fallback={<div className="p-6">Loading directory…</div>}>
-                  <TacticalContactManager />
+                  <StrategicDirectory />
                 </Suspense>
               </ProtectedRoute>
             ),
@@ -560,14 +561,7 @@ const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-          {
-            path: "hotlines",
-            element: (
-              <ProtectedRoute requiredRole="brgy">
-                <HotlineManagement />
-              </ProtectedRoute>
-            ),
-          },
+
           {
             path: "settings",
             element: (

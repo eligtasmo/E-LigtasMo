@@ -704,7 +704,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
         </MapboxMap>
         
         {/* Floating Search Bar */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
+        <div className="absolute top-6 left-6 z-[10] w-[400px] max-w-[90%]">
           <form onSubmit={handleSearch} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-slate-200/50 transition-all focus-within:ring-4 focus-within:ring-slate-900/10">
             <div className="pl-5 flex items-center">
               <FaSearch className="text-slate-400 text-sm" />
@@ -993,7 +993,7 @@ export default function IncidentReportingView({ showReceipt, setShowReceipt, ref
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
         @media (min-width: 768px) {
           .incident-reporting-container .mapboxgl-ctrl-top-right {
-            right: 364px !important;
+            right: 24px !important;
             top: 24px !important;
           }
         }

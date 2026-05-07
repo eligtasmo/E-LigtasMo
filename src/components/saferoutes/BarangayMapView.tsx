@@ -165,7 +165,7 @@ export default function BarangayMapView() {
       {/* Map Section */}
       <div className="flex-1 relative min-h-[400px] lg:h-full z-0 overflow-hidden">
         {/* Floating Search Bar */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
+        <div className="absolute top-6 left-6 z-[10] w-[400px] max-w-[90%]">
           <form onSubmit={handleSearch} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-slate-200/50 transition-all focus-within:ring-4 focus-within:ring-slate-900/10">
             <div className="pl-5 flex items-center">
               <FaSearch className="text-slate-400 text-sm" />

@@ -138,8 +138,8 @@ const TacticalContactManager = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contact Directory</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{isAdmin ? 'Global emergency contacts and sector coordination.' : `${brgyName} local emergency contacts.`}</p>
+            <h1 className="text-2xl font-bold text-gray-900">Agency & Coordination Directory</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{isAdmin ? 'Official directory for emergency agencies, sector partners, and inter-agency coordination.' : `${brgyName} tactical directory for agency partners.`}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={loadContacts} className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50 transition-colors">

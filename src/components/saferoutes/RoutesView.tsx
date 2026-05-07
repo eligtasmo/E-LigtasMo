@@ -792,6 +792,9 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
   const [panelTab, setPanelTab] = useState<'planner' | 'saved' | 'hazards'>(initialTab);
   const mapRef = useRef<any>(null);
   const [activeInput, setActiveInput] = useState<'start' | 'end'>('start');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (panelTab === 'saved') setPanelTab('planner');
@@ -1793,23 +1796,69 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
         {/* Map */}
         <div className="h-full w-full relative">
           {/* Floating Search Bar */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
-            <form onSubmit={(e) => e.preventDefault()} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-gray-200/50 transition-all focus-within:ring-4 focus-within:ring-blue-600/10">
+          <div className="absolute top-6 left-6 z-[10] w-[400px] max-w-[90%]">
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!searchQuery.trim()) return;
+                setIsSearching(true);
+                try {
+                  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&country=ph&proximity=121.4167,14.2833`;
+                  const response = await fetch(url);
+                  const data = await response.json();
+                  setSearchResults(data.features || []);
+                } catch (error) {
+                  console.error("Search error:", error);
+                } finally {
+                  setIsSearching(false);
+                }
+              }} 
+              className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-gray-200/50 transition-all focus-within:ring-4 focus-within:ring-blue-600/10"
+            >
               <div className="pl-5 flex items-center">
                 <FaSearch className="text-gray-400 text-sm" />
               </div>
               <input
                 type="text"
-                placeholder="Search for a location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for a tactical location..."
                 className="flex-1 px-4 py-3.5 text-[13px] outline-none bg-transparent text-gray-900 font-bold placeholder-gray-400"
               />
               <button 
                 type="submit" 
                 className="bg-blue-600 text-white px-6 hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
+                disabled={isSearching}
               >
-                <FaCheckCircle className="text-sm" />
+                {isSearching ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FaCheckCircle className="text-sm" />}
               </button>
             </form>
+
+            {searchResults.length > 0 && (
+              <div className="mt-2 bg-white rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-gray-100 custom-scrollbar divide-y divide-gray-50">
+                {searchResults.map((result, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => {
+                      const [lng, lat] = result.center;
+                      if (mapRef.current) {
+                        mapRef.current.getMap().flyTo({
+                          center: [lng, lat],
+                          zoom: 15,
+                          duration: 2000
+                        });
+                      }
+                      setSearchResults([]);
+                      setSearchQuery("");
+                    }}
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <p className="font-bold text-[13px] text-gray-900">{result.text}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{result.place_name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <MapboxMap
             ref={mapRef}

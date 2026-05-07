@@ -58,14 +58,14 @@ const intelItems: NavItem[] = [
     icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Reports",
     roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/flood-reports", brgy: "/brgy/flood-reports" },
+    pathByRole: { admin: "/admin/incident-reports", brgy: "/brgy/flood-reports" },
   },
   {
     icon: (active) => <HazardIcon active={active} className={`w-5 h-5 ${active ? 'text-red-600' : 'text-red-400'}`} />,
     name: "Hazard Management",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { 
-      admin: "/admin/incident-reports", 
+      admin: "/admin/report-incident", 
       brgy: "/brgy/report-incident", 
       resident: "/resident/report-incident" 
     },
@@ -87,21 +87,15 @@ const communityItems: NavItem[] = [
   },
   {
     icon: (active) => <BellIcon active={active} className={`w-5 h-5 ${active ? 'text-orange-600' : 'text-orange-400'}`} />,
-    name: "Community Alerts",
+    name: "Announcements & Alerts",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/announcements", brgy: "/brgy/announcements", resident: "/announcements" },
   },
   {
     icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
-    name: "Manage Contacts",
+    name: "Strategic Directory",
     roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/contacts", brgy: "/brgy/contacts" },
-  },
-  {
-    icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
-    name: "Emergency Hotlines",
-    roles: ["admin", "brgy"],
-    pathByRole: { admin: "/admin/hotlines", brgy: "/brgy/hotlines" },
+    pathByRole: { admin: "/admin/directory", brgy: "/brgy/directory" },
   },
 ];
 
