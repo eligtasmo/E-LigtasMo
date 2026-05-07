@@ -1,15 +1,15 @@
 import { useEffect, useState, useMemo } from 'react';
-import { FiAlertTriangle, FiBell, FiPlus, FiSend, FiLink, FiInfo, FiLayers, FiActivity, FiX, FiCheckCircle, FiGlobe, FiFilter, FiExternalLink, FiChevronRight } from 'react-icons/fi';
+import { FiAlertTriangle, FiBell, FiPlus, FiSend, FiLink, FiInfo, FiLayers, FiActivity, FiX, FiCheckCircle, FiGlobe, FiFilter, FiExternalLink, FiShield, FiRefreshCw } from 'react-icons/fi';
 import { FaBoxes, FaWind, FaExclamationCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../utils/api';
 import { toast } from 'react-hot-toast';
 
 const CATEGORIES = [
-  { id: 'general', name: 'General News', icon: <FiInfo />, color: 'blue' },
-  { id: 'typhoon', name: 'Typhoon Update', icon: <FaWind />, color: 'sky' },
-  { id: 'relief', name: 'Relief Operation', icon: <FaBoxes />, color: 'emerald' },
-  { id: 'incident', name: 'Incident Alert', icon: <FaExclamationCircle />, color: 'red' },
+  { id: 'disaster', name: 'Disaster News', icon: <FaExclamationCircle />, color: 'red' },
+  { id: 'safety', name: 'Safety Tips', icon: <FiShield />, color: 'blue' },
+  { id: 'recovery', name: 'Recovery Updates', icon: <FiRefreshCw />, color: 'emerald' },
+  { id: 'preparedness', name: 'Preparedness Guide', icon: <FiLayers />, color: 'amber' },
 ];
 
 export default function Announcements() {
@@ -165,200 +165,309 @@ export default function Announcements() {
   };
 
   return (
-    <div className="tactical-page">
-      <div className="tactical-container">
+    <div className="min-h-screen bg-[#f1f5f9] font-['Outfit'] antialiased">
+      <div className="flex h-screen overflow-hidden">
         
-        {/* Header Section */}
-        <div className="tactical-header">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="tactical-status-pill mb-4">
-                <div className="tactical-status-dot bg-blue-500 animate-pulse" />
-                <span>COMMS_HUB: {user?.brgy_name?.toUpperCase() || 'SANTA CRUZ'}</span>
-              </div>
-              <h1 className="tactical-title">Announcements & Alerts</h1>
-              <p className="tactical-subtitle">Unified broadcast center for public information, disaster advisories, and relief operation updates.</p>
+        {/* Sleek Tactical Sidebar */}
+        <div className="w-72 bg-slate-900 flex flex-col border-r border-slate-800 shadow-2xl z-20">
+          <div className="p-6 border-b border-slate-800/50">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+              <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Comms_Node: {user?.brgy_name || 'Global'}</span>
             </div>
-            {canSend && (
+            <h1 className="text-xl font-black text-white tracking-tight uppercase leading-none">Operations</h1>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
+            <div className="px-2 mb-4">
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Intelligence_Filters</span>
+            </div>
+            
+            <button 
+              onClick={() => setSelectedCategory(null)}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group ${!selectedCategory ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <FiLayers size={14} />
+              <span className="text-[11px] font-bold uppercase tracking-wider">All Intel</span>
+            </button>
+
+            {CATEGORIES.map(cat => (
+              <button 
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group ${selectedCategory === cat.id ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/30 hover:text-slate-200'}`}
+              >
+                <span className={`transition-transform group-hover:scale-110 ${selectedCategory === cat.id ? 'text-blue-400' : 'text-slate-500'}`}>{cat.icon}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">{cat.name}</span>
+              </button>
+            ))}
+
+            <div className="pt-8 px-2">
+              <div className="p-4 rounded-2xl bg-slate-800/30 border border-slate-800/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiActivity size={12} className="text-blue-400" />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Network_Status</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[8px] font-bold text-slate-500 uppercase">Uptime</span>
+                    <span className="text-[8px] font-black text-emerald-400">99.9%</span>
+                  </div>
+                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 w-[99%]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {canSend && (
+            <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-md">
               <button 
                 onClick={() => setShowModal(true)}
-                className="tactical-button-accent"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-[0.98] transition-all"
               >
-                <FiPlus /> New Broadcast
+                <FiPlus size={14} /> New Broadcast
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Metrics Section - More Compact */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Active Broadcasts', value: announcements.length, icon: <FiBell />, color: 'blue' },
-            { label: 'Urgent Alerts', value: announcements.filter(a => a.is_urgent === "1").length, icon: <FiAlertTriangle />, color: 'red' },
-            { label: 'Sync Status', value: '100%', icon: <FiActivity />, color: 'emerald' },
-            { label: 'Reach', value: 'Live', icon: <FiGlobe />, color: 'sky' },
-          ].map((m, i) => (
-            <div key={i} className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-4">
-              <div className={`p-2.5 rounded-xl bg-${m.color}-50 text-${m.color}-600`}>
-                {m.icon}
-              </div>
-              <div>
-                <div className="text-xl font-black text-slate-900 tracking-tight">{m.value}</div>
-                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{m.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar Filters - More Presence, Wider */}
-          <div className="lg:w-80 flex-shrink-0 space-y-6">
-            <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm sticky top-6">
-              <div className="flex items-center gap-2 mb-6">
-                <FiFilter className="text-slate-900" size={14} />
-                <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Intel_Filters</h2>
-              </div>
-              
-              <div className="space-y-2">
-                <button 
-                  onClick={() => setSelectedCategory(null)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl transition-all group ${!selectedCategory ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <FiLayers size={14} className={!selectedCategory ? 'text-blue-400' : 'text-slate-400'} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">All Intelligence</span>
-                  </div>
-                </button>
-
-                {CATEGORIES.map(cat => (
-                  <button 
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                    className={`w-full flex items-center justify-between p-3.5 rounded-xl transition-all group ${selectedCategory === cat.id ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className={`text-base transition-transform group-hover:scale-110 ${selectedCategory === cat.id ? 'text-blue-400' : `text-${cat.color}-600`}`}>{cat.icon}</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-1 h-1 rounded-full bg-blue-500" />
-                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Comms_Status</span>
-                </div>
-                <p className="text-[8px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter italic">
-                  Feed is synchronized with regional command nodes in real-time.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Feed - More Compact Cards */}
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between px-2 mb-2">
+        {/* Main Command Console */}
+        <div className="flex-1 flex flex-col h-screen bg-[#f8fafc]">
+          
+          {/* Compact Top Bar */}
+          <div className="bg-white border-b border-slate-200 px-8 py-3 flex items-center justify-between z-10 shadow-sm">
+            <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Operational_Feed</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Operational_Status</span>
+                <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black uppercase tracking-tighter">Live_Comms</div>
               </div>
-              <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">Assets: {filteredAnnouncements.length}</span>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map(n => (
-                  <div key={n} className="h-40 bg-white border border-slate-100 rounded-3xl animate-pulse" />
+              <div className="h-4 w-px bg-slate-200" />
+              <div className="flex items-center gap-6">
+                {[
+                  { label: 'Total', value: announcements.length, color: 'slate' },
+                  { label: 'Urgent', value: announcements.filter(a => a.is_urgent === "1").length, color: 'red' },
+                  { label: 'Barangay', value: announcements.filter(a => a.audience === 'barangay').length, color: 'blue' },
+                ].map((s, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{s.label}:</span>
+                    <span className={`text-xs font-black text-${s.color}-600 tabular-nums`}>{s.value}</span>
+                  </div>
                 ))}
               </div>
-            ) : filteredAnnouncements.length > 0 ? (
-              <div className="space-y-4">
-                {filteredAnnouncements.map((a: any) => {
-                  const cat = CATEGORIES.find(c => c.id === a.category);
-                  const isUrgent = a.is_urgent === "1";
-                  
-                  return (
-                    <div 
-                      key={a.id} 
-                      className={`group relative bg-white rounded-3xl border transition-all hover:shadow-xl ${isUrgent ? 'border-red-100 shadow-lg shadow-red-50/50' : 'border-slate-100 shadow-sm'}`}
-                    >
-                      <div className="p-6">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl border transition-all group-hover:scale-110 ${isUrgent ? 'bg-red-50 text-red-600 border-red-100 shadow-lg shadow-red-100' : 'bg-slate-50 text-slate-600 border-slate-100 shadow-inner'}`}>
-                              {getCategoryIcon(a.category)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isUrgent ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
-                                  {isUrgent ? 'URGENT' : cat?.name.toUpperCase() || 'INFO'}
-                                </span>
-                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest tabular-nums">
-                                  {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase group-hover:text-blue-600 transition-colors line-clamp-1">
-                                {a.title}
-                              </h3>
-                            </div>
-                          </div>
-                          
-                          <div className="flex md:flex-col items-center md:items-end gap-2 md:gap-0">
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{a.audience?.toUpperCase()}</span>
-                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter italic tabular-nums">{new Date(a.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={loadAnnouncements} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                <FiActivity size={16} className={isLoading ? 'animate-spin' : ''} />
+              </button>
+              <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">Sync_v4.2.1</div>
+            </div>
+          </div>
 
-                        <div className="relative pl-4 border-l-2 border-slate-100 group-hover:border-blue-200 transition-colors">
-                          <p className="text-sm text-slate-600 font-bold leading-relaxed line-clamp-3">
-                            {a.message}
-                          </p>
-                        </div>
+          {/* Feed Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <div className="max-w-5xl mx-auto space-y-4">
+              
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <FiLayers size={14} className="text-slate-400" />
+                  <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Strategic_Intelligence_Feed</h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sort: Latest_First</span>
+                </div>
+              </div>
 
-                        <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-50">
-                          {a.external_link ? (
-                            <a 
-                              href={a.external_link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-lg shadow-slate-200 transition-all active:scale-95"
-                            >
-                              <FiLink size={10} /> Intel_Source <FiExternalLink size={10} />
-                            </a>
-                          ) : <div />}
-                          
-                          <div className="flex items-center gap-2">
-                             <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Ref: {a.id}</span>
-                             {isUrgent && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <div key={n} className="h-24 bg-white border border-slate-200 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : filteredAnnouncements.length > 0 ? (
+                <div className="space-y-2.5">
+                  {filteredAnnouncements.map((a: any) => {
+                    const cat = CATEGORIES.find(c => c.id === a.category);
+                    const isUrgent = a.is_urgent === "1";
+                    
+                    return (
+                      <div 
+                        key={a.id} 
+                        className={`group relative bg-white border transition-all hover:border-slate-300 hover:shadow-md rounded-2xl overflow-hidden ${isUrgent ? 'border-red-200 shadow-sm shadow-red-50' : 'border-slate-200 shadow-sm'}`}
+                      >
+                        {isUrgent && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />}
+                        
+                        <div className="p-4 flex items-center gap-5">
+                          <div className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-lg border ${isUrgent ? 'bg-red-50 text-red-600 border-red-100 shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                            {getCategoryIcon(a.category)}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${isUrgent ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+                                {isUrgent ? 'CRITICAL_ALERT' : cat?.name.toUpperCase() || 'INFO'}
+                              </span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter tabular-nums">
+                                {new Date(a.created_at).toLocaleDateString()} // {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase truncate group-hover:text-blue-600 transition-colors">
+                              {a.title}
+                            </h3>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed truncate mt-0.5">
+                              {a.message}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
+                            <div className="text-right hidden sm:block">
+                              <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{a.audience?.toUpperCase()}</div>
+                              <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">ID: {a.id}</div>
+                            </div>
+                            
+                            {a.external_link && (
+                              <a 
+                                href={a.external_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-blue-600 text-slate-400 hover:text-white rounded-lg transition-all shadow-sm border border-slate-100"
+                              >
+                                <FiExternalLink size={14} />
+                              </a>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="bg-white rounded-3xl border border-slate-100 p-16 text-center flex flex-col items-center gap-4 shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
-                  <FiBell size={32} />
+                    );
+                  })}
                 </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase">Strategic_Silence</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Zero active broadcasts.</p>
+              ) : (
+                <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center gap-4 shadow-sm border-dashed">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
+                    <FiBell size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase">Operational_Silence</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Waiting for incoming intelligence updates.</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Modal - Improved Layout */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-white/20 animate-in zoom-in-95 duration-200 overflow-hidden">
+              <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">{phase === 'compose' ? 'Initialize_Broadcast' : 'Confirm_Intelligence'}</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocol: BCAST_INTEL_v4</span>
+                  </div>
+                </div>
+                <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-900 hover:shadow-md transition-all">
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              <div className="p-8">
+                {phase === 'compose' ? (
+                  <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intel_Category</label>
+                        <select 
+                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
+                          value={form.category}
+                          onChange={e => setForm({...form, category: e.target.value})}
+                        >
+                          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target_Audience</label>
+                        <select 
+                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
+                          value={form.audience}
+                          onChange={e => setForm({...form, audience: e.target.value})}
+                        >
+                          <option value="All Residents">All Residents</option>
+                          <option value="Barangay Only">Barangay Personnel</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Broadcast_Title</label>
+                      <input 
+                        required
+                        type="text"
+                        className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
+                        placeholder="e.g., SEVERE_WEATHER_ADVISORY"
+                        value={form.title}
+                        onChange={e => setForm({...form, title: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intelligence_Message</label>
+                      <textarea 
+                        required
+                        className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none h-32 resize-none"
+                        placeholder="Provide detailed situational assessment..."
+                        value={form.message}
+                        onChange={e => setForm({...form, message: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <FiAlertTriangle className={form.isUrgent ? 'text-red-600 animate-pulse' : 'text-slate-400'} />
+                        <div>
+                          <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Urgent_Priority</div>
+                          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Bypass normal notification delays</div>
+                        </div>
+                      </div>
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
+                        checked={form.isUrgent}
+                        onChange={e => setForm({...form, isUrgent: e.target.checked})}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-3 active:scale-[0.99]"
+                    >
+                      <FiSend /> Initiate_Broadcast
+                    </button>
+                  </form>
+                ) : (
+                  <div className="space-y-8 animate-in slide-in-from-right duration-300">
+                    <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 text-amber-900">
+                      <FiAlertTriangle size={24} />
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-widest">Duplicate_Intel_Detected</div>
+                        <p className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 opacity-80">A broadcast with this title already exists. Choose protocol:</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <button onClick={resetForm} className="flex-1 py-4 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all">Abort</button>
+                      <button onClick={confirmUpdate} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all">Overwrite_Intel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Broadcast Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
                   <FiSend size={18} />
                 </div>
@@ -507,8 +616,3 @@ export default function Announcements() {
   );
 }
 
-const FiChevronRight = ({ className }: { className?: string }) => (
-  <svg className={className} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-);
