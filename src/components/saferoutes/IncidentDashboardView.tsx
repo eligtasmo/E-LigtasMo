@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "react-leaflet";
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from "../../constants/geo";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useAuth } from '../../context/AuthContext';
@@ -385,10 +385,17 @@ export default function IncidentDashboardView() {
             <FaMapMarkerAlt /> Add Barangay Pin
           </button>
         )}
-        <MapContainer ref={mapRef} center={[14.28, 121.42]} zoom={9} style={{ height: "100%", width: "100%" }}>
+        <MapContainer 
+          ref={mapRef} 
+          center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]} 
+          zoom={DEFAULT_MAP_STATE.zoom} 
+          minZoom={DEFAULT_MAP_STATE.minZoom}
+          maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+          attributionControl={false}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OpenStreetMap contributors &copy; CARTO'
           />
           {/* Incident Markers */}
           {incidents.map((incident) => {

@@ -29,8 +29,7 @@ const localCommandItems: NavItem[] = [
 
 const safeRouteItems: NavItem[] = [
   { icon: (active) => <ManagementIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Barangay Management", path: "/brgy/brgy-map" },
-  { icon: (active) => <RouteIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Route Planner", path: "/brgy/safe-routes" },
-  { icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Environmental Intel", path: "/brgy/flood-reports" },
+  { icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Reports", path: "/brgy/flood-reports" },
   { icon: (active) => <HazardIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-red-500'}`} />, name: "Hazard Management", path: "/brgy/report-incident" },
   { icon: (active) => <ShelterIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />, name: "Shelter Management", path: "/brgy/shelters" },
 ];
@@ -39,7 +38,7 @@ const communityItems: NavItem[] = [
   { icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Resident Directory", path: "/brgy/residents" },
   { icon: (active) => <BellIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-orange-400'}`} />, name: "Community Alerts", path: "/brgy/announcements" },
   { icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Manage Contacts", path: "/brgy/contacts" },
-  { icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Emergency Hotlines", path: "/brgy/hotlines" },
+  { icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Barangay Hotlines", path: "/brgy/hotlines" },
 ];
 
 const monitoringItems: NavItem[] = [

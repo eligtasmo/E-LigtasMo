@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polygon } from "react-leaflet";
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from "../../constants/geo";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FaCheckCircle, FaTimesCircle, FaPhone, FaExclamationTriangle, FaShieldAlt, FaRoute, FaDirections, FaUser, FaTimes } from 'react-icons/fa';
@@ -321,10 +322,18 @@ export default function ResidentShelterView() {
         {/* Center - Map Container */}
         <div className="flex-1 relative h-full">
           <div className="relative h-full bg-white rounded-l-xl shadow-lg overflow-hidden">
-            <MapContainer ref={mapRef} center={[14.28, 121.42]} zoom={9} style={{ height: "100%", width: "100%" }} className="rounded-l-xl">
+            <MapContainer 
+              ref={mapRef} 
+              center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]} 
+              zoom={DEFAULT_MAP_STATE.zoom} 
+              minZoom={DEFAULT_MAP_STATE.minZoom}
+              maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+              attributionControl={false}
+              style={{ height: "100%", width: "100%" }} 
+              className="rounded-l-xl"
+            >
               <TileLayer
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                attribution='&copy; OpenStreetMap contributors &copy; CARTO'
               />
               <LocateUser onLocationFound={setUserLocation} />
               

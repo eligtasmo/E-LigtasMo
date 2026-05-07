@@ -289,101 +289,88 @@ const AnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <MdDashboard className="text-white text-xl" />
+      {/* Strategic Intelligence Header */}
+      <div className="bg-slate-900 -mx-4 -mt-4 mb-8 p-8 border-b border-slate-800 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+          <FaShieldAlt size={160} className="text-white" />
+        </div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+          <div className="flex items-center space-x-6">
+            <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-600/40 border border-emerald-500/30 group hover:scale-105 transition-transform duration-500">
+              <MdAnalytics className="text-3xl text-white animate-pulse" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Advanced Route Planner</h1>
-              <p className="text-sm text-gray-600">Travel Throughput & Safety</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase leading-none mb-2">
+                Strategic <span className="text-emerald-500">Intelligence</span>
+              </h1>
+              <p className="text-slate-400 text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                Data Analysis Matrix // LIVE_TELEMETRY
+              </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="1d">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 3 Months</option>
-            </select>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="bg-slate-800/50 rounded-xl px-4 py-2 border border-slate-700/50 backdrop-blur-md flex items-center gap-3">
+               <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest">Scope:</span>
+               <select
+                 className="text-[10px] bg-transparent text-white font-black uppercase outline-none cursor-pointer"
+                 value={selectedTimeRange}
+                 onChange={(e) => setSelectedTimeRange(e.target.value)}
+               >
+                 <option value="1d">24 Hours</option>
+                 <option value="7d">Week</option>
+                 <option value="30d">Month</option>
+               </select>
+            </div>
             
-            <button
-              onClick={() => setIsRealTime(!isRealTime)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                isRealTime 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              <div className={`w-2 h-2 rounded-full ${isRealTime ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-              <span className="hidden sm:inline">{isRealTime ? 'Live' : 'Paused'}</span>
-              <span className="sm:hidden">{isRealTime ? '🟢' : '⏸️'}</span>
-            </button>
-            
-            <button className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm">
-              <FaDownload className="text-xs" />
-              <span className="hidden sm:inline">Export</span>
-              <span className="sm:hidden">📊</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsRealTime(!isRealTime)}
+                className={`px-6 py-3 rounded-xl font-black tracking-widest text-[10px] uppercase transition-all flex items-center gap-3 shadow-lg ${
+                  isRealTime 
+                    ? 'bg-emerald-600/10 text-emerald-500 border border-emerald-500/30' 
+                    : 'bg-slate-800 text-slate-500 border border-slate-700'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${isRealTime ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`}></div>
+                {isRealTime ? 'Real_Time_Sync' : 'Analysis_Paused'}
+              </button>
+              
+              <button className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black tracking-widest text-[10px] uppercase shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2">
+                <FaDownload className="text-xs" /> Export_Packet
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      {/* Tactical Metrics Ribbon */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
         {keyMetrics.map((metric) => {
-          const IconComponent = metric.icon as React.ComponentType<{ className?: string }>;
-          const getCardColor = (color: string) => {
-            switch(color) {
-              case 'red': return 'border-red-200 bg-white';
-              case 'blue': return 'border-blue-200 bg-white';
-              case 'green': return 'border-green-200 bg-white';
-              case 'orange': return 'border-orange-200 bg-white';
-              case 'purple': return 'border-purple-200 bg-white';
-              case 'indigo': return 'border-indigo-200 bg-white';
-              default: return 'border-gray-200 bg-white';
-            }
-          };
-          
-          const getIconColor = (color: string) => {
-            switch(color) {
-              case 'red': return 'text-red-500';
-              case 'blue': return 'text-blue-500';
-              case 'green': return 'text-green-500';
-              case 'orange': return 'text-orange-500';
-              case 'purple': return 'text-purple-500';
-              case 'indigo': return 'text-indigo-500';
-              default: return 'text-gray-500';
-            }
-          };
+          const IconComponent = metric.icon as any;
+          const color = metric.color === 'red' ? 'rose' : metric.color === 'green' ? 'emerald' : metric.color;
           
           return (
             <div
               key={metric.id}
-              className={`${getCardColor(metric.color)} rounded-lg p-4 border hover:shadow-md transition-all duration-200`}
+              className="bg-white rounded-2xl p-6 border border-slate-100 hover:shadow-2xl transition-all duration-500 group relative overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-3">
-                <IconComponent className={`text-lg ${getIconColor(metric.color)}`} />
-                <div className="flex items-center gap-1 text-xs">
-                  {getTrendIcon(metric.trend)}
-                  <span className={`font-medium ${
-                    metric.trend === 'up' ? 'text-green-600' : 
-                    metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                  }`}>
-                    {Math.abs(metric.change)}%
-                  </span>
+              <div className={`absolute top-0 right-0 w-20 h-20 bg-${color}-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
+              
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <div className={`w-10 h-10 rounded-xl bg-${color}-50 flex items-center justify-center text-${color}-600 border border-${color}-100/30 group-hover:bg-${color}-600 group-hover:text-white transition-all`}>
+                  <IconComponent size={18} />
+                </div>
+                <div className={`flex items-center gap-1 text-[9px] font-black tracking-widest uppercase ${metric.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {metric.trend === 'up' ? <FaArrowUp size={8} /> : <FaArrowDown size={8} />}
+                  {Math.abs(metric.change)}%
                 </div>
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
-              <div className="text-sm text-gray-600 font-medium">{metric.title}</div>
-              <div className="text-xs text-gray-500 mt-1 hidden sm:block">{metric.description}</div>
+              <div className="relative z-10">
+                <div className="text-2xl font-black text-slate-900 tracking-tighter leading-none mb-1 tabular-nums">{metric.value}</div>
+                <div className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{metric.title}</div>
+              </div>
             </div>
           );
         })}
@@ -392,17 +379,19 @@ const AnalyticsDashboard: React.FC = () => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
         {/* Incident Trends */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2">
-              <FaChartLine className="text-blue-600 text-sm" />
-              Incident Trends
+        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[11px] font-black text-slate-900 tracking-[0.2em] uppercase flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <FaChartLine />
+              </div>
+              Temporal_Incident_Trends
             </h3>
             <button
               onClick={() => setExpandedChart(expandedChart === 'incidents' ? null : 'incidents')}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
             >
-              <FaExpand className="text-xs" />
+              <FaExpand size={12} />
             </button>
           </div>
           <div className="h-48 sm:h-56">

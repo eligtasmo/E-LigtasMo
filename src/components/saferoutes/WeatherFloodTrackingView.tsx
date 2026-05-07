@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useRef, Fragment } from "react";
-import { FiAlertTriangle, FiActivity, FiMap, FiChevronRight, FiExternalLink, FiX } from "react-icons/fi";
+import { FiAlertTriangle, FiActivity, FiMap, FiChevronRight, FiExternalLink, FiX, FiInfo } from "react-icons/fi";
 import { FaCloudRain, FaTint, FaWind, FaMapMarkerAlt, FaWater } from "react-icons/fa";
 import TacticalMarker from "../maps/TacticalMarker";
+import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 import MapboxMap, {
   Marker,
   Popup,
@@ -16,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import * as turf from "@turf/turf";
 import { apiFetch } from "../../utils/api";
+import { DEFAULT_MAP_STATE } from "../../constants/geo";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 import {
@@ -1307,15 +1309,17 @@ export default function WeatherFloodTrackingView() {
   }, []);
 
   return (
-    <div className="flex gap-4 w-full h-full">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-72px)] overflow-hidden">
       {/* Sidebar logic remains the same, but we update the toggles */}
-      <div className="w-full h-full rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+      <div className="flex-1 h-full relative">
         <MapboxMap
           initialViewState={{
-            latitude: 14.28,
-            longitude: 121.42,
-            zoom: 12
+            latitude: DEFAULT_MAP_STATE.latitude,
+            longitude: DEFAULT_MAP_STATE.longitude,
+            zoom: DEFAULT_MAP_STATE.zoom
           }}
+          minZoom={DEFAULT_MAP_STATE.minZoom}
+          maxBounds={DEFAULT_MAP_STATE.maxBounds}
           style={{ width: '100%', height: '100%' }}
           mapStyle="mapbox://styles/mapbox/light-v11"
           mapboxAccessToken={MAPBOX_TOKEN}
@@ -1335,6 +1339,7 @@ export default function WeatherFloodTrackingView() {
         >
           <NavigationControl position="top-right" />
           <FullscreenControl position="top-right" />
+          <SantaCruzMapboxOutline />
 
           {/* Precipitation Heatmap Layer */}
           {showHeatLayer && heatDisplayMode === 'heatmap' && (
@@ -1519,6 +1524,102 @@ export default function WeatherFloodTrackingView() {
           </div>
         </div>
       </div>
+
+      {/* Right Panel Section */}
+      {showSidebar && (
+        <div className="tactical-panel p-5 animate-in slide-in-from-right duration-500">
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between mb-4 px-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                <FiInfo className="text-white text-xs" />
+              </div>
+              <div>
+                <h2 className="text-slate-900 font-bold text-[13px] tracking-tight">Reports</h2>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowSidebar(false)}
+              className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-all"
+            >
+              <FiX className="text-xs" />
+            </button>
+          </div>
+
+          <div className="space-y-3 custom-scrollbar overflow-y-auto pr-1">
+            {/* Forecast Box */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Forecast Window ({forecastWindow}H)</span>
+                <span className="text-[10px] font-bold uppercase" style={{ color: floodLevel.color }}>{floodLevel.level}</span>
+              </div>
+              <div className="p-4 flex flex-col items-center justify-center border-b border-gray-50">
+                <div className="text-[29px] font-bold text-slate-900 tracking-tighter leading-none mb-1">
+                  {floodLevel.index.toFixed(1)}<span className="text-[11px] font-bold text-gray-300 ml-1">INDEX</span>
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Saturation Index</p>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-gray-100">
+                <div className="p-3 text-center">
+                  <p className="text-[13px] font-bold text-slate-900">{floodLevel.last3h.toFixed(1)}mm</p>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Recent Accum.</p>
+                </div>
+                <div className="p-3 text-center">
+                  <p className="text-[13px] font-bold text-blue-600">+{floodLevel.next3h.toFixed(1)}mm</p>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Expected Inflow</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Oversight Layers */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Map Layers</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {[
+                  { label: 'Rain Intensity', state: showHeatLayer, setter: setShowHeatLayer },
+                  { label: 'Flood Risks', state: showFloodAreas, setter: setShowFloodAreas },
+                  { label: 'Hazards', state: showHazards, setter: setShowHazards },
+                  { label: 'Emergency Shelters', state: showShelters, setter: setShowShelters },
+                  { label: 'Live Passability', state: showLiveRoads, setter: setShowLiveRoads },
+                ].map((layer) => (
+                  <button
+                    key={layer.label}
+                    onClick={() => layer.setter(!layer.state)}
+                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 transition-all group"
+                  >
+                    <span className={`text-[11px] font-bold uppercase tracking-tight ${layer.state ? 'text-slate-900' : 'text-gray-300'}`}>{layer.label}</span>
+                    <div className={`w-7 h-3.5 rounded-full relative transition-all ${layer.state ? 'bg-blue-600' : 'bg-gray-100'}`}>
+                      <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all ${layer.state ? 'right-0.5' : 'left-0.5'}`} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Monitoring Stations */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active Stations</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {monitoringPoints.map(pt => (
+                  <div key={pt.name} className="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded bg-blue-50 flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{pt.name}</span>
+                    </div>
+                    <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded">Online</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

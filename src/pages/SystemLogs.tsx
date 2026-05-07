@@ -1,438 +1,189 @@
-import { useState, useEffect } from "react";
-import { useMediaQuery } from "react-responsive";
-import PageBreadcrumb from "../components/common/PageBreadCrumb";
+import React, { useState, useEffect, useMemo } from 'react';
+import { FiSearch, FiRefreshCw, FiClock, FiActivity, FiUser, FiTerminal, FiFilter, FiDownload, FiTrash2, FiInfo, FiAlertCircle } from 'react-icons/fi';
 import PageMeta from "../components/common/PageMeta";
-import { CustomButton, CustomBadge } from "../components/common";
-import Input from "../components/form/input/InputField";
-import Label from "../components/form/Label";
-import Select from "../components/form/Select";
-import { MobileOptimizedTable, MobileOptimizedTableHeader, MobileOptimizedTableBody, MobileOptimizedTableCell, MobileOptimizedTableHeaderCell } from "../components/common/MobileOptimizedTable";
-import { MobileCard, MobileCardHeader, MobileCardTitle, MobileCardContent } from "../components/common/MobileCard";
-import { MobileButton, MobileIconButton } from "../components/common/MobileButton";
+import { toast } from 'react-hot-toast';
+import { apiFetch } from '../utils/api';
 
-interface LogEntry {
-  id: number;
-  user_id: number | null;
-  username: string | null;
-  user_role: string | null;
-  action_type: string;
-  action_description: string;
-  resource_type: string | null;
-  resource_id: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  status: string;
-  error_message: string | null;
-  created_at: string;
-}
+const SystemLogs: React.FC = () => {
+    const [logs, setLogs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterLevel, setFilterLevel] = useState('All');
 
-interface Pagination {
-  current_page: number;
-  total_records: number;
-  total_pages: number;
-  limit: number;
-}
+    useEffect(() => {
+        fetchLogs();
+    }, []);
 
-export default function SystemLogs() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
-  const isMobile = useMediaQuery({ maxWidth: 767 });
-  const [filters, setFilters] = useState({
-    action_type: "",
-    user_role: "",
-    status: "",
-    date_from: "",
-    date_to: "",
-    page: 1,
-    limit: 50
-  });
-
-  const actionTypes = [
-    "login", "logout", "create", "update", "delete", 
-    "approve", "reject", "view", "export", "report"
-  ];
-
-  const userRoles = ["admin", "brgy"];
-  const statuses = ["success", "error", "warning"];
-
-  const fetchLogs = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value.toString());
-      });
-
-      const response = await fetch(`/api/log-activity.php?${params}`, {
-        credentials: "include"
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setLogs(data.logs);
-        setPagination(data.pagination);
-      } else {
-        console.error("Failed to fetch logs:", data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const exportLogs = async () => {
-    setExporting(true);
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && key !== 'page' && key !== 'limit') {
-          params.append(key, value.toString());
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            const res = await apiFetch('system-logs.php');
+            const data = await res.json();
+            if (Array.isArray(data)) setLogs(data);
+        } catch (e) {
+            toast.error("Failed to load audit logs");
+        } finally {
+            setLoading(false);
         }
-      });
+    };
 
-      const response = await fetch(`/api/export-logs.php?${params}`, {
-        credentials: "include"
-      });
+    const filteredLogs = useMemo(() => {
+        return logs.filter(log => {
+            const matchesSearch = 
+                (log.action?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (log.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (log.details?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+            
+            const matchesLevel = filterLevel === 'All' || log.level === filterLevel;
+            return matchesSearch && matchesLevel;
+        });
+    }, [logs, searchTerm, filterLevel]);
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `system_logs_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        console.error("Failed to export logs");
-      }
-    } catch (error) {
-      console.error("Error exporting logs:", error);
-    } finally {
-      setExporting(false);
-    }
-  };
+    const getLevelStyle = (level: string) => {
+        switch(level?.toLowerCase()) {
+            case 'error': return 'bg-rose-50 text-rose-600 border-rose-100';
+            case 'warning': return 'bg-amber-50 text-amber-600 border-amber-100';
+            case 'success': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            default: return 'bg-blue-50 text-blue-600 border-blue-100';
+        }
+    };
 
-  const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: value,
-      page: 1 // Reset to first page when filters change
-    }));
-  };
+    const getActionIcon = (action: string) => {
+        const a = action?.toLowerCase() || '';
+        if (a.includes('delete') || a.includes('remove')) return <FiTrash2 className="text-rose-500" />;
+        if (a.includes('login') || a.includes('auth')) return <FiUser className="text-blue-500" />;
+        if (a.includes('update') || a.includes('edit')) return <FiActivity className="text-amber-500" />;
+        return <FiInfo className="text-slate-400" />;
+    };
 
-  const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      action_type: "",
-      user_role: "",
-      status: "",
-      date_from: "",
-      date_to: "",
-      page: 1,
-      limit: 50
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CustomBadge color="success">Success</CustomBadge>;
-      case 'error':
-        return <CustomBadge color="error">Error</CustomBadge>;
-      case 'warning':
-        return <CustomBadge color="warning">Warning</CustomBadge>;
-      default:
-        return <CustomBadge color="light">{status}</CustomBadge>;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
-  useEffect(() => {
-    fetchLogs();
-  }, [filters]);
-
-  return (
-    <>
-      <PageMeta
-        title="System Logs | E-LIGTASMO"
-        description="View and manage system activity logs and audit trail"
-      />
-      
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                System Activity Logs
-              </h1>
-              <p className="text-sm text-gray-600">
-                Monitor system activities and user actions for security and compliance
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <CustomButton
-                size="sm"
-                variant="outline"
-                onClick={clearFilters}
-                className="text-xs px-3 py-1.5 border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Clear Filters
-              </CustomButton>
-              <CustomButton
-                size="sm"
-                onClick={exportLogs}
-                disabled={exporting}
-                className="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                {exporting ? "Exporting..." : "Export CSV"}
-              </CustomButton>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4 mb-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
-            Filter Logs
-          </h4>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">Action Type</Label>
-              <Select
-                options={[{ value: "", label: "All Actions" }, ...actionTypes.map(type => ({ value: type, label: type.charAt(0).toUpperCase() + type.slice(1) }))]}
-                selected={filters.action_type}
-                onChange={value => handleFilterChange("action_type", value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">User Role</Label>
-              <Select
-                options={[{ value: "", label: "All Roles" }, ...userRoles.map(role => ({ value: role, label: role === 'brgy' ? 'Barangay' : 'Admin' }))]}
-                selected={filters.user_role}
-                onChange={value => handleFilterChange("user_role", value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">Status</Label>
-              <Select
-                options={[{ value: "", label: "All Status" }, ...statuses.map(status => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) }))]}
-                selected={filters.status}
-                onChange={value => handleFilterChange("status", value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">Date From</Label>
-              <Input
-                type="date"
-                value={filters.date_from}
-                onChange={(e) => handleFilterChange("date_from", e.target.value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">Date To</Label>
-              <Input
-                type="date"
-                value={filters.date_to}
-                onChange={(e) => handleFilterChange("date_to", e.target.value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-gray-700 mb-1">Records per Page</Label>
-              <Select
-                options={[{ value: "25", label: "25" }, { value: "50", label: "50" }, { value: "100", label: "100" }, { value: "200", label: "200" }]}
-                selected={filters.limit.toString()}
-                onChange={value => handleFilterChange("limit", value)}
-                className="text-xs border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Logs Table / Mobile Cards */}
-        <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow mb-4">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900">Activity Logs</h3>
-          </div>
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-sm text-gray-500">Loading logs...</div>
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-sm text-gray-500">No logs found</div>
-              </div>
-            ) : isMobile ? (
-              <div className="p-3 space-y-3">
-                {logs.map((log) => (
-                  <MobileCard key={log.id} interactive>
-                    <MobileCardHeader>
-                      <MobileCardTitle size="sm">
-                        {formatDate(log.created_at)}
-                      </MobileCardTitle>
-                    </MobileCardHeader>
-                    <MobileCardContent>
-                      <div className="flex items-center justify-between">
+    return (
+        <div className="tactical-page">
+            <PageMeta title="System Logs | E-LigtasMo Admin" description="Audit trail and activity monitoring for system-wide operations." />
+            
+            <div className="tactical-container">
+                
+                {/* Header */}
+                <div className="tactical-header">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{log.username || 'Anonymous'}</div>
-                          <div className="text-xs text-gray-500">{log.user_role || 'Unknown'}</div>
-                        </div>
-                        <div className="text-xs font-semibold text-gray-700 capitalize">{log.action_type}</div>
-                      </div>
-                      {log.action_description && (
-                        <div className="text-xs text-gray-600">
-                          {log.action_description}
-                        </div>
-                      )}
-                      {log.error_message && (
-                        <div className="text-xs text-red-600">
-                          Error: {log.error_message}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="text-xs text-gray-500">{log.ip_address || 'N/A'}</div>
-                        <div>{getStatusBadge(log.status)}</div>
-                      </div>
-                    </MobileCardContent>
-                  </MobileCard>
-                ))}
-              </div>
-            ) : (
-              <MobileOptimizedTable>
-                <table className="min-w-full">
-                  <MobileOptimizedTableHeader>
-                    <tr>
-                      <MobileOptimizedTableHeaderCell>Timestamp</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell>User</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell>Action</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell className="hidden md:table-cell">Description</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell className="hidden lg:table-cell">Resource</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell>Status</MobileOptimizedTableHeaderCell>
-                      <MobileOptimizedTableHeaderCell className="hidden xl:table-cell">IP Address</MobileOptimizedTableHeaderCell>
-                    </tr>
-                  </MobileOptimizedTableHeader>
-                  <MobileOptimizedTableBody>
-                    {logs.map((log) => (
-                      <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                        <MobileOptimizedTableCell>
-                          <div className="whitespace-nowrap">
-                            {formatDate(log.created_at)}
-                          </div>
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell>
-                          <div>
-                            <div className="font-medium text-gray-900">{log.username || 'Anonymous'}</div>
-                            <div className="text-xs text-gray-500">{log.user_role || 'Unknown'}</div>
-                          </div>
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell>
-                          <span className="font-medium capitalize text-gray-900">{log.action_type}</span>
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell className="hidden md:table-cell">
-                          <div className="max-w-xs">
-                            <div className="truncate" title={log.action_description}>
-                              {log.action_description}
+                            <div className="tactical-status-pill mb-4">
+                                <div className="tactical-status-dot bg-blue-500 animate-pulse" />
+                                <span>AUDIT_LOGS: REALTIME_SYNC</span>
                             </div>
-                            {log.error_message && (
-                              <div className="mt-1 text-xs text-red-600">
-                                Error: {log.error_message}
-                              </div>
-                            )}
-                          </div>
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell className="hidden lg:table-cell">
-                          {log.resource_type && (
-                            <div>
-                              <div className="font-medium capitalize text-gray-900">{log.resource_type}</div>
-                              {log.resource_id && (
-                                <div className="text-xs text-gray-500">ID: {log.resource_id}</div>
-                              )}
-                            </div>
-                          )}
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell>
-                          {getStatusBadge(log.status)}
-                        </MobileOptimizedTableCell>
-                        <MobileOptimizedTableCell className="hidden xl:table-cell">
-                          <div className="whitespace-nowrap">
-                            {log.ip_address || 'N/A'}
-                          </div>
-                        </MobileOptimizedTableCell>
-                      </tr>
-                    ))}
-                  </MobileOptimizedTableBody>
-                </table>
-              </MobileOptimizedTable>
-            )}
-          </div>
-        </div>
+                            <h1 className="tactical-title">System Audit Logs</h1>
+                            <p className="tactical-subtitle">Monitor administrative activities, operator behaviors, and core system events.</p>
+                        </div>
 
-        {/* Pagination */}
-        {pagination && pagination.total_pages > 1 && (
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-xs text-gray-600">
-                Showing {((pagination.current_page - 1) * pagination.limit) + 1} to{' '}
-                {Math.min(pagination.current_page * pagination.limit, pagination.total_records)} of{' '}
-                {pagination.total_records} records
-              </div>
-              <div className="flex items-center gap-2">
-                <CustomButton
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePageChange(pagination.current_page - 1)}
-                  disabled={pagination.current_page === 1}
-                  className="text-xs px-3 py-1.5 border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Previous
-                </CustomButton>
-                <span className="flex items-center px-3 text-xs text-gray-600">
-                  Page {pagination.current_page} of {pagination.total_pages}
-                </span>
-                <CustomButton
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handlePageChange(pagination.current_page + 1)}
-                  disabled={pagination.current_page === pagination.total_pages}
-                  className="text-xs px-3 py-1.5 border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Next
-                </CustomButton>
-              </div>
+                        <div className="flex items-center gap-3">
+                            <button className="tactical-button-ghost">
+                                <FiDownload /> Export_LOG
+                            </button>
+                            <button 
+                                onClick={fetchLogs}
+                                className="tactical-icon-container hover:bg-white hover:text-blue-600"
+                            >
+                                <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filter Bar */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                    <div className="relative flex-1">
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search by action, operator, or details..."
+                            className="tactical-input w-full pl-9 h-10 text-sm"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <select
+                        className="tactical-input h-10 text-sm appearance-none min-w-[150px]"
+                        value={filterLevel}
+                        onChange={e => setFilterLevel(e.target.value)}
+                    >
+                        <option value="All">All Levels</option>
+                        <option value="Info">Info</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Error">Error</option>
+                    </select>
+                </div>
+
+                {/* Main Log View */}
+                <div className="tactical-table-wrapper">
+                    <div className="overflow-x-auto">
+                        <table className="tactical-table">
+                            <thead>
+                                <tr>
+                                    <th className="tactical-th">Action</th>
+                                    <th className="tactical-th">Operator</th>
+                                    <th className="tactical-th">Status</th>
+                                    <th className="tactical-th">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {loading ? (
+                                    Array.from({ length: 8 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse h-20">
+                                            <td colSpan={4} className="px-8 py-4 bg-slate-50/20" />
+                                        </tr>
+                                    ))
+                                ) : filteredLogs.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="p-32 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <FiTerminal size={32} className="text-slate-200" />
+                                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No_Activity_Signals_Detected</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : filteredLogs.map((log, idx) => (
+                                    <tr key={idx} className="group hover:bg-slate-50 transition-colors">
+                                        <td className="tactical-td max-w-md">
+                                            <div className="flex items-start gap-3">
+                                                <div className="mt-0.5 w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                                    {getActionIcon(log.action)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-slate-800">{log.action || 'System Event'}</p>
+                                                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{log.details}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="tactical-td">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 bg-slate-900 text-white rounded-lg flex items-center justify-center text-[10px] font-bold">
+                                                    {log.username?.substring(0, 2).toUpperCase() || 'SY'}
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-700">{log.username || 'system'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="tactical-td">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getLevelStyle(log.level)}`}>
+                                                {log.level || 'Info'}
+                                            </span>
+                                        </td>
+                                        <td className="tactical-td whitespace-nowrap">
+                                            <span className="text-xs text-slate-500">{new Date(log.created_at).toLocaleString()}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-5 py-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between mt-2">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{filteredLogs.length} event{filteredLogs.length !== 1 ? 's' : ''}</span>
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">System Audit Trail</span>
+                </div>
             </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+        </div>
+    );
+};
+
+export default SystemLogs;

@@ -11,8 +11,17 @@ import Map, {
 } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+import { DEFAULT_MAP_STATE } from "../../constants/geo";
+
 export default function MapboxMap(props: any) {
-  return <Map {...props} />;
+  return (
+    <Map 
+      {...props}
+      minZoom={DEFAULT_MAP_STATE.minZoom}
+      maxBounds={DEFAULT_MAP_STATE.maxBounds}
+      attributionControl={false}
+    />
+  );
 }
 
 export { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer, useMap, MapProvider };

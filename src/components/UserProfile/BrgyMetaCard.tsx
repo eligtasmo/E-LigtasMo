@@ -6,52 +6,39 @@ export default function BrgyMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const { user } = useAuth();
   return (
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+    <>
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between w-full">
         <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-          <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-            <img src="/images/user/default-avatar.png" alt="user" />
+          <div className="w-16 h-16 overflow-hidden rounded-xl bg-blue-600 shadow-lg flex items-center justify-center">
+             <span className="text-white text-xl font-bold font-jetbrains">
+               {(user?.brgy_name || user?.username || "Brgy").charAt(0).toUpperCase()}
+             </span>
           </div>
           <div className="order-3 xl:order-2">
-            <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-              {user?.full_name || user?.username || "Barangay User"}
+            <h4 className="mb-1 text-lg font-bold text-slate-900 xl:text-left font-jetbrains uppercase tracking-tight">
+              {user?.brgy_name || user?.full_name || user?.username || "Barangay User"}
             </h4>
             <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Barangay
-              </p>
-              <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user?.brgy_name || "-"}
-              </p>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-600 tracking-widest uppercase">
+                Barangay Official
+              </span>
+              <div className="hidden h-3.5 w-px bg-slate-200 xl:block"></div>
+              <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                {user?.city && user?.province ? `${user.city}, ${user.province}` : "Region: Santa Cruz"}
+              </span>
             </div>
           </div>
           <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
             <button
               onClick={openModal}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+              className="tactical-button bg-slate-100 hover:bg-slate-200 text-slate-700"
             >
-              <svg
-                className="fill-current"
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-                  fill=""
-                />
-              </svg>
-              Edit
+              Configure_ID
             </button>
           </div>
         </div>
       </div>
       <EditProfileModal isOpen={isOpen} onClose={closeModal} />
-    </div>
+    </>
   );
 }

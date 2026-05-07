@@ -3,23 +3,24 @@ import WeatherFloodTrackingView from '../components/saferoutes/WeatherFloodTrack
 
 const WeatherFloods: React.FC = () => {
   return (
-    <>
-      <PageMeta title="Weather & Floods" description="Monitor weather conditions and flood tracking systems." />
-      <div className="bg-white rounded-3xl shadow-[-10px_0_30px_rgba(0,0,0,0.02)] border border-gray-100 font-jetbrains overflow-hidden">
-        <div className="border-b border-gray-100 bg-gray-100/50">
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-              <div className="w-2 h-8 bg-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
-              Weather & Floods
-            </h1>
-            <p className="text-gray-500 font-bold mt-2 tracking-tight text-[10px]">Monitor weather conditions, flood levels, and environmental hazards</p>
-          </div>
+    <div className="tactical-page">
+      <PageMeta title="Weather & Floods | E-LigtasMo" description="Monitor weather conditions and flood tracking systems." />
+      
+      <div className="tactical-container">
+        <div className="tactical-header">
+           <div className="tactical-status-pill mb-4">
+             <div className="tactical-status-dot bg-blue-500 animate-pulse" />
+             <span>MET_LINK: CONNECTED</span>
+           </div>
+           <h1 className="tactical-title">Weather & Floods</h1>
+           <p className="tactical-subtitle">Monitor real-time meteorological parameters and sector flood elevations.</p>
         </div>
-        <div className="p-8">
+
+        <div className="tactical-card p-10">
           <WeatherFloodTrackingView />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback, useReducer, Component, ReactNode, useRef, Fragment, useMemo } from "react";
 import MapboxMap, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from '../maps/MapboxMap';
+import { DEFAULT_MAP_STATE } from '../../constants/geo';
 import { apiFetch } from '../../utils/api';
 import * as turf from '@turf/turf';
 import { useGlobalMapContext } from '../../context/MapContext';
@@ -1484,11 +1485,10 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
     <ErrorBoundary>
       <div className={`relative w-full ${fullscreen ? 'h-full' : 'h-[75vh]'}`}>
         <div
-          className={`absolute z-[10] transition-all duration-300 ${
-            fullscreen
-              ? `top-0 right-0 bottom-0 ${collapsed ? 'w-0' : 'w-full sm:w-[360px] lg:w-[420px]'} bg-[#fcfcfd]/95 backdrop-blur-xl border-l border-gray-100 overflow-hidden`
-              : `right-0 inset-y-0 ${collapsed ? 'w-0' : 'w-full sm:w-[360px] lg:w-[420px] bg-[#fcfcfd] shadow-2xl border-l border-gray-100'}`
+          className={`tactical-panel absolute top-0 right-0 bottom-0 z-[10] transition-all duration-500 shadow-2xl ${
+            collapsed ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
           }`}
+          style={{ width: '340px' }}
         >
           {!fullscreen ? (
             <button
@@ -1543,7 +1543,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
 
             <div className={`flex-1 overflow-y-auto ${fullscreen && collapsed ? 'hidden' : ''}`}>
               {panelTab === 'hazards' ? (
-                <div className="p-4">
+                <div className="px-4 py-6">
                   <HazardManagementPanel
                     hazards={hazards}
                     snapToRoadEnabled={snapHazardToRoad}
@@ -1791,10 +1791,35 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
         ) : null}
 
         {/* Map */}
-        <div className="h-full w-full">
+        <div className="h-full w-full relative">
+          {/* Floating Search Bar */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
+            <form onSubmit={(e) => e.preventDefault()} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-gray-200/50 transition-all focus-within:ring-4 focus-within:ring-blue-600/10">
+              <div className="pl-5 flex items-center">
+                <FaSearch className="text-gray-400 text-sm" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search for a location..."
+                className="flex-1 px-4 py-3.5 text-[13px] outline-none bg-transparent text-gray-900 font-bold placeholder-gray-400"
+              />
+              <button 
+                type="submit" 
+                className="bg-blue-600 text-white px-6 hover:bg-blue-700 transition-all flex items-center justify-center active:scale-95"
+              >
+                <FaCheckCircle className="text-sm" />
+              </button>
+            </form>
+          </div>
           <MapboxMap
             ref={mapRef}
-            {...viewState}
+            initialViewState={{
+              latitude: DEFAULT_MAP_STATE.latitude,
+              longitude: DEFAULT_MAP_STATE.longitude,
+              zoom: DEFAULT_MAP_STATE.zoom
+            }}
+            minZoom={DEFAULT_MAP_STATE.minZoom}
+            maxBounds={DEFAULT_MAP_STATE.maxBounds}
             onMove={(e: any) => setViewState(e.viewState)}
             onLoad={(e: any) => {
               const map = e?.target?.getMap?.();
@@ -1835,7 +1860,7 @@ const RoutesView: React.FC<RoutesViewProps> = ({ fullscreen = false, canManageHa
             ]}
             style={{ width: '100%', height: '100%' }}
           >
-            <NavigationControl position="bottom-right" />
+            <NavigationControl position="top-right" />
             <FullscreenControl position="top-right" />
 
             <SantaCruzMapboxOutline />

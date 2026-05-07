@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import MapboxMap, { Marker, Popup, NavigationControl, FullscreenControl, Source, Layer } from "../maps/MapboxMap";
 import { SANTA_CRUZ_OUTLINE } from '../../constants/geo';
 import { useAuth } from '../../context/AuthContext';
-import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaHome, FaUsers, FaEdit, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaUser, FaPhoneAlt, FaHome, FaUsers, FaEdit, FaPlus, FaTimes, FaSearch, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import TacticalMarker from "../maps/TacticalMarker";
 import { SantaCruzMapboxOutline } from "../maps/SantaCruzOutline";
 import { useGlobalMapContext } from '../../context/MapContext';
@@ -41,6 +41,11 @@ export default function BarangayMapView() {
   const [isViewingDetails, setIsViewingDetails] = useState(false);
   const mapRef = useRef<any>(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   const { viewport: viewState, setViewport: setViewState, updateViewport } = useGlobalMapContext();
 
   const fetchBarangays = async () => {
@@ -66,6 +71,33 @@ export default function BarangayMapView() {
       }
     }
   }, [brgys, user?.brgy_name]);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&country=ph&proximity=121.4167,14.2833`;
+      const response = await fetch(url);
+      const data = await response.json();
+      setSearchResults(data.features || []);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectSearchResult = (result: any) => {
+    const [lng, lat] = result.center;
+    updateViewport({ latitude: lat, longitude: lng, zoom: 17 });
+    if (addingBrgy) {
+      setNewBrgy({ lat, lng });
+    }
+    setSearchResults([]);
+    setSearchQuery("");
+  };
 
   const handleMapClick = (e: any) => {
     if (user && (user.role === 'admin' || user.role === 'brgy') && addingBrgy) {
@@ -132,6 +164,44 @@ export default function BarangayMapView() {
     <div className="flex flex-col lg:flex-row h-full w-full overflow-hidden bg-gray-50 font-jetbrains">
       {/* Map Section */}
       <div className="flex-1 relative min-h-[400px] lg:h-full z-0 overflow-hidden">
+        {/* Floating Search Bar */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
+          <form onSubmit={handleSearch} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-slate-200/50 transition-all focus-within:ring-4 focus-within:ring-slate-900/10">
+            <div className="pl-5 flex items-center">
+              <FaSearch className="text-slate-400 text-sm" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for a tactical location..."
+              className="flex-1 px-4 py-3.5 text-[13px] outline-none bg-transparent text-slate-900 font-bold placeholder-slate-400"
+            />
+            <button 
+              type="submit" 
+              className="bg-slate-900 text-white px-6 hover:bg-slate-800 transition-all flex items-center justify-center active:scale-95"
+              disabled={isSearching}
+            >
+              {isSearching ? <FaSpinner className="animate-spin text-sm" /> : <FaCheckCircle className="text-sm" />}
+            </button>
+          </form>
+          
+          {searchResults.length > 0 && (
+            <div className="mt-2 bg-white rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-slate-100 custom-scrollbar divide-y divide-slate-50">
+              {searchResults.map((result, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => selectSearchResult(result)}
+                  className="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                >
+                  <p className="font-bold text-[13px] text-slate-900">{result.text}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{result.place_name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <MapboxMap
           {...viewState}
           onMove={(evt: any) => setViewState(evt.viewState)}
@@ -199,251 +269,133 @@ export default function BarangayMapView() {
         </MapboxMap>
       </div>
 
-      {/* Right Panel Section */}
-      <div className="w-full lg:w-[400px] h-[500px] lg:h-full bg-gray-50 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.02)] overflow-y-auto custom-scrollbar font-jetbrains shrink-0 animate-in slide-in-from-right duration-500">
-        <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-[#f59e0b] font-bold text-xl tracking-tight">Barangay Assets</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
-                <span className="text-[10px] text-gray-400 tracking-tight font-bold">Tactical Oversight</span>
-              </div>
+      {/* Floating Panel Section */}
+      <div className="tactical-panel p-5 animate-in slide-in-from-right duration-500" style={{outline:'1px solid rgba(0,0,0,0.08)',background:'#f8fafc'}}>
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/20">
+              <FaMapMarkerAlt className="text-white text-xs" />
             </div>
-            {user && (user.role === 'admin' || user.role === 'brgy') && !addingBrgy && !editingBrgy && (
-                <button 
-                  className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95" 
-                  onClick={() => setAddingBrgy(true)}
-                >
-                    <FaPlus className="text-white text-sm" />
-                </button>
-            )}
+            <h2 className="text-slate-900 font-bold text-[13px] tracking-tight">Barangay Assets</h2>
+          </div>
         </div>
-        
-        {/* Persistent instruction if no pins */}
-        {brgys.length === 0 && !addingBrgy && !editingBrgy && (
-          <div className="bg-gray-50 rounded-3xl border border-gray-200 p-6 mb-6 shadow-sm">
-            <div className="mb-2 text-[8px] text-gray-400 font-black uppercase tracking-[0.2em]">Asset Inventory</div>
-            <p className="text-gray-600 text-xs font-bold leading-relaxed">
-              No tactical assets deployed. Initiate pin placement to establish monitoring zones.
-            </p>
-            {user && (user.role === 'admin' || user.role === 'brgy') && (
-              <button
-                type="button"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all mt-6 text-[10px] tracking-widest uppercase shadow-xl shadow-blue-500/20"
-                onClick={() => setAddingBrgy(true)}
-              >
-                Initialize Pin
-              </button>
-            )}
-          </div>
-        )}
 
-        {/* Add/Edit Form */}
-        {(addingBrgy || editingBrgy) && (
-          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden mb-6 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="p-4 border-b border-gray-100 bg-gray-50">
-              <h3 className="font-black text-[10px] tracking-widest text-gray-900 uppercase flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
-                  {editingBrgy ? <FaEdit className="text-white" /> : <FaPlus className="text-white" />} 
-                </div>
-                {editingBrgy ? 'Modify_Deployment' : 'New_Deployment'}
-              </h3>
-            </div>
-            {addingBrgy && !newBrgy && (
-              <div className="p-6">
-                <div className="mb-2 text-[8px] text-blue-600 font-black tracking-widest uppercase">Target Acquisition</div>
-                <div className="text-gray-900 font-black text-sm mb-2 animate-pulse uppercase">Awaiting map selection...</div>
-                <p className="text-gray-500 mb-6 text-[11px] leading-relaxed font-bold">Engage the map viewport to pinpoint the strategic location of the new asset.</p>
-                <button
-                  type="button"
-                  className="w-full bg-gray-50 hover:bg-gray-100 text-gray-500 font-black py-4 rounded-2xl transition-all text-[10px] tracking-widest uppercase border border-gray-200"
-                  onClick={() => { setAddingBrgy(false); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }}
-                >
-                  Abort Deployment
-                </button>
-              </div>
-            )}
-            {(newBrgy || editingBrgy) && (
-              <form onSubmit={handleBrgyFormSubmit} className="flex flex-col">
-                <div className="p-4 border-b border-gray-50">
-                  <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Identifier Name</label>
-                  <input required placeholder="Enter asset name..." className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-4 py-3.5 text-xs font-bold outline-none focus:border-blue-500/50 transition-colors" value={brgyForm.name} onChange={e => setBrgyForm(f => ({...f, name: e.target.value}))} />
-                </div>
-                <div className="grid grid-cols-2 divide-x divide-gray-50 border-b border-gray-50">
-                  <div className="p-4">
-                    <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Asset Type</label>
-                    <select className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-3 py-3.5 text-[10px] font-black uppercase outline-none cursor-pointer focus:border-blue-500/50 transition-colors" value={brgyForm.type} onChange={e => setBrgyForm(f => ({...f, type: e.target.value}))}>
-                      <option>Hall</option>
-                      <option>Outpost</option>
-                      <option>Evacuation Center</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                  <div className="p-4">
-                    <label className="block text-[8px] font-black text-gray-400 tracking-widest uppercase mb-2">Comms Line</label>
-                    <input placeholder="Phone / Radio" className="w-full bg-gray-50 text-gray-900 border border-gray-100 rounded-xl px-4 py-3.5 text-xs font-bold outline-none focus:border-blue-500/50 transition-colors" value={brgyForm.contact} onChange={e => setBrgyForm(f => ({...f, contact: e.target.value}))} />
-                  </div>
-                </div>
-                <div className="flex divide-x divide-gray-100 bg-gray-50">
-                  <button type="button" className="flex-1 py-5 text-gray-400 hover:text-gray-900 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest" onClick={() => { setAddingBrgy(false); setEditingBrgy(null); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }}>Cancel</button>
-                  <button type="submit" className="flex-1 py-5 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest">{editingBrgy ? 'Update_Data' : 'Confirm_Pin'}</button>
-                </div>
-              </form>
-            )}
-          </div>
-        )}
-
-        {/* Barangay List or Detail View */}
-        <div className="flex-1 overflow-y-auto pt-2 custom-scrollbar">
-          {selectedBrgy && isViewingDetails ? (
-            <div className="flex flex-col animate-in slide-in-from-right duration-300">
-              {/* Back Header */}
-              <button 
-                onClick={() => setIsViewingDetails(false)}
-                className="flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors mb-6 group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center group-hover:bg-gray-100">
-                  <FaPlus className="rotate-45 text-[10px]" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest">Exit_Focus_Mode</span>
-              </button>
-
-              {/* Detail Header */}
-              <div className="relative h-48 rounded-3xl overflow-hidden mb-6 border border-gray-100 shadow-xl">
-                <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80" alt="Barangay" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
-                <div className="absolute bottom-5 left-5">
-                  <span className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[8px] font-black tracking-widest uppercase mb-2 inline-block shadow-lg shadow-blue-500/20">
-                    {selectedBrgy.type || 'Hall'}
-                  </span>
-                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-none">{selectedBrgy.name}</h3>
-                </div>
-              </div>
-
-              {/* Data Matrix */}
-              <div className="space-y-4">
-                <div className="bg-gray-50 rounded-3xl border border-gray-100 p-5 shadow-sm">
-                   <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
-                        <FaMapMarkerAlt className="text-blue-600 text-xl" />
-                      </div>
-                      <div>
-                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Tactical Location</div>
-                        <div className="text-gray-900 text-sm font-bold leading-tight mt-0.5">{selectedBrgy.address}</div>
-                      </div>
-                   </div>
-                   <div className="grid grid-cols-2 gap-4 pt-5 border-t border-gray-200/50">
-                      <div>
-                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Latitude</div>
-                        <div className="text-blue-600 text-xs font-black mt-1 uppercase">{Number(selectedBrgy.lat).toFixed(6)}</div>
-                      </div>
-                      <div>
-                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Longitude</div>
-                        <div className="text-blue-600 text-xs font-black mt-1 uppercase">{Number(selectedBrgy.lng).toFixed(6)}</div>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-3xl border border-gray-100 p-5 shadow-sm">
-                   <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
-                        <FaPhoneAlt className="text-blue-600 text-lg" />
-                      </div>
-                      <div>
-                        <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Comms Channel</div>
-                        <div className="text-gray-900 text-sm font-black mt-0.5">{selectedBrgy.contact || 'Secure line pending'}</div>
-                      </div>
-                   </div>
-                </div>
-
-                {user && (user.role === 'admin' || (user.role === 'brgy' && user.brgy_name === selectedBrgy.name)) && (
-                  <div className="flex gap-3 pt-2">
-                    <button 
-                      onClick={() => { setEditingBrgy(selectedBrgy); setBrgyForm({ name: selectedBrgy.name, contact: selectedBrgy.contact || '', type: selectedBrgy.type || 'Hall' }); setIsViewingDetails(false); }}
-                      className="flex-1 bg-gray-900 hover:bg-black text-white py-4 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all shadow-xl"
-                    >
-                      Modify Tactical Data
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to decommission the tactical asset: ${selectedBrgy.name}?`)) {
-                          handleDeleteBrgy(selectedBrgy.id);
-                        }
-                      }}
-                      className="w-14 h-14 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-2xl flex items-center justify-center transition-all shadow-sm"
-                    >
-                      <FaPlus className="rotate-45" />
-                    </button>
-                  </div>
-                )}
-                
-                {/* Audit Trail */}
-                <div className="mt-8 pt-6 border-t border-gray-100">
-                   <div className="flex flex-col gap-3">
-                      <div className="flex justify-between items-center text-[9px] tracking-widest uppercase font-black">
-                         <span className="text-gray-400">Registered By</span>
-                         <span className="text-gray-900">{selectedBrgy.added_by || 'Archival'}</span>
-                      </div>
-                      {selectedBrgy.updated_by && (
-                        <div className="flex justify-between items-center text-[9px] tracking-widest uppercase font-black">
-                           <span className="text-gray-400">Last Update By</span>
-                           <span className="text-blue-600">{selectedBrgy.updated_by}</span>
-                        </div>
-                      )}
-                   </div>
-                </div>
-              </div>
-            </div>
-          ) : (
+        <div className="space-y-3 custom-scrollbar overflow-y-auto pr-1">
+          {(!addingBrgy && !editingBrgy) ? (
             <>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-[1px] flex-1 bg-gray-100"></div>
-                <span className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase">Deployed Assets</span>
-                <div className="h-[1px] flex-1 bg-gray-100"></div>
-              </div>
-              {brgys.length === 0 ? (
-                <div className="text-gray-400 text-xs font-bold text-center py-10 italic">No assets registered in the database.</div>
-              ) : (
-                <div className="space-y-4">
-                  {brgys.map(brgy => (
-                    <div 
-                      key={brgy.id} 
-                      className="group rounded-3xl flex flex-col bg-white border border-gray-100 hover:border-blue-600/30 transition-all overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-0.5 duration-300"
-                    >
-                      <div className="p-5">
-                        <div className="flex items-center gap-5 w-full cursor-pointer" onClick={() => {
+              {user && (user.role === 'admin' || user.role === 'brgy') && (
+                <button
+                  className="w-full font-bold py-3 rounded-xl text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700 active:scale-95"
+                  onClick={() => { setAddingBrgy(true); setEditingBrgy(null); setNewBrgy(null); }}
+                >
+                  <FaPlus size={10} /> Add New Asset
+                </button>
+              )}
+
+              <div className="space-y-2">
+                <div className="px-1 pt-2">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Deployed Assets</span>
+                </div>
+                {brgys.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest italic">No assets registered</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {brgys.map((brgy) => (
+                      <div
+                        key={brgy.id}
+                        className={`bg-white rounded-2xl border transition-all cursor-pointer overflow-hidden ${selectedBrgy?.id === brgy.id ? 'border-blue-600 shadow-lg' : 'border-gray-200 hover:border-gray-300 shadow-sm'}`}
+                        onClick={() => {
                           setSelectedBrgy(brgy);
-                          setIsViewingDetails(true);
-                          updateViewport({ latitude: Number(brgy.lat), longitude: Number(brgy.lng), zoom: 15 });
-                        }}>
-                          <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-                            <FaHome className="text-blue-600 text-2xl" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-black text-sm text-gray-900 tracking-tight uppercase truncate">{brgy.name}</h3>
-                            <p className="text-gray-500 text-[11px] mt-1 truncate font-bold">{brgy.address}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center px-5 py-3 bg-gray-50/50 text-[9px] text-gray-400 font-black tracking-widest uppercase border-t border-gray-50">
-                        <div className="truncate pr-2">Comms: <span className="text-gray-900 ml-1">{brgy.contact || 'N/A'}</span></div>
-                        <div className="truncate text-blue-600">{brgy.type || 'Hall'}</div>
-                      </div>
-                      <button 
-                        className="w-full py-4 flex items-center justify-center gap-3 bg-white hover:bg-blue-600 hover:text-white text-gray-900 transition-all text-[10px] font-black uppercase tracking-widest border-t border-gray-50" 
-                        onClick={() => { 
-                          setSelectedBrgy(brgy);
-                          setIsViewingDetails(true);
                           updateViewport({ latitude: Number(brgy.lat), longitude: Number(brgy.lng), zoom: 15 });
                         }}
                       >
-                        <FaEdit className="group-hover:text-white" /> View Tactical Data
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        <div className="p-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600">
+                              <FaHome className="text-sm" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-[12px] font-bold text-slate-900 uppercase tracking-tight truncate">{brgy.name}</h3>
+                              <p className="text-[9px] font-bold text-slate-500 truncate">{brgy.address}</p>
+                            </div>
+                            <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-600">
+                              {brgy.type || 'Hall'}
+                            </span>
+                          </div>
+                          
+                          {brgy.contact && (
+                            <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between text-[9px] font-bold uppercase tracking-widest">
+                              <span className="text-slate-500">Comms:</span>
+                              <span className="text-slate-900">{brgy.contact}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {(user?.role === 'admin' || (user?.role === 'brgy' && brgy.added_by === user?.username)) && (
+                          <div className="flex divide-x divide-gray-100 border-t border-gray-50">
+                            <button 
+                              className="flex-1 py-2 text-[9px] font-bold text-slate-900 uppercase tracking-widest hover:bg-gray-50"
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setEditingBrgy(brgy); 
+                                setBrgyForm({ name: brgy.name, contact: brgy.contact || '', type: brgy.type || 'Hall' }); 
+                              }}
+                            >Modify</button>
+                            <button 
+                              className="flex-1 py-2 text-[9px] font-bold text-red-500 uppercase tracking-widest hover:bg-red-50"
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                if(window.confirm('Purge asset?')) handleDeleteBrgy(brgy.id!); 
+                              }}
+                            >Purge</button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
+          ) : (
+            <form className="space-y-3" onSubmit={handleBrgyFormSubmit}>
+               {addingBrgy && !newBrgy && (
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">
+                  Awaiting Map selection...
+                </div>
+               )}
+               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" style={{outline:'1px solid rgba(0,0,0,0.08)'}}>
+                  <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{editingBrgy ? 'Modify Asset' : 'Node Acquisition'}</span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    <div className="p-3">
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Asset Name</label>
+                      <input required className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="name" value={brgyForm.name} onChange={e => setBrgyForm(f => ({...f, name: e.target.value}))} />
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-gray-100">
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Classification</label>
+                        <select className="w-full text-[11px] font-bold uppercase bg-gray-50 border-none outline-none p-2 rounded-lg cursor-pointer" name="type" value={brgyForm.type} onChange={e => setBrgyForm(f => ({...f, type: e.target.value}))}>
+                          <option value="Hall">Hall</option>
+                          <option value="Outpost">Outpost</option>
+                          <option value="Evacuation Center">Evacuation Center</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Comms Line</label>
+                        <input className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="contact" value={brgyForm.contact} onChange={e => setBrgyForm(f => ({...f, contact: e.target.value}))} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex divide-x divide-gray-100 border-t border-gray-100">
+                    <button type="button" onClick={() => { setAddingBrgy(false); setEditingBrgy(null); setNewBrgy(null); setBrgyForm({ name: '', contact: '', type: 'Hall' }); }} className="flex-1 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-gray-50">Abort</button>
+                    <button type="submit" className="flex-1 py-3 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:bg-blue-50">Deploy</button>
+                  </div>
+               </div>
+            </form>
           )}
         </div>
       </div>

@@ -11,51 +11,32 @@ export default function UserAddressCard() {
   };
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-start justify-between gap-6">
+      <div className="w-full">
+        <div className="flex items-start justify-between gap-6 mb-6">
+          <h4 className="text-sm font-bold text-slate-900 font-jetbrains uppercase tracking-widest">Address Details</h4>
+          <button onClick={openModal} className="tactical-button bg-slate-100 hover:bg-slate-200 text-slate-700">Update_Data</button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
-            <h4 className="text-base font-semibold text-gray-900">Address</h4>
-
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Country
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  N/A
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  City/State
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  N/A
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Postal Code
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  N/A
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  TAX ID
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  N/A
-                </p>
-              </div>
-            </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Country</p>
+            <p className="text-sm font-bold text-slate-900">Philippines</p>
           </div>
 
-          <button onClick={openModal} className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Edit</button>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Region</p>
+            <p className="text-sm font-bold text-slate-900">N/A</p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Postal Code</p>
+            <p className="text-sm font-bold text-slate-900">N/A</p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Geographic Coordinates</p>
+            <p className="text-sm font-bold text-slate-900 font-mono text-blue-600">UNSET</p>
+          </div>
         </div>
       </div>
       <CustomModal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">

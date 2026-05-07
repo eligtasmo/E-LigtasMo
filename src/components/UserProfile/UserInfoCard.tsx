@@ -90,69 +90,42 @@ export default function UserInfoCard() {
     }
   };
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex-1">
-          <h4 className="text-base font-semibold text-gray-900">Personal Information</h4>
+    <div className="w-full">
+      <div className="flex items-start justify-between gap-6 mb-6">
+        <h4 className="text-sm font-bold text-slate-900 font-jetbrains uppercase tracking-widest">Personal Information</h4>
+        <button onClick={openModal} className="tactical-button bg-slate-100 hover:bg-slate-200 text-slate-700">Update_Data</button>
+      </div>
 
-                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Full Name
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.full_name || "Not set"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Email Address
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.email || "Not set"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Contact Number
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.contact_number || "Not set"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Barangay
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.brgy_name || "Not set"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  City
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.city || "Not set"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Province
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user?.province || "Not set"}
-                </p>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Full Name</p>
+          <p className="text-sm font-bold text-slate-900">{user?.full_name || "Not set"}</p>
         </div>
 
-        <button onClick={openModal} className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Edit</button>
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
+          <p className="text-sm font-bold text-slate-900">{user?.email || "Not set"}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Contact Number</p>
+          <p className="text-sm font-bold text-slate-900">{user?.contact_number || "Not set"}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Barangay</p>
+          <p className="text-sm font-bold text-slate-900">{user?.brgy_name || "Not set"}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">City</p>
+          <p className="text-sm font-bold text-slate-900">{user?.city || "Not set"}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Province</p>
+          <p className="text-sm font-bold text-slate-900">{user?.province || "Not set"}</p>
+        </div>
       </div>
 
       <CustomModal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">

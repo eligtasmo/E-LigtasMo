@@ -168,23 +168,28 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
           </View>
 
           {/* Categories */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 16 }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-            {CATEGORIES.map(cat => (
-              <TouchableOpacity 
-                key={cat} 
-                onPress={() => setSelectedCategory(cat)}
-                style={[
-                  styles.categoryBtn,
-                  { 
-                    backgroundColor: selectedCategory === cat ? '#F6F2EB' : 'rgba(255,255,255,0.04)',
-                    borderColor: selectedCategory === cat ? '#F6F2EB' : 'rgba(255,255,255,0.06)'
-                  }
-                ]}
-              >
-                <Text style={{ fontWeight: '700', fontSize: 12, color: selectedCategory === cat ? '#2A231C' : 'rgba(255,255,255,0.4)' }}>{cat}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <Row align="center" gap={8} style={{ marginTop: 16 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity 
+                  key={cat} 
+                  onPress={() => setSelectedCategory(cat)}
+                  style={[
+                    styles.categoryBtn,
+                    { 
+                      backgroundColor: selectedCategory === cat ? '#F6F2EB' : 'rgba(255,255,255,0.04)',
+                      borderColor: selectedCategory === cat ? '#F6F2EB' : 'rgba(255,255,255,0.06)'
+                    }
+                  ]}
+                >
+                  <Text style={{ fontWeight: '700', fontSize: 12, color: selectedCategory === cat ? '#2A231C' : 'rgba(255,255,255,0.4)' }}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.categoryChevron}>
+              <Lucide.ChevronDown size={18} color="rgba(255,255,255,0.4)" strokeWidth={2.5} />
+            </TouchableOpacity>
+          </Row>
         </Container>
 
         {loading ? (
@@ -200,40 +205,44 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
                   const Icon = Lucide[item.icon] || Lucide.Phone;
                   return (
                     <Card key={item.id} variant="none" noPadding style={styles.hotlineCard}>
-                      <View style={{ padding: 14 }}>
+                      <View style={{ padding: 12 }}>
                         {isAdmin && (
-                          <Row justify="flex-end" gap={8} style={{ position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
+                          <Row justify="flex-end" gap={8} style={{ position: 'absolute', top: 6, right: 6, zIndex: 10 }}>
                             <TouchableOpacity onPress={() => {
                               setEditingItem(item);
                               setFormData({ name: item.name, number: item.number, category: item.category, icon: item.icon });
                               setShowModal(true);
                             }}>
-                              <Lucide.Edit2 size={14} color="#F59E0B" />
+                              <Lucide.Edit2 size={12} color="#F59E0B" />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                              <Lucide.Trash2 size={14} color="#EF4444" />
+                              <Lucide.Trash2 size={12} color="#EF4444" />
                             </TouchableOpacity>
                           </Row>
                         )}
-                        <Row align="center" gap={10} style={{ marginBottom: 10 }}>
-                          <View style={styles.iconContainer}>
-                            <Icon size={18} color={item.category === 'Fire' ? '#FF7A2F' : item.category === 'Medical' ? '#FF4B5F' : '#5AA5FF'} strokeWidth={2.5} />
+                        <Row align="center" gap={10} style={{ marginBottom: 12 }}>
+                          <View style={styles.logoContainer}>
+                            {item.image_url ? (
+                              <RNImage source={{ uri: item.image_url }} style={{ width: 32, height: 32 }} resizeMode="contain" />
+                            ) : (
+                              <Icon size={24} color={item.category === 'Fire' ? '#FF4B2B' : item.category === 'Medical' ? '#EF4444' : '#2563EB'} strokeWidth={2} />
+                            )}
                           </View>
                           <Col style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 13, fontWeight: '700', color: '#F4F0E8' }} numberOfLines={1}>{item.name}</Text>
-                            <Text style={{ fontSize: 9, fontWeight: '700', color: 'rgba(242,238,230,0.4)', letterSpacing: 0.5 }}>
-                               {item.category.charAt(0).toUpperCase() + item.category.slice(1).toLowerCase()}
-                             </Text>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: '#F4F0E8' }} numberOfLines={2}>{item.name}</Text>
                           </Col>
                         </Row>
-                        <Row align="center" gap={6}>
-                          <Lucide.Phone size={10} color="rgba(255,255,255,0.3)" strokeWidth={2} />
-                          <Text style={{ fontSize: 11, fontWeight: '500', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{item.number}</Text>
+                        <Row align="center" gap={6} style={{ marginBottom: 12 }}>
+                          <Lucide.Phone size={14} color="#FFF" strokeWidth={2.5} />
+                          <Col>
+                            <Text style={{ fontSize: 10, fontWeight: '600', color: '#FFF' }}>{item.number}</Text>
+                            <Text style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>8723-0401</Text>
+                          </Col>
                         </Row>
-                        <Row justify="flex-end" gap={10} style={{ marginTop: 14 }}>
-                          <TouchableOpacity style={styles.actionBtn}><Lucide.Copy size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.2} /></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionBtn}><Lucide.MessageSquare size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.2} /></TouchableOpacity>
-                          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#FFFFFF' }]}><Lucide.Phone size={16} color="#000000" strokeWidth={3} /></TouchableOpacity>
+                        <Row justify="space-between" align="center">
+                          <TouchableOpacity style={styles.actionBtnSmall}><Lucide.Copy size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} /></TouchableOpacity>
+                          <TouchableOpacity style={styles.actionBtnSmall}><Lucide.MessageSquare size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} /></TouchableOpacity>
+                          <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: '#FFFFFF' }]}><Lucide.PhoneCall size={18} color="#000000" strokeWidth={2.5} /></TouchableOpacity>
                         </Row>
                       </View>
                     </Card>
@@ -350,14 +359,20 @@ const styles = StyleSheet.create({
       width: '48.5%', borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
       backgroundColor: '#161616'
    },
-   iconContainer: {
-      width: 38, height: 38, borderRadius: 10, 
+   logoContainer: {
+      width: 52, height: 52, borderRadius: 14, 
       backgroundColor: 'rgba(255,255,255,0.03)', 
       justifyContent: 'center', alignItems: 'center', 
-      borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)'
+      borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)'
    },
-   actionBtn: {
-      width: 38, height: 38, borderRadius: 19,
+   categoryChevron: {
+      width: 36, height: 36, borderRadius: 18, 
+      backgroundColor: 'rgba(255,255,255,0.05)', 
+      justifyContent: 'center', alignItems: 'center',
+      borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)'
+   },
+   actionBtnSmall: {
+      width: 42, height: 42, borderRadius: 21,
       backgroundColor: 'rgba(255,255,255,0.05)',
       justifyContent: 'center', alignItems: 'center',
       borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)'

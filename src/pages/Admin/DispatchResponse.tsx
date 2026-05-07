@@ -6,7 +6,7 @@ import type { TabKey } from '../../components/admin/AdminDispatchNavBar';
 import { apiFetch } from '../../utils/api';
 import { FiUsers, FiClock, FiCheckSquare, FiList, FiAlertTriangle, FiClipboard, FiCheck, FiRefreshCw, FiUploadCloud, FiImage, FiSend, FiX, FiChevronRight, FiPlus, FiCheckCircle } from 'react-icons/fi';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMapEvents, ZoomControl, Polygon } from 'react-leaflet';
-import { SANTA_CRUZ_OUTLINE } from '../../constants/geo';
+import { SANTA_CRUZ_OUTLINE, DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
 import { FaFacebookF } from 'react-icons/fa';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -1054,8 +1054,10 @@ const AdminDispatchResponse: React.FC = () => {
                 
                 <div className="flex-1 relative rounded-b-xl overflow-hidden group/map">
                   <MapContainer
-                    center={[14.5995, 120.9842]}
-                    zoom={12}
+                    center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]}
+                    zoom={DEFAULT_MAP_STATE.zoom}
+                    minZoom={DEFAULT_MAP_STATE.minZoom}
+                    maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
                     style={{ height: '100%', width: '100%' }}
                     scrollWheelZoom
                     zoomControl={false}
@@ -1064,7 +1066,7 @@ const AdminDispatchResponse: React.FC = () => {
                     ref={dispatchMapRef as any}
                   >
                     <ZoomControl position="bottomright" />
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                     <Polygon positions={SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]])} pathOptions={{ color: '#3b82f6', weight: 2, dashArray: '5, 5', fillOpacity: 0 }} />
                     {incidentsForMap.map((i: any, idx) => {
                       const hasSegment = Number.isFinite(Number(i.start_lat)) && Number.isFinite(Number(i.start_lng)) && Number.isFinite(Number(i.end_lat)) && Number.isFinite(Number(i.end_lng));

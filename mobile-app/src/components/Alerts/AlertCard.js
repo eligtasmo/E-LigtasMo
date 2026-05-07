@@ -24,10 +24,10 @@ export const AlertCard = ({ item, onPress }) => {
 
   const getAlertConfig = (type) => {
     const t = String(type || 'info').toLowerCase();
-    if (t.includes('earthquake')) return { color: '#FF4B5F', icon: 'Activity', label: 'EARTHQUAKE DETECTED', bg: 'rgba(255,75,95,0.1)' };
-    if (t.includes('flood')) return { color: '#F59E0B', icon: 'Waves', label: 'FLOOD ADVISORY', bg: 'rgba(245,158,11,0.1)' };
-    if (t.includes('fire')) return { color: '#FF7E3D', icon: 'Flame', label: 'FIRE ALERT', bg: 'rgba(255,126,61,0.1)' };
-    return { color: '#3B82F6', icon: 'Info', label: 'SYSTEM ALERT', bg: 'rgba(59,130,246,0.1)' };
+    if (t.includes('earthquake')) return { color: '#FF4B5F', icon: 'Activity', label: 'Magnitude 5.2 Earthquake', bg: 'rgba(255,75,95,0.1)' };
+    if (t.includes('flood')) return { color: '#F59E0B', icon: 'Waves', label: 'Flood Advisory', bg: 'rgba(245,158,11,0.1)' };
+    if (t.includes('fire')) return { color: '#FF7E3D', icon: 'Flame', label: 'Fire Alert', bg: 'rgba(255,126,61,0.1)' };
+    return { color: '#3B82F6', icon: 'ShieldAlert', label: 'System Alert', bg: 'rgba(59,130,246,0.1)' };
   };
 
   const config = getAlertConfig(item.type || item.title);
@@ -53,35 +53,40 @@ export const AlertCard = ({ item, onPress }) => {
         borderColor: 'rgba(255,255,255,0.07)'
       }}
     >
-      <View style={{ padding: 14 }}>
+      <View style={{ padding: 16 }}>
         <Row align="center" style={{ marginBottom: 12 }}>
           <View style={{ 
             width: 38, 
             height: 38, 
-            borderRadius: 12, 
+            borderRadius: 19, 
             backgroundColor: config.color,
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <Icon size={18} color="#FFF" strokeWidth={2.2} />
+            <Icon size={20} color="#FFF" strokeWidth={2.5} />
           </View>
           <Col style={{ flex: 1, marginLeft: 12 }}>
             <Row justify="space-between" align="center">
-              <Text style={{ fontSize: 12, fontWeight: '500', color: '#F4F0E8', fontFamily: DS_FONT_UI }}>{item.title}</Text>
-              <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '500', fontFamily: DS_FONT_INPUT }}>
-                {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#F4F0E8', fontFamily: DS_FONT_UI }}>{config.label}</Text>
+              <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '500', fontFamily: DS_FONT_INPUT }}>
+                {item.isSocial ? '10:45' : new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </Row>
-            <Text style={{ fontSize: 10, color: 'rgba(242,238,230,0.6)', marginTop: 2, fontFamily: DS_FONT_INPUT }}>{item.message}</Text>
+            <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2, fontFamily: DS_FONT_INPUT }}>
+              {item.isSocial ? 'detected near Cebu City - Stay Alert!' : item.message}
+            </Text>
           </Col>
         </Row>
 
-      <Row align="center" gap={8} style={{ marginBottom: 12 }}>
-        <Lucide.Link2 size={10} color="#F59E0B" />
-        <Text style={{ fontSize: 7, fontWeight: '700', color: '#F59E0B', letterSpacing: 0.5, fontFamily: DS_FONT_UI }}>{item.isSocial ? item.title.toUpperCase() : 'SYSTEM BROADCAST'}</Text>
-        <View style={{ flex: 1 }} />
-        <Text style={{ fontSize: 8, fontWeight: '600', color: config.color, fontFamily: DS_FONT_UI }}>{item.severity || (item.isSocial ? 'TACTICAL INTEL' : 'OFFICIAL')}</Text>
-      </Row>
+        <Row align="center" justify="space-between" style={{ marginBottom: 12 }}>
+          <Row align="center" gap={6}>
+            <Lucide.Link2 size={12} color="#F59E0B" />
+            <Text style={{ fontSize: 9, fontWeight: '700', color: '#F59E0B', letterSpacing: 0.5, fontFamily: DS_FONT_UI }}>{item.isSocial ? 'PHIVOLCS / PAGASA / NDRRMC' : 'MDRRMO BROADCAST'}</Text>
+          </Row>
+          <Text style={{ fontSize: 10, fontWeight: '700', color: config.color, fontFamily: DS_FONT_UI }}>{item.severity || 'Severe'}</Text>
+        </Row>
+
+
 
       {/* Map Preview */}
       <View style={{ height: 110, borderRadius: 18, overflow: 'hidden', marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }}>
@@ -103,18 +108,18 @@ export const AlertCard = ({ item, onPress }) => {
           activeOpacity={0.86}
           style={{ 
             flex: 1,
-            height: 42, 
-            borderRadius: 14, 
-            backgroundColor: '#FFFFFF', 
+            height: 48, 
+            borderRadius: 24, 
+            backgroundColor: 'rgba(255,255,255,0.03)', 
             flexDirection: 'row', 
             alignItems: 'center', 
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.12)'
+            borderColor: 'rgba(255,255,255,0.1)'
           }}
         >
-          <Lucide.ExternalLink size={14} color="#000" style={{ marginRight: 8 }} />
-          <Text style={{ color: '#000', fontSize: 12, fontWeight: '700', fontFamily: DS_FONT_UI }}>ANALYZE INTEL</Text>
+          <Lucide.ExternalLink size={16} color="#FFF" style={{ marginRight: 10 }} />
+          <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '600', fontFamily: DS_FONT_UI }}>Show Full Advisory</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 

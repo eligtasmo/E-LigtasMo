@@ -30,22 +30,22 @@ const PHClock: React.FC = () => {
   }).format(time);
 
   return (
-    <div className="flex items-center gap-4 group bg-black/5 dark:bg-white/5 px-4 py-1.5 rounded-2xl border border-black/5 dark:border-white/5 backdrop-blur-sm">
+    <div className="flex items-center gap-4 bg-slate-50 px-5 py-2 rounded-2xl border border-slate-100">
       <div className="flex flex-col items-end leading-tight">
-        <span className="text-xl font-bold tabular-nums tracking-tight text-gray-900 dark:text-white">
+        <span className="text-xl font-bold tabular-nums tracking-tight text-slate-900">
           {phTime}
         </span>
-        <span className="text-[9px] font-semibold text-blue-500 tracking-wide">
+        <span className="text-[10px] font-bold text-blue-500 tracking-wide uppercase">
           {phDate}
         </span>
       </div>
-      <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
-      <div className="flex flex-col items-center">
+      <div className="h-8 w-px bg-slate-200 mx-1" />
+      <div className="flex flex-col items-start">
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-          <span className="text-[9px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">EOC Live</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">System Status</span>
         </div>
-        <span className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-white leading-none">STX-Ops</span>
+        <span className="text-xs font-bold tracking-tight text-slate-900 leading-none">Operational</span>
       </div>
     </div>
   );
@@ -57,12 +57,11 @@ const AppHeader: React.FC = () => {
   const role = (user?.role || 'resident').toLowerCase();
 
   return (
-    <header className="h-[64px] flex items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300 shadow-sm font-jetbrains w-full">
-      <div className="w-full px-4 lg:px-6">
+    <header className="h-[60px] flex items-center bg-white/80 backdrop-blur-xl border-b border-slate-100 transition-all duration-300 font-outfit w-full sticky top-0 z-50">
+      <div className="w-full px-6">
         <div className="flex items-center justify-between h-full">
-          {/* Left side - Tactical Toggle (Removed per user request) */}
+          {/* Left side */}
           <div className="flex items-center gap-5">
-            {/* Menu and branding removed */}
           </div>
 
           {/* Center: PH Time Clock */}
@@ -72,10 +71,9 @@ const AppHeader: React.FC = () => {
 
           {/* Right side - User & Notifications */}
           <div className="flex items-center gap-4">
-            <div className="h-8 w-px bg-gray-100 dark:bg-gray-800 hidden sm:block" />
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-3">
               <NotificationDropdown notificationCount={5} />
-              <div className="w-px h-6 bg-gray-100 dark:bg-gray-800 mx-1" />
+              <div className="w-px h-8 bg-slate-100 mx-1" />
               <UserDropdown />
             </div>
           </div>

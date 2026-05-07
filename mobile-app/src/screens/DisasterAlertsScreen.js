@@ -128,8 +128,8 @@ const DisasterAlertsScreen = ({ navigation }) => {
                  borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' 
                }}
              >
-               <Lucide.Bell size={18} color="#F4F0E8" strokeWidth={2.2} />
-               <View style={{ position: 'absolute', top: 12, right: 12, width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#F5B235', borderWidth: 1.5, borderColor: '#080808' }} />
+               <Lucide.Bell size={20} color="#F4F0E8" strokeWidth={2} />
+               <View style={{ position: 'absolute', top: 10, right: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: '#F59E0B', borderWidth: 2, borderColor: '#080808' }} />
              </TouchableOpacity>
            </Row>
          </Row>
@@ -171,33 +171,35 @@ const DisasterAlertsScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Categories */}
-              <FlatList 
-                horizontal 
-                data={categories}
-                showsHorizontalScrollIndicator={false} 
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 10 }}
-                renderItem={({ item }) => {
-                  const isSelected = selectedCategory === item;
-                  return (
-                    <TouchableOpacity
-                      onPress={() => setSelectedCategory(item)}
-                      style={{ 
-                        paddingHorizontal: 20, 
-                        paddingVertical: 10, 
-                        borderRadius: 14, 
-                        backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.04)',
-                        borderWidth: 1,
-                        borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.06)'
-                      }}
-                    >
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#000' : 'rgba(236,231,223,0.5)', textTransform: 'capitalize' }}>
-                        {item}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }}
-              />
+               {/* Categories */}
+               <Row align="center" gap={8} style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                   {categories.map((item) => {
+                     const isSelected = selectedCategory === item;
+                     return (
+                       <TouchableOpacity
+                         key={item}
+                         onPress={() => setSelectedCategory(item)}
+                         style={{ 
+                           paddingHorizontal: 20, 
+                           paddingVertical: 10, 
+                           borderRadius: 14, 
+                           backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.04)',
+                           borderWidth: 1,
+                           borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.06)'
+                         }}
+                       >
+                         <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#000' : 'rgba(236,231,223,0.5)', textTransform: 'capitalize' }}>
+                           {item}
+                         </Text>
+                       </TouchableOpacity>
+                     );
+                   })}
+                 </ScrollView>
+                 <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <Lucide.ChevronDown size={18} color="rgba(255,255,255,0.4)" strokeWidth={2.5} />
+                 </TouchableOpacity>
+               </Row>
             </View>
           }
           renderItem={({ item }) => (

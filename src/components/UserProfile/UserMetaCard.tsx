@@ -14,34 +14,35 @@ export default function UserMetaCard() {
   };
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-gray-200 bg-gray-100 flex items-center justify-center">
-              {String(user?.role || "").toLowerCase() === "resident" ? (
-                <UserCircleIcon className="w-10 h-10 text-gray-600" />
-              ) : (
-                <img src="/images/user/default-avatar.png" alt="user" className="w-full h-full object-cover" />
-              )}
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-gray-900">{user?.full_name || "User"}</div>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                  {user?.role === 'admin' ? 'Administrator' : user?.role === 'brgy' ? 'Barangay Official' : 'Resident'}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {user?.city && user?.province ? `${user.city}, ${user.province}` : "Location not set"}
-                </span>
-              </div>
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between w-full">
+        <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
+          <div className="w-16 h-16 overflow-hidden rounded-xl bg-blue-600 shadow-lg flex items-center justify-center">
+             <span className="text-white text-xl font-bold font-jetbrains">
+               {(user?.full_name || user?.username || "User").charAt(0).toUpperCase()}
+             </span>
+          </div>
+          <div className="order-3 xl:order-2">
+            <h4 className="mb-1 text-lg font-bold text-slate-900 xl:text-left font-jetbrains uppercase tracking-tight">
+              {user?.full_name || user?.username || "Operator"}
+            </h4>
+            <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-50 text-blue-600 tracking-widest uppercase">
+                {user?.role === 'admin' ? 'HQ Administrator' : user?.role === 'brgy' ? 'Barangay Official' : 'Resident'}
+              </span>
+              <div className="hidden h-3.5 w-px bg-slate-200 xl:block"></div>
+              <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                {user?.city && user?.province ? `${user.city}, ${user.province}` : "Location not set"}
+              </span>
             </div>
           </div>
-          <button
-            onClick={openModal}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Edit
-          </button>
+          <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+            <button
+              onClick={openModal}
+              className="tactical-button bg-slate-100 hover:bg-slate-200 text-slate-700"
+            >
+              Configure_ID
+            </button>
+          </div>
         </div>
       </div>
       <CustomModal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">

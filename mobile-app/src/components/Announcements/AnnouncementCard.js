@@ -9,10 +9,11 @@ export const AnnouncementCard = ({ item, isAdmin, onEdit, onDelete, onPress }) =
 
   const getStatusConfig = (type) => {
     const t = String(type || 'info').toLowerCase();
-    if (t.includes('warning') || t.includes('disaster')) return { color: '#B37213', label: 'Disaster' };
-    if (t.includes('safety')) return { color: '#3B82F6', label: 'Safety Tips' };
-    if (t.includes('recovery')) return { color: '#10B981', label: 'Recovery' };
-    return { color: '#3B82F6', label: 'Mission Update' };
+    if (t.includes('warning') || t.includes('disaster')) return { color: '#FF9E0B', label: 'Disaster', bg: 'rgba(255,158,11,0.1)' };
+    if (t.includes('safety')) return { color: '#3B82F6', label: 'Safety Tips', bg: 'rgba(59,130,246,0.1)' };
+    if (t.includes('recovery')) return { color: '#10B981', label: 'Recovery', bg: 'rgba(16,185,129,0.1)' };
+    if (t.includes('prepare')) return { color: '#F472B6', label: 'Preparedness', bg: 'rgba(244,114,182,0.1)' };
+    return { color: '#3B82F6', label: 'News', bg: 'rgba(59,130,246,0.1)' };
   };
 
   const config = getStatusConfig(item.type);
@@ -29,46 +30,46 @@ export const AnnouncementCard = ({ item, isAdmin, onEdit, onDelete, onPress }) =
           borderColor: 'rgba(255,255,255,0.07)'
         }}
     >
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={{ padding: 14 }}>
-        <Row align="center" justify="space-between" style={{ marginBottom: 12 }}>
-          <Row align="center" gap={10}>
-            <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
-               <Lucide.Megaphone size={14} color={config.color} />
-            </View>
-            <Col>
-              <Text style={{ color: config.color, fontSize: 10, fontWeight: '700', letterSpacing: 0.2, fontFamily: DS_FONT_UI }}>{config.label}</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: '500', marginTop: 2, fontFamily: DS_FONT_INPUT }}>{new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
-            </Col>
-          </Row>
-          <Lucide.ChevronRight size={14} color="rgba(255,255,255,0.15)" />
-        </Row>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={{ padding: 12 }}>
+        <Row gap={14}>
+          {/* Thumbnail */}
+          <View style={{ width: 100, height: 100, borderRadius: 14, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+             <RNImage source={{ uri: item.image_url || fallbackImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          </View>
 
-        <Text style={{ color: '#F4F0E8', fontSize: 12, fontWeight: '500', marginBottom: 6, lineHeight: 18, fontFamily: DS_FONT_UI }}>{item.title}</Text>
-        <Text style={{ color: 'rgba(242,238,230,0.55)', fontSize: 10, lineHeight: 16, marginBottom: 14, fontFamily: DS_FONT_INPUT }} numberOfLines={2}>{item.message}</Text>
-
-        <View style={{ height: 140, borderRadius: 16, overflow: 'hidden', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' }}>
-           <RNImage source={{ uri: item.image_url || fallbackImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        </View>
-
-        <Row gap={10}>
-          <TouchableOpacity 
-            onPress={onPress}
-            activeOpacity={0.86}
-            style={{ flex: 1, height: 38, borderRadius: 19, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Text style={{ color: '#000', fontWeight: '700', fontSize: 11, fontFamily: DS_FONT_UI }}>Read More</Text>
-          </TouchableOpacity>
-
-          {isAdmin && (
-            <Row gap={6}>
-              <TouchableOpacity onPress={() => onEdit(item)} style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
-                <Lucide.FileEdit size={14} color="#FFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => onDelete(item.id)} style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(239,68,68,0.15)' }}>
-                <Lucide.Trash2 size={14} color="#EF4444" />
-              </TouchableOpacity>
+          {/* Content */}
+          <Col style={{ flex: 1 }}>
+            <Row align="center" justify="space-between" style={{ marginBottom: 6 }}>
+               <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: config.bg }}>
+                  <Text style={{ color: config.color, fontSize: 9, fontWeight: '700', textTransform: 'uppercase' }}>{config.label}</Text>
+               </View>
+               <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '500' }}>{new Date(item.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
             </Row>
-          )}
+
+            <Text style={{ color: '#F4F0E8', fontSize: 14, fontWeight: '700', marginBottom: 4, fontFamily: DS_FONT_UI }} numberOfLines={2}>{item.title}</Text>
+            <Text style={{ color: 'rgba(242,238,230,0.5)', fontSize: 11, marginBottom: 12, fontFamily: DS_FONT_INPUT }} numberOfLines={1}>{item.message}</Text>
+
+            <Row align="center" gap={10}>
+              <TouchableOpacity 
+                onPress={onPress}
+                activeOpacity={0.8}
+                style={{ height: 32, paddingHorizontal: 16, borderRadius: 16, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Text style={{ color: '#000', fontWeight: '800', fontSize: 10, fontFamily: DS_FONT_UI }}>Read More</Text>
+              </TouchableOpacity>
+
+              {isAdmin && (
+                <Row gap={8} style={{ flex: 1, justifyContent: 'flex-end' }}>
+                  <TouchableOpacity onPress={() => onEdit(item)} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Lucide.FileEdit size={14} color="#FFF" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => onDelete(item.id)} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(239,68,68,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Lucide.Trash2 size={14} color="#EF4444" />
+                  </TouchableOpacity>
+                </Row>
+              )}
+            </Row>
+          </Col>
         </Row>
       </TouchableOpacity>
     </TacticalCard>

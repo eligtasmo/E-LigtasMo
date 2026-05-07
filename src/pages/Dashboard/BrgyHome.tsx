@@ -1,7 +1,7 @@
 import PageMeta from "../../components/common/PageMeta";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, FormEvent, useMemo, useRef } from "react";
-import { FaExclamationTriangle, FaCheckCircle, FaUsers, FaMapMarkerAlt, FaPlus, FaBullhorn, FaHome, FaTimes, FaWater, FaList, FaWind, FaCloudSun } from "react-icons/fa";
+import { FaExclamationTriangle, FaCheckCircle, FaUsers, FaMapMarkerAlt, FaPlus, FaBullhorn, FaHome, FaTimes, FaWater, FaList, FaWind, FaCloudSun, FaShieldAlt } from "react-icons/fa";
 import { FiMapPin, FiClock as FiClockIcon, FiChevronRight, FiSearch, FiFilter, FiRefreshCw } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import * as turf from '@turf/turf';
 import TacticalMarker from "../../components/maps/TacticalMarker";
 import { useGlobalMapContext } from "../../context/MapContext";
 import SantaCruzOutline from "../../components/maps/SantaCruzOutline";
+import { DEFAULT_MAP_STATE } from "../../constants/geo";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefined;
@@ -446,91 +447,94 @@ const BrgyHome = () => {
         {/* Tactical Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 text-gray-900 shadow-xl border-b border-gray-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-            <FaExclamationTriangle size={120} />
+            <FaShieldAlt size={120} />
           </div>
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-bold tracking-tight text-red-500">Live Operations Active</span>
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-[10px] font-black tracking-widest text-blue-600 uppercase">Sector Command Active</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">
-              {user?.brgy_name || 'Barangay'} <span className="text-blue-600/60 text-xl font-medium tracking-normal italic">MDRRMO Console</span>
+            <h1 className="text-3xl font-black tracking-tighter mb-2 uppercase">
+              {user?.brgy_name || 'Barangay'} <span className="text-slate-400 font-medium tracking-normal italic capitalize">Operational Console</span>
             </h1>
-            <p className="text-gray-500 text-sm font-medium max-w-xl">
-              Real-time disaster risk reduction and management oversight for the local command sector.
+            <p className="text-gray-500 text-sm font-bold max-w-xl uppercase tracking-tight">
+              Sector-level tactical response and incident verification matrix.
             </p>
           </div>
           <div className="flex items-center gap-3 relative z-10">
-            <button 
-              onClick={loadData}
-              className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all flex items-center gap-2 text-xs font-bold tracking-wide text-gray-700"
-            >
-              <FiRefreshCw className={loadingData ? 'animate-spin' : ''} /> Refresh Sync
-            </button>
+            <div className="text-right mr-4 border-r border-slate-200 pr-4">
+              <div className="text-lg font-black text-slate-900 leading-none">
+                {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+              </div>
+              <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Local Time</div>
+            </div>
             <Link 
               to="/brgy/report-incident"
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-red-600/20 transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black tracking-widest text-[10px] uppercase shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2"
             >
-              <FaExclamationTriangle /> Declare Incident
+              <FaPlus /> Report_Incident
             </Link>
           </div>
         </div>
 
         {/* Tactical Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 lg:px-8 mt-6">
-          <div className="bento-card p-6 relative group overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
-            <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="p-3 bg-yellow-50 rounded-2xl">
-                <FaWater className="text-yellow-600 w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-bold text-yellow-600 tracking-wide bg-yellow-50 px-2 py-1 rounded-md">Live</span>
-            </div>
-            <div className="relative z-10">
-              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.activeIncidents}</div>
-              <div className="text-xs font-bold text-gray-500 tracking-wide">Active Incident Reports</div>
-            </div>
-          </div>
-
-          <div className="bento-card p-6 relative group overflow-hidden">
+          <div className="tactical-container p-6 relative group overflow-hidden bg-white border-gray-100">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-2xl">
-                <FaCheckCircle className="text-blue-600 dark:text-blue-500 w-6 h-6" />
+              <div className="p-3 bg-blue-50 rounded-2xl">
+                <FaWater className="text-blue-600 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-500 tracking-wide bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md">Critical</span>
+              <span className="text-[9px] font-black text-blue-600 tracking-widest bg-blue-50 px-2 py-1 rounded-md uppercase">Telemetry</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.pendingApprovals}</div>
-              <div className="text-xs font-bold text-gray-500 tracking-wide">Pending Verification</div>
+              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums text-slate-900">{metrics.activeIncidents}</div>
+              <div className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Sector Reports</div>
             </div>
           </div>
 
-          <div className="bento-card p-6 relative group overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+          <div className="tactical-container p-6 relative group overflow-hidden bg-white border-gray-100">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-2xl">
-                <FaHome className="text-green-600 dark:text-green-500 w-6 h-6" />
+              <div className="p-3 bg-orange-50 rounded-2xl">
+                <FaCheckCircle className="text-orange-600 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold text-green-600 dark:text-green-500 tracking-wide bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-md">Capacity</span>
+              <span className="text-[9px] font-black text-orange-600 tracking-widest bg-orange-50 px-2 py-1 rounded-md uppercase">Verification</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{metrics.shelterCapacity}</div>
-              <div className="text-xs font-bold text-gray-500 tracking-wide">Shelter Occupancy</div>
+              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums text-slate-900">{metrics.pendingApprovals}</div>
+              <div className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Pending Triage</div>
             </div>
           </div>
 
-          <div className="bento-card p-6 relative group overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+          <div className="tactical-container p-6 relative group overflow-hidden bg-white border-gray-100">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
             <div className="flex items-center justify-between mb-4 relative z-10">
-              <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-2xl">
-                <FaBullhorn className="text-red-600 dark:text-red-500 w-6 h-6" />
+              <div className="p-3 bg-emerald-50 rounded-2xl">
+                <FaHome className="text-emerald-600 w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold text-red-600 dark:text-red-500 tracking-wide bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-md">Broadcasting</span>
+              <span className="text-[9px] font-black text-emerald-600 tracking-widest bg-emerald-50 px-2 py-1 rounded-md uppercase">Logistics</span>
             </div>
             <div className="relative z-10">
-              <div className="text-4xl font-bold tracking-tight mb-1 tabular-nums">{announcements.length}</div>
-              <div className="text-xs font-bold text-gray-500 tracking-wide">Active Announcements</div>
+              <div className="text-4xl font-black tracking-tighter mb-1 tabular-nums text-slate-900">{metrics.shelterCapacity}</div>
+              <div className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Shelter Loading</div>
+            </div>
+          </div>
+
+          <div className="tactical-container p-6 relative group overflow-hidden bg-slate-900 border-slate-800 shadow-xl shadow-slate-900/20">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div className="p-3 bg-white/10 rounded-2xl">
+                <FaShieldAlt className="text-blue-400 w-6 h-6" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-[9px] font-black text-blue-400 tracking-widest uppercase">MDRRMO_Link</span>
+              </div>
+            </div>
+            <div className="relative z-10">
+              <div className="text-xl font-black tracking-tighter mb-1 text-white uppercase">Sync_Active</div>
+              <div className="text-[10px] font-black text-slate-500 tracking-widest uppercase">Command Liaison Status</div>
             </div>
           </div>
         </div>
@@ -568,7 +572,7 @@ const BrgyHome = () => {
           <div className="w-full lg:w-1/3 tactical-panel order-2 lg:order-2 relative">
             {!selectedIncident ? (
               <>
-                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                <div className="p-[10px] border-b border-gray-100 bg-gray-50/50">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center gap-3">
                       <div className="bg-red-600 text-white rounded-xl p-2.5">
@@ -587,8 +591,8 @@ const BrgyHome = () => {
                       <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Search incident matrix..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+                        placeholder="Search label"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[10px] font-bold tracking-widest uppercase focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -880,6 +884,8 @@ const BrgyHome = () => {
               ref={mapRef}
               {...viewState}
               onMove={(evt: any) => setViewState(evt.viewState)}
+              minZoom={DEFAULT_MAP_STATE.minZoom}
+              maxBounds={DEFAULT_MAP_STATE.maxBounds}
               pitch={0}
               bearing={0}
               mapStyle="mapbox://styles/mapbox/light-v11"

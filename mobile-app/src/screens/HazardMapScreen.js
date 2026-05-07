@@ -14,6 +14,7 @@ import {
   Dimensions,
   useWindowDimensions,
   ActivityIndicator,
+  Image as RNImage,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -34,6 +35,7 @@ import {
   DS_FONT_UI,
   useResponsive,
   ValidationInput,
+  Card,
 } from '../components/DesignSystem';
 import UniversalWebView from '../components/UniversalWebView';
 import { HazardAddControls, HazardModal } from '../components/Map/HazardAddControls';
@@ -68,8 +70,8 @@ const HazardMapScreen = ({ navigation, route }) => {
   const { width: pageWidth } = useWindowDimensions();
   const mapRef = useRef(null);
 
-  // PRECISION RESPONSIVENESS
-  const contentWidth = pageWidth - 32;
+  // PRECISION RESPONSIVENESS (COMPACT MODE)
+  const contentWidth = pageWidth * 0.94;
   const isWide = pageWidth > 600;
 
   const [region, setRegion] = useState(DEFAULT_REGION);
@@ -121,11 +123,7 @@ const HazardMapScreen = ({ navigation, route }) => {
       if (data?.success && Array.isArray(data.hazards)) {
         setHazards(data.hazards);
         if (data.hazards.length > 0) {
-          const first = data.hazards[0];
-          setSelectedHazardId(first.id);
-          if (first.lat && first.lng) {
-            setRegion({ lat: Number(first.lat), lng: Number(first.lng) });
-          }
+          // No auto-selection as requested
         }
       }
     } catch (error) {
@@ -166,10 +164,9 @@ const HazardMapScreen = ({ navigation, route }) => {
   }, [hazards, searchQuery]);
 
   const selectedHazard = useMemo(() => {
-    if (!filteredHazards.length && !hazards.length) return null;
-    const pool = filteredHazards.length ? filteredHazards : hazards;
-    return pool.find((item) => item.id === selectedHazardId) || pool[0] || null;
-  }, [filteredHazards, hazards, selectedHazardId]);
+    if (!hazards.length) return null;
+    return hazards.find((item) => item.id === selectedHazardId) || null;
+  }, [hazards, selectedHazardId]);
 
   const centeredHazards = useMemo(() => {
     return filteredHazards
@@ -321,7 +318,10 @@ const HazardMapScreen = ({ navigation, route }) => {
         <div id="map"></div>
         <script>
           mapboxgl.accessToken = '${MAPBOX_ACCESS_TOKEN}';
-          const hazards = ${JSON.stringify(payload)};
+          const hazards = ${JSON.stringify(payload)}.map(h => ({
+            ...h,
+            area: typeof h.area === 'string' ? JSON.parse(h.area) : h.area
+          }));
           const markers = [];
 
           const map = new mapboxgl.Map({
@@ -399,8 +399,8 @@ const HazardMapScreen = ({ navigation, route }) => {
                   source: sourceId,
                   paint: {
                     'line-color': hazardColor,
-                    'line-width': 2.5,
-                    'line-dasharray': [2, 1.5]
+                    'line-width': 2,
+                    'line-dasharray': [3, 2]
                   }
                 });
 
@@ -492,77 +492,86 @@ const HazardMapScreen = ({ navigation, route }) => {
 
       {/* 2. TACTICAL TOP OVERLAY */}
       <View style={[styles.topOverlay, { paddingTop: insets.top + 8 }]}>
-         <View style={{ width: contentWidth, alignSelf: 'center' }}>
+         <View style={{ width: pageWidth, alignSelf: 'center', paddingHorizontal: 16 }}>
             <Row align="center" justify="space-between" style={styles.headerRow}>
                <Row align="center" gap={12}>
                   <TouchableOpacity 
                     activeOpacity={0.86} 
                     onPress={() => navigation.goBack()} 
-                    style={styles.backBtn}
+                    style={styles.headerBtn}
                   >
-                    <Lucide.ChevronLeft size={18} color="#F4F0E8" strokeWidth={2.4} />
+                    <Lucide.ChevronLeft size={20} color="#F4F0E8" strokeWidth={2.4} />
                   </TouchableOpacity>
-                  <View>
-                     <Text style={styles.radarLabel}>RADAR COMMAND</Text>
-                     <Text style={styles.headerTitle}>Hazard Intelligence Map</Text>
-                  </View>
+                  <Text style={styles.headerTitle}>Live Hazard Map</Text>
                </Row>
-               <TouchableOpacity 
-                 activeOpacity={0.86} 
-                 onPress={() => fetchHazards()} 
-                 style={styles.refreshBtn}
-               >
-                 {loading ? <ActivityIndicator size="small" color="#F5B235" /> : <Lucide.RefreshCw size={18} color="#F4F0E8" strokeWidth={2.2} />}
-               </TouchableOpacity>
+               <Row gap={10}>
+                 <TouchableOpacity 
+                   activeOpacity={0.86} 
+                   onPress={() => fetchHazards()} 
+                   style={styles.headerBtn}
+                 >
+                   {loading ? <ActivityIndicator size="small" color="#F5B235" /> : <Lucide.RefreshCw size={18} color="#F4F0E8" strokeWidth={2.2} />}
+                 </TouchableOpacity>
+                 <TouchableOpacity style={styles.headerBtn}>
+                   <Lucide.Layers size={18} color="#F4F0E8" strokeWidth={2.2} />
+                 </TouchableOpacity>
+               </Row>
             </Row>
 
-            {/* SEARCH CONSOLE */}
-            <View style={styles.searchConsole}>
-               <Lucide.Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} />
-               <TextInput 
-                  placeholder="Scan Sector for Hazards..."
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  value={searchQuery}
-                  onChangeText={handleSearch}
-                  style={styles.searchInput}
-               />
-               <TouchableOpacity onPress={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}>
-                  <Lucide.Layers size={16} color="#F5B235" />
-               </TouchableOpacity>
-            </View>
+            {viewMode === 'list' && (
+              <View style={styles.searchConsole}>
+                 <Lucide.Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.4} />
+                 <TextInput 
+                    placeholder="Search"
+                    placeholderTextColor="rgba(255,255,255,0.25)"
+                    value={searchQuery}
+                    onChangeText={handleSearch}
+                    style={styles.searchInput}
+                 />
+              </View>
+            )}
 
-            {/* SUGGESTIONS OVERLAY */}
-            <AnimatePresence>
-              {suggestions.length > 0 && (
-                <MotiView 
-                  from={{ opacity: 0, translateY: -10 }}
-                  animate={{ opacity: 1, translateY: 0 }}
-                  exit={{ opacity: 0, translateY: -10 }}
-                  style={styles.suggestionsBox}
-                >
-                  {suggestions.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      onPress={() => focusHazard(item, 'map')}
-                      style={styles.suggestionItem}
-                    >
-                      <Lucide.Circle size={8} color={HAZARD_ACCENTS[getHazardKind(item)]} fill={HAZARD_ACCENTS[getHazardKind(item)]} />
-                      <Col style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.suggestionTitle}>{item.type || 'Unknown'}</Text>
-                        <Text style={styles.suggestionSub} numberOfLines={1}>{item.address || 'Locating...'}</Text>
-                      </Col>
-                    </TouchableOpacity>
-                  ))}
-                </MotiView>
-              )}
-            </AnimatePresence>
+            {viewMode === 'list' && (
+              <View style={styles.viewToggleContainer}>
+                 <TouchableOpacity 
+                   onPress={() => setViewMode('map')}
+                   style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+                 >
+                   <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
+                 </TouchableOpacity>
+                 <TouchableOpacity 
+                   onPress={() => setViewMode('list')}
+                   style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+                 >
+                   <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
+                 </TouchableOpacity>
+              </View>
+            )}
          </View>
       </View>
 
       {/* 3. TACTICAL BOTTOM OVERLAY */}
-      <View style={[styles.bottomOverlay, { paddingBottom: Math.max(insets.bottom, 24) }]}>
-         <View style={{ width: contentWidth, alignSelf: 'center' }}>
+      <View style={[styles.bottomOverlay, { paddingBottom: 0 }]}>
+         <View style={{ width: pageWidth - 32, alignSelf: 'center' }}>
             
+            {/* VIEW TOGGLE (FLOATING ON MAP) */}
+            {viewMode === 'map' && (
+               <View style={[styles.viewToggleContainer, { marginBottom: 16, alignSelf: 'center' }]}>
+                  <TouchableOpacity 
+                    onPress={() => setViewMode('map')}
+                    style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+                  >
+                    <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => setViewMode('list')}
+                    style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+                  >
+                    <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
+                  </TouchableOpacity>
+               </View>
+            )}
+
             {/* HAZARD DATA CARD */}
             <AnimatePresence>
                {selectedHazard && viewMode === 'map' && (
@@ -570,96 +579,71 @@ const HazardMapScreen = ({ navigation, route }) => {
                    from={{ opacity: 0, translateY: 40 }}
                    animate={{ opacity: 1, translateY: 0 }}
                    exit={{ opacity: 0, translateY: 40 }}
-                   style={styles.hazardCard}
+                   style={styles.hazardDetailCard}
                  >
-                    <Row align="center" justify="space-between" style={{ marginBottom: 16 }}>
-                       <Row align="center" gap={12}>
+                    <Row justify="space-between" align="flex-start" style={{ marginBottom: 12 }}>
+                       <Row gap={12} align="center">
                           <View style={[styles.cardIconBox, { backgroundColor: selectedAccent + '20', borderColor: selectedAccent + '40' }]}>
-                             <SelectedIcon size={20} color={selectedAccent} strokeWidth={2.5} />
+                             <SelectedIcon size={22} color={selectedAccent} strokeWidth={2.5} />
                           </View>
                           <View>
-                             <Text style={styles.cardTypeLabel}>{selectedHazard.type?.toUpperCase() || 'HAZARD'}</Text>
-                             <Text style={styles.cardTitle} numberOfLines={1}>{selectedHazard.address || 'Sector Alert'}</Text>
+                             <Text style={styles.cardTitle}>{selectedHazard.type || 'Earthquake'}</Text>
+                             <Row align="center" gap={4}>
+                                <Lucide.MapPin size={10} color="rgba(255,255,255,0.4)" />
+                                <Text style={styles.cardLoc}>{selectedHazard.address || 'Cebu City'}</Text>
+                             </Row>
                           </View>
                        </Row>
-                       <View style={styles.liveTag}>
-                          <View style={styles.livePulse} />
-                          <Text style={styles.liveText}>LIVE</Text>
-                       </View>
+                       <Col align="flex-end">
+                          <View style={[styles.ongoingBadge, { backgroundColor: (selectedHazard.severity === 'High' ? '#EF4444' : selectedHazard.severity === 'Medium' || selectedHazard.severity === 'Moderate' ? '#F59E0B' : '#10B981') + '20' }]}>
+                             <View style={[styles.pulseDot, { backgroundColor: selectedHazard.severity === 'High' ? '#EF4444' : selectedHazard.severity === 'Medium' || selectedHazard.severity === 'Moderate' ? '#F59E0B' : '#10B981' }]} />
+                             <Text style={[styles.ongoingText, { color: selectedHazard.severity === 'High' ? '#EF4444' : selectedHazard.severity === 'Medium' || selectedHazard.severity === 'Moderate' ? '#F59E0B' : '#10B981' }]}>
+                                {selectedHazard.severity || 'Moderate'}
+                             </Text>
+                          </View>
+                          <Text style={styles.cardDate}>Reported: {selectedHazard.created_at || 'Just Now'}</Text>
+                       </Col>
                     </Row>
 
-                    <Text style={styles.cardDesc} numberOfLines={2}>
-                       {selectedHazard.description || 'Sector teams are monitoring this hazard for public safety.'}
-                    </Text>
-
-                    <View style={styles.telemetryGrid}>
-                       <View style={styles.telItem}>
-                          <Text style={styles.telLabel}>SEVERITY</Text>
-                          <Text style={[styles.telValue, { color: selectedAccent }]}>{selectedHazard.severity?.toUpperCase() || 'MEDIUM'}</Text>
-                       </View>
-                       <View style={styles.telItem}>
-                          <Text style={styles.telLabel}>STATUS</Text>
-                          <Text style={styles.telValue}>{selectedHazard.status?.toUpperCase() || 'ACTIVE'}</Text>
-                       </View>
-                       <View style={styles.telItem}>
-                          <Text style={styles.telLabel}>REPORTED</Text>
-                          <Text style={styles.telValue}>
-                             {selectedHazard.datetime ? new Date(selectedHazard.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                          </Text>
+                    <View style={[styles.miniMapBox, { height: 120, marginBottom: 16 }]}>
+                       <RNImage source={{ uri: buildStaticPreview(selectedHazard) }} style={{ width: '100%', height: '100%' }} />
+                       <View style={styles.evacBanner}>
+                          <Text style={styles.evacText}>Pinned Location Intelligence</Text>
                        </View>
                     </View>
 
-                    <Row gap={12} style={{ marginTop: 20 }}>
-                       <TouchableOpacity 
-                         onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${selectedHazard.lat},${selectedHazard.lng}`)}
-                         style={styles.primaryBtn}
-                       >
-                          <Text style={styles.primaryBtnText}>NAVIGATE TO SECTOR</Text>
-                       </TouchableOpacity>
-                       <TouchableOpacity 
-                         onPress={() => handleMarkSafe(selectedHazard)}
-                         style={styles.secondaryBtn}
-                       >
-                          <Lucide.CheckCircle size={14} color="#FFF" />
-                          <Text style={styles.secondaryBtnText}>MARK SAFE</Text>
-                       </TouchableOpacity>
-                    </Row>
+                     <Row style={{ marginTop: 8 }}>
+                        <TouchableOpacity 
+                          onPress={() => handleMarkSafe(selectedHazard)}
+                          style={styles.safeBtn}
+                        >
+                           <Lucide.CheckCircle size={18} color="#FFF" />
+                           <Text style={styles.safeBtnText}>Mark Safe</Text>
+                        </TouchableOpacity>
+                     </Row>
                  </MotiView>
                )}
             </AnimatePresence>
 
             {/* FLOATING ACTION BUTTONS */}
-            <Row justify="space-between" align="center" style={{ marginTop: 16 }}>
-               <TouchableOpacity 
-                  onPress={() => setViewMode(prev => prev === 'list' ? 'map' : 'list')}
-                  style={styles.modeToggle}
-               >
-                  <Lucide.LayoutList size={18} color="#FFF" />
-                  <Text style={styles.modeToggleText}>{viewMode === 'map' ? 'LIST VIEW' : 'MAP VIEW'}</Text>
-               </TouchableOpacity>
-               
-               <Row gap={12}>
-                  <TouchableOpacity 
-                    onPress={() => {
-                       if (mapRef.current) {
-                          mapRef.current.postMessage(JSON.stringify({ type: 'FOCUS_HAZARD', lat: DEFAULT_REGION.lat, lng: DEFAULT_REGION.lng, zoom: 11 }));
-                       }
-                    }}
-                    style={styles.roundBtn}
-                  >
-                     <Lucide.Crosshair size={20} color="#FFF" />
-                  </TouchableOpacity>
-                  {userRole !== 'resident' && (
-                    <TouchableOpacity 
-                      onPress={() => navigation.navigate('AddHazard')}
-                      style={[styles.roundBtn, { backgroundColor: '#F5B235' }]}
-                    >
-                       <Lucide.Plus size={24} color="#000" strokeWidth={3} />
-                    </TouchableOpacity>
-                  )}
-               </Row>
-            </Row>
+            {viewMode === 'map' && (
+              <Col align="flex-end" style={{ position: 'absolute', top: -180, right: 0, gap: 12 }}>
+                 <TouchableOpacity style={styles.fabBtn}><Lucide.Layers size={20} color="#FFF" /></TouchableOpacity>
+                 <TouchableOpacity style={styles.fabBtn}><Lucide.Search size={20} color="#FFF" /></TouchableOpacity>
+                 <TouchableOpacity 
+                   onPress={() => {
+                      if (mapRef.current) {
+                         mapRef.current.postMessage(JSON.stringify({ type: 'FOCUS_HAZARD', lat: DEFAULT_REGION.lat, lng: DEFAULT_REGION.lng, zoom: 11 }));
+                      }
+                   }}
+                   style={styles.fabBtn}
+                 >
+                    <Lucide.Crosshair size={20} color="#FFF" />
+                 </TouchableOpacity>
+              </Col>
+            )}
          </View>
+         <View style={{ height: insets.bottom, backgroundColor: selectedHazard && viewMode === 'map' ? '#161616' : 'transparent' }} />
       </View>
 
       {/* 4. LIST VIEW OVERLAY */}
@@ -669,31 +653,56 @@ const HazardMapScreen = ({ navigation, route }) => {
             from={{ opacity: 0, translateY: 100 }}
             animate={{ opacity: 1, translateY: 0 }}
             exit={{ opacity: 0, translateY: 100 }}
-            style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, { backgroundColor: '#080808', paddingTop: insets.top + 80 }]}
+            style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, { backgroundColor: 'transparent', paddingTop: insets.top + 180 }]}
           >
             <ScrollView 
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ width: contentWidth, alignSelf: 'center', paddingBottom: 100 }}
+              contentContainerStyle={{ width: pageWidth, alignSelf: 'center', paddingBottom: 150 }}
             >
+              <View style={{ height: 24 }} />
               {filteredHazards.map((hazard) => {
                 const kind = getHazardKind(hazard);
                 const accent = HAZARD_ACCENTS[kind];
                 const Icon = Lucide[HAZARD_ICONS[kind]];
                 return (
-                  <TouchableOpacity 
-                    key={hazard.id}
-                    onPress={() => focusHazard(hazard, 'map')}
-                    style={styles.listItem}
-                  >
-                    <View style={[styles.listItemIcon, { backgroundColor: accent + '20', borderColor: accent + '40' }]}>
-                       <Icon size={20} color={accent} strokeWidth={2.5} />
+                  <Card key={hazard.id} variant="none" noPadding style={[styles.listCard, { width: pageWidth - 32 }]}>
+                    <View style={{ padding: 16 }}>
+                      <Row justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                        <Row gap={12} align="center">
+                          <View style={[styles.cardIconBoxSmall, { backgroundColor: accent + '20', borderColor: accent + '40' }]}>
+                             <Icon size={18} color={accent} strokeWidth={2.5} />
+                          </View>
+                          <View>
+                             <Text style={styles.listCardTitle}>{hazard.type || kind}</Text>
+                             <Text style={styles.listCardSub} numberOfLines={1}>{hazard.description || 'detected near Sector - Stay Alert!'}</Text>
+                          </View>
+                        </Row>
+                      </Row>
+
+                      <View style={styles.listMiniMap}>
+                         <RNImage source={{ uri: buildStaticPreview(hazard) }} style={{ width: '100%', height: '100%' }} />
+                         <View style={[styles.listPulseCircle, { borderColor: accent + '50', backgroundColor: accent + '20' }]}>
+                            <View style={[styles.listPulseDot, { backgroundColor: accent }]} />
+                         </View>
+                      </View>
+
+                      <Row gap={12} style={{ marginTop: 16 }}>
+                         <TouchableOpacity 
+                           onPress={() => focusHazard(hazard, 'map')}
+                           style={styles.listPrimaryBtn}
+                         >
+                            <Text style={styles.listPrimaryBtnText}>View Map</Text>
+                         </TouchableOpacity>
+                         <TouchableOpacity 
+                           onPress={() => handleMarkSafe(hazard)}
+                           style={styles.listSafeBtn}
+                         >
+                            <Lucide.Activity size={16} color="#10B981" />
+                            <Text style={styles.listSafeBtnText}>Mark Safe</Text>
+                         </TouchableOpacity>
+                      </Row>
                     </View>
-                    <Col style={{ flex: 1, marginLeft: 16 }}>
-                       <Text style={styles.listItemTitle}>{hazard.type || kind}</Text>
-                       <Text style={styles.listItemSub} numberOfLines={1}>{hazard.address || 'Locating...'}</Text>
-                    </Col>
-                    <Lucide.ChevronRight size={18} color="rgba(255,255,255,0.2)" />
-                  </TouchableOpacity>
+                  </Card>
                 );
               })}
             </ScrollView>
@@ -708,52 +717,68 @@ const HazardMapScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   mapVignette: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
   topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100 },
-  headerRow: { height: 56 },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  refreshBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  radarLabel: { fontSize: 8, fontWeight: '800', color: '#F5B235', letterSpacing: 2.5, fontFamily: DS_FONT_UI },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#F4F0E8', fontFamily: DS_FONT_UI },
-  searchConsole: { height: 52, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 26, marginTop: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  searchInput: { flex: 1, marginLeft: 12, fontSize: 14, color: '#FFF', fontFamily: DS_FONT_INPUT },
-  suggestionsBox: { backgroundColor: 'rgba(20,20,20,0.98)', marginTop: 8, borderRadius: 24, padding: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  suggestionItem: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
-  suggestionTitle: { fontSize: 14, fontWeight: '600', color: '#FFF', fontFamily: DS_FONT_UI },
-  suggestionSub: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2, fontFamily: DS_FONT_INPUT },
+  headerRow: { height: 56, marginBottom: 16 },
+  headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#F4F0E8', fontFamily: DS_FONT_UI },
+  searchConsole: { height: 54, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 27, marginBottom: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, color: '#FFF', fontWeight: '500' },
+  viewToggleContainer: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 25, padding: 4, alignSelf: 'center', width: '100%', marginBottom: 16 },
+  toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  toggleBtnActive: { backgroundColor: '#FFF' },
+  toggleText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.4)' },
+  toggleTextActive: { color: '#000' },
   bottomOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 },
-  hazardCard: { 
-    backgroundColor: 'rgba(20,20,20,0.96)', 
-    borderRadius: 32, 
-    padding: 24, 
+  hazardDetailCard: { 
+    backgroundColor: '#161616', 
+    borderRadius: 24, 
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    padding: 16, 
     borderWidth: 1, 
     borderColor: 'rgba(255,255,255,0.08)', 
     shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 20 }, 
-    shadowOpacity: 0.5, 
-    shadowRadius: 30,
-    boxShadow: '0 20px 30px rgba(0,0,0,0.5)'
+    shadowOffset: { width: 0, height: -16 }, 
+    shadowOpacity: 0.4, 
+    shadowRadius: 24,
+    elevation: 8,
+    width: '100%',
+    alignSelf: 'center',
   },
-  cardIconBox: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
-  cardTypeLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: 1.5, fontFamily: DS_FONT_UI },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#FFF', fontFamily: DS_FONT_UI },
-  liveTag: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.1)', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12 },
-  livePulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#EF4444', marginRight: 6 },
-  liveText: { fontSize: 9, fontWeight: '800', color: '#EF4444', letterSpacing: 1 },
-  cardDesc: { fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 20, fontFamily: DS_FONT_INPUT },
-  telemetryGrid: { flexDirection: 'row', marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
-  telItem: { flex: 1 },
-  telLabel: { fontSize: 8, fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: 1, marginBottom: 4 },
-  telValue: { fontSize: 13, fontWeight: '700', color: '#FFF', fontFamily: DS_FONT_UI },
-  primaryBtn: { flex: 2, height: 50, backgroundColor: '#FFF', borderRadius: 25, alignItems: 'center', justifyContent: 'center' },
-  primaryBtnText: { fontSize: 12, fontWeight: '800', color: '#000', letterSpacing: 1, fontFamily: DS_FONT_UI },
-  secondaryBtn: { flex: 1, height: 50, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  secondaryBtnText: { fontSize: 11, fontWeight: '700', color: '#FFF', fontFamily: DS_FONT_UI },
-  modeToggle: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 24, gap: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  modeToggleText: { fontSize: 10, fontWeight: '800', color: '#FFF', letterSpacing: 1 },
-  roundBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  listItem: { flexDirection: 'row', alignItems: 'center', padding: 18, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  listItemIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
-  listItemTitle: { fontSize: 16, fontWeight: '600', color: '#FFF', fontFamily: DS_FONT_UI },
-  listItemSub: { fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2, fontFamily: DS_FONT_INPUT },
+  cardIconBox: { width: 50, height: 50, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#FFF', fontFamily: DS_FONT_UI },
+  cardLoc: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.4)' },
+  ongoingBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.1)', paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, marginBottom: 4 },
+  pulseDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#EF4444', marginRight: 5 },
+  ongoingText: { fontSize: 8, fontWeight: '800', color: '#EF4444', letterSpacing: 0.8 },
+  cardDate: { fontSize: 8, color: 'rgba(255,255,255,0.3)', fontWeight: '600' },
+  miniMapBox: { flex: 1.5, borderRadius: 16, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  evacBanner: { position: 'absolute', top: 12, left: 12, backgroundColor: '#EF4444', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  evacText: { fontSize: 8, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
+  graphBox: { flex: 1, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  primaryBtn: { flex: 1, height: 46, backgroundColor: '#FFF', borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#2F80ED' },
+  primaryBtnText: { fontSize: 13, fontWeight: '900', color: '#000', fontFamily: DS_FONT_UI },
+  safeBtn: { flex: 1, height: 46, backgroundColor: 'rgba(20,20,20,0.9)', borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)' },
+  safeBtnText: { fontSize: 13, fontWeight: '800', color: '#FFF', fontFamily: DS_FONT_UI },
+  fabBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(20,20,20,0.8)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  listCard: { 
+    backgroundColor: 'rgba(20, 20, 20, 0.92)', 
+    borderRadius: 16, 
+    marginBottom: 16, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.06)', 
+    overflow: 'hidden',
+    alignSelf: 'center'
+  },
+  cardIconBoxSmall: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5 },
+  listCardTitle: { fontSize: 15, fontWeight: '800', color: '#FFF', fontFamily: DS_FONT_UI, letterSpacing: -0.2 },
+  listCardSub: { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2, fontWeight: '600' },
+  listMiniMap: { height: 160, borderRadius: 12, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  listPulseCircle: { position: 'absolute', top: '50%', left: '50%', marginLeft: -25, marginTop: -25, width: 50, height: 50, borderRadius: 25, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  listPulseDot: { width: 10, height: 10, borderRadius: 5 },
+  listPrimaryBtn: { flex: 1, height: 44, backgroundColor: '#FFF', borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#2F80ED' },
+  listPrimaryBtnText: { fontSize: 12, fontWeight: '900', color: '#000' },
+  listSafeBtn: { flex: 1, height: 44, backgroundColor: 'rgba(20,20,20,0.9)', borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)' },
+  listSafeBtnText: { fontSize: 12, fontWeight: '800', color: '#FFF' },
 });
 
 export default HazardMapScreen;

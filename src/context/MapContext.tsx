@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { DEFAULT_MAP_STATE } from '../constants/geo';
 
 interface ViewportState {
   longitude: number;
@@ -15,9 +16,9 @@ interface MapContextType {
 }
 
 const defaultViewport: ViewportState = {
-  longitude: 121.410,
-  latitude: 14.275,
-  zoom: 12,
+  longitude: DEFAULT_MAP_STATE.longitude,
+  latitude: DEFAULT_MAP_STATE.latitude,
+  zoom: DEFAULT_MAP_STATE.zoom,
   pitch: 0,
   bearing: 0
 };

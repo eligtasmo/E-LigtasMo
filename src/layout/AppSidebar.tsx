@@ -33,30 +33,30 @@ type NavItem = {
 
   const operationsItems: NavItem[] = [
   {
-    icon: (active) => <DashboardIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <DashboardIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Dashboard",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin", brgy: "/brgy", resident: "/resident/home" },
   },
   {
-    icon: (active) => <ManagementIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-500'}`} />,
+    icon: (active) => <ManagementIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />,
     name: "Barangay Management",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/brgy-map", brgy: "/brgy/brgy-map" },
     badge: "LIVE"
   },
   {
-    icon: (active) => <RouteIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-500'}`} />,
+    icon: (active) => <RouteIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />,
     name: "Route Planner",
-    roles: ["admin", "brgy", "resident"],
-    pathByRole: { admin: "/admin/admin-routes", brgy: "/brgy/safe-routes", resident: "/route-planner" },
+    roles: ["resident"],
+    pathByRole: { resident: "/route-planner" },
   },
 ];
 
 const intelItems: NavItem[] = [
   {
-    icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
-    name: "Environmental Intel",
+    icon: (active) => <IntelIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
+    name: "Reports",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/flood-reports", brgy: "/brgy/flood-reports" },
   },
@@ -71,7 +71,7 @@ const intelItems: NavItem[] = [
     },
   },
   {
-    icon: (active) => <ShelterIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-500'}`} />,
+    icon: (active) => <ShelterIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-500'}`} />,
     name: "Shelter Management",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/shelters", brgy: "/brgy/shelters", resident: "/shelters" },
@@ -80,7 +80,7 @@ const intelItems: NavItem[] = [
 
 const communityItems: NavItem[] = [
   {
-    icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Resident Directory",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/user-management", brgy: "/brgy/residents" },
@@ -92,13 +92,13 @@ const communityItems: NavItem[] = [
     pathByRole: { admin: "/admin/announcements", brgy: "/brgy/announcements", resident: "/announcements" },
   },
   {
-    icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Manage Contacts",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/contacts", brgy: "/brgy/contacts" },
   },
   {
-    icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Emergency Hotlines",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/hotlines", brgy: "/brgy/hotlines" },
@@ -107,19 +107,19 @@ const communityItems: NavItem[] = [
 
 const systemItems: NavItem[] = [
   {
-    icon: (active) => <ProfileIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <ProfileIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Profile & Settings",
     roles: ["admin", "brgy"],
     pathByRole: { admin: "/admin/settings", brgy: "/brgy/profile" },
   },
   {
-    icon: (active) => <BookIcon active={active} className={`w-5 h-5 ${active ? 'text-blue-900' : 'text-blue-400'}`} />,
+    icon: (active) => <BookIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Emergency Guides",
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/resources", brgy: "/brgy/resources", resident: "/resources" },
   },
   {
-    icon: (active) => <LogsIcon size={20} className={active ? 'text-blue-900' : 'text-blue-400'} />,
+    icon: (active) => <LogsIcon size={20} className={active ? 'text-[#1e1b4b]' : 'text-blue-400'} />,
     name: "Audit Logs",
     roles: ["admin"],
     path: "/admin/system-logs",
@@ -166,7 +166,7 @@ const AppSidebar: React.FC = () => {
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${
                     active 
                       ? "bg-white text-[#1e1b4b] shadow-xl shadow-black/20 scale-[1.02]" 
-                      : "text-white/90 hover:bg-white/5 hover:text-white"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
                   } ${!isExpanded && !isHovered && !isMobileOpen ? "justify-center" : ""}`}
                 >
                   <span className={`flex-shrink-0 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>
@@ -178,7 +178,7 @@ const AppSidebar: React.FC = () => {
                     </span>
                   )}
                   {(isExpanded || isHovered || isMobileOpen) && nav.badge && (
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest ${active ? "bg-red-500 text-white" : "bg-red-500 text-white animate-pulse"}`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-tight ${active ? "bg-[#1e1b4b] text-white" : "bg-white/10 text-white"}`}>
                       {nav.badge}
                     </span>
                   )}
@@ -194,7 +194,7 @@ const AppSidebar: React.FC = () => {
   return (
     <>
       <aside
-        className={`h-screen bg-blue-900 transition-all duration-300 z-[1200] flex flex-col font-jetbrains shadow-2xl relative border-r border-blue-800/30 ${
+        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-jetbrains shadow-2xl relative ${
           isExpanded || isHovered || isMobileOpen ? "w-[260px]" : "w-[80px]"
         } ${isMobileOpen ? "fixed inset-y-0 left-0 translate-x-0" : "hidden lg:flex"}`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
@@ -202,13 +202,13 @@ const AppSidebar: React.FC = () => {
       >
         <div className="h-[70px] flex items-center px-6 mb-4">
           <Link to={role === 'admin' ? '/admin' : '/brgy'} className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 active:scale-95 shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center transition-transform group-hover:scale-105 active:scale-95">
                <img src="/images/logo/logo-icon.png" alt="Logo" className="w-7 h-7" />
             </div>
             {(isExpanded || isHovered || isMobileOpen) && (
               <div className="flex flex-col leading-none">
-                <span className="text-lg font-bold tracking-tight text-white">E-LigtasMo</span>
-                <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">{role === 'admin' ? 'HQ Command' : 'Brgy Node'}</span>
+                <span className="text-lg font-bold tracking-tight text-white italic">E-LigtasMo</span>
+                <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">{role === 'admin' ? 'HQ Command' : 'Barangay Node'}</span>
               </div>
             )}
           </Link>
@@ -223,12 +223,12 @@ const AppSidebar: React.FC = () => {
 
         {(isExpanded || isHovered || isMobileOpen) && (
           <div className="p-4 border-t border-white/5">
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5 backdrop-blur-sm">
+            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-                <span className="text-[10px] font-black text-white/60 tracking-widest uppercase">SECURE_LINK_LIVE</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">System Live</span>
               </div>
-              <div className="text-[9px] text-white/30 font-black uppercase tracking-widest">v.1.0.0 Tactical</div>
+              <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">v.4.2.0 Standard</div>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Polygon, useMapEvents, useMap } from 'react-leaflet';
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
 import { SantaCruzLeafletOutline } from '../maps/SantaCruzOutline';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -798,6 +799,8 @@ export default function ResidentView() {
                             <MapContainer
                               center={zone.path && zone.path[0]}
                               zoom={16}
+                              minZoom={DEFAULT_MAP_STATE.minZoom}
+                              maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
                               style={{ height: '100%', width: '100%' }}
                               scrollWheelZoom={false}
                               dragging={false}
@@ -880,14 +883,15 @@ export default function ResidentView() {
       )}
       <div className="flex-1 h-full rounded-lg shadow-md overflow-hidden relative">
         <MapContainer
-          center={[14.5995, 120.9842]}
-          zoom={13}
+          center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]}
+          zoom={DEFAULT_MAP_STATE.zoom}
+          minZoom={DEFAULT_MAP_STATE.minZoom}
+          maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
           style={{ height: "100%", width: "100%" }}
           attributionControl={false}
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution="&copy; OpenStreetMap &copy; CARTO"
           />
           <SantaCruzLeafletOutline />
           <StartEndHandler setStart={setStart} setEnd={setEnd} start={start} end={end} />

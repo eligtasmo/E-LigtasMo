@@ -181,7 +181,7 @@ header [class*="CustomDropdown"] * {
   --font-roboto: Roboto, sans-serif;
   --font-jetbrains: 'JetBrains Mono', monospace;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-sans: 'JetBrains Mono', monospace;
+  --font-sans: Outfit, sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -323,10 +323,27 @@ header [class*="CustomDropdown"] * {
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-jetbrains z-1 bg-white text-gray-900;
+    @apply relative font-normal font-jetbrains z-1 bg-slate-50 text-gray-900;
   }
   input, textarea, select {
     @apply font-roboto;
+  }
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-gray-200);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gray-300);
   }
 }
 
@@ -342,7 +359,8 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-panel {
-  @apply bg-gray-50 border-l border-gray-100 shadow-premium-lg flex flex-col h-full shrink-0 z-20;
+  @apply bg-white border-l border-gray-100 shadow-premium-lg flex flex-col h-full shrink-0 z-20 overflow-y-auto custom-scrollbar font-jetbrains;
+  width: 340px;
 }
 
 @utility premium-input {
@@ -449,87 +467,8 @@ header [class*="CustomDropdown"] * {
   @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
 }
 
-/* ── Tactical Design System (Shared Hybrid Utilities) ─────────────────── */
 
-@utility tactical-container {
-  @apply bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300;
-}
-
-@utility tactical-section-header {
-  @apply p-2 bg-gray-50/50 border-b border-gray-50 text-slate-800 text-[9px] font-black tracking-widest uppercase ml-1;
-}
-
-@utility tactical-label {
-  @apply text-slate-800 text-[10px] font-black tracking-tight;
-}
-
-@utility tactical-label-sm {
-  @apply text-slate-700 text-[9px] font-black tracking-widest uppercase ml-1;
-}
-
-@utility tactical-btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-blue-600/20 active:scale-[0.97] flex items-center justify-center gap-3 disabled:opacity-50 text-[12px] tracking-widest uppercase py-3.5;
-}
-
-@utility tactical-btn-secondary {
-  @apply bg-white hover:bg-gray-50 text-slate-800 font-black rounded-xl border border-gray-100 transition-all active:scale-[0.98] text-[11px] tracking-tight py-2 px-4 flex items-center justify-center gap-2;
-}
-
-@utility tactical-grid-btn-active {
-  @apply bg-emerald-50 text-emerald-600 transition-all duration-300 py-3 flex flex-col items-center justify-center gap-1.5;
-}
-
-@utility tactical-grid-btn-inactive {
-  @apply bg-red-50 text-red-500 opacity-60 grayscale-[0.3] transition-all duration-300 hover:opacity-100 hover:grayscale-0 py-3 flex flex-col items-center justify-center gap-1.5;
-}
-
-@utility tactical-card-header {
-  @apply flex items-center justify-between p-3 border-b border-gray-50 bg-white;
-}
-
-@utility tactical-stat-value {
-  @apply text-gray-900 text-[13px] font-black tracking-tight;
-}
-
-@utility tactical-stat-label {
-  @apply text-gray-500 text-[9px] font-bold;
-}
-
-@utility no-scrollbar {
-  /* Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-@utility custom-scrollbar {
-  &::-webkit-scrollbar {
-    @apply size-1.5;
-  }
-
-  &::-webkit-scrollbar-track {
-    @apply rounded-full;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
-  }
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #344054;
-}
-
-@layer utilities {
-  /* For Remove Date Icon */
-  input[type="date"]::-webkit-inner-spin-button,
-  input[type="time"]::-webkit-inner-spin-button,
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator {
-    display: none;
-    -webkit-appearance: none;
-  }
-}
+/* ── Modern Scrollbar System ─────────────────── */
 
 .tableCheckbox:checked ~ span span {
   @apply opacity-100;
@@ -1311,3 +1250,120 @@ span.flatpickr-weekday,
   background-color: rgba(0,0,0,0.08) !important;
   color: #000 !important;
 }
+
+
+/* ── Tactical Command Design System v2.0 ────────────────────────────────── */
+
+@utility tactical-page {
+  @apply min-h-screen bg-slate-50 font-jetbrains text-slate-900;
+}
+
+@utility tactical-container {
+  @apply max-w-7xl mx-auto px-6 py-10 lg:px-8 lg:py-12 space-y-10;
+}
+
+@utility tactical-header {
+  @apply relative mb-12;
+}
+
+@utility tactical-title {
+  @apply text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-4;
+}
+
+@utility tactical-subtitle {
+  @apply text-slate-500 mt-3 text-sm font-medium max-w-2xl leading-relaxed;
+}
+
+@utility tactical-status-pill {
+  @apply inline-flex items-center gap-2.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-600 shadow-sm transition-all;
+}
+
+@utility tactical-status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+@utility tactical-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+@utility tactical-card {
+  @apply bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
+}
+
+@utility tactical-card-header {
+  @apply px-6 py-4 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between;
+}
+
+@utility tactical-card-body {
+  @apply p-6;
+}
+
+@utility tactical-table-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04);
+}
+
+@utility tactical-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Inter, Outfit, system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+@utility tactical-th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  user-select: none;
+}
+
+@utility tactical-td {
+  padding: 0 16px;
+  height: 56px;
+  color: #111827;
+  vertical-align: middle;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+@utility tactical-input {
+  @apply h-12 px-5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400;
+}
+
+@utility tactical-button {
+  @apply h-12 px-6 rounded-xl text-sm font-bold uppercase tracking-widest transition-all active:scale-[0.97] flex items-center justify-center gap-3 disabled:opacity-50;
+}
+
+@utility tactical-button-primary {
+  @apply tactical-button bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10;
+}
+
+@utility tactical-button-accent {
+  @apply tactical-button bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20;
+}
+
+@utility tactical-button-ghost {
+  @apply tactical-button bg-white border border-slate-200 text-slate-600 hover:bg-slate-50;
+}
+
+@utility tactical-label {
+  @apply text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 mb-2 block;
+}
+
+@utility tactical-icon-container {
+  @apply w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-400 transition-colors;
+}
+
+@utility tactical-search-group {
+  @apply flex flex-col md:flex-row items-stretch md:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8;
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */

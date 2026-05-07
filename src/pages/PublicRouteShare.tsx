@@ -4,6 +4,7 @@ import { apiFetch } from '../utils/api';
 import { MapContainer, TileLayer, Polyline, Polygon, Marker, Popup, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../constants/geo';
 
 type Mode = 'driving-car' | 'driving-hgv' | 'foot-walking' | 'cycling-regular';
 
@@ -232,14 +233,16 @@ const PublicRouteShare: React.FC = () => {
               <MapContainer
                 center={center}
                 zoom={13}
+                minZoom={DEFAULT_MAP_STATE.minZoom}
+                maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
+                attributionControl={false}
                 ref={mapRef as any}
               >
                 <ZoomControl position="bottomright" />
                 <TileLayer
                   url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                  attribution="&copy; OpenStreetMap contributors &copy; CARTO"
                 />
                 {blockedPolygonsLatLng.map((ring, idx) => (
                   <Polygon

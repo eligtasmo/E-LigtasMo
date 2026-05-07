@@ -1,541 +1,189 @@
 import React, { useState, useEffect } from 'react';
+import { FiCloud, FiDroplet, FiWind, FiSun, FiMap, FiActivity, FiSearch, FiRefreshCw, FiAlertTriangle, FiNavigation, FiZap } from 'react-icons/fi';
 import PageMeta from "../components/common/PageMeta";
-import { 
-  FaCloudSun, 
-  FaCloud, 
-  FaSun, 
-  FaCloudRain, 
-  FaSnowflake, 
-  FaBolt, 
-  FaEye, 
-  FaTint, 
-  FaWind, 
-  FaThermometerHalf, 
-  FaLocationArrow, 
-  FaExclamationTriangle,
-  FaSyncAlt,
-  FaMapMarkerAlt
-} from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
-import { FaWind as FiWindIcon, FaTimes as FiTimesIcon } from 'react-icons/fa';
-
-interface WeatherData {
-  current: {
-    temp: number;
-    feels_like: number;
-    humidity: number;
-    pressure: number;
-    visibility: number;
-    wind_speed: number;
-    wind_deg: number;
-    weather: Array<{
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }>;
-  };
-  daily: Array<{
-    dt: number;
-    temp: {
-      min: number;
-      max: number;
-    };
-    weather: Array<{
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }>;
-    pop: number; // Probability of precipitation
-  }>;
-  alerts?: Array<{
-    sender_name: string;
-    event: string;
-    start: number;
-    end: number;
-    description: string;
-  }>;
-}
-
-interface LocationData {
-  lat: number;
-  lon: number;
-  city: string;
-  country: string;
-}
+import MapboxMap, { NavigationControl } from "../components/maps/MapboxMap";
+import { toast } from 'react-hot-toast';
+import { DEFAULT_MAP_STATE } from '../constants/geo';
 
 const Weather: React.FC = () => {
-  const { user } = useAuth();
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [location, setLocation] = useState<LocationData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [showRadar, setShowRadar] = useState(false);
+    const [weatherData, setWeatherData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [location, setLocation] = useState('Santa Cruz, Laguna');
 
-  // OpenWeatherMap API key from environment variables
-  const API_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY;
-
-  // Fixed location for Santa Cruz, Laguna (Philippines)
-  const DEFAULT_LOCATION: LocationData = {
-    lat: 14.281,
-    lon: 121.416,
-    city: 'Santa Cruz',
-    country: 'Laguna, PH',
-  };
-
-  // Weather icon mapping
-  const getWeatherIcon = (iconCode: string, size: string = "text-4xl") => {
-    const iconMap: { [key: string]: React.ReactElement } = {
-      '01d': <FaSun className={`${size} text-yellow-500`} />,
-      '01n': <FaSun className={`${size} text-yellow-400`} />,
-      '02d': <FaCloudSun className={`${size} text-yellow-500`} />,
-      '02n': <FaCloudSun className={`${size} text-yellow-400`} />,
-      '03d': <FaCloud className={`${size} text-gray-500`} />,
-      '03n': <FaCloud className={`${size} text-gray-400`} />,
-      '04d': <FaCloud className={`${size} text-gray-600`} />,
-      '04n': <FaCloud className={`${size} text-gray-500`} />,
-      '09d': <FaCloudRain className={`${size} text-blue-500`} />,
-      '09n': <FaCloudRain className={`${size} text-blue-400`} />,
-      '10d': <FaCloudRain className={`${size} text-blue-600`} />,
-      '10n': <FaCloudRain className={`${size} text-blue-500`} />,
-      '11d': <FaBolt className={`${size} text-purple-600`} />,
-      '11n': <FaBolt className={`${size} text-purple-500`} />,
-      '13d': <FaSnowflake className={`${size} text-blue-200`} />,
-      '13n': <FaSnowflake className={`${size} text-blue-100`} />,
-      '50d': <FaCloud className={`${size} text-gray-400`} />,
-      '50n': <FaCloud className={`${size} text-gray-300`} />,
+    const fetchWeather = async () => {
+        setLoading(true);
+        try {
+            const API_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY;
+            const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=${API_KEY}`);
+            const data = await res.json();
+            if (data.cod === 200) {
+                setWeatherData(data);
+            } else {
+                toast.error("Location not found");
+            }
+        } catch (e) {
+            toast.error("Weather service unavailable");
+        } finally {
+            setLoading(false);
+        }
     };
-    return iconMap[iconCode] || <FaCloudSun className={`${size} text-gray-500`} />;
-  };
 
-  // Use fixed Santa Cruz location (no geolocation prompt)
-  const getDefaultLocation = async (): Promise<LocationData> => {
-    return DEFAULT_LOCATION;
-  };
+    useEffect(() => {
+        fetchWeather();
+    }, []);
 
-  // Fetch weather data from OpenWeatherMap API with Open‑Meteo fallback
-  const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherData> => {
-    // Try OpenWeather (One Call 2.5 - free-compatible)
-    if (API_KEY && API_KEY !== 'your_openweathermap_api_key') {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&units=metric&appid=${API_KEY}`
-      );
-      if (response.ok) {
-        return await response.json();
-      }
-      // If unauthorized or subscription error, fall through to Open‑Meteo
-    }
-
-    // Fallback: Open‑Meteo (no API key required)
-    const meteo = await fetchOpenMeteoWeatherData(lat, lon);
-    if (meteo) return meteo;
-    throw new Error('Failed to fetch weather data (both OpenWeather and Open‑Meteo).');
-  };
-
-  // Open‑Meteo → WeatherData mapper
-  const fetchOpenMeteoWeatherData = async (lat: number, lon: number): Promise<WeatherData | null> => {
-    try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&daily=weathercode,temperature_2m_max,temperature_2_m_min,precipitation_probability_mean&timezone=auto`;
-      const res = await fetch(url);
-      if (!res.ok) return null;
-      const m = await res.json();
-      const current = m.current || {};
-      const daily = m.daily || {};
-      const times: string[] = daily.time || [];
-      const wcodes: number[] = daily.weathercode || [];
-      const tmax: number[] = daily.temperature_2m_max || [];
-      const tmin: number[] = daily.temperature_2_m_min || [];
-      const pops: number[] = daily.precipitation_probability_mean || [];
-
-      const iconInfo = mapOpenMeteoCode(Number(current.weathercode ?? wcodes?.[0] ?? 2));
-      const weather: WeatherData = {
-        current: {
-          temp: Math.round(current.temperature_2m ?? 0),
-          feels_like: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 0),
-          humidity: Number(current.relative_humidity_2m ?? 0),
-          pressure: 1013,
-          visibility: 10000,
-          wind_speed: Number(current.wind_speed_10m ?? 0),
-          wind_deg: 0,
-          weather: [{ id: iconInfoCode(iconInfo.icon), main: iconInfo.main, description: iconInfo.description, icon: iconInfo.icon }],
-        },
-        daily: times.map((t, i) => ({
-          dt: Math.floor(new Date(t).getTime() / 1000),
-          temp: { min: Math.round(tmin[i] ?? 0), max: Math.round(tmax[i] ?? 0) },
-          weather: [{ id: iconInfoCode(mapOpenMeteoCode(wcodes[i] ?? wcodes[0]).icon), main: mapOpenMeteoCode(wcodes[i] ?? wcodes[0]).main, description: mapOpenMeteoCode(wcodes[i] ?? wcodes[0]).description, icon: mapOpenMeteoCode(wcodes[i] ?? wcodes[0]).icon }],
-          pop: typeof pops[i] === 'number' ? (pops[i] / 100) : 0,
-        })),
-        alerts: [],
-      };
-      return weather;
-    } catch {
-      return null;
-    }
-  };
-
-  // Helpers for icon mapping
-  const iconInfoCode = (icon: string) => {
-    const map: Record<string, number> = {
-      '01d': 800, '02d': 801, '03d': 802, '04d': 804, '09d': 300, '10d': 500, '11d': 200, '13d': 600, '50d': 741,
-      '01n': 800, '02n': 801, '03n': 802, '04n': 804, '09n': 300, '10n': 500, '11n': 200, '13n': 600, '50n': 741,
-    };
-    return map[icon] ?? 800;
-  };
-
-  const mapOpenMeteoCode = (code: number): { main: string; description: string; icon: string } => {
-    const map: Record<number, { main: string; description: string; icon: string }> = {
-      0: { main: 'Clear', description: 'Clear sky', icon: '01d' },
-      1: { main: 'Clear', description: 'Mainly clear', icon: '02d' },
-      2: { main: 'Clouds', description: 'Partly cloudy', icon: '03d' },
-      3: { main: 'Clouds', description: 'Overcast', icon: '04d' },
-      45: { main: 'Fog', description: 'Fog', icon: '50d' },
-      48: { main: 'Fog', description: 'Depositing rime fog', icon: '50d' },
-      51: { main: 'Drizzle', description: 'Light drizzle', icon: '09d' },
-      53: { main: 'Drizzle', description: 'Moderate drizzle', icon: '09d' },
-      55: { main: 'Drizzle', description: 'Dense drizzle', icon: '09d' },
-      56: { main: 'Drizzle', description: 'Light freezing drizzle', icon: '09d' },
-      57: { main: 'Drizzle', description: 'Dense freezing drizzle', icon: '09d' },
-      61: { main: 'Rain', description: 'Slight rain', icon: '10d' },
-      63: { main: 'Rain', description: 'Moderate rain', icon: '10d' },
-      65: { main: 'Rain', description: 'Heavy rain', icon: '10d' },
-      66: { main: 'Rain', description: 'Light freezing rain', icon: '10d' },
-      67: { main: 'Rain', description: 'Heavy freezing rain', icon: '10d' },
-      71: { main: 'Snow', description: 'Slight snow', icon: '13d' },
-      73: { main: 'Snow', description: 'Moderate snow', icon: '13d' },
-      75: { main: 'Snow', description: 'Heavy snow', icon: '13d' },
-      77: { main: 'Snow', description: 'Snow grains', icon: '13d' },
-      80: { main: 'Rain', description: 'Rain showers', icon: '10d' },
-      81: { main: 'Rain', description: 'Rain showers', icon: '10d' },
-      82: { main: 'Rain', description: 'Violent rain showers', icon: '11d' },
-      85: { main: 'Snow', description: 'Snow showers', icon: '13d' },
-      86: { main: 'Snow', description: 'Snow showers', icon: '13d' },
-      95: { main: 'Thunderstorm', description: 'Thunderstorm', icon: '11d' },
-      96: { main: 'Thunderstorm', description: 'Thunderstorm with hail', icon: '11d' },
-      99: { main: 'Thunderstorm', description: 'Thunderstorm with hail', icon: '11d' },
-    };
-    return map[code] || { main: 'Clouds', description: 'Cloudy', icon: '03d' };
-  };
-
-  // Load weather data
-  const loadWeatherData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    return (
+    <div className="tactical-page !h-screen flex flex-col">
+      <PageMeta title="Weather Intelligence | E-LigtasMo" description="Real-time meteorological monitoring and hazard assessment." />
       
-      const locationData = await getDefaultLocation();
-      setLocation(locationData);
-      
-      const weather = await fetchWeatherData(locationData.lat, locationData.lon);
-      setWeatherData(weather);
-      setLastUpdated(new Date());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while loading weather data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Refresh weather data
-  const refreshWeather = () => {
-    loadWeatherData();
-  };
-
-  // Load weather data on component mount
-  useEffect(() => {
-    loadWeatherData();
-  }, []);
-
-  // Format temperature
-  const formatTemp = (temp: number) => Math.round(temp);
-
-  // Format date
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  // Get emergency weather recommendations
-  const getEmergencyRecommendations = (weather: WeatherData) => {
-    const recommendations: string[] = [];
-    const currentWeather = weather.current.weather[0];
-    
-    if (currentWeather.main === 'Rain' || currentWeather.main === 'Thunderstorm') {
-      recommendations.push('⚠️ Heavy rain expected - avoid flood-prone areas');
-      recommendations.push('🌊 Monitor local flood warnings and evacuation routes');
-    }
-    
-    if (currentWeather.main === 'Thunderstorm') {
-      recommendations.push('⚡ Thunderstorm alert - stay indoors and avoid metal objects');
-      recommendations.push('🏠 Unplug electrical devices to prevent damage');
-    }
-    
-    if (weather.current.wind_speed > 10) {
-      recommendations.push('💨 Strong winds - secure loose objects and avoid tall structures');
-    }
-    
-    if (weather.current.temp > 35) {
-      recommendations.push('🌡️ Extreme heat - stay hydrated and avoid prolonged sun exposure');
-    }
-    
-    if (weather.current.temp < 10) {
-      recommendations.push('🧥 Cold weather - dress warmly and check on elderly neighbors');
-    }
-    
-    return recommendations;
-  };
-
-  if (!user) {
-    return <div className="p-8 text-center text-gray-400">Loading...</div>;
-  }
-
-  return (
-    <>
-      <PageMeta
-        title="Weather Forecast | E-LigtasMo"
-        description="Current weather conditions and forecast for emergency preparedness"
-      />
-      
-      <div className="w-full font-jetbrains">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Weather Forecast</h1>
-                <p className="text-sm text-gray-600 mt-1">Stay informed for emergency preparedness</p>
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                <FaMapMarkerAlt className="text-blue-600" />
-                Santa Cruz, Laguna
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-2 rounded-lg text-xs transition-colors">
-                Last 24 Hours
-              </button>
-              <button
-                onClick={() => setShowRadar(!showRadar)}
-                className={`flex items-center gap-2 font-medium px-3 py-2 rounded-lg text-xs transition-colors ${showRadar ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                <FaWind className={showRadar ? 'animate-spin-slow' : ''} />
-                {showRadar ? 'Close Radar' : 'Tactical Radar'}
-              </button>
-              <button
-                onClick={refreshWeather}
-                disabled={loading}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-              >
-                <FaSyncAlt className={`text-xs ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-            </div>
+      {/* Control Header */}
+      <div className="bg-white border-b border-slate-200 p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 z-10 shadow-sm">
+        <div>
+          <div className="tactical-status-pill mb-3">
+            <div className="tactical-status-dot bg-blue-500 animate-pulse" />
+            <span>MET_INTEL: LIVE</span>
           </div>
+          <h1 className="tactical-title text-2xl">Weather Intelligence</h1>
+          <p className="tactical-subtitle mt-1">Real-time environmental monitoring & forecasting</p>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-3">
-              <FaExclamationTriangle className="text-red-500 text-lg" />
-              <div>
-                <h3 className="font-semibold text-red-800 text-sm">Unable to load weather data</h3>
-                <p className="text-red-600 text-xs mt-1">{error}</p>
-                <button
-                  onClick={refreshWeather}
-                  className="text-red-700 hover:text-red-800 font-medium text-xs mt-2 underline"
-                >
-                  Try again
-                </button>
-              </div>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="tactical-search-group mb-0 p-1.5 h-12 flex items-center">
+            <FiSearch className="ml-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Enter sector ID or location..."
+              className="tactical-input !border-none !bg-transparent h-full w-64 pl-3"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && fetchWeather()}
+            />
           </div>
-        )}
-
-        {/* Loading State */}
-        {loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-lg border border-gray-200 p-4">
-                <div className="animate-pulse">
-                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-3"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Weather Content */}
-        {weatherData && location && !loading && (
-          <div className="space-y-4">
-            {showRadar && (
-              <div className="w-full h-[600px] bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100 relative">
-                <iframe 
-                  src={`https://embed.windy.com/embed2.html?lat=${location.lat}&lon=${location.lon}&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
-                  className="w-full h-full border-none"
-                  title="Windy Radar"
-                />
-                <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                   <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Live_Radar_Feed</span>
-                </div>
-              </div>
-            )}
-
-            {!showRadar && (
-              <>
-            {/* Current Weather Card */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg text-white p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-blue-200 text-sm" />
-                  <div>
-                    <h2 className="text-lg font-bold">{location.city}</h2>
-                    <p className="text-blue-200 text-xs">{location.country}</p>
-                  </div>
-                </div>
-                {lastUpdated && (
-                  <div className="text-right text-blue-200 text-xs">
-                    <p>Last updated</p>
-                    <p>{lastUpdated.toLocaleTimeString()}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-4">
-                  {getWeatherIcon(weatherData.current.weather[0].icon, "text-4xl")}
-                  <div>
-                    <div className="text-3xl font-bold mb-1">
-                      {formatTemp(weatherData.current.temp)}°C
-                    </div>
-                    <div className="text-sm text-blue-100 capitalize">
-                      {weatherData.current.weather[0].description}
-                    </div>
-                    <div className="text-blue-200 text-xs mt-1">
-                      Feels like {formatTemp(weatherData.current.feels_like)}°C
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <FaTint className="text-blue-200 text-xs" />
-                      <span className="text-blue-200 text-xs">Humidity</span>
-                    </div>
-                    <div className="text-lg font-bold">{weatherData.current.humidity}%</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <FaWind className="text-blue-200 text-xs" />
-                      <span className="text-blue-200 text-xs">Wind Speed</span>
-                    </div>
-                    <div className="text-lg font-bold">{Math.round(weatherData.current.wind_speed)} m/s</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <FaThermometerHalf className="text-blue-200 text-xs" />
-                      <span className="text-blue-200 text-xs">Pressure</span>
-                    </div>
-                    <div className="text-lg font-bold">{weatherData.current.pressure} hPa</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <FaEye className="text-blue-200 text-xs" />
-                      <span className="text-blue-200 text-xs">Visibility</span>
-                    </div>
-                    <div className="text-lg font-bold">{Math.round(weatherData.current.visibility / 1000)} km</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Weather Alerts */}
-            {weatherData.alerts && weatherData.alerts.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-2 mb-3">
-                  <FaExclamationTriangle className="text-red-500 text-lg" />
-                  <h3 className="text-lg font-bold text-red-800">Weather Alerts</h3>
-                </div>
-                <div className="space-y-2">
-                  {weatherData.alerts.map((alert, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 border border-red-200">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-red-800 text-sm">{alert.event}</h4>
-                        <span className="text-xs text-red-600">{alert.sender_name}</span>
-                      </div>
-                      <p className="text-red-700 text-xs mb-1">{alert.description}</p>
-                      <div className="text-xs text-red-600">
-                        {new Date(alert.start * 1000).toLocaleString()} - {new Date(alert.end * 1000).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Emergency Recommendations */}
-            {(() => {
-              const recommendations = getEmergencyRecommendations(weatherData);
-              return recommendations.length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaExclamationTriangle className="text-orange-500 text-lg" />
-                    <h3 className="text-lg font-bold text-orange-800">Emergency Preparedness</h3>
-                  </div>
-                  <div className="space-y-1">
-                    {recommendations.map((rec, index) => (
-                      <div key={index} className="flex items-start gap-2 text-orange-700">
-                        <span className="text-xs mt-0.5">•</span>
-                        <span className="text-xs">{rec}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* 7-Day Forecast */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">7-Day Forecast</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
-                {weatherData.daily.slice(0, 7).map((day, index) => (
-                  <div key={index} className="text-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="font-semibold text-gray-700 mb-2 text-xs">
-                      {index === 0 ? 'Today' : formatDate(day.dt)}
-                    </div>
-                    <div className="flex justify-center mb-2">
-                      {getWeatherIcon(day.weather[0].icon, "text-2xl")}
-                    </div>
-                    <div className="text-xs text-gray-600 mb-2 capitalize">
-                      {day.weather[0].description}
-                    </div>
-                    <div className="flex justify-center items-center gap-1 text-xs">
-                      <span className="font-bold text-gray-900">{formatTemp(day.temp.max)}°</span>
-                      <span className="text-gray-500">{formatTemp(day.temp.min)}°</span>
-                    </div>
-                    {day.pop > 0 && (
-                      <div className="text-xs text-blue-600 mt-1">
-                        {Math.round(day.pop * 100)}% rain
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            </>
-            )}
-          </div>
-        )}
+          <button 
+            onClick={fetchWeather}
+            className="tactical-button-accent h-12 px-8 shadow-2xl"
+          >
+            {loading ? <FiRefreshCw className="animate-spin" /> : <FiCloud />}
+            SYNC_DATA
+          </button>
+        </div>
       </div>
-    </>
-  );
+
+      {/* Main Interactive Map View */}
+      <div className="flex-grow relative overflow-hidden flex flex-col lg:flex-row">
+        
+        {/* Visual Map Area */}
+        <div className="flex-grow h-full relative z-0">
+          <MapboxMap
+            initialViewState={{
+              latitude: weatherData?.coord?.lat || DEFAULT_MAP_STATE.latitude,
+              longitude: weatherData?.coord?.lon || DEFAULT_MAP_STATE.longitude,
+              zoom: DEFAULT_MAP_STATE.zoom
+            }}
+            mapStyle="mapbox://styles/mapbox/light-v11"
+          >
+            <NavigationControl />
+          </MapboxMap>
+
+          {/* Floating Weather Summary Card */}
+          {weatherData && !loading && (
+            <div className="absolute top-8 left-8 w-80 bg-white/90 backdrop-blur-md rounded-[40px] p-10 border border-slate-200/50 shadow-2xl animate-in slide-in-from-left duration-500">
+              <div className="flex items-start justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-tight mb-2 uppercase tracking-tight">{weatherData.name}</h2>
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">{weatherData.weather[0].description}</p>
+                </div>
+                <div className="text-4xl text-blue-600">
+                  <FiSun />
+                </div>
+              </div>
+
+              <div className="text-6xl font-black text-slate-900 tracking-tighter mb-10 tabular-nums">
+                {Math.round(weatherData.main.temp)}°<span className="text-slate-300 font-medium">C</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
+                  <label className="tactical-label !text-[8px] mb-2">Humidity</label>
+                  <div className="flex items-center gap-2">
+                    <FiDroplet className="text-blue-500" />
+                    <span className="text-xl font-black text-slate-900">{weatherData.main.humidity}%</span>
+                  </div>
+                </div>
+                <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
+                  <label className="tactical-label !text-[8px] mb-2">Wind_Spd</label>
+                  <div className="flex items-center gap-2">
+                    <FiWind className="text-cyan-500" />
+                    <span className="text-xl font-black text-slate-900">{weatherData.wind.speed}m/s</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tactical Forecast Panel */}
+        <div className="w-full lg:w-[480px] bg-white border-t lg:border-t-0 lg:border-l border-slate-200 p-10 flex flex-col gap-10 overflow-y-auto shrink-0 z-10 shadow-2xl">
+          
+          <div className="flex items-center gap-4">
+            <div className="tactical-icon-container w-14 h-14 bg-blue-50 text-blue-600 border-blue-100 shadow-xl shadow-blue-600/5">
+              <FiActivity size={24} />
+            </div>
+            <div>
+              <h3 className="font-black text-lg text-slate-900 uppercase tracking-tight">Atmospheric Analysis</h3>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Station: SCT_DELTA_LAGUNA</p>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div className="tactical-card p-8 border-amber-200 bg-amber-50/30">
+              <div className="flex items-center gap-3 mb-4">
+                <FiAlertTriangle className="text-amber-500" />
+                <label className="tactical-label !text-amber-600 mb-0">Hazard_Assessment</label>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed font-bold italic">
+                "Environmental parameters indicate stable atmospheric conditions. No immediate thermal or flood hazards detected in primary sector."
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Visibility', value: '10km', icon: <FiNavigation />, color: 'text-blue-500' },
+                { label: 'Pressure', value: '1012hPa', icon: <FiZap />, color: 'text-cyan-500' },
+                { label: 'Min_Temp', value: '24°C', icon: <FiCloud />, color: 'text-slate-400' },
+                { label: 'Max_Temp', value: '31°C', icon: <FiSun />, color: 'text-amber-500' }
+              ].map((stat, i) => (
+                <div key={i} className="tactical-card p-6 flex flex-col gap-4 group hover:border-blue-200 transition-all">
+                  <div className={`w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center ${stat.color} border border-slate-100 shadow-sm group-hover:bg-white`}>
+                    {stat.icon}
+                  </div>
+                  <div>
+                    <label className="tactical-label !text-[8px] mb-1">{stat.label}</label>
+                    <p className="text-xl font-black text-slate-900 tabular-nums">{stat.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-8 rounded-[40px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group">
+              <div className="relative z-10">
+                <label className="tactical-label !text-white/60 mb-3">Operational_Notice</label>
+                <p className="text-sm leading-relaxed font-bold italic">
+                  "Maintain hydration support missions for peak thermal window [12:00-15:00] across central sectors."
+                </p>
+              </div>
+              <FiActivity className="absolute -right-12 -bottom-12 w-48 h-48 opacity-[0.05] group-hover:scale-110 transition-transform duration-700" />
+            </div>
+          </div>
+
+          <div className="mt-auto pt-8 border-t border-slate-100 flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">
+            <span>LINKED_OPENWEATHER_API</span>
+            <span>INTEL_v2.1.4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    );
 };
 
 export default Weather;

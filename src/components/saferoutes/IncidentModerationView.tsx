@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaCheck, FaTimes, FaMapMarkerAlt, FaUser, FaClock, FaInfoCircle, FaPhone, FaExclamationTriangle } from 'react-icons/fa';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from "../../constants/geo";
 import 'leaflet/dist/leaflet.css';
 import DuplicateIncidentManager from './DuplicateIncidentManager';
 
@@ -219,7 +220,18 @@ export default function IncidentModerationView() {
               )}
               {/* Map */}
               <div className="mb-2 rounded-lg overflow-hidden border border-gray-200" style={{ height: 180 }}>
-                <MapContainer center={[incident.lat, incident.lng]} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false} dragging={false} doubleClickZoom={false} zoomControl={false} attributionControl={false}>
+                <MapContainer 
+                  center={[incident.lat, incident.lng]} 
+                  zoom={15} 
+                  minZoom={DEFAULT_MAP_STATE.minZoom}
+                  maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+                  attributionControl={false}
+                  style={{ height: '100%', width: '100%' }} 
+                  scrollWheelZoom={false} 
+                  dragging={false} 
+                  doubleClickZoom={false} 
+                  zoomControl={false}
+                >
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   {
                     (() => {

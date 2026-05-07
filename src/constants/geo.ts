@@ -74,3 +74,23 @@ export const SANTA_CRUZ_OUTLINE: any = {
 };
 
 export const SANTA_CRUZ_LEAFLET_POSITIONS = SANTA_CRUZ_OUTLINE.geometry.coordinates[0].map((c: any) => [c[1], c[0]]);
+
+// Boundaries for Santa Cruz, Laguna
+export const SANTA_CRUZ_BOUNDS: [[number, number], [number, number]] = [
+  [121.32, 14.18], // Southwest coordinates (lng, lat)
+  [121.48, 14.36]  // Northeast coordinates (lng, lat)
+];
+
+export const SANTA_CRUZ_BOUNDS_LEAFLET: [[number, number], [number, number]] = [
+  [14.18, 121.32], // Southwest coordinates (lat, lng)
+  [14.36, 121.48]  // Northeast coordinates (lat, lng)
+];
+
+// Default initial view state for Santa Cruz focus
+export const DEFAULT_MAP_STATE = {
+  latitude: 14.275,
+  longitude: 121.405,
+  zoom: 12.5,
+  minZoom: 11,
+  maxBounds: SANTA_CRUZ_BOUNDS
+};

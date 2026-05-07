@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import MapboxMap, { Popup, NavigationControl, FullscreenControl } from "../maps/MapboxMap";
 import TacticalMarker from "../maps/TacticalMarker";
+import { SantaCruzMapboxOutline } from '../maps/SantaCruzOutline';
 import { FaCheckCircle, FaTimesCircle, FaPhone, FaPencilAlt, FaTrash, FaHome, FaTimes, FaCamera, FaPlus, FaSearch, FaSpinner } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import * as XLSX from 'xlsx';
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../utils/api";
+import { isPointInSantaCruz } from "../../utils/geoValidation";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 
@@ -68,16 +70,26 @@ export default function ManageSheltersView() {
       try {
         const response = await apiFetch('shelters-list.php');
         const data = await response.json();
-        setShelters(data);
+        
+        // Filter: only show shelters they made if they are not an admin
+        const filteredData = (user?.role === 'admin') 
+          ? data 
+          : data.filter((s: ShelterForm) => s.created_by === user?.username);
+          
+        setShelters(filteredData);
       } catch (error) {
         console.error("Failed to fetch shelters:", error);
       }
     };
     fetchShelters();
-  }, []);
+  }, [user]);
 
   const handleMapClick = async (latlng: { lat: number; lng: number }) => {
     if (!adding) return;
+    if (!isPointInSantaCruz(latlng.lat, latlng.lng)) {
+      alert("Pinpoint restricted to Santa Cruz, Laguna area only.");
+      return;
+    }
     setLoadingAddress(true);
     const address = await reverseGeocode(latlng.lat, latlng.lng);
     setForm({
@@ -273,6 +285,7 @@ export default function ManageSheltersView() {
         >
           <NavigationControl position="top-right" />
           <FullscreenControl position="top-right" />
+          <SantaCruzMapboxOutline />
           
           {shelters.map((shelter) => (
             <TacticalMarker 
@@ -353,37 +366,37 @@ export default function ManageSheltersView() {
         </MapboxMap>
 
         {/* Floating Search Bar */}
-        <div className="absolute top-6 right-20 z-[10] w-72 md:w-80">
-          <form onSubmit={handleSearch} className="flex shadow-2xl rounded-xl bg-white/95 backdrop-blur-md overflow-hidden border border-gray-200/50 transition-all focus-within:ring-2 focus-within:ring-blue-600/20">
-            <div className="pl-4 flex items-center">
-              <FaSearch className="text-gray-400 text-sm" />
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[10] w-[400px] max-w-[90%]">
+          <form onSubmit={handleSearch} className="flex shadow-2xl rounded-2xl bg-white/95 backdrop-blur-md overflow-hidden border border-slate-200/50 transition-all focus-within:ring-4 focus-within:ring-slate-900/10">
+            <div className="pl-5 flex items-center">
+              <FaSearch className="text-slate-400 text-sm" />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for a location..."
-              className="flex-1 px-3 py-3 text-[13px] outline-none bg-transparent text-gray-900 font-medium placeholder-gray-400"
+              placeholder="Search for a tactical location..."
+              className="flex-1 px-4 py-3.5 text-[13px] outline-none bg-transparent text-slate-900 font-bold placeholder-slate-400"
             />
             <button 
               type="submit" 
-              className="bg-blue-600 text-white px-4 hover:bg-blue-700 transition-colors flex items-center justify-center"
+              className="bg-slate-900 text-white px-6 hover:bg-slate-800 transition-all flex items-center justify-center active:scale-95"
               disabled={isSearching}
             >
-              {isSearching ? <FaSpinner className="animate-spin" /> : <FaCheckCircle className="text-sm" />}
+              {isSearching ? <FaSpinner className="animate-spin text-sm" /> : <FaCheckCircle className="text-sm" />}
             </button>
           </form>
           
           {searchResults.length > 0 && (
-            <div className="mt-2 bg-white rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-gray-100 custom-scrollbar divide-y divide-gray-50">
+            <div className="mt-2 bg-white rounded-xl shadow-2xl max-h-64 overflow-y-auto border border-slate-100 custom-scrollbar divide-y divide-slate-50">
               {searchResults.map((result, idx) => (
                 <div 
                   key={idx}
                   onClick={() => selectSearchResult(result)}
-                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                  className="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors"
                 >
-                  <p className="font-bold text-[13px] text-gray-900">{result.text}</p>
-                  <p className="text-[11px] text-gray-500 truncate">{result.place_name}</p>
+                  <p className="font-bold text-[13px] text-slate-900">{result.text}</p>
+                  <p className="text-[11px] text-slate-500 truncate">{result.place_name}</p>
                 </div>
               ))}
             </div>
@@ -392,63 +405,60 @@ export default function ManageSheltersView() {
       </div>
 
       {/* Floating Panel Section */}
-      <div className="w-full lg:w-[400px] h-[500px] lg:h-full bg-gray-50 p-6 border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.02)] overflow-y-auto custom-scrollbar font-jetbrains shrink-0 animate-in slide-in-from-right duration-500">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-              <FaHome className="text-white text-lg" />
+      {/* Floating Panel Section */}
+      <div className="tactical-panel p-5 animate-in slide-in-from-right duration-500" style={{outline:'1px solid rgba(0,0,0,0.08)',background:'#f8fafc'}}>
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/20">
+              <FaHome className="text-white text-xs" />
             </div>
-            <div>
-              <h2 className="text-gray-900 font-bold text-xl tracking-tight">Active Shelters</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                <span className="text-[10px] text-gray-400 tracking-tight font-bold">Operational Nodes</span>
-              </div>
-            </div>
+            <h2 className="text-slate-900 font-bold text-[13px] tracking-tight">Shelters</h2>
           </div>
           <button 
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-all"
+            className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-all"
           >
             <FaTimes className="text-xs" />
           </button>
         </div>
 
-        {!form ? (
-          <>
-            {adding && (
-              <div className="mb-4 bg-blue-50 text-blue-700 px-4 py-3 rounded-xl border border-blue-100 text-[12px] font-bold flex items-center gap-2 animate-pulse">
-                <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                Awaiting map location selection...
-              </div>
-            )}
-            <button
-              className="w-full font-bold py-4 px-6 rounded-xl text-[11px] mb-4 transition-all flex items-center justify-center gap-3 shadow-xl bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700 active:scale-[0.98]"
-              onClick={() => { setAdding(!adding); setEditId(null); setForm(null); }}
-            >
-              {adding ? <FaTimes className="text-sm" /> : <FaPlus className="text-sm" />}
-              {adding ? "Cancel Operation" : "Register New Shelter"}
-            </button>
-            <div className="border-t border-gray-100 pt-4 flex-grow">
-              <div className="mb-3 text-[10px] text-gray-400 font-bold">Export Data</div>
-              <div className="flex flex-col gap-3 mb-6">
-                <div className="flex gap-2">
+        <div className="space-y-3 custom-scrollbar overflow-y-auto pr-1">
+          {!form ? (
+            <>
+              {adding && (
+                <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">
+                  Awaiting Map selection...
+                </div>
+              )}
+              
+              <button
+                className="w-full font-bold py-3 rounded-xl text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700 active:scale-95"
+                onClick={() => { setAdding(!adding); setEditId(null); setForm(null); }}
+              >
+                {adding ? <FaTimes size={10} /> : <FaPlus size={10} />}
+                {adding ? "Cancel" : "Add New Shelter"}
+              </button>
+
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" style={{outline:'1px solid rgba(0,0,0,0.08)'}}>
+                <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Export Options</span>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-gray-100">
                   <button
-                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 font-bold px-3 py-3 rounded-xl text-[11px] tracking-widest border border-gray-100 transition-all shadow-sm active:scale-95"
+                    className="p-3 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all group"
                     onClick={() => {
-                      if (shelters.length === 0) { setShowToast('No shelters to export.'); return; }
+                      if (shelters.length === 0) return;
                       const ws = XLSX.utils.json_to_sheet(shelters);
                       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Shelters');
                       XLSX.writeFile(wb, `shelters_${new Date().toISOString().slice(0,10)}.xlsx`);
                     }}
                   >
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                    Export Excel
+                    <span className="text-[9px] font-bold text-slate-900 uppercase tracking-widest group-hover:text-blue-600">Export XLSX</span>
                   </button>
                   <button
-                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 font-bold px-3 py-3 rounded-xl text-[11px] tracking-widest border border-gray-100 transition-all shadow-sm active:scale-95"
+                    className="p-3 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all group"
                     onClick={() => {
-                      if (shelters.length === 0) { setShowToast('No shelters to export.'); return; }
+                      if (shelters.length === 0) return;
                       const csvRows = [
                         ['Name', 'Address', 'Capacity', 'Occupancy', 'Status', 'Contact Person', 'Contact Number'].join(','),
                         ...shelters.map(s => [s.name, s.address, s.capacity, s.occupancy, s.status, s.contact_person, s.contact_number].map(v => `"${v ?? ''}"`).join(','))
@@ -457,217 +467,142 @@ export default function ManageSheltersView() {
                       link.download = `shelters_${new Date().toISOString().slice(0,10)}.csv`; link.click();
                     }}
                   >
-                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                    CSV_DATA
+                    <span className="text-[9px] font-bold text-slate-900 uppercase tracking-widest group-hover:text-emerald-600">Export CSV</span>
                   </button>
                 </div>
               </div>
 
-              {showToast && (
-                <div className="mb-4 bg-emerald-50 text-emerald-700 px-4 py-3 rounded-xl border border-emerald-100 text-[11px] font-bold flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                  <FaCheckCircle /> {showToast}
+              <div className="space-y-2">
+                <div className="px-1 pt-2">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Shelter List</span>
                 </div>
-              )}
-
-              <div className="mb-3 text-[10px] text-gray-400 uppercase tracking-[0.2em] font-black">Active Facilities</div>
-              <div className="flex flex-col gap-3">
                 {shelters.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl">
-                    <FaHome className="text-gray-200 text-4xl mx-auto mb-3" />
-                    <p className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">No Registered Facilities</p>
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest italic">No shelters found</p>
                   </div>
                 ) : (
-                  shelters.map((shelter) => {
-                    const isFull = shelter.occupancy >= shelter.capacity;
-                    const percent = Math.min(100, Math.round((shelter.occupancy / shelter.capacity) * 100));
-                    return (
-                      <div
-                        key={shelter.id}
-                        className={`group rounded-2xl flex flex-col bg-white border-2 transition-all cursor-pointer overflow-hidden ${selectedShelter?.id === shelter.id ? 'border-blue-600 shadow-xl shadow-blue-600/5' : 'border-gray-50 hover:border-gray-200'}`}
-                        onClick={() => {
-                          setSelectedShelter(shelter);
-                          setIsViewingDetails(true);
-                        }}
-                      >
-                        <div className="p-4">
-                          <div className="flex items-center gap-3 w-full">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0 transition-colors ${isFull ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                              <FaHome className="text-lg" />
+                  <div className="space-y-2">
+                    {shelters.map((shelter) => {
+                      const isFull = shelter.occupancy >= shelter.capacity;
+                      const percent = Math.min(100, Math.round((shelter.occupancy / shelter.capacity) * 100));
+                      return (
+                        <div
+                          key={shelter.id}
+                          className={`bg-white rounded-2xl border transition-all cursor-pointer overflow-hidden ${selectedShelter?.id === shelter.id ? 'border-blue-600 shadow-lg' : 'border-gray-200 hover:border-gray-300 shadow-sm'}`}
+                          onClick={() => {
+                            setSelectedShelter(shelter);
+                            setIsViewingDetails(true);
+                          }}
+                        >
+                          <div className="p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isFull ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                                  <FaHome className="text-sm" />
+                                </div>
+                                <div className="min-w-0">
+                                  <h3 className="text-[12px] font-bold text-slate-900 uppercase tracking-tight truncate">{shelter.name}</h3>
+                                  <p className="text-[9px] font-bold text-slate-500 truncate">{shelter.address}</p>
+                                </div>
+                              </div>
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${isFull ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                {isFull ? 'FULL' : 'OPEN'}
+                              </span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-[14px] text-gray-900 tracking-tight truncate">{shelter.name}</h3>
-                              <p className="text-gray-400 text-[11px] font-medium truncate mt-0.5">{shelter.address}</p>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest">
+                                <span className="text-slate-500">Saturation</span>
+                                <span className={isFull ? 'text-red-500' : 'text-blue-600'}>{percent}%</span>
+                              </div>
+                              <div className="w-full h-1 bg-gray-50 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-700 ${isFull ? 'bg-red-500' : 'bg-blue-600'}`} style={{ width: `${percent}%` }}></div>
+                              </div>
+                              <div className="flex justify-between text-[8px] font-bold text-gray-300 uppercase tracking-tighter">
+                                <span>{shelter.occupancy} Active</span>
+                                <span>{shelter.capacity} Limit</span>
+                              </div>
                             </div>
-                            <span className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${isFull ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                              {isFull ? 'FULL' : 'OPEN'}
-                            </span>
                           </div>
 
-                          <div className="mt-4 space-y-2">
-                            <div className="flex justify-between items-center text-[11px] font-bold">
-                              <span className="text-gray-400 uppercase tracking-widest">Occupancy Status</span>
-                              <span className="text-gray-900">{percent}%</span>
-                            </div>
-                            <div className="w-full h-2 bg-gray-50 rounded-full overflow-hidden">
-                              <div className={`h-full transition-all duration-700 ${isFull ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${percent}%` }}></div>
-                            </div>
-                            <div className="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-tighter pt-1">
-                              <span>{shelter.occupancy} Active</span>
-                              <span>{shelter.capacity} Total Slots</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex border-t border-gray-50 bg-gray-50/30">
-                          {(user?.role === 'admin' || (user?.role === 'brgy' && shelter.created_brgy === user?.brgy_name)) ? (
-                            <>
+                          {(user?.role === 'admin' || (user?.role === 'brgy' && shelter.created_brgy === user?.brgy_name)) && (
+                            <div className="flex divide-x divide-gray-100 border-t border-gray-50">
                               <button 
-                                className="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-white text-gray-600 hover:text-blue-600 transition-all text-[11px] font-black uppercase tracking-widest border-r border-gray-50" 
+                                className="flex-1 py-2 text-[9px] font-bold text-slate-900 uppercase tracking-widest hover:bg-gray-50"
                                 onClick={(e) => { e.stopPropagation(); handleEdit(shelter); }}
-                              >
-                                <FaPencilAlt className="text-[10px]" /> Update
-                              </button>
+                              >Modify</button>
                               <button 
-                                className="flex-1 py-3 flex items-center justify-center gap-2 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-all text-[11px] font-black uppercase tracking-widest" 
-                                onClick={(e) => { e.stopPropagation(); if(window.confirm('Are you sure you want to decommission this facility?')) handleDelete(shelter.id!); }}
-                              >
-                                <FaTrash className="text-[10px]" /> Purge
-                              </button>
-                            </>
-                          ) : (
-                             <div className="flex-1 py-3 text-center text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] italic">
-                                Tactical View Only
-                             </div>
+                                className="flex-1 py-2 text-[9px] font-bold text-red-500 uppercase tracking-widest hover:bg-red-50"
+                                onClick={(e) => { e.stopPropagation(); if(window.confirm('Purge facility?')) handleDelete(shelter.id!); }}
+                              >Purge</button>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-            </div>
-          </>
-        ) : (
-          <form className="flex flex-col gap-4 mt-2" onSubmit={e => e.preventDefault()}>
-            <div className="space-y-4">
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Facility Category</label>
-                <select
-                  className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20 transition-all appearance-none"
-                  name="category"
-                  value={form.category || ''}
-                  onChange={handleFormChange}
-                  required
-                >
-                  <option value="">Select Type</option>
-                  <option value="School">School</option>
-                  <option value="Gym">Gym</option>
-                  <option value="Church">Church</option>
-                  <option value="Barangay Hall">Barangay Hall</option>
-                  <option value="Covered Court">Covered Court</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="p-4 border-b border-gray-100">
-                  <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Shelter Name</label>
-                  <input
-                    className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20"
-                    name="name" value={form.name} onChange={handleFormChange} required placeholder="Enter facility name"
-                  />
-                </div>
-                <div className="grid grid-cols-2 divide-x divide-gray-100">
-                  <div className="p-4">
-                    <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Capacity</label>
-                    <input
-                      type="number"
-                      className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20"
-                      name="capacity" value={String(form.capacity)} onChange={handleFormChange} required
-                    />
+            </>
+          ) : (
+            <form className="space-y-3" onSubmit={e => e.preventDefault()}>
+               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" style={{outline:'1px solid rgba(0,0,0,0.08)'}}>
+                  <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{editId ? 'Modify Intelligence' : 'Node Acquisition'}</span>
                   </div>
-                  <div className="p-4">
-                    <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Occupancy</label>
-                    <input
-                      type="number"
-                      className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20"
-                      name="occupancy" value={String(form.occupancy)} onChange={handleFormChange} required
-                    />
+                  <div className="divide-y divide-gray-100">
+                    <div className="p-3">
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Facility Name</label>
+                      <input required className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="name" value={form.name} onChange={handleFormChange} />
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-gray-100">
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Classification</label>
+                        <select className="w-full text-[11px] font-bold uppercase bg-gray-50 border-none outline-none p-2 rounded-lg cursor-pointer" name="category" value={form.category || ''} onChange={handleFormChange}>
+                          <option value="">TYPE</option>
+                          <option value="School">School</option>
+                          <option value="Gym">Gym</option>
+                          <option value="Church">Church</option>
+                          <option value="Barangay Hall">Hall</option>
+                          <option value="Covered Court">Court</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Status</label>
+                        <select className="w-full text-[11px] font-bold uppercase bg-gray-50 border-none outline-none p-2 rounded-lg cursor-pointer" name="status" value={form.status} onChange={handleFormChange}>
+                          <option value="available">OPEN</option>
+                          <option value="full">FULL</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-gray-100">
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Capacity</label>
+                        <input type="number" className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="capacity" value={String(form.capacity)} onChange={handleFormChange} />
+                      </div>
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Occupancy</label>
+                        <input type="number" className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="occupancy" value={String(form.occupancy)} onChange={handleFormChange} />
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Contact Officer</label>
+                      <input className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="contact_person" value={form.contact_person} onChange={handleFormChange} />
+                    </div>
+                    <div className="p-3">
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Hotline</label>
+                      <input className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="contact_number" value={form.contact_number} onChange={handleFormChange} />
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Primary Contact Person</label>
-                    <input
-                      className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20"
-                      name="contact_person" value={form.contact_person} onChange={handleFormChange} placeholder="Full Name"
-                    />
+                  <div className="flex divide-x divide-gray-100 border-t border-gray-100">
+                    <button onClick={handleCancel} className="flex-1 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-gray-50">Abort</button>
+                    <button onClick={handleSave} className="flex-1 py-3 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:bg-blue-50">Deploy</button>
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-2">Emergency Hotline</label>
-                    <input
-                      className="w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20"
-                      name="contact_number" value={form.contact_number} onChange={handleFormChange} placeholder="Phone Number"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
-                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-gray-400 mb-3">Facility Status Override</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className={`flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${form.status === 'available' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-white text-gray-400 border border-gray-200 hover:bg-gray-100'}`}
-                    onClick={() => handleFormChange({ target: { name: 'status', value: 'available' } } as any)}
-                  >
-                    Open
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex-1 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${form.status === 'full' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-white text-gray-400 border border-gray-200 hover:bg-gray-100'}`}
-                    onClick={() => handleFormChange({ target: { name: 'status', value: 'full' } } as any)}
-                  >
-                    At Capacity
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
-                <label className="block text-[10px] uppercase tracking-[0.2em] font-black text-blue-400 mb-2">Verified Geolocation</label>
-                <div className="relative">
-                  <textarea
-                    className="w-full bg-white/50 text-blue-900 border border-blue-100 rounded-xl px-4 py-3 text-[12px] font-bold outline-none resize-none opacity-80 cursor-not-allowed"
-                    value={loadingAddress ? "Acquiring coordinates..." : form.address} readOnly rows={2}
-                  />
-                  <div className="absolute right-3 top-3">
-                    <FaCheckCircle className="text-blue-500" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-4">
-              <button 
-                type="button" 
-                onClick={handleSave} 
-                className="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-black text-[12px] tracking-[0.2em] uppercase shadow-xl shadow-blue-600/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <FaCheckCircle className="text-lg" /> Complete
-              </button>
-              <button 
-                type="button" 
-                onClick={handleCancel} 
-                className="flex-[0.6] bg-gray-100 text-gray-500 py-5 rounded-2xl font-black text-[12px] tracking-[0.2em] uppercase hover:bg-gray-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+               </div>
+            </form>
+          )}
+        </div>
       </div>
 
       {/* Full Details Overlay */}
@@ -709,13 +644,13 @@ export default function ManageSheltersView() {
             <div className="mb-12">
               <div className="flex items-center gap-2 mb-10">
                 <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                <h3 className="text-gray-400 font-black text-[12px] tracking-[0.3em] uppercase">Intelligence Summary</h3>
+                <h3 className="text-slate-500 font-bold text-[12px] tracking-[0.3em] uppercase">Intelligence Summary</h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 transition-all hover:border-blue-200">
                   <div className="flex justify-between items-center mb-6">
-                    <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em]">Live Utilization</p>
+                    <p className="text-slate-500 text-[11px] font-bold uppercase tracking-[0.2em]">Live Utilization</p>
                     <span className="text-blue-600 font-black text-xl">{Math.min(100, Math.round((selectedShelter.occupancy / selectedShelter.capacity) * 100))}%</span>
                   </div>
                   <div className="w-full h-3 bg-gray-200 rounded-full mb-6 overflow-hidden">
@@ -726,7 +661,7 @@ export default function ManageSheltersView() {
                 </div>
                 
                 <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 transition-all hover:border-emerald-200">
-                  <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] mb-6">Resource Availability</p>
+                  <p className="text-slate-500 text-[11px] font-bold uppercase tracking-[0.2em] mb-6">Resource Availability</p>
                   <p className="text-emerald-600 text-5xl font-black tracking-tighter mb-2">{selectedShelter.capacity - selectedShelter.occupancy}</p>
                   <p className="text-gray-900 text-lg font-bold">Unallocated Slots</p>
                   <p className="text-gray-500 text-[13px] font-medium mt-1 italic">Ready for immediate deployment</p>
@@ -742,12 +677,12 @@ export default function ManageSheltersView() {
                 </div>
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-black mb-2">Officer in Charge</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Officer in Charge</p>
                     <p className="text-gray-900 text-xl font-bold">{selectedShelter.contact_person || 'Station Commander'}</p>
                     <p className="text-gray-400 text-[12px] mt-1">Verified Personnel</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-black mb-2">Hotline Connection</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Hotline Connection</p>
                     <p className="text-blue-600 text-2xl font-black tracking-tight">{selectedShelter.contact_number || 'N/A'}</p>
                     <p className="text-gray-400 text-[12px] mt-1">24/7 Operations Line</p>
                   </div>
@@ -756,7 +691,7 @@ export default function ManageSheltersView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
-                   <p className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-black mb-2">Facility Logistics</p>
+                   <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Facility Logistics</p>
                    <div className="flex items-center gap-2">
                      <span className="text-gray-900 font-bold">{selectedShelter.created_by || 'ADMIN'}</span>
                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
@@ -765,7 +700,7 @@ export default function ManageSheltersView() {
                 </div>
                 {(selectedShelter as any).category && (
                   <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
-                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-black mb-2">Classification</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-2">Classification</p>
                     <p className="text-blue-600 font-black text-sm uppercase tracking-widest">{(selectedShelter as any).category}</p>
                   </div>
                 )}
@@ -794,7 +729,7 @@ const InputField = ({ label, name, value, onChange, readOnly = false, required =
   { label: string, name: string, value: string, onChange: (e: any) => void, readOnly?: boolean, required?: boolean, type?: string }
 ) => (
   <div>
-    {label && <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">{label}</label>}
+    {label && <label className="block text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-1">{label}</label>}
     <input
       className={`w-full bg-white text-gray-900 border border-gray-200 rounded-xl px-4 py-3 text-[13px] font-bold outline-none focus:ring-2 focus:ring-blue-600/20 ${readOnly ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
       name={name} value={value} onChange={onChange} readOnly={readOnly} required={required} type={type}

@@ -130,7 +130,7 @@ const AnnouncementsScreen = ({ navigation }) => {
     }).then(() => fetchAnnouncements());
   };
 
-  const filters = ['All', 'Warnings', 'Critical', 'Info'];
+  const filters = ['All', 'Disaster News', 'Safety Tips', 'Recovery Updates', 'Preparedness Guide'];
   const filteredAnnouncements = useMemo(() => {
     let filtered = announcements;
     
@@ -239,34 +239,38 @@ const AnnouncementsScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Categories */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 10 }}
-              >
-                {filters.map((filter) => {
-                  const isSelected = selectedFilter === filter;
-                  return (
-                    <TouchableOpacity
-                      key={filter}
-                      style={{ 
-                        paddingHorizontal: 20, 
-                        paddingVertical: 10, 
-                        borderRadius: 14, 
-                        backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.04)',
-                        borderWidth: 1,
-                        borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.06)'
-                      }}
-                      onPress={() => setSelectedFilter(filter)}
-                    >
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#000' : 'rgba(236,231,223,0.5)', textTransform: 'capitalize' }}>
-                        {filter}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+              <Row align="center" gap={8} style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 10 }}
+                >
+                  {filters.map((filter) => {
+                    const isSelected = selectedFilter === filter;
+                    return (
+                      <TouchableOpacity
+                        key={filter}
+                        style={{ 
+                          paddingHorizontal: 20, 
+                          paddingVertical: 10, 
+                          borderRadius: 14, 
+                          backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.04)',
+                          borderWidth: 1,
+                          borderColor: isSelected ? '#FFFFFF' : 'rgba(255,255,255,0.06)'
+                        }}
+                        onPress={() => setSelectedFilter(filter)}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: isSelected ? '#000' : 'rgba(236,231,223,0.5)', textTransform: 'capitalize' }}>
+                          {filter}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+                <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+                  <Lucide.ChevronDown size={18} color="rgba(255,255,255,0.4)" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </Row>
             </View>
           }
           renderItem={({ item, index }) => (

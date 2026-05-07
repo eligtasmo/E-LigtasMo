@@ -10,6 +10,8 @@ import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
+
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -18,10 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 });
 
-const SANTA_CRUZ_BOUNDS: L.LatLngBoundsExpression = [
-  [14.20, 121.35], // Southwest coordinates
-  [14.35, 121.50]  // Northeast coordinates
-];
 
 const brgys = [
   "Alipit", "Bagumbayan", "Bubukal", "Calios", "Duhat", 
@@ -477,8 +475,15 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
             <div className="animate-fade-in space-y-4">
               <Label>Pin Barangay Hall Location <span className="text-gray-400 font-normal text-sm ml-1">(Optional)</span></Label>
               <div className="h-64 w-full rounded-xl border overflow-hidden relative z-0">
-                <MapContainer center={[14.28, 121.42]} zoom={13} minZoom={12} maxBounds={SANTA_CRUZ_BOUNDS} style={{ height: "100%", width: "100%" }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
+                <MapContainer 
+                  center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]} 
+                  zoom={DEFAULT_MAP_STATE.zoom} 
+                  minZoom={DEFAULT_MAP_STATE.minZoom} 
+                  maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET} 
+                  attributionControl={false}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <LocationPicker position={location} setPosition={setLocation} />
                 </MapContainer>
               </div>

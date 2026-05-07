@@ -4,14 +4,17 @@ import {
   FaExclamationTriangle, FaCheckCircle, FaTimes, FaMapMarkerAlt, 
   FaInfoCircle, FaClock, FaUser, FaPhoneAlt, FaPlus, FaFilter, FaSearch, FaSpinner, FaCamera
 } from 'react-icons/fa';
-import { FiChevronRight, FiMaximize2, FiExternalLink, FiRefreshCw, FiMapPin } from 'react-icons/fi';
+import { FiChevronRight, FiMaximize2, FiExternalLink, FiRefreshCw, FiMapPin, FiSearch } from 'react-icons/fi';
+import PageMeta from "../components/common/PageMeta";
 import MapboxMap, { Marker, Popup, NavigationControl, FullscreenControl, MapProvider } from '../components/maps/MapboxMap';
 import TacticalMarker from '../components/maps/TacticalMarker';
+import { SantaCruzMapboxOutline } from '../components/maps/SantaCruzOutline';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { useGlobalMapContext } from '../context/MapContext';
 import { useMap } from 'react-map-gl';
+import { DEFAULT_MAP_STATE } from '../constants/geo';
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 
@@ -125,7 +128,7 @@ const TacticalApprovalDashboard: React.FC = () => {
     setCurrentImageIndex(0);
   }, [selectedIncident]);
 
-  const filteredIncidents = useMemo(() => {
+  const filteredIncidents = useMemo<UnifiedIncident[]>(() => {
     return incidents.filter(inc => {
       const status = (inc.status || '').toUpperCase();
       const matchesTab = 
@@ -191,322 +194,263 @@ const TacticalApprovalDashboard: React.FC = () => {
   };
 
   return (
-    <MapProvider>
-      <div className="h-[calc(100vh-72px)] w-full bg-white text-gray-900 overflow-hidden font-jetbrains flex">
+    <div className="tactical-page !h-[calc(100vh-72px)] overflow-hidden">
+      <PageMeta title="Command Center | E-LigtasMo" description="Real-time incident oversight and tactical approval dashboard." />
+      
+      <div className="flex flex-col lg:flex-row h-full overflow-hidden">
         {/* Main View: Map (Left) */}
-        <div className="flex-1 relative h-full">
-          <MapboxMap
-            {...viewState}
-            onMove={(evt: any) => setViewState(evt.viewState)}
-            onLoad={(e: any) => setMapInstance(e.target)}
-            mapboxAccessToken={MAPBOX_TOKEN}
-            mapStyle="mapbox://styles/mapbox/light-v11"
-            pitch={0}
-            bearing={0}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {incidents.filter(inc => (inc.status || '').toUpperCase() !== 'REJECTED').map(inc => (
-              <TacticalMarker
-                key={`${inc.source_table}-${inc.id}`}
-                latitude={Number(inc.lat)}
-                longitude={Number(inc.lng)}
-                type={inc.type}
-                status={inc.status}
-                onClick={() => {
-                  setSelectedIncident(inc);
-                  flyToIncident(Number(inc.lat), Number(inc.lng));
-                }}
-              />
-            ))}
-            <NavigationControl position="top-right" />
-            <FullscreenControl position="top-right" />
-          </MapboxMap>
-
-          {/* Overlay Branding */}
-          <div className="absolute top-6 left-6 z-10">
-            <div className="px-4 py-2 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 flex items-center gap-3 shadow-xl">
-              <div className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
-              <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">TACTICAL_OVERSIGHT_ACTIVE</span>
-            </div>
-          </div>
+        <div className="flex-1 relative min-h-[400px] lg:h-full">
+          <MapProvider>
+            <MapboxMap
+              {...viewState}
+              onMove={(evt: any) => setViewState(evt.viewState)}
+              minZoom={DEFAULT_MAP_STATE.minZoom}
+              maxBounds={DEFAULT_MAP_STATE.maxBounds}
+              onLoad={(e: any) => setMapInstance(e.target)}
+              mapboxAccessToken={MAPBOX_TOKEN}
+              mapStyle="mapbox://styles/mapbox/light-v11"
+              pitch={0}
+              bearing={0}
+              style={{ width: '100%', height: '100%' }}
+            >
+              {incidents.filter(inc => (inc.status || '').toUpperCase() !== 'REJECTED').map(inc => (
+                <TacticalMarker
+                  key={`${inc.source_table}-${inc.id}`}
+                  latitude={Number(inc.lat)}
+                  longitude={Number(inc.lng)}
+                  type={inc.type}
+                  status={inc.status}
+                  onClick={() => {
+                    setSelectedIncident(inc);
+                    flyToIncident(Number(inc.lat), Number(inc.lng));
+                  }}
+                />
+              ))}
+              <NavigationControl position="top-right" />
+              <FullscreenControl position="top-right" />
+              <SantaCruzMapboxOutline />
+            </MapboxMap>
+          </MapProvider>
         </div>
 
-        {/* Unified Command Sidebar (Right) */}
-        <div className="w-[400px] flex flex-col bg-gray-50 z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.05)] h-full shrink-0 border-l border-gray-100 overflow-hidden">
+        <div className="tactical-panel animate-in slide-in-from-right duration-500">
           {selectedIncident ? (
-            /* Inspection Node View (Replaces Feed) */
+            /* Inspection Node View */
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-              <div className="p-4 border-b border-gray-100 relative bg-gray-50">
-                <button 
-                  onClick={() => setSelectedIncident(null)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-2xl bg-white hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-all border border-gray-200 shadow-sm"
-                >
-                  <FaTimes size={14} />
-                </button>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] animate-pulse" />
-                  <h2 className="text-[#f59e0b] font-bold text-base tracking-tight">Inspection Node</h2>
-                </div>
-                <p className="text-gray-400 text-[8px] tracking-tight font-bold mt-0.5">
-                  Ref Id: {selectedIncident.id}
-                </p>
+              <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Report Details</span>
+                <button onClick={() => setSelectedIncident(null)} className="text-[9px] font-bold text-blue-600 uppercase">Back</button>
               </div>
 
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-                {/* Evidence Carousel */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[8px] text-gray-500 font-bold tracking-tight uppercase">Evidence Visuals</span>
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : selectedIncident.media_urls.length - 1))}
-                        className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-gray-500"
-                      >
-                        <FiChevronRight className="rotate-180" />
-                      </button>
-                      <button 
-                        onClick={() => setCurrentImageIndex(prev => (prev < selectedIncident.media_urls.length - 1 ? prev + 1 : 0))}
-                        className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 text-gray-500"
-                      >
-                        <FiChevronRight />
-                      </button>
-                    </div>
-                  </div>
+                {/* Evidence Visuals */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                   <div className="px-3 py-1.5 bg-gray-50/30 border-b border-gray-100 flex justify-between items-center">
+                     <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Evidence</span>
+                     {selectedIncident.media_urls.length > 1 && (
+                       <div className="flex gap-2">
+                         <button onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : selectedIncident.media_urls.length - 1))} className="text-gray-400 hover:text-blue-600 transition-colors">
+                           <FiChevronRight className="rotate-180" size={10} />
+                         </button>
+                         <button onClick={() => setCurrentImageIndex(prev => (prev < selectedIncident.media_urls.length - 1 ? prev + 1 : 0))} className="text-gray-400 hover:text-blue-600 transition-colors">
+                           <FiChevronRight size={10} />
+                         </button>
+                       </div>
+                     )}
+                   </div>
                   
                   {selectedIncident.media_urls.length > 0 ? (
-                    <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 relative group shadow-lg">
+                    <div className="aspect-video bg-slate-100 relative">
                       <img 
                         src={selectedIncident.media_urls[currentImageIndex].startsWith('data:') 
                           ? selectedIncident.media_urls[currentImageIndex] 
                           : `/${selectedIncident.media_urls[currentImageIndex]}`} 
-                        alt="Incident Evidence" 
+                        alt="Evidence" 
                         className="w-full h-full object-cover" 
                       />
-                      <div className="absolute bottom-3 right-3 px-2 py-1 bg-white/80 backdrop-blur-md rounded-lg text-[10px] font-black tracking-widest text-[#f59e0b] border border-gray-200 shadow-sm">
-                        {currentImageIndex + 1}/{selectedIncident.media_urls.length}
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-slate-900/80 rounded text-[7px] font-black text-white">
+                        {currentImageIndex + 1} / {selectedIncident.media_urls.length}
                       </div>
                     </div>
                   ) : (
-                    <div className="aspect-video rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-                      <FaCamera size={24} className="mb-2 opacity-10" />
-                      <span className="text-[9px] font-black tracking-widest uppercase opacity-40">Zero_Visual_Intel</span>
+                    <div className="aspect-video bg-gray-50 flex flex-col items-center justify-center text-gray-300">
+                      <FaCamera size={16} className="opacity-20 mb-1" />
+                      <span className="text-[7px] font-black tracking-widest uppercase">No_Intel</span>
                     </div>
                   )}
                 </div>
 
-                {/* Data Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm group relative">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block">Severity</span>
-                      <button 
-                        onClick={() => setIsEditingSeverity(!isEditingSeverity)}
-                        className="text-[8px] text-[#f59e0b] hover:underline font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        {isEditingSeverity ? 'Cancel' : 'Triage'}
-                      </button>
-                    </div>
-                    {isEditingSeverity ? (
-                      <div className="flex gap-1 mt-1">
-                        {['Low', 'Moderate', 'High'].map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => handleUpdateSeverity(selectedIncident.id, selectedIncident.source_table, s)}
-                            className={`flex-1 py-1 rounded text-[8px] font-black uppercase transition-all ${
-                              selectedIncident.severity === s 
-                              ? getSeverityStyle(s)
-                              : 'bg-white text-gray-400 hover:bg-gray-100 border border-gray-100'
-                            }`}
-                          >
-                            {s}
-                          </button>
-                        ))}
+                {/* Tactical Parameters */}
+                <div className="space-y-2">
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="grid grid-cols-2 divide-x divide-gray-100 border-b border-gray-100">
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Severity</label>
+                        <span className={`text-[11px] font-bold uppercase tracking-tight ${getSeverityStyle(selectedIncident.severity).split(' ')[0]}`}>{selectedIncident.severity}</span>
                       </div>
-                    ) : (
-                      <p className={`text-xs font-black uppercase ${getSeverityStyle(selectedIncident.severity).split(' ')[0]}`}>
-                        {selectedIncident.severity}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-                    <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block mb-1">Type</span>
-                    <p className="text-xs font-black text-gray-900 uppercase">{selectedIncident.type}</p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 col-span-2 flex items-center gap-4 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-[#f59e0b]/10 flex items-center justify-center border border-[#f59e0b]/20 shrink-0">
-                      <FaUser className="text-[#f59e0b] text-sm" />
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Type</label>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase">{selectedIncident.type}</span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest block leading-none mb-1">Reporter</span>
-                      <p className="text-xs font-black text-gray-900 uppercase truncate">{selectedIncident.reporter || 'Anonymous'}</p>
+                    <div className="grid grid-cols-2 divide-x divide-gray-100 border-b border-gray-100">
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Coordinates</label>
+                        <span className="text-[10px] font-bold text-slate-600 truncate block">
+                          {Number(selectedIncident.lat).toFixed(5)}, {Number(selectedIncident.lng).toFixed(5)}
+                        </span>
+                      </div>
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Timestamp</label>
+                        <span className="text-[10px] font-bold text-slate-600">
+                          {new Date(selectedIncident.time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                      </div>
                     </div>
+                    <div className="p-3">
+                      <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Reporter</label>
+                      <div className="flex items-center gap-2">
+                         <div className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center">
+                            <FaUser size={10} className="text-blue-600" />
+                         </div>
+                         <span className="text-[11px] font-bold text-slate-900 uppercase truncate">{selectedIncident.reporter || 'Anonymous'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Intel Notes */}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-20" />
+                    <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Description</label>
+                    <p className="text-[11px] text-slate-600 font-semibold leading-tight italic">
+                      "{selectedIncident.description || 'Zero field intel.'}"
+                    </p>
                   </div>
                 </div>
 
-                {/* Field Notes */}
-                <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 relative overflow-hidden shadow-sm">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f59e0b] opacity-40" />
-                  <span className="text-[7px] text-gray-400 uppercase font-black tracking-widest mb-2 block">Intelligence_Notes</span>
-                  <p className="text-[11px] text-gray-600 leading-relaxed font-bold italic">
-                    "{selectedIncident.description || 'No additional field intelligence recorded for this sector.'}"
-                  </p>
-                </div>
-
-                {/* Actions Area */}
-                <div className="pt-2 pb-6">
-                  {selectedIncident.status.toUpperCase() === 'PENDING' ? (
-                    <div className="flex bg-[#f59e0b] rounded-2xl overflow-hidden divide-x divide-black/10 border border-[#f59e0b] shadow-2xl">
-                      <button 
-                        onClick={() => {
-                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
-                          navigate(path, { state: { prefill: selectedIncident, isVerify: true } });
-                        }}
-                        className="flex-1 py-5 flex flex-col items-center justify-center hover:bg-black/5 transition-all group"
-                      >
-                        <FaCheckCircle className="text-black text-xl mb-1 group-hover:scale-110 transition-transform" />
-                        <span className="text-black font-black text-[10px] tracking-widest uppercase">VERIFY</span>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          if (window.confirm("CONFIRM REJECTION: Dismiss this report?")) {
-                            handleAction(selectedIncident.id, 'reject', selectedIncident.source_table);
-                          }
-                        }}
-                        disabled={actionLoading === selectedIncident.id}
-                        className="flex-1 py-5 flex flex-col items-center justify-center hover:bg-black/5 transition-all group"
-                      >
-                        {actionLoading === selectedIncident.id ? <FaSpinner className="animate-spin text-black" /> : <FaTimes className="text-black text-xl mb-1 group-hover:scale-110 transition-transform" />}
-                        <span className="text-black font-black text-[10px] tracking-widest uppercase">REJECT</span>
-                      </button>
-                    </div>
-                  ) : selectedIncident.status.toUpperCase() === 'ACTIVE' || selectedIncident.status.toUpperCase() === 'APPROVED' || selectedIncident.status.toUpperCase() === 'VERIFIED' ? (
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleAction(selectedIncident.id, 'resolve', selectedIncident.source_table)}
-                        disabled={actionLoading === selectedIncident.id}
-                        className="flex-1 py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black text-[11px] tracking-[0.4em] uppercase shadow-2xl transition-all flex flex-col items-center justify-center gap-1 group"
-                      >
-                        {actionLoading === selectedIncident.id ? <FaSpinner className="animate-spin text-white" /> : <FaCheckCircle className="text-white text-xl group-hover:scale-110 transition-transform" />}
-                        RESOLVE_UNIT
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
-                          navigate(path, { state: { prefill: selectedIncident, isEdit: true } });
-                        }}
-                        className="px-6 py-5 bg-white hover:bg-gray-50 text-gray-700 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all flex flex-col items-center justify-center gap-1 group border border-gray-200 shadow-lg"
-                      >
-                        <FiMaximize2 className="text-gray-400 text-xl group-hover:scale-110 transition-transform" />
-                        Modify Severity
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="py-5 text-center border border-gray-100 rounded-2xl bg-gray-50 shadow-inner">
-                      <span className="text-[9px] text-gray-500 font-bold tracking-tight">Archived Log</span>
-                    </div>
-                  )}
-                </div>
+                {/* Operations Area */}
+                 <div className="space-y-2 pt-2">
+                   {selectedIncident.status.toUpperCase() === 'PENDING' ? (
+                     <div className="grid grid-cols-2 gap-2">
+                       <button 
+                         onClick={() => {
+                           const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
+                           navigate(path, { state: { prefill: selectedIncident, isVerify: true } });
+                         }}
+                         className="py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all shadow-lg shadow-blue-500/20"
+                       >Verify</button>
+                       <button 
+                         onClick={() => { if (window.confirm("Reject report?")) handleAction(selectedIncident.id, 'reject', selectedIncident.source_table); }}
+                         className="py-3 bg-white border border-gray-100 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
+                       >Reject</button>
+                     </div>
+                   ) : (['ACTIVE', 'APPROVED', 'VERIFIED'].includes(selectedIncident.status.toUpperCase())) && (user?.role === 'admin' || user?.brgy_name === selectedIncident.brgy) ? (
+                     <div className="flex flex-col gap-2">
+                       <button 
+                         onClick={() => handleAction(selectedIncident.id, 'resolve', selectedIncident.source_table)}
+                         className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[11px] tracking-widest uppercase shadow-lg shadow-emerald-500/20"
+                       >Resolve Report</button>
+                       <button 
+                         onClick={() => {
+                           const path = user?.role === 'admin' ? '/admin/report-incident' : '/brgy/report-incident';
+                           navigate(path, { state: { prefill: selectedIncident, isEdit: true } });
+                         }}
+                         className="w-full py-3 bg-white border border-gray-100 hover:bg-gray-50 text-slate-600 rounded-xl font-bold text-[10px] tracking-widest uppercase transition-all"
+                       >Edit Report</button>
+                     </div>
+                   ) : (
+                     <div className="py-4 text-center border border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
+                       <span className="text-[9px] text-gray-300 font-bold tracking-widest uppercase">Archived</span>
+                     </div>
+                   )}
+                 </div>
               </div>
             </div>
           ) : (
             /* Tactical Feed View */
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-right duration-300">
-              {/* Header */}
-              <div className="p-6 border-b border-gray-100 relative bg-gray-100/50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-xl font-bold tracking-tight text-[#f59e0b]">Operational Command</h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-[10px] text-gray-400 tracking-tight font-bold">Live Tactical Stream</span>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={fetchIncidents}
-                    className="p-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 transition-all active:scale-90 shadow-sm"
-                    disabled={loading}
-                  >
-                    <FiRefreshCw className={`text-gray-400 ${loading ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
+              <div className="px-3 py-2 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Command Center</span>
+                <button onClick={fetchIncidents} className="text-gray-400 hover:text-blue-600 transition-colors">
+                  <FiRefreshCw size={10} className={loading ? 'animate-spin' : ''} />
+                </button>
+              </div>
 
+              <div className="p-[10px] border-b border-gray-100 space-y-3">
                 <div className="relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                   <input 
                     type="text" 
-                    placeholder="Search tactical data..."
-                    className="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-12 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/10 placeholder-gray-400 transition-all font-bold"
+                    placeholder="Search label"
+                    className="w-full bg-gray-50 text-[10px] font-bold border-none outline-none py-2.5 pl-9 rounded-xl"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
 
-                <div className="flex p-1 bg-gray-50 rounded-2xl border border-gray-200 overflow-x-auto no-scrollbar">
-                  {(['PENDING', 'ACTIVE', 'RESOLVED', 'REJECTED'] as const).map(tab => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`flex-1 py-2 px-3 rounded-xl text-[9px] font-bold tracking-tight transition-all whitespace-nowrap ${
-                        activeTab === tab 
-                        ? 'bg-[#f59e0b] text-black shadow-lg shadow-[#f59e0b]/20' 
-                        : 'text-gray-400 hover:text-gray-600'
-                      }`}
-                    >
-                      {tab.charAt(0) + tab.slice(1).toLowerCase()}
-                    </button>
-                  ))}
-                </div>
+                 <div className="flex bg-gray-100 rounded-xl p-0.5 overflow-x-auto no-scrollbar">
+                   {(['PENDING', 'ACTIVE', 'RESOLVED', 'REJECTED'] as const).map(tab => (
+                     <button
+                       key={tab}
+                       onClick={() => setActiveTab(tab)}
+                       className={`flex-1 py-1.5 px-2 rounded-lg text-[9px] font-bold tracking-widest transition-all uppercase ${
+                         activeTab === tab 
+                         ? 'bg-white text-slate-900 shadow-sm' 
+                         : 'text-gray-400 hover:text-gray-600'
+                       }`}
+                     >
+                       {tab.toLowerCase()}
+                     </button>
+                   ))}
+                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-gray-50/50">
+              {/* Sidebar Feed */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
                 {loading && incidents.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-600 gap-4">
-                    <FaSpinner className="animate-spin text-xl" />
-                    <span className="text-[9px] font-bold tracking-tight">Syncing tactical link...</span>
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-300 gap-2">
+                    <FaSpinner className="animate-spin text-sm" />
+                    <span className="text-[8px] font-black tracking-widest uppercase">Syncing...</span>
                   </div>
                 ) : filteredIncidents.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-gray-700 opacity-30">
-                    <FaInfoCircle className="text-3xl mb-3" />
-                    <span className="text-[10px] font-bold tracking-tight text-center px-6">No matches found in this sector</span>
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-200">
+                    <FaInfoCircle size={20} className="mb-2 opacity-20" />
+                    <span className="text-[8px] font-black tracking-widest uppercase text-center px-4">No tactical signatures detected</span>
                   </div>
                 ) : (
                   filteredIncidents.map(inc => (
-                    <div 
+                    <button 
                       key={`${inc.source_table}-${inc.id}`}
                       onClick={() => {
                         setSelectedIncident(inc);
                         flyToIncident(Number(inc.lat), Number(inc.lng));
                       }}
-                      className={`px-5 py-4 cursor-pointer border-l-4 transition-all relative rounded-2xl mb-2 ${
-                        (selectedIncident as any)?.id === inc.id && (selectedIncident as any)?.source_table === inc.source_table
-                        ? 'bg-white border-[#f59e0b] shadow-xl ring-1 ring-black/5' 
-                        : 'bg-white border-transparent hover:border-gray-200 hover:bg-gray-50 shadow-sm border border-gray-100'
-                      }`}
+                      className="w-full text-left bg-white rounded-2xl border transition-all overflow-hidden border-gray-100 hover:border-gray-200 shadow-sm"
                     >
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${getSeverityStyle(inc.severity)}`}>
-                          {inc.severity}
-                        </span>
-                        <span className="text-[8px] text-gray-600 font-mono">#{inc.id.toString().slice(-4)}</span>
-                      </div>
-                      
-                      <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">{inc.type}</h3>
-                      
-                      <div className="flex items-center gap-1.5 text-gray-400 mb-2">
-                        <FaMapMarkerAlt className="text-[9px] shrink-0" />
-                        <span className="text-[10px] truncate uppercase font-bold tracking-tighter">{inc.location_text}</span>
-                      </div>
+                      <div className="p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border ${getSeverityStyle(inc.severity)}`}>
+                            {inc.severity}
+                          </span>
+                          <span className="text-[8px] font-bold text-gray-300">#SCT_{inc.id}</span>
+                        </div>
+                        
+                        <h3 className="text-[12px] font-bold text-slate-900 uppercase tracking-tight truncate mb-1">{inc.type}</h3>
+                        
+                        <div className="flex items-center gap-1.5 text-gray-400 mb-3">
+                          <FaMapMarkerAlt size={8} className="shrink-0" />
+                          <span className="text-[9px] truncate font-semibold uppercase tracking-tight">{inc.location_text}</span>
+                        </div>
 
-                      <div className="flex items-center justify-between text-[9px] text-gray-400 font-bold uppercase">
-                        <div className="flex items-center gap-1.5">
-                          <FaClock className="shrink-0" />
-                          <span>{new Date(inc.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[#f59e0b] font-black">{(inc.reporter || 'ANON').split(' ')[0]}</span>
+                        <div className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest pt-2 border-t border-gray-50">
+                          <div className="flex items-center gap-1.5">
+                            <FaClock size={8} className="text-gray-300" />
+                            <span>{new Date(inc.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                          </div>
+                          <span className="text-blue-600">{(inc.reporter || 'Anonymous').split(' ')[0]}</span>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))
                 )}
               </div>
@@ -516,13 +460,12 @@ const TacticalApprovalDashboard: React.FC = () => {
       </div>
 
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.1); }
-        .sentinelx-glow { filter: drop-shadow(0 0 4px #f59e0b); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.15); }
       `}</style>
-    </MapProvider>
+    </div>
   );
 };
 

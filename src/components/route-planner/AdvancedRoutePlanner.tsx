@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap 
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import * as turf from '@turf/turf';
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
 import { 
   FaCar, 
   FaWalking, 
@@ -436,15 +437,17 @@ const AdvancedRoutePlanner: React.FC = () => {
       {/* Map Container */}
       <div className="flex-1 relative">
         <MapContainer
-          center={[14.5995, 120.9842]}
-          zoom={13}
+          center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]}
+          zoom={DEFAULT_MAP_STATE.zoom}
+          minZoom={DEFAULT_MAP_STATE.minZoom}
+          maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+          attributionControl={false}
           style={{ height: "100%", width: "100%" }}
-          ref={mapRef}
+          ref={mapRef as any}
           className="z-0"
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           
           {/* Start Marker */}

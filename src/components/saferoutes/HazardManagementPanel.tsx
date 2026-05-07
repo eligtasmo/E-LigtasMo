@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit3, FiAlertTriangle, FiMapPin, FiClock, FiUser, FiX, FiCheck, FiExternalLink } from 'react-icons/fi';
+import { FiPlus, FiEdit3, FiAlertTriangle, FiMapPin, FiClock, FiUser, FiX, FiCheck, FiExternalLink, FiChevronRight } from 'react-icons/fi';
 import { FaExclamationTriangle, FaRoad, FaWater, FaFire, FaSnowflake, FaWind, FaMapMarkerAlt, FaPhone, FaEnvelope, FaCalendarAlt, FaCheck, FaCar, FaMotorcycle, FaWalking, FaBicycle, FaBus } from 'react-icons/fa';
 import HazardFormModal from './HazardFormModal';
 
@@ -190,323 +190,187 @@ const HazardManagementPanel: React.FC<HazardManagementPanelProps> = ({
   const previewRadiusM = draftSeverity === 'critical' ? 350 : draftSeverity === 'high' ? 250 : draftSeverity === 'medium' ? 160 : 110;
 
   return (
-    <>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #3b82f6, #6366f1);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #2563eb, #4f46e5);
-        }
-      `}</style>
-      <div className="w-full flex flex-col z-10 relative overflow-hidden">
+    <div className="flex flex-col h-full font-jetbrains">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 p-3 rounded-t-xl">
-        <div className="flex items-center gap-2 mb-2">
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-          <div>
-            <h1 className="text-sm font-medium text-gray-800">Hazard Management</h1>
-            <p className="text-gray-600 text-xs">Monitor & Respond to Hazards</p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/20">
+              <FiAlertTriangle className="text-white text-lg" />
+            </div>
+            <div>
+              <h1 className="text-gray-900 font-black text-lg tracking-tight uppercase">Search</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] text-slate-500 tracking-tight font-bold uppercase">Live Surveillance</span>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Status Indicator */}
-        <div className="flex items-center justify-between p-2 bg-gray-50 rounded border text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-            <span className="font-medium text-gray-700">Hazard System</span>
-          </div>
-          <div className="text-gray-600">
-            {(Array.isArray(hazards) ? hazards : []).filter(h => h.status === 'active').length} active hazard{(Array.isArray(hazards) ? hazards : []).filter(h => h.status === 'active').length !== 1 ? 's' : ''}
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleNavigateToIncidentReport}
+              className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-slate-500 hover:bg-gray-100 hover:text-gray-900 transition-all shadow-sm"
+              title="Incident Reports"
+            >
+              <FiExternalLink />
+            </button>
+            {!isHazardDrawing ? (
+              <button
+                onClick={() => {
+                  onSelectHazard(null);
+                  onResetHazardDraft();
+                  setHazardDrawTool('segment');
+                  setIsHazardDrawing(true);
+                }}
+                className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95"
+                title="Create New Hazard"
+              >
+                <FiPlus />
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onResetHazardDraft();
+                  setIsHazardDrawing(false);
+                }}
+                className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white shadow-lg shadow-gray-900/20 hover:bg-black transition-all active:scale-95"
+                title="Cancel Drawing"
+              >
+                <FiX />
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="mt-2 p-2 bg-white rounded border border-gray-200">
-          <div className="flex items-center justify-between gap-2">
-            {isHazardDrawing && hazardDrawTool === 'segment' ? (
-              <label className="flex items-center gap-2 text-xs font-semibold text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={!!snapToRoadEnabled}
-                  onChange={(e) => setSnapToRoadEnabled(e.target.checked)}
-                  className="accent-blue-600"
-                />
-                Snap to road
-              </label>
-            ) : (
-              <div className="text-xs font-semibold text-gray-700">Hazard settings</div>
-            )}
-            <div className="text-[11px] font-semibold text-gray-700">
-              {severityLabel} • {previewRadiusM}m
-            </div>
+        {/* Hazard System Metrics */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Active Status</p>
+            <p className="text-gray-900 font-black text-xl">
+              {(Array.isArray(hazards) ? hazards : []).filter(h => h.status === 'active').length}
+              <span className="text-red-600 ml-1">!!</span>
+            </p>
           </div>
-          <div className="mt-2">
-            <input
-              type="range"
-              min={0}
-              max={3}
-              step={1}
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Grid Mode</p>
+            <p className="text-blue-600 font-black text-[13px] uppercase tracking-tight">Tactical-V2</p>
+          </div>
+        </div>
+
+        {/* Drawing Controls (Conditional) */}
+        {isHazardDrawing && (
+          <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100 mb-6 animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
+                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Aquisition Mode</span>
+              </div>
+              <div className="flex bg-white rounded-lg p-1 border border-blue-100">
+                <button
+                  type="button"
+                  onClick={() => { setHazardDrawTool('segment'); onResetHazardDraft(); }}
+                  className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${hazardDrawTool === 'segment' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-400 hover:text-blue-600'}`}
+                >Path</button>
+                <button
+                  type="button"
+                  onClick={() => { setHazardDrawTool('polygon'); onResetHazardDraft(); }}
+                  className={`px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest transition-all ${hazardDrawTool === 'polygon' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-400 hover:text-blue-600'}`}
+                >Area</button>
+              </div>
+            </div>
+
+            {hazardDrawTool === 'segment' ? (
+              <div className="space-y-4">
+                <div className="bg-white/50 rounded-xl p-3 border border-blue-100/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-black text-blue-400 uppercase">Input Node [A]</span>
+                    <span className={`text-[9px] font-bold ${hazardStart ? 'text-emerald-600' : 'text-slate-500'}`}>{hazardStart ? 'LOCKED' : 'PENDING'}</span>
+                  </div>
+                  {hazardStart && hazardStart.length >= 2 && (
+                    <p className="text-[11px] font-bold text-blue-900 truncate opacity-70">
+                      {hazardStart[0].toFixed(5)}, {hazardStart[1].toFixed(5)}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-white/50 rounded-xl p-3 border border-blue-100/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-black text-blue-400 uppercase">Input Node [B]</span>
+                    <span className={`text-[9px] font-bold ${hazardEnd ? 'text-emerald-600' : 'text-slate-500'}`}>{hazardEnd ? 'LOCKED' : 'PENDING'}</span>
+                  </div>
+                  {hazardEnd && hazardEnd.length >= 2 && (
+                    <p className="text-[11px] font-bold text-blue-900 truncate opacity-70">
+                      {hazardEnd[0].toFixed(5)}, {hazardEnd[1].toFixed(5)}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <button onClick={onResetHazardDraft} className="flex-1 py-3 rounded-xl bg-white border border-blue-100 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all">Reset</button>
+                  <button onClick={() => setIsHazardFormOpen(true)} disabled={!hazardStart || !hazardEnd} className="flex-[2] py-3 rounded-xl bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20">Finalize</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold text-blue-900">Vertices Placed: <span className="font-black text-blue-600">{hazardPolygonCount}</span></p>
+                  <span className="text-[9px] font-bold text-blue-400 italic">Min 3 req.</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                   <button onClick={onUndoHazardPolygon} disabled={hazardPolygonCount === 0} className="py-3 rounded-xl bg-white border border-blue-100 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all disabled:opacity-30">Undo</button>
+                   <button onClick={onFinishHazardPolygon} disabled={hazardPolygonCount < 3} className="py-3 rounded-xl bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-30">Lock Area</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Severity Configuration */}
+        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+           <div className="flex items-center justify-between mb-4">
+              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Impact Radius</p>
+              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-white`} style={{ backgroundColor: SEVERITY_COLORS[draftSeverity] }}>
+                {draftSeverity}
+              </span>
+           </div>
+           <input
+              type="range" min={0} max={3} step={1}
               value={severityIndex}
               onChange={(e) => {
                 const v = Number(e.target.value);
                 setDraftSeverity(v === 0 ? 'low' : v === 1 ? 'medium' : v === 2 ? 'high' : 'critical');
               }}
-              className="w-full"
+              className="w-full accent-gray-900 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
-            <div className="mt-1 flex justify-between text-[10px] text-gray-500 font-semibold">
-              <span>Low</span>
-              <span>Moderate</span>
-              <span>High</span>
-              <span>Critical</span>
+            <div className="flex justify-between mt-3 text-[8px] font-bold text-slate-500 uppercase tracking-tighter">
+               <span>Minor</span>
+               <span>Moderate</span>
+               <span>Severe</span>
+               <span>Critical</span>
             </div>
-          </div>
         </div>
-        
-        {/* Status Filter Buttons */}
-        <div className="flex gap-1 mt-2 mb-2">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              statusFilter === 'all' 
-                ? 'bg-gray-600 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setStatusFilter('active')}
-            className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              statusFilter === 'active' 
-                ? 'bg-red-600 text-white' 
-                : 'bg-red-50 text-red-600 hover:bg-red-100'
-            }`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setStatusFilter('monitoring')}
-            className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              statusFilter === 'monitoring' 
-                ? 'bg-yellow-600 text-white' 
-                : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
-            }`}
-          >
-            Monitoring
-          </button>
-          <button
-            onClick={() => setStatusFilter('resolved')}
-            className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              statusFilter === 'resolved' 
-                ? 'bg-green-600 text-white' 
-                : 'bg-green-50 text-green-600 hover:bg-green-100'
-            }`}
-          >
-            Resolved
-          </button>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleNavigateToIncidentReport}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1"
-            title="Go to Incident Reports"
-          >
-            <FiExternalLink className="text-sm" />
-            <span className="text-xs">Reports</span>
-          </button>
-          {!isHazardDrawing ? (
-            <button
-              onClick={() => {
-                onSelectHazard(null);
-                onResetHazardDraft();
-                setHazardDrawTool('segment');
-                setIsHazardDrawing(true);
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1"
-              title="Create new hazard"
-            >
-              <FiPlus className="text-sm" />
-              <span className="text-xs">Create</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                onResetHazardDraft();
-                setIsHazardDrawing(false);
-              }}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1.5 rounded-md transition-colors flex items-center gap-1"
-              title="Cancel drawing"
-            >
-              <FiX className="text-sm" />
-              <span className="text-xs">Cancel</span>
-            </button>
-          )}
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mt-6">
+           {['all', 'active', 'monitoring', 'resolved'].map((status) => (
+             <button
+               key={status}
+               onClick={() => setStatusFilter(status as any)}
+               className={`flex-1 py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${statusFilter === status ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-50 text-slate-500 hover:text-gray-900 border border-gray-100'}`}
+             >
+               {status}
+             </button>
+           ))}
         </div>
       </div>
 
-      {isHazardDrawing ? (
-        <div className="bg-blue-50 p-3 mt-0 rounded w-full">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <FiMapPin className="text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-blue-800">
-                  {hazardDrawTool === 'polygon' ? 'Draw hazard area' : 'Mark hazard on road'}
-                </p>
-                <p className="text-xs text-blue-600">
-                  {hazardDrawTool === 'polygon' ? 'Tap points around the affected zone.' : 'Tap start point then end point.'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-blue-100">
-              <button
-                type="button"
-                onClick={() => {
-                  setHazardDrawTool('segment');
-                  onResetHazardDraft();
-                  setIsHazardDrawing(true);
-                }}
-                className={`px-2 py-1 rounded-md text-xs font-semibold ${hazardDrawTool === 'segment' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'}`}
-              >
-                Path
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setHazardDrawTool('polygon');
-                  onResetHazardDraft();
-                  setIsHazardDrawing(true);
-                }}
-                className={`px-2 py-1 rounded-md text-xs font-semibold ${hazardDrawTool === 'polygon' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'}`}
-              >
-                Area
-              </button>
-            </div>
-          </div>
-
-          {hazardDrawTool === 'segment' ? (
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${hazardStart ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className="text-xs text-gray-700">Start</span>
-                  {hazardStart ? (
-                    <button
-                      onClick={() => setActiveHazardInput('start')}
-                      className={`text-xs px-2 py-1 rounded ${
-                        activeHazardInput === 'start'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                      }`}
-                    >
-                      {activeHazardInput === 'start' ? 'Active' : 'Edit'}
-                    </button>
-                  ) : null}
-                </div>
-                {hazardStart ? (
-                  <span className="text-xs text-gray-500">
-                    {hazardStart[0].toFixed(4)}, {hazardStart[1].toFixed(4)}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${hazardEnd ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className="text-xs text-gray-700">End</span>
-                  {hazardEnd ? (
-                    <button
-                      onClick={() => setActiveHazardInput('end')}
-                      className={`text-xs px-2 py-1 rounded ${
-                        activeHazardInput === 'end'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                      }`}
-                    >
-                      {activeHazardInput === 'end' ? 'Active' : 'Edit'}
-                    </button>
-                  ) : null}
-                </div>
-                {hazardEnd ? (
-                  <span className="text-xs text-gray-500">
-                    {hazardEnd[0].toFixed(4)}, {hazardEnd[1].toFixed(4)}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="mt-3 flex gap-2">
-                {(hazardStart || hazardEnd) ? (
-                  <button
-                    onClick={onResetHazardDraft}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-1.5 px-3 rounded text-sm font-medium transition-colors"
-                  >
-                    Clear
-                  </button>
-                ) : null}
-                {hazardStart && hazardEnd ? (
-                  <button
-                    onClick={() => setIsHazardFormOpen(true)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 px-3 rounded text-sm font-medium transition-colors"
-                  >
-                    Continue
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ) : (
-            <div className="mt-3">
-              <div className="text-xs text-gray-700 font-semibold">
-                Tap points: {hazardPolygonCount}
-              </div>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={onUndoHazardPolygon}
-                  className="bg-white border border-blue-100 hover:bg-blue-50 text-blue-700 py-1.5 px-2 rounded text-xs font-semibold transition-colors disabled:opacity-50"
-                  disabled={hazardPolygonCount === 0}
-                >
-                  Undo
-                </button>
-                <button
-                  type="button"
-                  onClick={onFinishHazardPolygon}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-1.5 px-2 rounded text-xs font-semibold transition-colors disabled:opacity-50"
-                  disabled={hazardPolygonCount < 3}
-                >
-                  Done
-                </button>
-                <button
-                  type="button"
-                  onClick={onResetHazardDraft}
-                  className="bg-gray-600 hover:bg-gray-700 text-white py-1.5 px-2 rounded text-xs font-semibold transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {/* Hazards List */}
-        <div className="flex-grow overflow-y-auto overflow-x-hidden px-2 pb-3 custom-scrollbar">
+      {/* Hazards List Section */}
+      <div className="flex-1 overflow-y-auto pr-1 -mr-1 custom-scrollbar space-y-4">
         {(() => {
           const filteredHazards = statusFilter === 'all' 
             ? hazards 
-            : hazards.filter(h => h.status === statusFilter);
+            : (hazards || []).filter(h => h.status === statusFilter);
           
-          // Sort hazards by most recent first (prefer created_at, fallback to datetime)
           const sortedHazards = [...filteredHazards].sort((a, b) => {
             const dateA = a.created_at ? new Date(a.created_at).getTime() : (a.datetime ? new Date(a.datetime).getTime() : 0);
             const dateB = b.created_at ? new Date(b.created_at).getTime() : (b.datetime ? new Date(b.datetime).getTime() : 0);
@@ -514,162 +378,74 @@ const HazardManagementPanel: React.FC<HazardManagementPanelProps> = ({
           });
           
           return sortedHazards.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <FiAlertTriangle className="text-3xl text-gray-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-600">
-                {statusFilter === 'all' ? 'No hazards reported' : `No ${statusFilter} hazards`}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {statusFilter === 'all' ? 'Click the + button to add a hazard' : `Switch to "All" to see other hazards`}
-              </p>
+            <div className="py-20 text-center">
+               <div className="w-16 h-16 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <FiAlertTriangle className="text-gray-200 text-2xl" />
+               </div>
+               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">No Records Found</p>
             </div>
           ) : (
-            <div className="space-y-2 mt-4">
-              {sortedHazards.map((hazard) => {
+            sortedHazards.map((hazard) => {
               const HazardIcon = getHazardIcon(hazard.type);
               const isSelected = selectedHazard?.id === hazard.id;
               
               return (
                 <div
                   key={hazard.id}
-                  className={`border border-gray-200 rounded-lg p-2.5 hover:shadow-md transition-shadow cursor-pointer ${
-                    isSelected ? 'ring-2 ring-red-500 bg-red-50' : 'bg-white'
-                  }`}
                   onClick={() => onSelectHazard(isSelected ? null : hazard)}
+                  className={`group rounded-3xl border-2 transition-all cursor-pointer overflow-hidden p-5 ${isSelected ? 'bg-white border-blue-600 shadow-xl' : 'bg-white border-gray-50 hover:border-gray-200 shadow-sm'}`}
                 >
-                  <div className="flex items-start justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="p-1.5 rounded text-white"
-                        style={{ backgroundColor: getHazardColor(hazard.type) }}
-                      >
-                        <HazardIcon className="text-xs" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 text-sm">
-                          {HAZARD_TYPES.find(t => t.value === hazard.type)?.label || hazard.type}
-                        </h4>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span
-                            className="px-1.5 py-0.5 text-xs font-medium rounded text-white"
-                            style={{ backgroundColor: SEVERITY_COLORS[hazard.severity] }}
-                          >
-                            {hazard.severity.toUpperCase()}
-                          </span>
-                          <span
-                            className="px-1.5 py-0.5 text-xs font-medium rounded text-white"
-                            style={{ backgroundColor: STATUS_COLORS[hazard.status] }}
-                          >
-                            {hazard.status.toUpperCase()}
-                          </span>
+                  <div className="flex items-center justify-between mb-4">
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: getHazardColor(hazard.type) }}>
+                           <HazardIcon />
                         </div>
-                      </div>
-                    </div>
+                        <div>
+                           <h4 className="text-gray-900 font-black text-sm uppercase tracking-tight truncate max-w-[140px]">{hazard.type}</h4>
+                           <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: SEVERITY_COLORS[hazard.severity] }}>{hazard.severity}</span>
+                              <div className="w-1 h-1 rounded-full bg-gray-200" />
+                              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: STATUS_COLORS[hazard.status] }}>{hazard.status}</span>
+                           </div>
+                        </div>
+                     </div>
+                     <button className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-50 text-slate-500 group-hover:bg-gray-100'}`}>
+                        <FiChevronRight className={`transition-transform duration-300 ${isSelected ? 'rotate-90' : ''}`} />
+                     </button>
                   </div>
 
-                  <div className="mb-1.5">
-                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
-                      <FiMapPin className="text-xs" />
-                      <span className="break-words">{hazard.location || hazard.address}</span>
-                    </div>
-                    <p className="text-xs text-gray-600 line-clamp-2 break-words">
-                      {hazard.description}
-                    </p>
-                 </div>
-
-                  {/* Allowed Vehicle Modes (view-only in card) */}
-                  <div className="mt-2">
-                    <div className="text-xs text-gray-700 font-medium mb-1">Allowed vehicles</div>
-                    <div className="grid grid-cols-5 gap-1">
-                      {[
-                        { key: 'driving-car', label: 'Car', Icon: FaCar },
-                        { key: 'driving-car', label: 'Motor', Icon: FaMotorcycle },
-                        { key: 'cycling-regular', label: 'Bike', Icon: FaBicycle },
-                        { key: 'foot-walking', label: 'Walk', Icon: FaWalking },
-                        { key: 'driving-hgv', label: 'Truck', Icon: FaBus },
-                      ].map(({ key, label, Icon }) => {
-                        const selected = Array.isArray(hazard.allowed_modes) && hazard.allowed_modes.includes(key);
-                        return (
-                          <div
-                            key={label}
-                            className={`${selected ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'} px-1.5 py-1 rounded text-xs flex items-center justify-center gap-1`}
-                          >
-                            <Icon className="text-xs" />
-                            <span>{label}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-[10px] text-gray-500 mt-1">
-                      {Array.isArray(hazard.allowed_modes) && hazard.allowed_modes.length > 0
-                        ? `Allowed: ${hazard.allowed_modes.map(m => {
-                            if (m === 'driving-car') return 'Car/Motor';
-                            if (m === 'cycling-regular') return 'Bike';
-                            if (m === 'foot-walking') return 'Walk';
-                            if (m === 'driving-hgv') return 'Truck';
-                            return m;
-                          }).join(', ')}`
-                        : 'No vehicles allowed (fully restricted)'}
-                    </div>
+                  <div className="space-y-3 mb-5">
+                     <div className="flex items-start gap-2">
+                        <FiMapPin className="text-slate-500 mt-0.5 shrink-0" />
+                        <p className="text-[11px] font-bold text-slate-600 leading-tight">{hazard.location || hazard.address}</p>
+                     </div>
+                     <p className="text-[12px] text-gray-900 leading-relaxed font-medium line-clamp-2">{hazard.description}</p>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                    <div className="flex items-center gap-1">
-                      <FiClock className="text-xs" />
-                      <span>
-                        {hazard.datetime 
-                          ? new Date(hazard.datetime).toLocaleDateString()
-                          : hazard.created_at 
-                            ? new Date(hazard.created_at).toLocaleDateString()
-                            : 'No date'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FiUser className="text-xs" />
-                      <span>{hazard.reportedBy || hazard.reported_by || hazard.reporter || 'Unknown'}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-1.5 pt-1.5 border-t border-gray-100">
-                    {hazard.status === 'active' && (
-                      <button 
-                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkAsResolved(hazard.id);
-                        }}
+                  {/* Actions (visible when selected or on hover) */}
+                  <div className={`flex gap-2 pt-4 border-t border-gray-50 transition-all ${isSelected ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
+                     {hazard.status === 'active' && (
+                       <button 
+                         onClick={(e) => { e.stopPropagation(); handleMarkAsResolved(hazard.id); }}
+                         className="flex-1 py-3 rounded-xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                       >
+                         <FiCheck /> Resolve
+                       </button>
+                     )}
+                     <button 
+                        onClick={(e) => { e.stopPropagation(); handleEdit(hazard); }}
+                        className="flex-1 py-3 rounded-xl bg-gray-50 text-gray-900 text-[10px] font-black uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-all flex items-center justify-center gap-2 border border-gray-100"
                       >
-                        <FaCheck className="text-xs" />
-                        Mark as Done
-                      </button>
-                    )}
-                    
-                    {hazard.status !== 'resolved' && (
-                      <button 
-                        className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(hazard);
-                        }}
-                      >
-                        <FiEdit3 className="text-xs" />
-                        Edit
-                      </button>
-                    )}
+                        <FiEdit3 /> Edit
+                     </button>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        );
+            })
+          );
         })()}
       </div>
 
-
-
-      {/* Hazard Form Modal */}
       <HazardFormModal
         isOpen={isHazardFormOpen}
         onClose={handleCloseModal}
@@ -688,8 +464,7 @@ const HazardManagementPanel: React.FC<HazardManagementPanelProps> = ({
         defaultLocation={defaultLocation}
         defaultAddress={defaultAddress}
       />
-      </div>
-    </>
+    </div>
   );
 };
 

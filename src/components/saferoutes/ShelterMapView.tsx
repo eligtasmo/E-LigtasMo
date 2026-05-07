@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon } from "react-leaflet";
-import { SANTA_CRUZ_OUTLINE } from "../../constants/geo";
+import { SANTA_CRUZ_OUTLINE, DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from "../../constants/geo";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { apiFetch } from "../../utils/api";
@@ -222,13 +222,15 @@ export default function ShelterMapView() {
       {/* Right Panel - Map */}
       <div className="flex-grow h-full w-full">
         <MapContainer
-          center={panTo || center || [14.275, 121.410]}
-          zoom={13}
+          center={panTo || center || [DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]}
+          zoom={DEFAULT_MAP_STATE.zoom}
+          minZoom={DEFAULT_MAP_STATE.minZoom}
+          maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+          attributionControl={false}
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           />
           <MapController panTo={panTo} bounds={bounds} />
           

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import * as XLSX from 'xlsx';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { FiSearch, FiUsers, FiDownload, FiUserPlus, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiMoreHorizontal } from 'react-icons/fi';
 import { useAuth } from "../context/AuthContext";
+import { toast } from 'react-hot-toast';
 
 interface User {
   id: number;
@@ -14,21 +15,24 @@ interface User {
   contact_number: string;
   role: string;
   status: string;
+  created_at?: string;
 }
 
-interface BrgyAccountRow {
-  brgy_id: number;
-  brgy_name: string;
-  lat: any;
-  lng: any;
-  address: string;
-  contact: string | null;
-  user_id: number | null;
-  username: string | null;
-  email: string | null;
-  role: string | null;
-  status: string | null;
-}
+const PAGE_SIZE = 10;
+
+const statusStyle = (status: string) => {
+  const s = (status || '').toLowerCase();
+  if (s === 'approved' || s === 'active') return 'bg-[#ecfdf5] text-[#065f46]';
+  if (s === 'pending') return 'bg-[#fffbeb] text-[#92400e]';
+  if (s === 'rejected' || s === 'blocked') return 'bg-[#fef2f2] text-[#991b1b]';
+  return 'bg-[#f3f4f6] text-[#374151]';
+};
+
+const SortIcon = () => (
+  <svg className="inline ml-1 w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+  </svg>
+);
 
 const UserManagement: React.FC = () => {
   const { user } = useAuth();
@@ -36,579 +40,310 @@ const UserManagement: React.FC = () => {
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
-  
-  // Initialize activeTab based on role
-  // Both admins and brgy officials can see approvals (officials only see their own residents)
-  const [activeTab, setActiveTab] = useState<'approvals' | 'users' | 'brgyAccounts'>(
-    isBrgy ? 'users' : 'approvals'
-  );
-  
-  const [showToast, setShowToast] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterBrgy, setFilterBrgy] = useState(isBrgy ? (user?.brgy_name || '') : '');
-  const [filterRole, setFilterRole] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [brgyAccounts, setBrgyAccounts] = useState<BrgyAccountRow[]>([]);
-  const [brgyLoading, setBrgyLoading] = useState(false);
-  const [brgyError, setBrgyError] = useState("");
-
-  // Ensure activeTab is correct. Brgy can access approvals now.
-  useEffect(() => {
-    if (isBrgy && activeTab === 'brgyAccounts') {
-      setActiveTab('users');
-    }
-  }, [isBrgy, activeTab]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [page, setPage] = useState(1);
+  const [sortCol, setSortCol] = useState<string>('full_name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const fetchUsers = async () => {
     setLoading(true);
-    setError("");
     try {
       const brgyParam = isBrgy ? (user?.brgy_name || '') : filterBrgy;
-      const res = await fetch(`/api/list-users.php?status=${filterStatus}&brgy=${encodeURIComponent(brgyParam)}`, {
-        credentials: "include"
-      });
-      if (!res.ok) {
-        setError(`Server error: ${res.status} ${res.statusText}`);
-        setLoading(false);
-        return;
-      }
-      const text = await res.text();
-      console.log('[DEBUG] User fetch response:', text);
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error('[DEBUG] JSON Parse error:', e, 'Raw text:', text);
-        setError("Invalid JSON from server");
-        setLoading(false);
-        return;
-      }
-      if (data.success) {
-        setUsers(data.users);
-      } else {
-        setError(data.message || "Failed to fetch users");
-      }
-    } catch (err) {
-      setError("Server error. Please try again later.");
-    }
+      const res = await fetch(`/api/list-users.php?status=&brgy=${encodeURIComponent(brgyParam)}`, { credentials: "include" });
+      if (!res.ok) { setLoading(false); return; }
+      const data = await res.json();
+      if (data.success) setUsers(data.users);
+    } catch { }
     setLoading(false);
   };
 
-  const fetchBrgyAccounts = async () => {
-    if (isBrgy) return; // Don't fetch for brgy users
-    setBrgyLoading(true);
-    setBrgyError("");
-    try {
-      const res = await fetch(`/api/list-brgy-accounts.php`, {
-        credentials: "include"
-      });
-      if (!res.ok) {
-        setBrgyError(`Server error: ${res.status} ${res.statusText}`);
-        setBrgyLoading(false);
-        return;
-      }
-      const text = await res.text();
-      console.log('[DEBUG] Brgy accounts response:', text);
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error('[DEBUG] Brgy JSON Parse error:', e, 'Raw text:', text);
-        setBrgyError("Invalid JSON from server");
-        setBrgyLoading(false);
-        return;
-      }
-      if (data.success && Array.isArray(data.brgys)) {
-        setBrgyAccounts(data.brgys);
-      } else {
-        setBrgyError(data.message || "Failed to fetch brgy accounts");
-      }
-    } catch (err) {
-      setBrgyError("Server error. Please try again later.");
+  useEffect(() => { fetchUsers(); }, [filterBrgy]);
+
+
+  const brgys = useMemo(() => Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean))), [users]);
+
+  const filtered = useMemo(() => {
+    let r = users;
+    if (search) {
+      const s = search.toLowerCase();
+      r = r.filter(u => u.full_name?.toLowerCase().includes(s) || u.username?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s));
     }
-    setBrgyLoading(false);
+    r = [...r].sort((a, b) => {
+      const av = (a as any)[sortCol] || '';
+      const bv = (b as any)[sortCol] || '';
+      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    return r;
+  }, [users, search, sortCol, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const toggleSelect = (id: number) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const allOnPageSelected = paginated.length > 0 && paginated.every(u => selected.has(u.id));
+  const toggleAll = () => {
+    if (allOnPageSelected) {
+      const next = new Set(selected);
+      paginated.forEach(u => next.delete(u.id));
+      setSelected(next);
+    } else {
+      const next = new Set(selected);
+      paginated.forEach(u => next.add(u.id));
+      setSelected(next);
+    }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [activeTab, filterBrgy, filterStatus]); // Refetch when filters change
-
-  useEffect(() => {
-    if (activeTab === 'brgyAccounts' && brgyAccounts.length === 0 && !brgyLoading && !isBrgy) {
-      fetchBrgyAccounts();
-    }
-  }, [activeTab, isBrgy]);
-
-  const updateStatus = async (user_id: number, status: "approved" | "rejected") => {
-    setActionLoading(user_id);
-    try {
-      await fetch("/api/update-user-status.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id, status }),
-        credentials: "include"
-      });
-      fetchUsers();
-      if (activeTab === 'brgyAccounts') {
-        fetchBrgyAccounts();
-      }
-    } catch (err) {
-      setError("Failed to update user status.");
-    }
-    setActionLoading(null);
+  const handleSort = (col: string) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('asc'); }
+    setPage(1);
   };
 
-  // Split users into pending and others
-  const pendingUsers = users.filter(u => u.status === "pending");
-  const otherUsers = users.filter(u => u.status !== "pending");
+  const exportData = () => {
+    if (!filtered.length) { toast.error('No data to export'); return; }
+    const ws = XLSX.utils.json_to_sheet(filtered);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Residents');
+    XLSX.writeFile(wb, `residents_${Date.now()}.xlsx`);
+  };
 
-  // Get unique brgys, roles, statuses for dropdowns
-  const brgys = Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean)));
-  const roles = Array.from(new Set(users.map(u => u.role).filter(Boolean)));
-  const statuses = Array.from(new Set(users.map(u => u.status).filter(Boolean)));
+  const pageTitle = isBrgy ? `${user?.brgy_name || 'Barangay'} Residents` : 'Residents';
 
-  // Filtered users
-  const filteredUsers = (activeTab === 'approvals' ? pendingUsers : otherUsers).filter(u => {
-    const matchesSearch =
-      u.username.toLowerCase().includes(search.toLowerCase()) ||
-      u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesBrgy = !filterBrgy || u.brgy_name === filterBrgy;
-    const matchesRole = !filterRole || u.role === filterRole;
-    const matchesStatus = !filterStatus || u.status === filterStatus;
-    return matchesSearch && matchesBrgy && matchesRole && matchesStatus;
-  });
+  const COLS = [
+    { key: 'full_name', label: 'Full Name' },
+    { key: 'username', label: 'Username' },
+    { key: 'email', label: 'Email' },
+    { key: 'contact_number', label: 'Contact' },
+    ...(!isBrgy ? [{ key: 'brgy_name', label: 'Barangay' }] : []),
+    { key: 'status', label: 'Status' },
+    { key: 'created_at', label: 'Enrolled' },
+  ];
 
   return (
-    <div className="w-full font-jetbrains">
-      <div className="space-y-4">
+    <div className="tactical-page">
+      <div className="tactical-container" style={{ fontFamily: "Inter, Outfit, system-ui, sans-serif" }}>
+
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {isBrgy ? `Barangay "${user?.brgy_name || ''}" Residents List Registered` : "User Management"}
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {isBrgy ? `Comprehensive directory of all registered residents within your jurisdiction.` : "Manage user accounts and approvals"}
-            </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{isBrgy ? "Resident database for your sector." : "System-wide user and resident database."}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              Last 24 Hours
+            <button onClick={exportData} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+              <FiDownload size={14} /> Export
             </button>
+            {!isBrgy && (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/invites-generate.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: 'brgy' }), credentials: "include" });
+                    const data = await res.json();
+                    if (data.success) {
+                      const link = `${window.location.origin}/brgy-signin?mode=brgy&invite=${data.code}`;
+                      navigator.clipboard.writeText(link);
+                      toast.success('Invite link copied');
+                    }
+                  } catch { toast.error('Failed'); }
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-black transition-colors shadow-sm"
+              >
+                <FiUserPlus size={14} /> Invite
+              </button>
+            )}
           </div>
         </div>
-      {error && <div className="text-error-500 mb-2">{error}</div>}
 
-        {!isBrgy && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow mb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-              <div className="flex gap-2">
-                <button
-                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'approvals' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  onClick={() => setActiveTab('approvals')}
-                >
-                  Approvals {pendingUsers.length > 0 && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full">{pendingUsers.length}</span>}
-                </button>
 
-                <button
-                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'users' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  onClick={() => setActiveTab('users')}
-                >
-                  All Users
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-lg font-bold text-xs focus:outline-none transition-all duration-200 ${activeTab === 'brgyAccounts' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  onClick={() => setActiveTab('brgyAccounts')}
-                >
-                  Barangay Accounts
-                </button>
-              </div>
-              {activeTab !== 'brgyAccounts' && (
-                <div className="flex gap-2">
-                  <button
-                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-                    onClick={() => {
-                      const data = (activeTab === 'users' ? otherUsers : pendingUsers);
-                      if (data.length === 0) { setShowToast('No users to export.'); return; }
-                      const csvRows = [];
-                      // Conditional headers based on role
-                      const headers = isBrgy 
-                        ? ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact']
-                        : ['Username', 'Full Name', 'Barangay', 'City', 'Province', 'Email', 'Contact', 'Role', 'Status'];
-                      
-                      csvRows.push(headers.join(','));
-                      data.forEach(u => {
-                        const row = isBrgy 
-                          ? [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number]
-                          : [u.username, u.full_name, u.brgy_name, u.city, u.province, u.email, u.contact_number, u.role, u.status];
-                        
-                        csvRows.push(row.map(val => `"${val ?? ''}"`).join(','));
-                      });
-                      const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.join('\n');
-                      const encodedUri = encodeURI(csvContent);
-                      const link = document.createElement('a');
-                      link.setAttribute('href', encodedUri);
-                      link.setAttribute('download', `users_${activeTab}_${new Date().toISOString().slice(0,10)}.csv`);
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      setShowToast(`Exported ${data.length} users as CSV.`);
-                    }}
-                    aria-label="Export as CSV"
-                    title="Export as CSV"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                    CSV
-                  </button>
-                  <button
-                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-                    onClick={() => {
-                      const data = (activeTab === 'users' ? otherUsers : pendingUsers);
-                      if (data.length === 0) { setShowToast('No users to export.'); return; }
-                      const ws = XLSX.utils.json_to_sheet((data || []).map(u => {
-                        const row: any = {
-                          Username: u.username,
-                          'Full Name': u.full_name,
-                          Barangay: u.brgy_name,
-                          City: u.city,
-                          Province: u.province,
-                          Email: u.email,
-                          Contact: u.contact_number,
-                        };
-                        if (!isBrgy) {
-                          row.Role = u.role;
-                          row.Status = u.status;
-                        }
-                        return row;
-                      }));
-                      const wb = XLSX.utils.book_new();
-                      XLSX.utils.book_append_sheet(wb, ws, 'Users');
-                      XLSX.writeFile(wb, `users_${activeTab}_${new Date().toISOString().slice(0,10)}.xlsx`);
-                      setShowToast(`Exported ${data.length} users as Excel.`);
-                    }}
-                    aria-label="Export as Excel"
-                    title="Export as Excel"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 16v-8m0 8l-4-4m4 4l4-4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-                    Excel
-                  </button>
-                  <button
-                    className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-2 rounded-lg text-xs transition-colors"
-                    onClick={async () => {
-                      try {
-                        const res = await fetch("/api/invites-generate.php", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ role: 'brgy' }),
-                          credentials: "include"
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                          const origin = window.location.origin;
-                          const link = `${origin}/brgy-signin?mode=brgy&invite=${data.code}`;
-                          navigator.clipboard.writeText(link);
-                          setShowToast(`Invite link copied to clipboard!`);
-                        } else {
-                          setShowToast(`Error: ${data.message}`);
-                        }
-                      } catch (e) {
-                        setShowToast("Failed to generate invite.");
-                      }
-                    }}
-                    title="Generate One-Time Invite Link"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                    Invite
-                  </button>
-                </div>
-              )}
-            </div>
+        {/* Search + filter row */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+            <input
+              type="text"
+              placeholder="Search by name, username, or email..."
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 transition-all"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+            />
           </div>
-        )}
-        
-        {showToast && (
-          <div className="mb-4 text-xs text-green-700 bg-green-100 rounded-lg px-3 py-2">{showToast}</div>
-        )}
+          {!isBrgy && (
+            <select
+              className="px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none min-w-[160px] cursor-pointer"
+              value={filterBrgy}
+              onChange={e => { setFilterBrgy(e.target.value); setPage(1); }}
+            >
+              <option value="">All Barangays</option>
+              {brgys.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          )}
+          <button onClick={fetchUsers} className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50 transition-colors">
+            <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
 
-        {activeTab !== 'brgyAccounts' && (
-          <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow mb-4">
-            <div className="flex flex-wrap gap-3 items-center">
-              <div className="relative">
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded-lg px-3 py-2 pl-8 text-sm w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Search user..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-                <FaSearch className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
-                {search && (
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500" onClick={() => setSearch('')}><FaTimes /></button>
-                )}
-              </div>
-              <select 
-                className={`border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isBrgy ? 'bg-gray-50 opacity-70' : ''}`} 
-                value={filterBrgy} 
-                onChange={e => !isBrgy && setFilterBrgy(e.target.value)}
-                disabled={isBrgy}
+        {/* Table */}
+        <div className="tactical-table-wrapper">
+          <div className="overflow-x-auto">
+            <table className="tactical-table">
+              <thead>
+                <tr>
+                  <th className="tactical-th" style={{ width: 40 }}>
+                    <input
+                      type="checkbox"
+                      checked={allOnPageSelected}
+                      onChange={toggleAll}
+                      className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
+                    />
+                  </th>
+                  {COLS.map(col => (
+                    <th
+                      key={col.key}
+                      className="tactical-th cursor-pointer hover:text-gray-800 hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort(col.key)}
+                    >
+                      {col.label}
+                      <SortIcon />
+                    </th>
+                  ))}
+                  <th className="tactical-th text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i}>
+                      <td colSpan={COLS.length + 2} className="tactical-td">
+                        <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+                      </td>
+                    </tr>
+                  ))
+                ) : paginated.length === 0 ? (
+                  <tr>
+                    <td colSpan={COLS.length + 2} className="tactical-td py-20 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <FiUsers size={32} className="text-gray-200" />
+                        <span className="text-sm text-gray-400">No residents found</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginated.map(u => (
+                  <tr
+                    key={u.id}
+                    className={`group transition-colors ${selected.has(u.id) ? 'bg-[#f5f3ff]' : 'hover:bg-[#f9fafb]'}`}
+                  >
+                    <td className="tactical-td" style={{ width: 40 }}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(u.id)}
+                        onChange={() => toggleSelect(u.id)}
+                        className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
+                      />
+                    </td>
+                    <td className="tactical-td">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600 shrink-0">
+                          {(u.full_name || u.username || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-gray-900">{u.full_name || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="tactical-td text-gray-600">{u.username}</td>
+                    <td className="tactical-td text-gray-600 lowercase">{u.email || '—'}</td>
+                    <td className="tactical-td text-gray-600 tabular-nums">{u.contact_number || '—'}</td>
+                    {!isBrgy && <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>}
+                    <td className="tactical-td">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusStyle(u.status)}`}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="tactical-td text-gray-500 text-xs tabular-nums">
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </td>
+                    <td className="tactical-td text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                          <FiEdit2 size={14} />
+                        </button>
+                        <button className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                          <FiTrash2 size={14} />
+                        </button>
+                        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                          <FiMoreHorizontal size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer row */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-white">
+            <span className="text-sm text-gray-500">
+              Showing <span className="font-medium text-gray-700">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium text-gray-700">{filtered.length}</span> residents
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                <option value="">{isBrgy ? filterBrgy : 'All Barangays'}</option>
-                {!isBrgy && brgys.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-              {!isBrgy && (
-                <>
-                  <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
-                    <option value="">All Roles</option>
-                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="">All Statuses</option>
-                    {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </>
+                <FiChevronLeft size={14} /> Previous
+              </button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const p = totalPages <= 5 ? i + 1 : (page <= 3 ? i + 1 : page - 2 + i);
+                if (p > totalPages) return null;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === p ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+              {totalPages > 5 && <span className="text-gray-400 px-1">…</span>}
+              {totalPages > 5 && (
+                <button onClick={() => setPage(totalPages)} className="w-8 h-8 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 border border-gray-200">{totalPages}</button>
               )}
               <button
-                className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium border border-gray-300 transition-colors"
-                onClick={() => { setSearch(''); setFilterBrgy(''); setFilterRole(''); setFilterStatus(''); }}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Clear Filters
+                Next <FiChevronRight size={14} />
               </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Tab Content */}
-        {activeTab === 'approvals' && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
-            <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-semibold text-[#0A192F]">Pending Approvals</h2>
-                <p className="text-xs text-gray-500">Accounts waiting for validation from {isBrgy ? user?.brgy_name : 'all brgys'}.</p>
-              </div>
-              <span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                {filteredUsers.length} total
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-[#0A192F] text-white">
-                  <tr>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Resident Details</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Barangay</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Location</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">Contact Info</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {loading ? (
-                    <tr><td colSpan={5} className="text-center p-8"><div className="flex flex-col items-center gap-2"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div><span className="text-gray-500">Loading residents...</span></div></td></tr>
-                  ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center p-8 text-gray-400 italic font-light">No pending approvals found for this criteria.</td></tr>
-                  ) : (
-                    filteredUsers.map(u => (
-                      <tr key={u.id} className="hover:bg-blue-50/30 transition-colors group">
-                        <td className="px-5 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{u.full_name || "Anonymous"}</span>
-                            <span className="text-xs text-gray-500 tracking-tight">@{u.username}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[11px] font-medium border border-gray-200">{u.brgy_name || "N/A"}</span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="text-xs text-gray-600">
-                            <div>{u.city}</div>
-                            <div className="text-[10px] text-gray-400">{u.province}</div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex flex-col gap-0.5">
-                             <a href={`mailto:${u.email}`} className="text-blue-600 hover:underline flex items-center gap-1">{u.email}</a>
-                             <span className="text-xs text-gray-500 underline decoration-dotted capitalize">{u.contact_number}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex justify-center gap-2">
-                             <button 
-                               onClick={() => updateStatus(u.id, 'approved')}
-                               disabled={actionLoading === u.id}
-                               className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-md shadow-green-900/10"
-                             >
-                               {actionLoading === u.id ? '...' : 'Approve'}
-                             </button>
-                             <button 
-                               onClick={() => updateStatus(u.id, 'rejected')}
-                               disabled={actionLoading === u.id}
-                               className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50 shadow-md shadow-red-900/10"
-                             >
-                               {actionLoading === u.id ? '...' : 'Reject'}
-                             </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
-            <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-semibold text-[#0A192F]">Registered Residents</h2>
-                <p className="text-xs text-gray-500">Listing all validated accounts in {isBrgy ? user?.brgy_name : 'the system'}.</p>
-              </div>
-              <div className="flex gap-2">
-                 <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full border border-gray-200">
-                   {filteredUsers.length} total
-                 </span>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-[#0A192F] text-white">
-                  <tr>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide">User Profile</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Barangay</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Contact Info</th>
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Location</th>
-                    {!isBrgy && <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Role</th>}
-                    <th className="px-5 py-4 text-left text-xs font-bold tracking-wide text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {loading ? (
-                    <tr><td colSpan={isBrgy ? 3 : 5} className="text-center p-8"><div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
-                  ) : filteredUsers.length === 0 ? (
-                    <tr><td colSpan={isBrgy ? 3 : 5} className="text-center p-8 text-gray-400 italic">No users found.</td></tr>
-                  ) : (
-                    filteredUsers.map(u => (
-                      <tr key={u.id} className="hover:bg-blue-300/10 transition-colors group">
-                        <td className="px-5 py-4">
-                           <div className="flex flex-col">
-                              <span className="font-bold text-gray-900 group-hover:text-[#1E3A8A] transition-colors">{u.full_name || "N/A"}</span>
-                              <span className="text-[11px] text-gray-500">@{u.username}</span>
-                           </div>
-                        </td>
-                        <td className="px-5 py-4">
-                           <div className="text-xs font-medium text-gray-800 bg-gray-50 px-2 py-1 rounded inline-block border border-gray-200">
-                             {u.brgy_name || "N/A"}
-                           </div>
-                        </td>
-                        <td className="px-5 py-4">
-                           <div className="flex flex-col items-center text-xs">
-                             <span className="font-semibold text-gray-700">{u.contact_number}</span>
-                             <span className="text-[10px] text-gray-400 break-all">{u.email}</span>
-                           </div>
-                        </td>
-                        <td className="px-5 py-4 text-center">
-                           <div className="text-[11px] text-gray-600">
-                             <div>{u.city}</div>
-                             <div className="text-[9px] text-gray-400">{u.province}</div>
-                           </div>
-                        </td>
-                        {!isBrgy && (
-                          <td className="px-5 py-4 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {u.role || "N/A"}
-                            </span>
-                          </td>
-                        )}
-                        <td className="px-5 py-4 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${u.status === 'active' || u.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                            {u.status || "N/A"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'brgyAccounts' && !isBrgy && (
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Barangay Accounts</h2>
-              <p className="text-xs text-gray-500 mt-1">List of brgys and their linked brgy user accounts.</p>
-            </div>
-            <div className="overflow-x-auto">
-              {brgyError && (
-                <div className="px-4 py-3 text-sm text-red-600 bg-red-50 border-b border-red-100">
-                  {brgyError}
-                </div>
-              )}
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Barangay</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Address</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Contact</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Username</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Role</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 tracking-wide">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {brgyLoading ? (
-                    <tr><td colSpan={8} className="text-center p-4 text-gray-500">Loading...</td></tr>
-                  ) : brgyAccounts.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center p-4 text-gray-500">No brgys found.</td></tr>
-                  ) : (
-                    brgyAccounts.map(row => (
-                      <tr key={row.brgy_id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.brgy_name || "N/A"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.address || "N/A"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.contact || "-"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          {row.username || <span className="text-gray-400 italic">No account</span>}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.email || "-"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900">{row.role || "-"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 capitalize">{row.status || "-"}</td>
-                        <td className="px-4 py-3 text-sm">
-                          {row.status === 'pending' && row.user_id && (
-                            <div className="flex gap-2">
-                              <button
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg disabled:opacity-50 transition-colors"
-                                disabled={actionLoading === row.user_id}
-                                onClick={() => updateStatus(row.user_id as number, "approved")}
-                              >
-                                {actionLoading === row.user_id ? "..." : "Approve"}
-                              </button>
-                              <button
-                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg disabled:opacity-50 transition-colors"
-                                disabled={actionLoading === row.user_id}
-                                onClick={() => updateStatus(row.user_id as number, "rejected")}
-                              >
-                                {actionLoading === row.user_id ? "..." : "Reject"}
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-white border border-gray-200 rounded-2xl shadow-xl animate-in slide-in-from-bottom duration-200">
+            <span className="text-sm font-semibold text-gray-700">{selected.size} selected</span>
+            <div className="w-px h-4 bg-gray-200" />
+            <button onClick={exportData} className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              <FiDownload size={14} /> Export
+            </button>
+            <button onClick={() => setSelected(new Set())} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors ml-1">
+              ✕
+            </button>
           </div>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default UserManagement;

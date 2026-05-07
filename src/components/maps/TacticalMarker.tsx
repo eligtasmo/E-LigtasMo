@@ -61,6 +61,10 @@ export default function TacticalMarker({ latitude, longitude, type, status, onCl
     icon = <FaMapMarkerAlt className="text-white text-[12px]" />;
   }
 
+    const isPending = (status || '').toLowerCase() === 'pending' || (status || '').toLowerCase() === 'moderate'; // Treating moderate as a proxy for pending if needed, or just pending
+    // Actually the user specifically said "pending"
+    const isActuallyPending = (status || '').toLowerCase() === 'pending';
+
   return (
     <Marker latitude={latitude} longitude={longitude} anchor="bottom" onClick={onClick}>
       <div 
@@ -82,7 +86,9 @@ export default function TacticalMarker({ latitude, longitude, type, status, onCl
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          opacity: isActuallyPending ? 0.6 : 1,
+          filter: isActuallyPending ? 'grayscale(0.4) brightness(1.1)' : 'none'
         }}>
           {icon}
         </div>

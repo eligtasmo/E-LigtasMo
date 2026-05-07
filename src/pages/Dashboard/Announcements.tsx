@@ -165,290 +165,147 @@ export default function Announcements() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto font-jetbrains">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-8 rounded-[2.5rem] text-gray-900 shadow-xl border border-gray-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10 text-blue-600">
-          <FiBell size={100} />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span className="text-[10px] font-bold tracking-tight text-blue-600">Communication hub active</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight mb-2">Community Alerts</h1>
-          <p className="text-gray-500 text-sm font-bold">Broadcast operational updates, typhoon warnings, and relief schedules to residents.</p>
-        </div>
-        {canSend && (
-          <button 
-            onClick={() => setShowModal(true)}
-            className="relative z-10 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold tracking-wide text-xs shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-2"
-          >
-            <FiPlus /> New Broadcast
-          </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Feed */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-xs font-bold text-gray-500 tracking-wide">Operational Feed</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
-              <FiActivity className="animate-pulse text-emerald-500" /> Live Synced
+    <div className="tactical-page">
+      <div className="tactical-container">
+        
+        {/* Header Section */}
+        <div className="tactical-header">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div className="tactical-status-pill mb-4">
+                <div className="tactical-status-dot bg-blue-500 animate-pulse" />
+                <span>COMMS_HUB: {user?.brgy_name?.toUpperCase() || 'SANTA CRUZ'}</span>
+              </div>
+              <h1 className="tactical-title">Community Alerts</h1>
+              <p className="tactical-subtitle">Operational updates, typhoon warnings, and relief schedules for the sector.</p>
             </div>
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(n => (
-                <div key={n} className="h-32 bg-gray-50 animate-pulse rounded-3xl" />
-              ))}
-            </div>
-          ) : filteredAnnouncements.length > 0 ? (
-            <div className="space-y-4">
-              {filteredAnnouncements.map((a: any) => (
-                <div 
-                  key={a.id} 
-                  className={`bg-white rounded-3xl border ${a.is_urgent ? 'border-red-500/20 shadow-lg shadow-red-500/5' : 'border-gray-100'} p-6 transition-all hover:shadow-md group`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-                        a.category === 'typhoon' ? 'bg-sky-50 text-sky-600' :
-                        a.category === 'relief' ? 'bg-emerald-50 text-emerald-600' :
-                        a.category === 'incident' ? 'bg-red-50 text-red-600' :
-                        'bg-blue-50 text-blue-600'
-                      }`}>
-                        {getCategoryIcon(a.category)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-gray-900 tracking-tight leading-none">{a.title}</h3>
-                          {a.is_urgent === 1 && (
-                            <span className="px-2 py-0.5 bg-red-600 text-white text-[8px] font-bold tracking-wide rounded-md">Urgent</span>
-                          )}
-                        </div>
-                        <div className="text-[10px] font-bold text-gray-400 tracking-wide mt-1">
-                          {new Date(a.created_at).toLocaleString()} • {a.audience}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                    {a.message}
-                  </p>
-                  {a.external_link && (
-                    <a 
-                      href={a.external_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-[10px] font-bold text-blue-600 tracking-tight hover:underline"
-                    >
-                      <FiLink /> Source Intelligence
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 p-12 text-center">
-              <FiBell className="mx-auto text-gray-200 mb-4" size={40} />
-              <p className="text-gray-400 font-bold tracking-tight text-xs">No active broadcasts found</p>
-            </div>
-          )}
-        </div>
-
-        {/* Categories / Side Info */}
-        <div className="space-y-6">
-          <div className="bento-card p-6">
-            <h2 className="text-xs font-bold text-gray-500 tracking-wide mb-6">Dispatch Filters</h2>
-            <div className="space-y-3">
+            {canSend && (
               <button 
-                onClick={() => setSelectedCategory(null)}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${!selectedCategory ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
+                onClick={() => setShowModal(true)}
+                className="tactical-button-accent"
               >
-                <div className="flex items-center gap-3">
-                  <FiLayers className={!selectedCategory ? 'text-white' : 'text-gray-400'} />
-                  <span className={`text-xs font-bold tracking-wide ${!selectedCategory ? 'text-white' : 'text-gray-700'}`}>All Broadcasts</span>
-                </div>
-                <FiChevronRight className={!selectedCategory ? 'text-white' : 'text-gray-300'} />
+                <FiPlus /> New Broadcast
               </button>
-              {CATEGORIES.map(cat => (
-                <button 
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group ${selectedCategory === cat.id ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`text-lg ${selectedCategory === cat.id ? 'text-white' : `text-${cat.color}-600`}`}>{cat.icon}</span>
-                    <span className={`text-xs font-bold tracking-wide ${selectedCategory === cat.id ? 'text-white' : 'text-gray-700'}`}>{cat.name}</span>
-                  </div>
-                  <FiChevronRight className={selectedCategory === cat.id ? 'text-white' : 'text-gray-300'} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-blue-600 p-6 rounded-3xl text-white shadow-lg relative overflow-hidden group">
-            <div className="absolute -bottom-4 -right-4 text-white/10 rotate-12 transition-transform group-hover:scale-110">
-              <FiSend size={100} />
-            </div>
-            <h3 className="text-lg font-bold tracking-tight mb-2">Direct Notification</h3>
-            <p className="text-white/80 text-xs leading-relaxed mb-4">Urgent alerts are pushed directly to resident devices as high-priority interruptions.</p>
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-wide">
-              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Mobile Push Enabled
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Broadcast Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={resetForm} />
-          <div className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden">
-            {phase === 'compose' ? (
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight">New Tactical Broadcast</h2>
-                    <p className="text-xs text-gray-500 font-medium">Configure alert parameters and audience targeting.</p>
-                  </div>
-                  <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-xl transition-all"><FiX size={24} /></button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Category</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {CATEGORIES.map(cat => (
-                        <button
-                          key={cat.id}
-                          onClick={() => setForm(f => ({ ...f, category: cat.id }))}
-                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                            form.category === cat.id 
-                            ? `border-${cat.color}-600 bg-${cat.color}-50 text-${cat.color}-600 shadow-sm` 
-                            : 'border-gray-100 text-gray-500 hover:bg-gray-50'
-                          }`}
-                        >
-                          <span className="text-lg">{cat.icon}</span>
-                          <span className="text-[10px] font-bold truncate">{cat.name.split(' ')[0]}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Broadcast Priority</label>
-                    <button
-                      onClick={() => setForm(f => ({ ...f, isUrgent: !f.isUrgent }))}
-                      className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                        form.isUrgent 
-                        ? 'border-red-600 bg-red-50 text-red-600 shadow-md ring-2 ring-red-100' 
-                        : 'border-gray-100 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <FiAlertTriangle className={form.isUrgent ? 'animate-pulse' : ''} size={20} />
-                        <span className="text-[10px] font-bold tracking-wide">Urgent Alert</span>
-                      </div>
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                        form.isUrgent ? 'border-red-600 bg-red-600' : 'border-gray-200'
-                      }`}>
-                        {form.isUrgent && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Headline</label>
-                    <input 
-                      className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl p-4 text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all"
-                      placeholder="Enter a compelling subject line..."
-                      value={form.title}
-                      onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Intelligence Brief (Message)</label>
-                    <textarea 
-                      className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl p-4 text-sm font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all min-h-[120px]"
-                      placeholder="Details of the announcement, relief schedule, or incident..."
-                      value={form.message}
-                      onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">External Intelligence Source (URL)</label>
-                    <div className="relative">
-                      <FiLink className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input 
-                        className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-medium placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all"
-                        placeholder="Paste news link from NDRRMC, PAGASA, or relief sources..."
-                        value={form.externalLink}
-                        onChange={e => setForm(f => ({ ...f, externalLink: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold tracking-wide text-gray-400 mb-2">Audience Targeting</label>
-                    <div className="flex gap-2">
-                      {['All Residents', 'Barangay Only', 'Everyone'].map(target => (
-                        <button
-                          key={target}
-                          onClick={() => setForm(f => ({ ...f, audience: target }))}
-                          className={`flex-1 py-3 rounded-xl border text-[10px] font-bold tracking-wide transition-all ${
-                            form.audience === target 
-                            ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                            : 'border-gray-100 text-gray-400 hover:bg-gray-50'
-                          }`}
-                        >
-                          {target}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button onClick={resetForm} className="flex-1 py-4 text-xs font-bold tracking-wide text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Cancel</button>
-                  <button 
-                    onClick={handleSend}
-                    className={`flex-1 py-4 rounded-2xl text-white text-xs font-bold tracking-wide shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                      form.isUrgent ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700' : 'bg-blue-600 shadow-blue-600/20 hover:bg-blue-700'
-                    }`}
-                  >
-                    <FiSend /> Broadcast Alert
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <FiAlertTriangle size={40} />
-                </div>
-                <h2 className="text-2xl font-bold tracking-tight mb-2">Update Deployment?</h2>
-                <p className="text-gray-500 text-sm mb-8">An active broadcast for this audience already exists. Do you want to overwrite it with this new intelligence?</p>
-                <div className="flex gap-4">
-                  <button onClick={() => setPhase('compose')} className="flex-1 py-4 text-xs font-bold tracking-wide text-gray-500 hover:bg-gray-50 rounded-2xl transition-all">Back to Edit</button>
-                  <button 
-                    onClick={confirmUpdate}
-                    className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-xs font-bold tracking-wide shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95"
-                  >
-                    Overwrite Sync
-                  </button>
-                </div>
-              </div>
             )}
           </div>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main Feed */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="flex items-center justify-between px-2">
+              <span className="tactical-label">Operational Feed</span>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                <FiActivity className="animate-pulse text-emerald-500" /> LIVE_SYNCED
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="h-40 bg-slate-100 animate-pulse rounded-2xl" />
+                ))}
+              </div>
+            ) : filteredAnnouncements.length > 0 ? (
+              <div className="space-y-6">
+                {filteredAnnouncements.map((a: any) => (
+                  <div 
+                    key={a.id} 
+                    className="tactical-card group hover:translate-y-[-4px] transition-all"
+                  >
+                    <div className="p-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl bg-${CATEGORIES.find(c => c.id === a.category)?.color || 'blue'}-50 text-${CATEGORIES.find(c => c.id === a.category)?.color || 'blue'}-600 flex items-center justify-center border border-current/10 shadow-sm transition-transform group-hover:scale-110`}>
+                            {getCategoryIcon(a.category)}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase group-hover:text-blue-600 transition-colors">{a.title}</h3>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest tabular-nums">{new Date(a.created_at).toLocaleString()}</span>
+                              <div className="w-1 h-1 rounded-full bg-slate-200" />
+                              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{a.audience?.toUpperCase()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {a.is_urgent === "1" && (
+                          <div className="tactical-status-pill !bg-red-50 !text-red-600 !border-red-100">
+                            <FiAlertTriangle className="animate-pulse" /> URGENT_PRIORITY
+                          </div>
+                        )}
+                      </div>
+                      
+                      <p className="text-sm text-slate-600 font-medium leading-relaxed mb-6">
+                        {a.message}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                        {a.external_link ? (
+                          <a 
+                            href={a.external_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:translate-x-1 transition-transform"
+                          >
+                            <FiLink /> Intelligence_Source <FiChevronRight />
+                          </a>
+                        ) : <div />}
+                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                          ID: SCT_TRANS_{a.id}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredAnnouncements.length === 0 && (
+                  <div className="tactical-card p-20 text-center flex flex-col items-center gap-6 opacity-40">
+                    <FiBell size={48} className="text-slate-300" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em]">Zero_Active_Broadcasts_In_Feed</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="h-40 bg-slate-100 animate-pulse rounded-2xl" />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-8">
+            <div className="tactical-card p-8">
+              <label className="tactical-label">Filter_Intelligence</label>
+              <div className="space-y-3">
+                <button 
+                  onClick={() => setSelectedCategory(null)}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${!selectedCategory ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <FiLayers className="text-lg" />
+                    <span className="text-xs font-bold tracking-wide">All Broadasts</span>
+                  </div>
+                </button>
+                {CATEGORIES.map(cat => (
+                  <button 
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all group ${selectedCategory === cat.id ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`text-lg ${selectedCategory === cat.id ? 'text-white' : `text-${cat.color}-600`}`}>{cat.icon}</span>
+                      <span className="text-xs font-bold tracking-wide">{cat.name}</span>
+                    </div>
+                    <FiChevronRight className={selectedCategory === cat.id ? 'text-white' : 'text-slate-300'} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

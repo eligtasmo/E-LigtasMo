@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AdminEmergencyNavBar from '../../components/admin/AdminEmergencyNavBar';
 import { apiFetch } from '../../utils/api';
 import { FiMapPin, FiClock, FiUser, FiPhone, FiEdit2 } from 'react-icons/fi';
+import PageMeta from "../../components/common/PageMeta";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
 
 type Status = 'Received' | 'Dispatched' | 'Responding' | 'Resolved' | 'Documented';
 
@@ -188,233 +190,290 @@ const EmergencyRequestManagement: React.FC = () => {
   
 
   return (
-    <div className="w-full font-jetbrains">
-      <AdminEmergencyNavBar active={activeTab} onChange={setActiveTab} counts={counts} />
-      {toast && (
-        <div className={`mx-4 lg:mx-6 mt-4 p-4 rounded-xl border flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-300 ${
-          toast.kind === 'success' ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-600/20' : 
-          toast.kind === 'error' ? 'bg-red-600 border-red-500 text-white shadow-red-600/20' : 
-          'bg-slate-900 border-slate-800 text-white'
-        }`}>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            <span className="text-[11px] font-black uppercase tracking-widest">{toast.text}</span>
-          </div>
-          <button className="text-[10px] font-black uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity" onClick={() => setToast(null)}>Dismiss</button>
-        </div>
-      )}
+    <div className="tactical-page">
+      <PageMeta title="Emergency Intake | E-LigtasMo" description="Direct emergency request processing and registry oversight." />
+      
+      <div className="tactical-container">
+        <AdminEmergencyNavBar active={activeTab} onChange={setActiveTab} counts={counts} />
 
-      {activeTab === 'create' && (
-        <div className="w-full p-4 lg:p-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-              <div className="w-1.5 h-6 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.4)]" />
-              Emergency Request Form
-            </h2>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1.5 opacity-70">Log_Field_Incident • Primary_Intake_Module</p>
+        {toast && (
+          <div className={`mt-8 p-6 rounded-3xl border flex items-center justify-between shadow-2xl animate-in slide-in-from-top duration-300 ${
+            toast.kind === 'success' ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-600/20' : 
+            toast.kind === 'error' ? 'bg-rose-600 border-rose-500 text-white shadow-rose-600/20' : 
+            'bg-slate-900 border-slate-800 text-white'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-widest">{toast.text}</span>
+            </div>
+            <button className="text-[10px] font-black uppercase tracking-widest opacity-70 hover:opacity-100 transition-opacity" onClick={() => setToast(null)}>Dismiss</button>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white tactical-container border-gray-100 p-5 shadow-xl shadow-slate-900/5 animate-pop">
-              <div className="space-y-5">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Emergency_Type</label>
-                  <select className="w-full h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-                    value={type} onChange={e => setType(e.target.value)}>
-                    <option>Accident</option>
-                    <option>Fire</option>
-                    <option>Flood</option>
-                    <option>Health Emergency</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Threat_Level</label>
-                  <div className="flex gap-2">
-                    {['low', 'medium', 'high'].map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setSeverity(s)}
-                        className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
-                          severity === s 
-                          ? s === 'high' ? 'bg-red-600 text-white border-red-600 shadow-lg shadow-red-600/20' :
-                            s === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' :
-                            'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/20'
-                          : 'bg-white text-slate-400 border-gray-100 hover:bg-gray-50'
-                        }`}
+        )}
+
+        {activeTab === 'create' && (
+          <div className="mt-8 space-y-8">
+            <div className="tactical-header">
+              <div className="tactical-status-pill mb-4">
+                <div className="tactical-status-dot bg-rose-500 animate-pulse" />
+                <span>INTAKE_CHANNEL: PRIORITY</span>
+              </div>
+              <h2 className="tactical-title">Emergency Request Form</h2>
+              <p className="tactical-subtitle">Initiate official emergency response log and tactical dispatch sequence.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+              <div className="lg:col-span-1 space-y-8">
+                <div className="tactical-card p-10">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="tactical-label">Emergency_Type_Ref</label>
+                      <select 
+                        className="tactical-input w-full appearance-none pr-10"
+                        value={type} 
+                        onChange={e => setType(e.target.value)}
                       >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-4 pt-2">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Caller_Identification</label>
-                    <div className="relative">
-                      <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                      <input className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.callerName ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
-                        value={callerName} onChange={e => setCallerName(e.target.value)} placeholder="Full_Name" />
+                        <option>Accident</option>
+                        <option>Fire</option>
+                        <option>Flood</option>
+                        <option>Health Emergency</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="tactical-label">Criticality_Level</label>
+                      <div className="flex gap-3">
+                        {['low', 'medium', 'high'].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setSeverity(s)}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shadow-sm ${
+                              severity === s 
+                              ? s === 'high' ? 'bg-rose-600 text-white border-rose-600 shadow-rose-600/20' :
+                                s === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-amber-500/20' :
+                                'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20'
+                              : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 space-y-6 border-t border-slate-100">
+                      <div>
+                        <label className="tactical-label">Reporter_Ident</label>
+                        <div className="relative">
+                          <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            className={`tactical-input w-full pl-12 ${submitAttempted && requiredMissing.callerName ? 'border-rose-500 bg-rose-50/10' : ''}`}
+                            value={callerName} 
+                            onChange={e => setCallerName(e.target.value)} 
+                            placeholder="Full_Legal_Name" 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="tactical-label">Contact_Comms</label>
+                        <div className="relative">
+                          <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            type="tel" 
+                            className={`tactical-input w-full pl-12 ${submitAttempted && requiredMissing.callerContact ? 'border-rose-500 bg-rose-50/10' : ''}`}
+                            value={callerContact} 
+                            onChange={e => setCallerContact(e.target.value)} 
+                            placeholder="09XX-XXX-XXXX" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100">
+                      <label className="tactical-label">Patient_Demographics</label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input 
+                          placeholder="Name" 
+                          className="tactical-input w-full"
+                          value={patientName} 
+                          onChange={e => setPatientName(e.target.value)} 
+                        />
+                        <input 
+                          placeholder="Age" 
+                          type="number" 
+                          className="tactical-input w-full"
+                          value={patientAge} 
+                          onChange={e => setPatientAge(e.target.value ? Number(e.target.value) : '')} 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Comm_Link</label>
-                    <div className="relative">
-                      <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                      <input type="tel" className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.callerContact ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
-                        value={callerContact} onChange={e => setCallerContact(e.target.value)} placeholder="09XX-XXX-XXXX" />
-                    </div>
-                  </div>
                 </div>
-                <div className="pt-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Patient_Profile</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    <input placeholder="Name" className="col-span-3 h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                      value={patientName} onChange={e => setPatientName(e.target.value)} />
-                    <input placeholder="Age" type="number" className="col-span-2 h-11 rounded-xl border border-gray-100 bg-gray-50/50 px-4 text-[11px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                      value={patientAge} onChange={e => setPatientAge(e.target.value ? Number(e.target.value) : '')} />
-                  </div>
-                </div>
-                <div className="pt-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Sector_Location</label>
-                  <div className="relative mb-3">
-                    <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                    <input className={`w-full h-11 pl-10 pr-4 rounded-xl bg-gray-50/50 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.address ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
-                      value={address} onChange={e => setAddress(e.target.value)} placeholder="Physical_Address_Reference" />
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50/50 rounded-xl border border-gray-100">
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                      {coords ? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}` : 'Wait_For_Map_Pick'}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="px-2 py-1 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all" onClick={() => {
-                        if (!navigator.geolocation) return;
-                        navigator.geolocation.getCurrentPosition((pos) => {
-                          const { latitude, longitude } = pos.coords;
-                          setCoords([latitude, longitude]);
-                        });
-                      }}>GPS_Sync</button>
-                      <button className="px-2 py-1 rounded-lg bg-white border border-gray-100 text-[9px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all" onClick={() => setCoords(null)}>Reset</button>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Mission_Timeline</label>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50/30 rounded-xl border border-blue-100/50">
-                    <FiClock className="text-blue-600 text-sm" />
-                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">{datetime}</span>
-                  </div>
-                </div>
-                <div className="pt-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Incident_Intelligence</label>
-                  <textarea rows={4} className={`w-full rounded-xl bg-gray-50/50 px-4 py-3 text-[11px] font-black uppercase tracking-widest border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${submitAttempted && requiredMissing.description ? 'border-red-500 focus:border-red-500 bg-red-50/10' : 'border-gray-100 focus:border-blue-500'}`}
-                    value={description} onChange={e => setDescription(e.target.value)} placeholder="Field_Intelligence_Summary..." />
-                </div>
-                
-                <div className="pt-4">
-                  <button 
-                    onClick={handleSubmit} 
-                    disabled={!canSubmit} 
-                    className={`w-full flex items-center justify-center gap-3 h-14 rounded-xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-xl ${
-                      canSubmit 
-                      ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 hover:scale-[1.02]' 
-                      : 'bg-gray-100 text-slate-300 cursor-not-allowed border border-gray-100'
-                    }`}
-                  >
-                    <FiEdit2 className="text-lg" /> Initiate_Emergency_Log
-                  </button>
+
+                <div className="tactical-card p-10">
+                   <div className="space-y-6">
+                      <div>
+                        <label className="tactical-label">Sector_Deployment_Target</label>
+                        <div className="relative">
+                          <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input 
+                            className={`tactical-input w-full pl-12 ${submitAttempted && requiredMissing.address ? 'border-rose-500 bg-rose-50/10' : ''}`}
+                            value={address} 
+                            onChange={e => setAddress(e.target.value)} 
+                            placeholder="Physical_Address_Reference" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest tabular-nums">
+                          {coords ? `${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}` : 'Wait_For_Map_Pick'}
+                        </span>
+                        <div className="flex gap-2">
+                          <button 
+                            className="tactical-button-ghost py-1.5 px-3 text-[9px] bg-white" 
+                            onClick={() => {
+                              if (!navigator.geolocation) return;
+                              navigator.geolocation.getCurrentPosition((pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                setCoords([latitude, longitude]);
+                              });
+                            }}
+                          >
+                            GPS_SYNC
+                          </button>
+                          <button className="tactical-button-ghost py-1.5 px-3 text-[9px] bg-white hover:text-rose-600" onClick={() => setCoords(null)}>RESET</button>
+                        </div>
+                      </div>
+                   </div>
                 </div>
               </div>
-            </div>
-            <div className="lg:col-span-2 bg-white tactical-container border-gray-100 p-3 shadow-xl shadow-slate-900/5 animate-pop flex flex-col">
-              <div className="flex-1 rounded-xl overflow-hidden border border-gray-50">
-                <MapContainer center={coords || [14.28, 121.41]} zoom={coords ? 17 : 13} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-                  <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution="&copy; OpenStreetMap contributors &copy; CARTO" />
-                  {coords && (
-                    <Marker position={coords} icon={getMarkerIcon('#dc2626')}>
-                      <Popup>Sector_Reference</Popup>
-                    </Marker>
-                  )}
-                  <MapClickSetter onPick={(ll) => setCoords(ll)} />
-                  <ZoomControl position="bottomright" />
-                </MapContainer>
-              </div>
-              <div className="mt-3 px-4 py-3 bg-gray-50/50 rounded-xl flex items-center justify-between border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${coords ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`} />
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    {coords ? 'Coordinate_Reference_Set' : 'Select_Mission_Point_On_Map'}
-                  </span>
-                </div>
-                {submitAttempted && requiredMissing.coords && (
-                  <div className="text-[10px] font-black text-red-600 uppercase tracking-widest flex items-center gap-2">
-                    <FiAlertTriangle /> Mandatory_Selection
+
+              <div className="lg:col-span-2 space-y-8">
+                <div className="tactical-card p-4 h-[600px] flex flex-col">
+                  <div className="flex-1 rounded-3xl overflow-hidden border border-slate-100">
+                    <MapContainer 
+                      center={coords || [DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]} 
+                      zoom={coords ? 17 : DEFAULT_MAP_STATE.zoom} 
+                      minZoom={DEFAULT_MAP_STATE.minZoom}
+                      maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET}
+                      zoomControl={false} 
+                      attributionControl={false}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                      {coords && (
+                        <Marker position={coords} icon={getMarkerIcon('#dc2626')}>
+                          <Popup>Sector_Reference</Popup>
+                        </Marker>
+                      )}
+                      <MapClickSetter onPick={(ll) => setCoords(ll)} />
+                      <ZoomControl position="bottomright" />
+                    </MapContainer>
                   </div>
-                )}
+                  <div className="mt-4 px-6 py-4 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-2.5 h-2.5 rounded-full ${coords ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`} />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        {coords ? 'Coordinate_Reference_Set' : 'Select_Mission_Point_On_Map'}
+                      </span>
+                    </div>
+                    {submitAttempted && requiredMissing.coords && (
+                      <div className="text-[10px] font-black text-rose-600 uppercase tracking-widest">
+                        Mandatory_Selection
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="tactical-card p-10">
+                   <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="tactical-label">Incident_Intelligence</label>
+                          <textarea 
+                            rows={4} 
+                            className={`tactical-input w-full p-4 h-32 resize-none ${submitAttempted && requiredMissing.description ? 'border-rose-500 bg-rose-50/10' : ''}`}
+                            value={description} 
+                            onChange={e => setDescription(e.target.value)} 
+                            placeholder="Field_Intelligence_Summary..." 
+                          />
+                        </div>
+                        <div className="space-y-6">
+                           <div>
+                             <label className="tactical-label">Log_Timestamp</label>
+                             <div className="flex items-center gap-4 px-6 py-4 bg-blue-50 rounded-2xl border border-blue-100">
+                               <FiClock className="text-blue-600 text-lg" />
+                               <span className="text-[12px] font-black text-blue-900 uppercase tracking-widest tabular-nums">{datetime}</span>
+                             </div>
+                           </div>
+                           <button 
+                            onClick={handleSubmit} 
+                            disabled={!canSubmit} 
+                            className="tactical-button-accent w-full h-16 text-sm shadow-2xl"
+                          >
+                            <FiEdit2 className="text-lg" /> Initiate_Emergency_Log
+                          </button>
+                        </div>
+                      </div>
+                   </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'requests' && (
-        <div className="w-full p-4 lg:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
-                <div className="w-1.5 h-6 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
-                Emergency Registry
-              </h2>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1.5 opacity-70">Log_Field_Database • Tactical_Overview</p>
-            </div>
-            {loading && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Syncing...</span>
+        {activeTab === 'requests' && (
+          <div className="mt-8 space-y-8">
+            <div className="tactical-header">
+              <div className="tactical-status-pill mb-4">
+                <div className="tactical-status-dot bg-blue-500 animate-pulse" />
+                <span>REGISTRY_ACCESS: GRANTED</span>
               </div>
-            )}
-          </div>
-          <div className="bg-white tactical-container border-gray-100 overflow-hidden shadow-xl shadow-slate-900/5 animate-pop">
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {incidents.length === 0 && (
-                <div className="p-12 text-center">
-                  <span className="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Zero_Target_Matches_In_Registry</span>
-                </div>
-              )}
-              {incidents.map((i) => (
-                <div key={i.id} className="p-5 flex items-center gap-6 hover:bg-gray-50/50 transition-colors group">
-                  <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center text-white shrink-0 shadow-lg shadow-slate-900/20 group-hover:bg-blue-600 transition-colors">
-                    <FiAlertTriangle className="text-lg" />
+              <h2 className="tactical-title">Emergency Registry</h2>
+              <p className="tactical-subtitle">Comprehensive database of active and historical emergency signatures.</p>
+            </div>
+
+            <div className="tactical-table-wrapper overflow-hidden">
+              <div className="divide-y divide-slate-100">
+                {incidents.length === 0 ? (
+                  <div className="p-32 text-center">
+                    <span className="text-[11px] font-black text-slate-300 uppercase tracking-[0.4em]">Zero_Target_Matches_In_Registry</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <span className="text-[12px] font-black text-slate-900 uppercase tracking-tight">REF_{i.id}</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-200" />
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{i.type}</span>
+                ) : incidents.map((i) => (
+                  <div key={i.id} className="p-8 flex items-center gap-10 hover:bg-slate-50/50 transition-all group">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white shrink-0 shadow-2xl group-hover:bg-blue-600 transition-colors">
+                      <FiEdit2 className="text-xl" />
                     </div>
-                    <div className="text-[11px] text-slate-600 font-black uppercase tracking-tight truncate opacity-80 mb-1">{i.address}</div>
-                    <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
-                      <FiClock className="text-[10px]" /> {i.datetime}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-4 mb-2">
+                        <span className="text-[13px] font-black text-slate-900 uppercase tracking-tight">REF_{i.id}</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                        <span className="text-[11px] font-black text-blue-600 uppercase tracking-widest">{i.type}</span>
+                      </div>
+                      <div className="text-[12px] text-slate-600 font-bold uppercase tracking-tight truncate opacity-80 mb-2">{i.address}</div>
+                      <div className="flex items-center gap-3">
+                        <FiClock className="text-slate-400 text-xs" />
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest tabular-nums">{i.datetime}</span>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${
+                        (i.status || '').toLowerCase() === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/10' :
+                        (i.status || '').toLowerCase() === 'responding' ? 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-500/10' :
+                        'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/10'
+                      }`}>
+                        {i.status || 'Received'}
+                      </span>
                     </div>
                   </div>
-                  <div className="shrink-0">
-                    <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                      (i.status || '').toLowerCase() === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                      (i.status || '').toLowerCase() === 'responding' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                      'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
-                      {i.status || 'Received'}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      
-
-      
+        )}
+      </div>
     </div>
   );
 };

@@ -45,8 +45,10 @@ import {
   FaAmbulance,
   FaFire
 } from 'react-icons/fa';
+import { DEFAULT_MAP_STATE } from '../../constants/geo';
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "../../utils/api";
+import TacticalCommsStatus from "../../components/dashboard/TacticalCommsStatus";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN) as string | undefined;
 const OWM_KEY = import.meta.env.VITE_OPENWEATHERMAP_API_KEY as string | undefined;
@@ -295,22 +297,25 @@ export default function Home() {
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-lg shadow-red-600/20">
-                <FaShieldAlt className="text-white text-xl" />
+              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-xl shadow-slate-900/20 border border-slate-800">
+                <FaShieldAlt className="text-white text-2xl" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Emergency Command Center</h1>
-                <p className="text-sm text-gray-500 font-bold">Real-time mission monitoring and coordination</p>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-1">Strategic Command</h1>
+                <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">Municipal Oversight Protocol // LIVE</p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <button className="tactical-btn-secondary">
-                Last 24 Hours
-              </button>
-              <button className="px-3 py-2 rounded-lg text-[10px] font-black tracking-widest uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                Live_Feed
+              <div className="text-right mr-4 border-r border-slate-200 pr-4">
+                <div className="text-lg font-black text-slate-900 leading-none">
+                  {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </div>
+                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tactical Time</div>
+              </div>
+              <button className="px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase bg-blue-600 text-white shadow-lg shadow-blue-600/20 flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                Active_Mission
               </button>
             </div>
           </div>
@@ -384,85 +389,109 @@ export default function Home() {
           </div>
         </div>  </div>
 
-        {/* Enhanced Key Metrics Cards - Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+        {/* Strategic Situation Ribbon */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 h-12 bg-slate-900 rounded-2xl flex items-center px-6 border border-slate-800 shadow-xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent animate-pulse" />
+            <div className="flex items-center gap-4 relative z-10 w-full">
+              <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                <span className="text-[10px] font-black text-white tracking-widest uppercase">Protocol_Alpha</span>
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase mr-3">Current Situation:</span>
+                <span className="text-[11px] font-black text-emerald-400 tracking-widest uppercase">System_Wide_Stability_Confirmed</span>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Global_Ver:</span>
+                  <span className="text-[9px] font-mono text-blue-400 font-bold">V4.2.0_STABLE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="w-48 h-12 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center gap-3 px-4">
+            <div className="flex flex-col items-end">
+              <div className="text-[10px] font-black text-slate-900 leading-none mb-0.5">MUNICIPAL_LINK</div>
+              <div className="text-[8px] font-black text-emerald-500 tracking-widest uppercase">Uplink_Active</div>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
+              <FiRefreshCw className="text-xs" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {[
             { 
-              label: 'Active Incidents', 
+              label: 'INCIDENTS', 
               value: keyMetrics.activeIncidents.value, 
               trend: keyMetrics.activeIncidents.trend, 
               icon: <FaFire />, 
               color: 'red', 
               path: '/admin/incident-reports',
-              sub: 'AWAITING_DISPATCH'
+              sub: 'AWAITING_RESPONSE'
             },
             { 
-              label: 'Shelter Network', 
+              label: 'SHELTERS', 
               value: `${keyMetrics.sheltersAvailable.value}/${keyMetrics.sheltersAvailable.total}`, 
               occupancy: keyMetrics.sheltersAvailable.occupancy, 
               icon: <FaShieldAlt />, 
               color: 'blue', 
               path: '/admin/shelters',
-              sub: `${keyMetrics.sheltersAvailable.occupancy}%_UTILIZATION`
+              sub: `${keyMetrics.sheltersAvailable.occupancy}%_LOAD`
             },
             { 
-              label: 'Hazard Zones', 
+              label: 'THREATS', 
               value: keyMetrics.hazardZones.value, 
               active: keyMetrics.hazardZones.active, 
               icon: <FaSkullCrossbones />, 
               color: 'orange', 
               path: '/admin/hazards',
-              sub: `${keyMetrics.hazardZones.active}_ACTIVE_THREATS`
+              sub: `${keyMetrics.hazardZones.active}_ACTIVE_ZONES`
             },
             { 
-              label: 'Population', 
+              label: 'CITIZENS', 
               value: keyMetrics.totalResidents.value.toLocaleString(), 
               icon: <FaUsers />, 
               color: 'emerald', 
               path: '/admin/user-management',
-              sub: 'REGISTERED_CITIZENS'
+              sub: 'SECTOR_POPULATION'
             },
             { 
-              label: 'Response Time', 
+              label: 'LATENCY', 
               value: `${keyMetrics.responseTime.value}m`, 
               icon: <FiActivity />, 
               color: 'purple', 
               path: '/admin/analytics',
-              sub: 'AVG_VERIFICATION'
+              sub: 'AVG_TRIAGE_TIME'
             },
             { 
-              label: 'Weather Alert', 
+              label: 'WEATHER', 
               value: keyMetrics.weatherAlert.type, 
               icon: <FaWind />, 
               color: 'cyan', 
               path: '/admin/weather',
-              sub: `LVL_${keyMetrics.weatherAlert.level.toUpperCase()}`
+              sub: `ALERT_LVL_${keyMetrics.weatherAlert.level.toUpperCase()}`
             }
           ].map((m, idx) => (
             <Link 
               key={idx} 
               to={m.path} 
-              className="tactical-container p-4 bg-white hover:shadow-xl transition-all duration-300 group relative border-gray-50"
+              className="tactical-container p-4 bg-white hover:shadow-2xl transition-all duration-500 group relative border-gray-100/50 overflow-hidden"
             >
-              <div className={`absolute top-0 right-0 w-24 h-24 bg-${m.color}-500/5 rounded-full -mr-12 -mt-12 transition-all group-hover:scale-150`} />
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className={`bg-${m.color}-50 text-${m.color}-600 rounded-xl p-2.5 group-hover:bg-${m.color}-600 group-hover:text-white transition-all border border-${m.color}-100/50`}>
-                  {m.icon}
+              <div className={`absolute top-0 right-0 w-20 h-20 bg-${m.color}-500/5 rounded-full -mr-10 -mt-10 transition-all group-hover:scale-150`} />
+              <div className="flex items-center justify-between mb-3 relative z-10">
+                <div className={`bg-${m.color}-50 text-${m.color}-600 rounded-xl p-2 group-hover:bg-${m.color}-600 group-hover:text-white transition-all border border-${m.color}-100/30`}>
+                  {React.cloneElement(m.icon as React.ReactElement<any>, { size: 14 })}
                 </div>
-                {m.trend !== undefined && (
-                  <div className={`flex items-center gap-1 text-[10px] font-black tracking-wide ${m.trend < 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {m.trend < 0 ? <FaArrowDown /> : <FaArrowUp />}
-                    {Math.abs(m.trend)}%
-                  </div>
-                )}
               </div>
-              <div className="text-2xl font-black text-slate-900 mb-1 tracking-tighter">{m.value}</div>
+              <div className="text-2xl font-black text-slate-900 leading-none mb-1 tracking-tighter tabular-nums">{m.value}</div>
               <div className="text-slate-500 text-[10px] font-black tracking-widest uppercase mb-1">{m.label}</div>
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">{m.sub}</div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tight truncate opacity-80">{m.sub}</div>
               {m.occupancy !== undefined && (
                 <div className="w-full bg-slate-100 rounded-full h-1 mt-3 overflow-hidden">
                   <div 
-                    className={`bg-${m.color}-500 h-1 rounded-full transition-all duration-500`} 
+                    className={`bg-${m.color}-500 h-1 rounded-full transition-all duration-700`} 
                     style={{ width: `${m.occupancy}%` }}
                   ></div>
                 </div>
@@ -471,61 +500,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Barangay Flood Levels Section */}
-        <div className="tactical-container mb-6 bg-white p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <div className="bg-blue-600 text-white rounded-xl p-2.5 shadow-lg shadow-blue-600/20">
-                <FaWater className="text-lg" />
-              </div>
-              Barangay Tactical Status
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Update_Frequency: 1M</span>
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            </div>
-          </div>
-          
-          {loadingLevels ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-               {[1,2,3,4,5,6].map(i => (
-                 <div key={i} className="h-28 bg-slate-800/50 animate-pulse rounded-2xl border border-slate-700/50"></div>
-               ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {brgyLevels.map((brgy, idx) => {
-                const status = (brgy.status_level || 'safe').toLowerCase();
-                let colorClass = 'emerald';
-                if (status === 'critical') colorClass = 'red';
-                else if (status === 'warning') colorClass = 'orange';
-                else if (status === 'monitor') colorClass = 'yellow';
-
-                return (
-                  <div key={`brgy-status-${brgy.id || idx}`} className={`tactical-container p-4 bg-gray-50 border-${colorClass}-500/20 hover:border-${colorClass}-500/50 transition-all duration-300 group shadow-none`}>
-                    <div className="flex items-center justify-between mb-3">
-                       <div className={`p-1.5 rounded-lg bg-${colorClass}-50 text-${colorClass}-600 border border-${colorClass}-100/50`}>
-                         <FaShieldAlt className="text-sm" />
-                       </div>
-                       {Number(brgy.flood_depth_cm) > 0 && (
-                         <span className="text-[10px] font-black bg-white px-2 py-1 rounded text-slate-900 border border-gray-100 font-mono shadow-sm">
-                           {brgy.flood_depth_cm}CM
-                         </span>
-                       )}
-                    </div>
-                    <div className="font-black text-[12px] mb-1 text-slate-900 truncate tracking-tight uppercase" title={brgy.brgy_name}>
-                       {brgy.brgy_name}
-                    </div>
-                    <div className={`text-[9px] text-${colorClass}-600 font-black tracking-widest flex items-center justify-between uppercase`}>
-                       <span>{status}</span>
-                       {brgy.message && <FaInfoCircle className="text-[10px] opacity-40 group-hover:opacity-100 transition-opacity" title={brgy.message} />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {/* Sector Status Overview replaces the old full-width grid for better spatial flow */}
 
         {/* Main Content Area - Enhanced Layout & Responsive */}
         <div className="flex flex-col lg:grid lg:grid-cols-4 min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)]">
@@ -571,18 +546,22 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Live Map - Enhanced */}
-          <div className="w-full lg:col-span-3 min-h-[400px] lg:h-full tactical-container border-0 rounded-none order-1 lg:order-1 relative group bg-white">
+          {/* Live Map - Centered Focus */}
+          <div className="w-full lg:col-span-3 min-h-[500px] lg:h-full tactical-container border-0 rounded-none order-1 lg:order-1 relative group bg-white">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 p-6 bg-gray-50 border-b border-gray-100">
               <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
-                <div className="bg-red-600 text-white rounded-xl p-2.5 shadow-lg shadow-red-600/20">
+                <div className="bg-blue-900 text-white rounded-xl p-2.5 shadow-lg shadow-blue-900/20">
                   <FaMapMarkerAlt className="text-sm" />
                 </div>
-                Tactical Intelligence Map
+                Strategic Map Interface
               </h3>
               <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-Time_Telemetry</span>
                 </div>
               </div>
+            </div>
             {/* Map Section Content continues... */}
 
             {/* Weather Controls Overlay (Admin) */}
@@ -637,6 +616,8 @@ export default function Home() {
               <MapboxMap
                 {...viewState}
                 onMove={(evt: any) => setViewState(evt.viewState)}
+                minZoom={DEFAULT_MAP_STATE.minZoom}
+                maxBounds={DEFAULT_MAP_STATE.maxBounds}
                 pitch={0}
                 bearing={0}
                 mapStyle="mapbox://styles/mapbox/light-v11"
@@ -659,6 +640,21 @@ export default function Home() {
                     />
                   </Source>
                 )}
+                {/* Sector Comms Panel - Floating Overlay */}
+                <div className="absolute left-4 top-24 bottom-4 z-10 w-72 pointer-events-none">
+                  <div className="pointer-events-auto h-full">
+                    <TacticalCommsStatus 
+                      title="Sector Matrix"
+                      sectors={brgyLevels.map(b => ({
+                        name: b.brgy_name,
+                        status: (b.status_level || 'safe').toLowerCase() as any,
+                        lastPing: 'Active Now',
+                        depth: b.flood_depth_cm
+                      }))}
+                    />
+                  </div>
+                </div>
+
                 {/* Layer Controls Widget */}
                 <div className="absolute right-4 top-24 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 p-4 min-w-[180px]">
                   <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-4 border-b border-gray-100 pb-2">Tactical Layers</div>
