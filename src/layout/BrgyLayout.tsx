@@ -61,8 +61,8 @@ const LayoutContent: React.FC = () => {
             }`}
           />
 
-          <div className={`${isPlannerRoute ? "p-0 h-full w-full bg-transparent overflow-hidden" : "px-4 py-6 lg:px-8 lg:py-8"}`}>
-            <div className={`mx-auto h-full ${isFullWidth ? "max-w-none" : isCentered ? "max-w-7xl" : "max-w-none"} ${isPlannerRoute ? "" : "space-y-6"}`}>
+          <div className="p-0 h-full w-full bg-transparent overflow-hidden">
+            <div className={`mx-auto h-full ${isFullWidth ? "max-w-none" : isCentered ? "max-w-7xl" : "max-w-none"}`}>
               <Outlet />
             </div>
           </div>

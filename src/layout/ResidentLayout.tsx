@@ -58,8 +58,8 @@ const LayoutContent: React.FC = () => {
           {/* Mobile bottom navigation for residents */}
           <MobileNavigation userRole={"resident"} showBottomBar={true} showTopMobileBar={false} showDesktopBar={false} />
           
-          <div className={`${isPlannerRoute ? "h-full p-0 bg-transparent overflow-hidden" : "px-4 py-6 lg:px-8 lg:py-8 bg-gray-50 dark:bg-gray-900"}`}>
-            <div className={`mx-auto h-full ${isFullWidth ? "max-w-none" : isCentered ? "max-w-7xl" : "max-w-none"} ${isPlannerRoute ? "" : "space-y-6"}`}>
+          <div className="h-full p-0 bg-transparent overflow-hidden">
+            <div className={`mx-auto h-full ${isFullWidth ? "max-w-none" : isCentered ? "max-w-7xl" : "max-w-none"}`}>
               <Outlet />
             </div>
           </div>
