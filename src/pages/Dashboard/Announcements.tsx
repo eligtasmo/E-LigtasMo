@@ -28,7 +28,7 @@ export default function Announcements() {
     message: '', 
     type: 'info', 
     audience: 'All Residents', 
-    category: 'general',
+    category: 'disaster',
     externalLink: '',
     isUrgent: false
   });
@@ -68,8 +68,6 @@ export default function Announcements() {
 
     try {
       const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
-      
-      // If it's an urgent alert, we also create a notification
       const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
       
       const payload = { 
@@ -151,7 +149,7 @@ export default function Announcements() {
       message: '', 
       type: 'info', 
       audience: 'All Residents', 
-      category: 'general',
+      category: 'disaster',
       externalLink: '',
       isUrgent: false
     });
@@ -362,257 +360,158 @@ export default function Announcements() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-white/20 animate-in zoom-in-95 duration-200 overflow-hidden">
               <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">{phase === 'compose' ? 'Initialize_Broadcast' : 'Confirm_Intelligence'}</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocol: BCAST_INTEL_v4</span>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
+                    <FiSend size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">
+                      {phase === 'confirm' ? 'Confirm Overwrite' : 'New Strategic Broadcast'}
+                    </h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Comms_Protocol_v.4.2</p>
                   </div>
                 </div>
-                <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-900 hover:shadow-md transition-all">
+                <button 
+                  onClick={() => { setShowModal(false); setPhase('compose'); }} 
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-900 hover:shadow-md transition-all border border-transparent hover:border-slate-100"
+                >
                   <FiX size={20} />
                 </button>
               </div>
 
-              <div className="p-8">
-                {phase === 'compose' ? (
-                  <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intel_Category</label>
-                        <select 
-                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
-                          value={form.category}
-                          onChange={e => setForm({...form, category: e.target.value})}
-                        >
-                          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target_Audience</label>
-                        <select 
-                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
-                          value={form.audience}
-                          onChange={e => setForm({...form, audience: e.target.value})}
-                        >
-                          <option value="All Residents">All Residents</option>
-                          <option value="Barangay Only">Barangay Personnel</option>
-                        </select>
-                      </div>
-                    </div>
-
+              {phase === 'compose' ? (
+                <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Broadcast_Title</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intel_Category</label>
+                      <select 
+                        className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
+                        value={form.category} 
+                        onChange={e => setForm({ ...form, category: e.target.value })}
+                      >
+                        {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target_Audience</label>
+                      <select 
+                        className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
+                        value={form.audience} 
+                        onChange={e => setForm({ ...form, audience: e.target.value })}
+                      >
+                        <option value="All Residents">All Residents</option>
+                        <option value="Barangay Only">Barangay Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Broadcast_Title</label>
+                    <input 
+                      type="text" 
+                      required 
+                      className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                      value={form.title} 
+                      onChange={e => setForm({ ...form, title: e.target.value })} 
+                      placeholder="Subject Heading..." 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intelligence_Content</label>
+                    <textarea 
+                      required 
+                      className="w-full px-5 py-4 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 h-32 resize-none transition-all placeholder:text-slate-300" 
+                      value={form.message} 
+                      onChange={e => setForm({ ...form, message: e.target.value })} 
+                      placeholder="Detailed situational update or advisory..." 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">External_Source_Link (Optional)</label>
+                    <div className="relative">
+                      <FiLink className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
-                        required
-                        type="text"
-                        className="w-full px-5 py-3 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none"
-                        placeholder="e.g., SEVERE_WEATHER_ADVISORY"
-                        value={form.title}
-                        onChange={e => setForm({...form, title: e.target.value})}
+                        type="url" 
+                        className="w-full pl-12 pr-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                        value={form.externalLink} 
+                        onChange={e => setForm({ ...form, externalLink: e.target.value })} 
+                        placeholder="https://..." 
                       />
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intelligence_Message</label>
-                      <textarea 
-                        required
-                        className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-slate-50 font-bold text-sm focus:ring-4 focus:ring-blue-600/5 transition-all outline-none h-32 resize-none"
-                        placeholder="Provide detailed situational assessment..."
-                        value={form.message}
-                        onChange={e => setForm({...form, message: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <FiAlertTriangle className={form.isUrgent ? 'text-red-600 animate-pulse' : 'text-slate-400'} />
-                        <div>
-                          <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Urgent_Priority</div>
-                          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Bypass normal notification delays</div>
-                        </div>
+                  <div className="pt-2">
+                    <label className="flex items-center gap-4 p-5 rounded-2xl border border-red-100 bg-red-50/30 cursor-pointer group hover:bg-red-50 transition-all">
+                      <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${form.isUrgent ? 'bg-red-600 border-red-600' : 'border-red-200 bg-white group-hover:border-red-400'}`}>
+                        {form.isUrgent && <FiCheckCircle className="text-white text-sm" />}
                       </div>
                       <input 
                         type="checkbox" 
-                        className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
-                        checked={form.isUrgent}
-                        onChange={e => setForm({...form, isUrgent: e.target.checked})}
+                        className="hidden" 
+                        checked={form.isUrgent} 
+                        onChange={e => setForm({ ...form, isUrgent: e.target.checked })} 
                       />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-3 active:scale-[0.99]"
-                    >
-                      <FiSend /> Initiate_Broadcast
-                    </button>
-                  </form>
-                ) : (
-                  <div className="space-y-8 animate-in slide-in-from-right duration-300">
-                    <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 text-amber-900">
-                      <FiAlertTriangle size={24} />
                       <div>
-                        <div className="text-xs font-black uppercase tracking-widest">Duplicate_Intel_Detected</div>
-                        <p className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 opacity-80">A broadcast with this title already exists. Choose protocol:</p>
+                        <div className="text-[11px] font-black text-red-600 uppercase tracking-widest">Urgent_Priority_Broadcast</div>
+                        <p className="text-[10px] font-bold text-red-400 mt-0.5 uppercase tracking-tighter italic">Trigger push notifications for mission-critical disaster alerts.</p>
                       </div>
-                    </div>
-                    <div className="flex gap-4">
-                      <button onClick={resetForm} className="flex-1 py-4 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all">Abort</button>
-                      <button onClick={confirmUpdate} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all">Overwrite_Intel</button>
-                    </div>
+                    </label>
                   </div>
-                )}
-              </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      type="button" 
+                      onClick={() => { setShowModal(false); resetForm(); }} 
+                      className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                    >
+                      Abort_Protocol
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black shadow-xl shadow-slate-200 active:scale-[0.98] transition-all"
+                    >
+                      Execute_Broadcast
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="p-10 text-center space-y-6">
+                  <div className="w-20 h-20 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mx-auto border-4 border-white shadow-xl">
+                    <FiAlertTriangle size={32} />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Duplicate Intel Detected</h3>
+                    <p className="text-sm text-slate-500 font-medium max-w-sm mx-auto">An active broadcast with this title already exists. Overwriting will replace the current situational update.</p>
+                  </div>
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      onClick={() => setPhase('compose')} 
+                      className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all"
+                    >
+                      Back_To_Comms
+                    </button>
+                    <button 
+                      onClick={confirmUpdate} 
+                      className="flex-1 py-4 rounded-2xl bg-orange-600 text-white text-xs font-black uppercase tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-200 transition-all"
+                    >
+                      Confirm_Overwrite
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
-                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
-                  <FiSend size={18} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">
-                    {phase === 'confirm' ? 'Confirm Overwrite' : 'New Strategic Broadcast'}
-                  </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Comms_Protocol_v.4.2</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => { setShowModal(false); setPhase('compose'); }} 
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-900 hover:shadow-md transition-all border border-transparent hover:border-slate-100"
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-
-            {phase === 'compose' ? (
-              <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intel_Category</label>
-                    <select 
-                      className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
-                      value={form.category} 
-                      onChange={e => setForm({ ...form, category: e.target.value })}
-                    >
-                      {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target_Audience</label>
-                    <select 
-                      className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
-                      value={form.audience} 
-                      onChange={e => setForm({ ...form, audience: e.target.value })}
-                    >
-                      <option>All Residents</option>
-                      <option>Barangay Only</option>
-                      <option>Global Sector</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Broadcast_Title</label>
-                  <input 
-                    type="text" 
-                    required 
-                    className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
-                    value={form.title} 
-                    onChange={e => setForm({ ...form, title: e.target.value })} 
-                    placeholder="Subject Heading..." 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intelligence_Content</label>
-                  <textarea 
-                    required 
-                    className="w-full px-5 py-4 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 h-32 resize-none transition-all placeholder:text-slate-300" 
-                    value={form.message} 
-                    onChange={e => setForm({ ...form, message: e.target.value })} 
-                    placeholder="Detailed situational update or advisory..." 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">External_Source_Link (Optional)</label>
-                  <div className="relative">
-                    <FiLink className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                      type="url" 
-                      className="w-full pl-12 pr-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
-                      value={form.externalLink} 
-                      onChange={e => setForm({ ...form, externalLink: e.target.value })} 
-                      placeholder="https://..." 
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <label className="flex items-center gap-4 p-5 rounded-2xl border border-red-100 bg-red-50/30 cursor-pointer group hover:bg-red-50 transition-all">
-                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${form.isUrgent ? 'bg-red-600 border-red-600' : 'border-red-200 bg-white group-hover:border-red-400'}`}>
-                      {form.isUrgent && <FiCheckCircle className="text-white text-sm" />}
-                    </div>
-                    <input 
-                      type="checkbox" 
-                      className="hidden" 
-                      checked={form.isUrgent} 
-                      onChange={e => setForm({ ...form, isUrgent: e.target.checked })} 
-                    />
-                    <div>
-                      <div className="text-[11px] font-black text-red-600 uppercase tracking-widest">Urgent_Priority_Broadcast</div>
-                      <p className="text-[10px] font-bold text-red-400 mt-0.5 uppercase tracking-tighter italic">Trigger push notifications for mission-critical disaster alerts.</p>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="flex gap-4 pt-4">
-                  <button 
-                    type="button" 
-                    onClick={() => { setShowModal(false); resetForm(); }} 
-                    className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
-                  >
-                    Abort_Protocol
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black shadow-xl shadow-slate-200 active:scale-[0.98] transition-all"
-                  >
-                    Execute_Broadcast
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="p-10 text-center space-y-6">
-                <div className="w-20 h-20 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mx-auto border-4 border-white shadow-xl">
-                  <FiAlertTriangle size={32} />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Duplicate Intel Detected</h3>
-                  <p className="text-sm text-slate-500 font-medium max-w-sm mx-auto">An active broadcast with this title already exists. Overwriting will replace the current situational update.</p>
-                </div>
-                <div className="flex gap-4 pt-4">
-                  <button 
-                    onClick={() => setPhase('compose')} 
-                    className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all"
-                  >
-                    Back_To_Comms
-                  </button>
-                  <button 
-                    onClick={confirmUpdate} 
-                    className="flex-1 py-4 rounded-2xl bg-orange-600 text-white text-xs font-black uppercase tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-200 transition-all"
-                  >
-                    Confirm_Overwrite
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.4); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
+      `}} />
     </div>
   );
 }
-
