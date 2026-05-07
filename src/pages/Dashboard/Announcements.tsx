@@ -190,44 +190,43 @@ export default function Announcements() {
           </div>
         </div>
 
-        {/* Metrics Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+        {/* Metrics Section - More Compact */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Active Broadcasts', value: announcements.length, icon: <FiBell />, color: 'blue' },
             { label: 'Urgent Alerts', value: announcements.filter(a => a.is_urgent === "1").length, icon: <FiAlertTriangle />, color: 'red' },
-            { label: 'Intelligence Sync', value: '100%', icon: <FiActivity />, color: 'emerald' },
-            { label: 'Global Reach', value: 'Live', icon: <FiGlobe />, color: 'sky' },
+            { label: 'Sync Status', value: '100%', icon: <FiActivity />, color: 'emerald' },
+            { label: 'Reach', value: 'Live', icon: <FiGlobe />, color: 'sky' },
           ].map((m, i) => (
-            <div key={i} className="bg-white border border-slate-100 p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-xl bg-${m.color}-50 text-${m.color}-600`}>
-                  {m.icon}
-                </div>
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Protocol_{i+1}</span>
+            <div key={i} className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-4">
+              <div className={`p-2.5 rounded-xl bg-${m.color}-50 text-${m.color}-600`}>
+                {m.icon}
               </div>
-              <div className="text-3xl font-black text-slate-900 tracking-tight">{m.value}</div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{m.label}</div>
+              <div>
+                <div className="text-xl font-black text-slate-900 tracking-tight">{m.value}</div>
+                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{m.label}</div>
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          {/* Sidebar Filters */}
-          <div className="lg:col-span-1 space-y-8">
-            <div className="bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm sticky top-6">
-              <div className="flex items-center gap-2 mb-8">
-                <FiFilter className="text-slate-900" />
-                <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Intel_Filters</h2>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Filters - More Presence, Wider */}
+          <div className="lg:w-80 flex-shrink-0 space-y-6">
+            <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm sticky top-6">
+              <div className="flex items-center gap-2 mb-6">
+                <FiFilter className="text-slate-900" size={14} />
+                <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Intel_Filters</h2>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <button 
                   onClick={() => setSelectedCategory(null)}
-                  className={`w-full flex items-center justify-between p-5 rounded-2xl transition-all group ${!selectedCategory ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-xl transition-all group ${!selectedCategory ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <FiLayers className={!selectedCategory ? 'text-blue-400' : 'text-slate-400'} />
-                    <span className="text-xs font-black uppercase tracking-widest">All Intelligence</span>
+                  <div className="flex items-center gap-3">
+                    <FiLayers size={14} className={!selectedCategory ? 'text-blue-400' : 'text-slate-400'} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">All Intelligence</span>
                   </div>
                 </button>
 
@@ -235,46 +234,46 @@ export default function Announcements() {
                   <button 
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                    className={`w-full flex items-center justify-between p-5 rounded-2xl transition-all group ${selectedCategory === cat.id ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                    className={`w-full flex items-center justify-between p-3.5 rounded-xl transition-all group ${selectedCategory === cat.id ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                   >
-                    <div className="flex items-center gap-4">
-                      <span className={`text-lg transition-transform group-hover:scale-110 ${selectedCategory === cat.id ? 'text-blue-400' : `text-${cat.color}-600`}`}>{cat.icon}</span>
-                      <span className="text-xs font-black uppercase tracking-widest">{cat.name.split(' ')[0]}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-base transition-transform group-hover:scale-110 ${selectedCategory === cat.id ? 'text-blue-400' : `text-${cat.color}-600`}`}>{cat.icon}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
                     </div>
                   </button>
                 ))}
               </div>
 
-              <div className="mt-12 p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Comms_Status</span>
+              <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-1 h-1 rounded-full bg-blue-500" />
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Comms_Status</span>
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter italic">
-                  Feed is synchronized with regional command and local barangay nodes in real-time.
+                <p className="text-[8px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter italic">
+                  Feed is synchronized with regional command nodes in real-time.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Main Feed */}
-          <div className="lg:col-span-3 space-y-10">
-            <div className="flex items-center justify-between px-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em]">Live_Intelligence_Feed</span>
+          {/* Main Feed - More Compact Cards */}
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">Operational_Feed</span>
               </div>
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest tabular-nums">Items: {filteredAnnouncements.length}</span>
+              <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">Assets: {filteredAnnouncements.length}</span>
             </div>
 
             {isLoading ? (
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {[1, 2, 3].map(n => (
-                  <div key={n} className="h-64 bg-white border border-slate-100 rounded-[2.5rem] animate-pulse" />
+                  <div key={n} className="h-40 bg-white border border-slate-100 rounded-3xl animate-pulse" />
                 ))}
               </div>
             ) : filteredAnnouncements.length > 0 ? (
-              <div className="space-y-8">
+              <div className="space-y-4">
                 {filteredAnnouncements.map((a: any) => {
                   const cat = CATEGORIES.find(c => c.id === a.category);
                   const isUrgent = a.is_urgent === "1";
@@ -282,67 +281,56 @@ export default function Announcements() {
                   return (
                     <div 
                       key={a.id} 
-                      className={`group relative bg-white rounded-[2.5rem] border transition-all hover:shadow-2xl hover:-translate-y-1 ${isUrgent ? 'border-red-100 shadow-lg shadow-red-50' : 'border-slate-100 shadow-sm'}`}
+                      className={`group relative bg-white rounded-3xl border transition-all hover:shadow-xl ${isUrgent ? 'border-red-100 shadow-lg shadow-red-50/50' : 'border-slate-100 shadow-sm'}`}
                     >
-                      {isUrgent && (
-                        <div className="absolute -top-3 -right-3 w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-red-200 animate-bounce z-10">
-                          <FiAlertTriangle size={24} />
-                        </div>
-                      )}
-                      
-                      <div className="p-10">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
-                          <div className="flex items-center gap-6">
-                            <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl border transition-all group-hover:scale-110 ${isUrgent ? 'bg-red-50 text-red-600 border-red-100 shadow-lg shadow-red-100' : 'bg-slate-50 text-slate-600 border-slate-100 shadow-inner'}`}>
+                      <div className="p-6">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl border transition-all group-hover:scale-110 ${isUrgent ? 'bg-red-50 text-red-600 border-red-100 shadow-lg shadow-red-100' : 'bg-slate-50 text-slate-600 border-slate-100 shadow-inner'}`}>
                               {getCategoryIcon(a.category)}
                             </div>
                             <div>
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${isUrgent ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
-                                  {isUrgent ? 'URGENT_PRIORITY' : cat?.name.toUpperCase() || 'INFO'}
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isUrgent ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
+                                  {isUrgent ? 'URGENT' : cat?.name.toUpperCase() || 'INFO'}
                                 </span>
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest tabular-nums">
+                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest tabular-nums">
                                   {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase group-hover:text-blue-600 transition-colors">
+                              <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase group-hover:text-blue-600 transition-colors line-clamp-1">
                                 {a.title}
                               </h3>
                             </div>
                           </div>
                           
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{a.audience?.toUpperCase()}_SECTOR</span>
-                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-tighter italic tabular-nums">{new Date(a.created_at).toLocaleDateString()}</span>
+                          <div className="flex md:flex-col items-center md:items-end gap-2 md:gap-0">
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{a.audience?.toUpperCase()}</span>
+                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter italic tabular-nums">{new Date(a.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
 
-                        <div className="relative">
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-100 rounded-full group-hover:bg-blue-200 transition-colors" />
-                          <p className="pl-8 text-sm md:text-base text-slate-600 font-bold leading-relaxed">
+                        <div className="relative pl-4 border-l-2 border-slate-100 group-hover:border-blue-200 transition-colors">
+                          <p className="text-sm text-slate-600 font-bold leading-relaxed line-clamp-3">
                             {a.message}
                           </p>
                         </div>
 
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mt-10 pt-10 border-t border-slate-50">
+                        <div className="flex items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-50">
                           {a.external_link ? (
                             <a 
                               href={a.external_link} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-xl shadow-slate-200 transition-all active:scale-95"
+                              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-blue-600 shadow-lg shadow-slate-200 transition-all active:scale-95"
                             >
-                              <FiLink /> Intelligence_Source <FiExternalLink />
+                              <FiLink size={10} /> Intel_Source <FiExternalLink size={10} />
                             </a>
                           ) : <div />}
                           
-                          <div className="flex items-center gap-4">
-                             <div className="flex -space-x-2">
-                               {[1,2,3].map(i => (
-                                 <div key={i} className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm" />
-                               ))}
-                             </div>
-                             <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Ref: SCT_TRANS_{a.id}</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Ref: {a.id}</span>
+                             {isUrgent && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
                           </div>
                         </div>
                       </div>
@@ -351,15 +339,14 @@ export default function Announcements() {
                 })}
               </div>
             ) : (
-              <div className="bg-white rounded-[3rem] border border-slate-100 p-24 text-center flex flex-col items-center gap-8 shadow-sm">
-                <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
-                  <FiBell size={48} />
+              <div className="bg-white rounded-3xl border border-slate-100 p-16 text-center flex flex-col items-center gap-4 shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
+                  <FiBell size={32} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Strategic_Silence</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.3em] mt-3">Zero active broadcasts currently on this frequency.</p>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase">Strategic_Silence</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Zero active broadcasts.</p>
                 </div>
-                <button onClick={() => setSelectedCategory(null)} className="text-blue-600 font-black text-[10px] uppercase tracking-[0.2em] hover:underline decoration-2 underline-offset-8">Reset_All_Frequencies</button>
               </div>
             )}
           </div>
