@@ -408,7 +408,7 @@ const BrgyAccountManagement: React.FC = () => {
               <div className="flex justify-between items-center mb-10">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Enroll Brgy Official</h2>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Registry Synchronization Node</p>
+                  <p className="text-xs font-semibold text-gray-400 mt-1">Direct system registration for sector officials.</p>
                 </div>
                 <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                   <FiX size={24} className="text-gray-400" />
@@ -417,7 +417,7 @@ const BrgyAccountManagement: React.FC = () => {
 
               <form onSubmit={handleCreateAccount} className="space-y-6">
                 <div>
-                  <label className="tactical-label">Lead_Full_Name</label>
+                  <label className="tactical-label">Full Name</label>
                   <input 
                     required
                     className="tactical-input w-full"
@@ -429,7 +429,7 @@ const BrgyAccountManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="tactical-label">System_ID (Username)</label>
+                    <label className="tactical-label">Username</label>
                     <input 
                       required
                       className="tactical-input w-full"
@@ -439,7 +439,7 @@ const BrgyAccountManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="tactical-label">Comms_Key (Password)</label>
+                    <label className="tactical-label">Password</label>
                     <input 
                       required
                       type="password"
@@ -453,7 +453,7 @@ const BrgyAccountManagement: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="tactical-label">Official_Email</label>
+                    <label className="tactical-label">Email Address</label>
                     <input 
                       required
                       type="email"
@@ -464,7 +464,7 @@ const BrgyAccountManagement: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="tactical-label">Comms_Target (Phone)</label>
+                    <label className="tactical-label">Phone Number</label>
                     <input 
                       required
                       className="tactical-input w-full"
@@ -476,7 +476,7 @@ const BrgyAccountManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="tactical-label">Sector_Assignment (Barangay)</label>
+                  <label className="tactical-label">Barangay Assignment</label>
                   <select 
                     required
                     className="tactical-input w-full appearance-none cursor-pointer pr-10"
@@ -494,14 +494,14 @@ const BrgyAccountManagement: React.FC = () => {
                     onClick={() => setShowCreateModal(false)}
                     className="tactical-button-ghost flex-1"
                   >
-                    Abort
+                    Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={creating}
                     className="tactical-button-accent flex-1"
                   >
-                    {creating ? 'Syncing...' : 'Confirm Enrollment'}
+                    {creating ? 'Confirming...' : 'Confirm'}
                   </button>
                 </div>
               </form>
