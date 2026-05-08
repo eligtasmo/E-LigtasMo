@@ -117,7 +117,7 @@ export default function IncidentDashboardView() {
 
   const fetchBarangays = async () => {
     try {
-      const res = await fetch('/api/list-brgys.php');
+      const res = await fetch('/api/list-barangays.php');
       const data = await res.json();
       if (data.success) setBarangays(data.brgys || []);
       else setBarangays([]);

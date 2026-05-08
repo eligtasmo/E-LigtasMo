@@ -945,7 +945,7 @@ const MMDRMODashboard: React.FC = () => {
 
   const fetchBarangays = async () => {
     try {
-      const response = await apiFetch('list-brgys.php');
+      const response = await apiFetch('list-barangays.php');
       const data = await response.json();
       if (data.success && Array.isArray(data.brgys)) {
         setBarangays(data.brgys);

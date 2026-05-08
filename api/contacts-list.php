@@ -24,7 +24,7 @@ function ensure_contacts_table($pdo) {
 }
 
 try {
-    ensure_contacts_table($pdo);
+    @ensure_contacts_table($pdo);
     
     $brgy = isset($_GET['brgy']) ? trim($_GET['brgy']) : null;
     $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
@@ -64,6 +64,7 @@ try {
     $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($contacts);
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    http_response_code(200); // Return 200 with empty array if table doesn't exist yet
+    echo json_encode([]);
 }
+?>

@@ -75,7 +75,7 @@ const BrgyAccountManagement: React.FC = () => {
       'Santo Angel Central', 'Santo Angel Norte', 'Santo Angel Sur'
     ];
     try {
-      const res = await fetch("/api/list-barangays.php");
+      const res = await apiFetch("list-barangays.php");
       const data = await res.json();
       if (data.success && data.barangays && data.barangays.length > 0) {
         setAllBrgys(data.barangays.map((b: any) => b.name));
@@ -139,11 +139,10 @@ const BrgyAccountManagement: React.FC = () => {
   const handleApproveAction = async (userId: number, action: 'approve' | 'reject') => {
     if (!window.confirm(`Are you sure you want to ${action} this account?`)) return;
     try {
-      const res = await fetch("/api/approve-brgy-account.php", {
+      const res = await apiFetch("approve-brgy-account.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, action }),
-        credentials: "include"
       });
       const data = await res.json();
       if (data.success) {
@@ -159,11 +158,10 @@ const BrgyAccountManagement: React.FC = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await fetch("/api/admin-create-user.php", {
+      const res = await apiFetch("admin-create-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createData),
-        credentials: "include"
       });
       const data = await res.json();
       if (data.success) {

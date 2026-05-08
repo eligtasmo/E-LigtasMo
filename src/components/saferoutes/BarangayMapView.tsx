@@ -50,7 +50,7 @@ export default function BarangayMapView() {
 
   const fetchBarangays = async () => {
     try {
-      const res = await apiFetch('list-brgys.php');
+      const res = await apiFetch('list-barangays.php');
       const data = await res.json();
       if (data.success) setBarangays(data.brgys || []);
       else setBarangays([]);

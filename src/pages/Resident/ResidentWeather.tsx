@@ -114,10 +114,10 @@ const ResidentWeather: React.FC = () => {
     // Try brgy center
     if (user?.brgy_name) {
       try {
-        const res = await fetch('/api/list-brgys.php');
+        const res = await fetch('/api/list-barangays.php');
         const data = await res.json();
-        if (data.success && Array.isArray(data.brgys)) {
-          const match = data.brgys.find((b: any) => (b.name || '').toLowerCase() === (user.brgy_name || '').toLowerCase());
+        if (data.success && Array.isArray(data.barangays)) {
+          const match = data.barangays.find((b: any) => (b.name || '').toLowerCase() === (user.brgy_name || '').toLowerCase());
           if (match && match.lat && match.lng) {
             return {
               lat: Number(match.lat),

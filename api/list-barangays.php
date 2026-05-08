@@ -11,6 +11,7 @@ try {
     echo json_encode([
         'success' => true,
         'barangays' => $barangays,
+        'brgys' => $barangays, // Compatibility alias
         'count' => count($barangays)
     ]);
 } catch (Exception $e) {

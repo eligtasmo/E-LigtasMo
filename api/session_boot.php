@@ -1,15 +1,14 @@
 <?php
 require_once "cors.php";
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
         'domain' => '',
-        'secure' => $isHttps,
+        'secure' => true,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'None',
     ]);
     session_start();
 }
-?> 
+?>
