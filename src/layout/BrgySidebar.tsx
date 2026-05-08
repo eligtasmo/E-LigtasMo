@@ -15,6 +15,7 @@ import {
   ProfileIcon, 
   BookIcon 
 } from "../components/TacticalIcons";
+import { FiActivity } from "react-icons/fi";
 
 type NavItem = {
   name: string;
@@ -61,7 +62,7 @@ const BrgySidebar: React.FC = () => {
             {nav.path && (
               <Link
                 to={nav.path}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group relative font-bold ${
                   active 
                     ? "bg-white text-[#1e1b4b] shadow-xl shadow-black/20 scale-[1.02]" 
                     : "text-gray-400 hover:bg-white/5 hover:text-white"
@@ -71,7 +72,7 @@ const BrgySidebar: React.FC = () => {
                   {nav.icon(active)}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className={`text-sm font-medium flex-1 truncate tracking-tight ${active ? "text-[#1e1b4b]" : "text-inherit"}`}>
+                  <span className={`sidebar-link-text flex-1 truncate ${active ? "text-[#1e1b4b]" : "text-inherit"}`}>
                     {nav.name}
                   </span>
                 )}
@@ -86,7 +87,7 @@ const BrgySidebar: React.FC = () => {
   return (
     <>
       <aside
-        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-jetbrains shadow-2xl relative ${
+        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-sans shadow-2xl relative ${
           isExpanded || isHovered || isMobileOpen ? "w-[260px]" : "w-[80px]"
         } ${isMobileOpen ? "fixed inset-y-0 left-0 translate-x-0" : "hidden lg:flex"}`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
@@ -99,8 +100,8 @@ const BrgySidebar: React.FC = () => {
             </div>
             {(isExpanded || isHovered || isMobileOpen) && (
               <div className="flex flex-col leading-none">
-                <span className="text-lg font-bold tracking-tight text-white italic">E-LigtasMo</span>
-                <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">Brgy Node</span>
+                <span className="text-xl font-black tracking-tighter text-white italic">E-LigtasMo</span>
+                <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">Barangay Node</span>
               </div>
             )}
           </Link>

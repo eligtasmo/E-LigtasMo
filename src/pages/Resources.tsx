@@ -102,10 +102,6 @@ export default function Resources() {
         <div className="tactical-header">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div>
-              <div className="tactical-status-pill mb-4">
-                <div className="tactical-status-dot bg-blue-500 animate-pulse" />
-                <span>INTEL_REPOSITORY: ACTIVE</span>
-              </div>
               <h1 className="tactical-title">Emergency Resources</h1>
               <p className="tactical-subtitle">Essential safety guides, survival checklists, and contact intelligence for sector preparedness.</p>
             </div>
@@ -137,7 +133,7 @@ export default function Resources() {
                   <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="SEARCH_INTEL_REPOSITORY..."
+                    placeholder="Search resources..."
                     className="tactical-input w-full pl-12"
                     value={search}
                     onChange={e => setSearch(e.target.value)}

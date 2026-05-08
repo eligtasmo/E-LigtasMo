@@ -34,7 +34,7 @@ const LayoutContent: React.FC = () => {
   const isNoSidebarRoute = location.pathname.startsWith('/admin/emergency-analytics');
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-500 font-jetbrains">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-500 font-sans">
       {/* Fixed Full Height Sidebar */}
       {!isNoSidebarRoute && <AppSidebar />}
       
@@ -56,7 +56,7 @@ const LayoutContent: React.FC = () => {
           />
 
           <div className="h-full w-full p-0 bg-transparent">
-            <div className={`h-full ${isPlannerRoute ? "w-full" : "max-w-[1600px] mx-auto"}`}>
+            <div className="h-full w-full">
               <Outlet />
             </div>
           </div>

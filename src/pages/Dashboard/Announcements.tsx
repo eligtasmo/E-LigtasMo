@@ -1,15 +1,15 @@
 import { useEffect, useState, useMemo } from 'react';
-import { FiAlertTriangle, FiBell, FiPlus, FiSend, FiLink, FiInfo, FiLayers, FiActivity, FiX, FiCheckCircle, FiGlobe, FiFilter, FiExternalLink, FiShield, FiRefreshCw } from 'react-icons/fi';
-import { FaBoxes, FaWind, FaExclamationCircle } from 'react-icons/fa';
+import { FiAlertTriangle, FiBell, FiPlus, FiSend, FiLink, FiInfo, FiLayers, FiActivity, FiX, FiCheckCircle, FiGlobe, FiFilter, FiExternalLink, FiShield, FiRefreshCw, FiSearch } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../utils/api';
 import { toast } from 'react-hot-toast';
+import PageMeta from "../../components/common/PageMeta";
 
 const CATEGORIES = [
-  { id: 'disaster', name: 'Disaster News', icon: <FaExclamationCircle />, color: 'red' },
-  { id: 'safety', name: 'Safety Tips', icon: <FiShield />, color: 'blue' },
-  { id: 'recovery', name: 'Recovery Updates', icon: <FiRefreshCw />, color: 'emerald' },
-  { id: 'preparedness', name: 'Preparedness Guide', icon: <FiLayers />, color: 'amber' },
+  { id: 'disaster', name: 'Disaster News' },
+  { id: 'safety', name: 'Safety Tips' },
+  { id: 'recovery', name: 'Recovery Updates' },
+  { id: 'preparedness', name: 'Preparedness Guide' },
 ];
 
 export default function Announcements() {
@@ -17,375 +17,276 @@ export default function Announcements() {
   const role = (user?.role || 'resident').toLowerCase();
   const brgyName = (user as any)?.brgy_name || (user as any)?.brgy || '';
   const canSend = role === 'admin' || role === 'brgy' || role === 'brgy_chair';
-  
-  const [showModal, setShowModal] = useState(false);
+
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  
-  const [form, setForm] = useState({ 
-    title: '', 
-    message: '', 
-    type: 'info', 
-    audience: 'All Residents', 
+  const [phase, setPhase] = useState<'compose' | 'confirm'>('compose');
+  const [existing, setExisting] = useState<any>(null);
+
+  const [form, setForm] = useState({
+    title: '',
+    message: '',
+    type: 'broadcast',
+    audience: 'All Residents',
     category: 'disaster',
     externalLink: '',
-    isUrgent: false
+    isUrgent: false,
+    alsoSendSms: false
   });
-
-  const [phase, setPhase] = useState<'compose'|'confirm'>('compose');
-  const [existing, setExisting] = useState<any | null>(null);
 
   const loadAnnouncements = async () => {
     setIsLoading(true);
     try {
-      const aud = role === 'admin' ? 'all' : (role.includes('brgy') ? 'barangay' : 'residents');
-      const brgyParam = brgyName && aud !== 'all' ? `&brgy=${encodeURIComponent(brgyName)}` : '';
-      const res = await apiFetch(`list-announcements.php?audience=${encodeURIComponent(aud)}&limit=100${brgyParam}`, { headers: { 'X-Role': role } });
+      const res = await apiFetch('list-announcements.php');
       const data = await res.json();
-      if (data.success) {
-        setAnnouncements(data.announcements || []);
-      }
-    } catch {
-      toast.error("Failed to load feed sync.");
+      if (data.success) setAnnouncements(Array.isArray(data.data) ? data.data : []);
+    } catch (err) {
+      console.error(err);
+      toast.error('Sync failed');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredAnnouncements = useMemo(() => {
-    if (!selectedCategory) return announcements;
-    return announcements.filter(a => a.category === selectedCategory);
-  }, [announcements, selectedCategory]);
+  useEffect(() => { loadAnnouncements(); }, []);
 
-  useEffect(() => { loadAnnouncements(); }, [role]);
+  const resetForm = () => {
+    setForm({
+      title: '',
+      message: '',
+      type: 'broadcast',
+      audience: 'All Residents',
+      category: 'disaster',
+      externalLink: '',
+      isUrgent: false,
+      alsoSendSms: false
+    });
+    setExisting(null);
+  };
 
   const handleSend = async () => {
     if (!form.title || !form.message) {
-      toast.error("Title and message are required.");
+      toast.error('Fields are incomplete');
+      return;
+    }
+
+    const dup = announcements.find(a => a.title.toLowerCase() === form.title.toLowerCase() && a.brgy_name === (role === 'admin' ? 'Global' : brgyName));
+    if (dup && phase === 'compose') {
+      setExisting(dup);
+      setPhase('confirm');
       return;
     }
 
     try {
-      const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
-      const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
-      
-      const payload = { 
-        title: form.title, 
-        message: form.message, 
-        type: form.isUrgent ? 'error' : form.type, 
-        audience,
-        category: form.category,
-        external_link: form.externalLink,
-        is_urgent: form.isUrgent ? 1 : 0
+      const payload = {
+        ...form,
+        brgy: role === 'admin' ? 'Global' : brgyName,
+        sender: user?.username,
+        isUpdate: phase === 'confirm',
+        id: existing?.id
       };
 
-      const res = await apiFetch(endpoint, {
+      const res = await apiFetch('create-announcement.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Role': role },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
-      const data = await res.json();
-      
-      if (!data.success && data.existing && data.id) {
-        setExisting({ id: data.id });
-        setPhase('confirm');
-        return;
-      } else if (!data.success) {
-        throw new Error('Failed announcement');
-      }
 
-      toast.success(form.isUrgent ? "Urgent Alert Broadcasted!" : "Announcement Published.");
-      setShowModal(false);
-      resetForm();
-      loadAnnouncements();
-    } catch {
-      toast.error("Network communication failure.");
-    }
-  };
-
-  const confirmUpdate = async () => {
-    if (!existing) return;
-    try {
-      const audience = form.audience === 'Barangay Only' ? 'barangay' : (form.audience === 'All Residents' ? 'residents' : 'all');
-      const endpoint = form.isUrgent ? 'create-notification.php' : 'create-announcement.php';
-      
-      const payload = { 
-        title: form.title, 
-        message: form.message, 
-        type: form.isUrgent ? 'error' : form.type, 
-        audience,
-        category: form.category,
-        external_link: form.externalLink,
-        is_urgent: form.isUrgent ? 1 : 0,
-        overwrite: true,
-        existing_id: existing.id
-      };
-
-      const res = await apiFetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Role': role },
-        body: JSON.stringify(payload)
-      });
-      
       const data = await res.json();
       if (data.success) {
-        toast.success("Broadcast Overwritten & Synced.");
+        toast.success(phase === 'confirm' ? 'Updated' : 'Sent');
         setShowModal(false);
+        setPhase('compose');
         resetForm();
         loadAnnouncements();
       } else {
-        throw new Error('Overwrite failed');
+        toast.error(data.message || 'Failed to send');
       }
-    } catch {
-      toast.error("Critical update synchronization failure.");
+    } catch (err) {
+      console.error(err);
+      toast.error('Network error');
     }
   };
 
-  const resetForm = () => {
-    setForm({ 
-      title: '', 
-      message: '', 
-      type: 'info', 
-      audience: 'All Residents', 
-      category: 'disaster',
-      externalLink: '',
-      isUrgent: false
-    });
-    setExisting(null);
-    setPhase('compose');
-  };
+  const confirmUpdate = () => handleSend();
 
-  const getCategoryIcon = (catId: string) => {
-    const cat = CATEGORIES.find(c => c.id === catId);
-    return cat ? cat.icon : <FiInfo />;
-  };
+  const filteredAnnouncements = useMemo(() => {
+    const list = Array.isArray(announcements) ? announcements : [];
+    if (!selectedCategory) return list;
+    return list.filter(a => a.category === selectedCategory);
+  }, [announcements, selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] font-['Outfit'] antialiased">
-      <div className="flex h-screen overflow-hidden">
-        
-        {/* Sleek Tactical Sidebar */}
-        <div className="w-72 bg-slate-900 flex flex-col border-r border-slate-800 shadow-2xl z-20">
-          <div className="p-6 border-b border-slate-800/50">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-              <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Comms_Node: {user?.brgy_name || 'Global'}</span>
-            </div>
-            <h1 className="text-xl font-black text-white tracking-tight uppercase leading-none">Operations</h1>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
-            <div className="px-2 mb-4">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Intelligence_Filters</span>
-            </div>
-            
-            <button 
-              onClick={() => setSelectedCategory(null)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group ${!selectedCategory ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-            >
-              <FiLayers size={14} />
-              <span className="text-[11px] font-bold uppercase tracking-wider">All Intel</span>
-            </button>
-
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all group ${selectedCategory === cat.id ? 'bg-slate-800 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800/30 hover:text-slate-200'}`}
-              >
-                <span className={`transition-transform group-hover:scale-110 ${selectedCategory === cat.id ? 'text-blue-400' : 'text-slate-500'}`}>{cat.icon}</span>
-                <span className="text-[11px] font-bold uppercase tracking-wider">{cat.name}</span>
-              </button>
-            ))}
-
-            <div className="pt-8 px-2">
-              <div className="p-4 rounded-2xl bg-slate-800/30 border border-slate-800/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiActivity size={12} className="text-blue-400" />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Network_Status</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[8px] font-bold text-slate-500 uppercase">Uptime</span>
-                    <span className="text-[8px] font-black text-emerald-400">99.9%</span>
-                  </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 w-[99%]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+    <div className="tactical-page">
+      <PageMeta title="Broadcast Hub" description="Manage announcements and SMS." />
+      
+      {/* Header Section */}
+      <div className="tactical-header">
+        <div>
+          <h1 className="tactical-title">Broadcast Hub</h1>
+          <p className="tactical-subtitle">Manage and track your sector messages.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={loadAnnouncements} className="tactical-btn-secondary p-2">
+            <FiRefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+          </button>
           {canSend && (
-            <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-md">
-              <button 
-                onClick={() => setShowModal(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/20 active:scale-[0.98] transition-all"
-              >
-                <FiPlus size={14} /> New Broadcast
-              </button>
-            </div>
+            <button onClick={() => setShowModal(true)} className="tactical-btn-primary flex items-center gap-2">
+              <FiPlus size={18} /> New Broadcast
+            </button>
           )}
         </div>
+      </div>
 
-        {/* Main Command Console */}
-        <div className="flex-1 flex flex-col h-screen bg-[#f8fafc]">
-          
-          {/* Compact Top Bar */}
-          <div className="bg-white border-b border-slate-200 px-8 py-3 flex items-center justify-between z-10 shadow-sm">
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Operational_Status</span>
-                <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black uppercase tracking-tighter">Live_Comms</div>
-              </div>
-              <div className="h-4 w-px bg-slate-200" />
-              <div className="flex items-center gap-6">
-                {[
-                  { label: 'Total', value: announcements.length, color: 'slate' },
-                  { label: 'Urgent', value: announcements.filter(a => a.is_urgent === "1").length, color: 'red' },
-                  { label: 'Barangay', value: announcements.filter(a => a.audience === 'barangay').length, color: 'blue' },
-                ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{s.label}:</span>
-                    <span className={`text-xs font-black text-${s.color}-600 tabular-nums`}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+         {[
+            { label: 'Total Records', value: (announcements || []).length, color: 'text-gray-900' },
+            { label: 'Urgent Alerts', value: (announcements || []).filter(a => a.is_urgent === "1").length, color: 'text-red-600' },
+            { label: 'SMS Outreach', value: (announcements || []).reduce((acc, curr) => acc + (parseInt(curr.sms_sent) || 0), 0), color: 'text-blue-600' }
+         ].map((stat, i) => (
+            <div key={i} className="tactical-card p-6">
+               <p className="tactical-stat-label">{stat.label}</p>
+               <div className={`tactical-stat-value ${stat.color}`}>{stat.value}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={loadAnnouncements} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                <FiActivity size={16} className={isLoading ? 'animate-spin' : ''} />
-              </button>
-              <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">Sync_v4.2.1</div>
-            </div>
-          </div>
+         ))}
+      </div>
 
-          {/* Feed Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-            <div className="max-w-5xl mx-auto space-y-4">
-              
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <FiLayers size={14} className="text-slate-400" />
-                  <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Strategic_Intelligence_Feed</h2>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Sort: Latest_First</span>
-                </div>
-              </div>
-
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} className="h-24 bg-white border border-slate-200 rounded-2xl animate-pulse" />
-                  ))}
-                </div>
-              ) : filteredAnnouncements.length > 0 ? (
-                <div className="space-y-2.5">
-                  {filteredAnnouncements.map((a: any) => {
-                    const cat = CATEGORIES.find(c => c.id === a.category);
-                    const isUrgent = a.is_urgent === "1";
-                    
-                    return (
-                      <div 
-                        key={a.id} 
-                        className={`group relative bg-white border transition-all hover:border-slate-300 hover:shadow-md rounded-2xl overflow-hidden ${isUrgent ? 'border-red-200 shadow-sm shadow-red-50' : 'border-slate-200 shadow-sm'}`}
-                      >
-                        {isUrgent && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />}
-                        
-                        <div className="p-4 flex items-center gap-5">
-                          <div className={`w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-lg border ${isUrgent ? 'bg-red-50 text-red-600 border-red-100 shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
-                            {getCategoryIcon(a.category)}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${isUrgent ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
-                                {isUrgent ? 'CRITICAL_ALERT' : cat?.name.toUpperCase() || 'INFO'}
-                              </span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter tabular-nums">
-                                {new Date(a.created_at).toLocaleDateString()} // {new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase truncate group-hover:text-blue-600 transition-colors">
-                              {a.title}
-                            </h3>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed truncate mt-0.5">
-                              {a.message}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-4 pl-4 border-l border-slate-100">
-                            <div className="text-right hidden sm:block">
-                              <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{a.audience?.toUpperCase()}</div>
-                              <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest tabular-nums">ID: {a.id}</div>
-                            </div>
-                            
-                            {a.external_link && (
-                              <a 
-                                href={a.external_link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="w-8 h-8 flex items-center justify-center bg-slate-50 hover:bg-blue-600 text-slate-400 hover:text-white rounded-lg transition-all shadow-sm border border-slate-100"
-                              >
-                                <FiExternalLink size={14} />
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center gap-4 shadow-sm border-dashed">
-                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
-                    <FiBell size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase">Operational_Silence</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Waiting for incoming intelligence updates.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-4 tactical-card p-4 mb-6">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search history..."
+            className="tactical-input w-full pl-11"
+          />
         </div>
+        <select 
+          className="tactical-input min-w-[200px]"
+          value={selectedCategory || 'all'}
+          onChange={(e) => setSelectedCategory(e.target.value === 'all' ? null : e.target.value)}
+        >
+          <option value="all">All Categories</option>
+          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </div>
 
-        {/* Modal - Improved Layout */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-white/20 animate-in zoom-in-95 duration-200 overflow-hidden">
-              <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
-                    <FiSend size={18} />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">
-                      {phase === 'confirm' ? 'Confirm Overwrite' : 'New Strategic Broadcast'}
-                    </h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Comms_Protocol_v.4.2</p>
-                  </div>
+      {/* Table Wrapper */}
+      <div className="tactical-card">
+        <div className="overflow-x-auto">
+          <table className="tactical-table">
+            <thead>
+              <tr>
+                <th className="tactical-th">Date</th>
+                <th className="tactical-th">Subject</th>
+                <th className="tactical-th">Sector</th>
+                <th className="tactical-th">Audience</th>
+                <th className="tactical-th">SMS Reach</th>
+                <th className="tactical-th text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td colSpan={6} className="px-6 py-8">
+                      <div className="h-4 bg-gray-50 rounded animate-pulse w-3/4 mx-auto" />
+                    </td>
+                  </tr>
+                ))
+              ) : filteredAnnouncements.length > 0 ? (
+                filteredAnnouncements.map((a: any) => {
+                  const isUrgent = a.is_urgent === "1";
+                  return (
+                    <tr key={a.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="tactical-td">
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{new Date(a.created_at).toLocaleDateString()}</span>
+                          <span className="text-sm text-gray-400">{new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </td>
+                      <td className="tactical-td">
+                        <div className="flex flex-col">
+                          <span className="font-bold">{a.title}</span>
+                          <span className="text-sm text-gray-500 truncate max-w-xs">{a.message}</span>
+                        </div>
+                      </td>
+                      <td className="tactical-td">
+                        <span className="text-sm font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">{a.brgy_name || 'Global'}</span>
+                      </td>
+                      <td className="tactical-td">
+                        <span className={`text-sm font-semibold ${isUrgent ? 'text-red-600' : 'text-blue-600'}`}>
+                          {a.audience}
+                        </span>
+                      </td>
+                      <td className="tactical-td">
+                        <span className="font-bold text-gray-700">{a.sms_sent || 0}</span>
+                      </td>
+                      <td className="tactical-td text-right">
+                        <button 
+                          onClick={() => {
+                            setForm({
+                              title: a.title,
+                              message: a.message,
+                              type: a.type,
+                              audience: a.audience,
+                              category: a.category,
+                              externalLink: a.external_link || '',
+                              isUrgent: a.is_urgent === "1",
+                              alsoSendSms: false
+                            });
+                            setExisting({ id: a.id });
+                            setPhase('confirm');
+                            setShowModal(true);
+                          }}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        >
+                          <FiRefreshCw size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-20 text-center">
+                    <FiBell size={40} className="text-gray-200 mx-auto mb-4" />
+                    <p className="text-sm text-gray-400 font-medium">No history found</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {phase === 'confirm' ? 'Update Broadcast' : 'New Broadcast'}
+                  </h2>
+                  <p className="text-sm text-gray-400 mt-1">Direct system message distribution</p>
                 </div>
-                <button 
-                  onClick={() => { setShowModal(false); setPhase('compose'); }} 
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-900 hover:shadow-md transition-all border border-transparent hover:border-slate-100"
-                >
-                  <FiX size={20} />
+                <button onClick={() => { setShowModal(false); setPhase('compose'); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+                  <FiX size={24} />
                 </button>
               </div>
 
               {phase === 'compose' ? (
-                <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="p-8 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intel_Category</label>
+                      <label className="text-sm font-bold text-gray-700">Category</label>
                       <select 
-                        className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
+                        className="tactical-input w-full h-11"
                         value={form.category} 
                         onChange={e => setForm({ ...form, category: e.target.value })}
                       >
@@ -393,125 +294,90 @@ export default function Announcements() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target_Audience</label>
+                      <label className="text-sm font-bold text-gray-700">Audience</label>
                       <select 
-                        className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none cursor-pointer" 
+                        className="tactical-input w-full h-11"
                         value={form.audience} 
                         onChange={e => setForm({ ...form, audience: e.target.value })}
                       >
                         <option value="All Residents">All Residents</option>
                         <option value="Barangay Only">Barangay Only</option>
+                        {role === 'admin' && <option value="Global Admin">Global Admin</option>}
                       </select>
                     </div>
                   </div>
 
+                  <label className="flex items-center gap-4 p-5 rounded-2xl border border-blue-100 bg-blue-50/30 cursor-pointer group hover:bg-blue-50 transition-all">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-gray-300 accent-blue-600"
+                      checked={form.alsoSendSms} 
+                      onChange={e => setForm({ ...form, alsoSendSms: e.target.checked })} 
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-blue-700">Broadcast via SMS</p>
+                      <p className="text-sm text-blue-500 mt-1">Send as a text message to all sector residents.</p>
+                    </div>
+                  </label>
+
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Broadcast_Title</label>
+                    <label className="text-sm font-bold text-gray-700">Subject</label>
                     <input 
                       type="text" 
                       required 
-                      className="w-full px-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
+                      className="tactical-input w-full h-11 bg-white border-gray-200"
                       value={form.title} 
                       onChange={e => setForm({ ...form, title: e.target.value })} 
-                      placeholder="Subject Heading..." 
+                      placeholder="e.g. Flood Advisory" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Intelligence_Content</label>
+                    <label className="text-sm font-bold text-gray-700">Message</label>
                     <textarea 
                       required 
-                      className="w-full px-5 py-4 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 h-32 resize-none transition-all placeholder:text-slate-300" 
+                      className="tactical-input w-full h-32 resize-none bg-white border-gray-200"
                       value={form.message} 
                       onChange={e => setForm({ ...form, message: e.target.value })} 
-                      placeholder="Detailed situational update or advisory..." 
+                      placeholder="Type your message..." 
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">External_Source_Link (Optional)</label>
-                    <div className="relative">
-                      <FiLink className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        type="url" 
-                        className="w-full pl-12 pr-5 py-3.5 text-sm font-bold border border-slate-200 rounded-2xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all placeholder:text-slate-300" 
-                        value={form.externalLink} 
-                        onChange={e => setForm({ ...form, externalLink: e.target.value })} 
-                        placeholder="https://..." 
-                      />
+                  <label className="flex items-center gap-4 p-5 rounded-2xl border border-red-100 bg-red-50/30 cursor-pointer group hover:bg-red-50 transition-all">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-gray-300 accent-red-600"
+                      checked={form.isUrgent} 
+                      onChange={e => setForm({ ...form, isUrgent: e.target.checked })} 
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-red-700">Urgent Alert</p>
+                      <p className="text-sm text-red-500 mt-1">Trigger priority notifications.</p>
                     </div>
-                  </div>
+                  </label>
 
-                  <div className="pt-2">
-                    <label className="flex items-center gap-4 p-5 rounded-2xl border border-red-100 bg-red-50/30 cursor-pointer group hover:bg-red-50 transition-all">
-                      <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${form.isUrgent ? 'bg-red-600 border-red-600' : 'border-red-200 bg-white group-hover:border-red-400'}`}>
-                        {form.isUrgent && <FiCheckCircle className="text-white text-sm" />}
-                      </div>
-                      <input 
-                        type="checkbox" 
-                        className="hidden" 
-                        checked={form.isUrgent} 
-                        onChange={e => setForm({ ...form, isUrgent: e.target.checked })} 
-                      />
-                      <div>
-                        <div className="text-[11px] font-black text-red-600 uppercase tracking-widest">Urgent_Priority_Broadcast</div>
-                        <p className="text-[10px] font-bold text-red-400 mt-0.5 uppercase tracking-tighter italic">Trigger push notifications for mission-critical disaster alerts.</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className="flex gap-4 pt-4">
-                    <button 
-                      type="button" 
-                      onClick={() => { setShowModal(false); resetForm(); }} 
-                      className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
-                    >
-                      Abort_Protocol
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black shadow-xl shadow-slate-200 active:scale-[0.98] transition-all"
-                    >
-                      Execute_Broadcast
-                    </button>
+                  <div className="flex gap-4 pt-6">
+                    <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">Cancel</button>
+                    <button type="submit" className="tactical-btn-primary flex-1 py-3 h-auto">Send Now</button>
                   </div>
                 </form>
               ) : (
-                <div className="p-10 text-center space-y-6">
-                  <div className="w-20 h-20 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mx-auto border-4 border-white shadow-xl">
-                    <FiAlertTriangle size={32} />
+                <div className="text-center space-y-6">
+                  <FiAlertTriangle size={48} className="text-orange-500 mx-auto" />
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Duplicate Title</h3>
+                    <p className="text-sm text-gray-500 mt-2">A message with this subject already exists. Update it instead?</p>
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Duplicate Intel Detected</h3>
-                    <p className="text-sm text-slate-500 font-medium max-w-sm mx-auto">An active broadcast with this title already exists. Overwriting will replace the current situational update.</p>
-                  </div>
-                  <div className="flex gap-4 pt-4">
-                    <button 
-                      onClick={() => setPhase('compose')} 
-                      className="flex-1 py-4 rounded-2xl border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all"
-                    >
-                      Back_To_Comms
-                    </button>
-                    <button 
-                      onClick={confirmUpdate} 
-                      className="flex-1 py-4 rounded-2xl bg-orange-600 text-white text-xs font-black uppercase tracking-widest hover:bg-orange-700 shadow-xl shadow-orange-200 transition-all"
-                    >
-                      Confirm_Overwrite
-                    </button>
+                  <div className="flex gap-4 pt-6">
+                    <button onClick={() => setPhase('compose')} className="flex-1 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all border border-gray-200">Back</button>
+                    <button onClick={confirmUpdate} className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold rounded-xl shadow-lg transition-all">Yes, Update</button>
                   </div>
                 </div>
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.4); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
-      `}} />
+        </div>
+      )}
     </div>
   );
 }

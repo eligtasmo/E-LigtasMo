@@ -4,7 +4,7 @@ import EditProfileModal from "../components/UserProfile/EditProfileModal";
 import { useModal } from "../hooks/useModal";
 import { useState } from "react";
 import { apiFetch } from "../utils/api";
-import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEdit2, FiShield } from "react-icons/fi";
+import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiEdit2, FiShield, FiX } from "react-icons/fi";
 
 export default function UserProfiles() {
   const { user } = useAuth();
@@ -55,105 +55,102 @@ export default function UserProfiles() {
   ];
 
   return (
-    <>
+    <div className="tactical-page">
       <PageMeta title="Profile | E-LigtasMo" description="Manage your user profile and account settings." />
-      <div className="tactical-page">
-        <div className="tactical-container">
-          <div className="tactical-header">
-            <h1 className="tactical-title">Profile & Settings</h1>
-            <p className="tactical-subtitle">Your account information and security settings.</p>
+      
+      {/* Header */}
+      <div className="tactical-header">
+        <div>
+          <h1 className="tactical-title">Profile Settings</h1>
+          <p className="tactical-subtitle">Your account information and security parameters.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Profile Info */}
+        <div className="tactical-card">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <h3 className="text-sm font-bold text-gray-700">Account Information</h3>
+            <button onClick={openModal} className="text-blue-600 font-bold text-xs hover:underline flex items-center gap-1">
+              <FiEdit2 size={12} /> Edit Profile
+            </button>
           </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {/* Profile Info */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden" style={{ outline: "1px solid #e2e8f0" }}>
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Account Info</span>
-                <button onClick={openModal} className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors">
-                  <FiEdit2 size={11} /> Edit
-                </button>
+          <div className="p-8">
+            <div className="flex items-center gap-6 mb-8 pb-8 border-b border-gray-50">
+              <div className="w-16 h-16 rounded-2xl bg-gray-900 flex items-center justify-center shadow-lg shrink-0">
+                <span className="text-white text-2xl font-bold">{(user?.full_name || user?.username || "U").charAt(0).toUpperCase()}</span>
               </div>
-              <div className="p-6">
-                {/* Avatar Row */}
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-                  <div className="w-14 h-14 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg shrink-0">
-                    <span className="text-white text-xl font-bold">{(user?.full_name || user?.username || "U").charAt(0).toUpperCase()}</span>
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">{user?.full_name || user?.username || "User"}</h2>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-block px-2 py-0.5 text-[9px] font-bold rounded tracking-widest uppercase ${roleColor}`}>{roleLabel}</span>
-                      <FiShield size={10} className="text-slate-300" />
-                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{user?.username}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {fields.map((f, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                        <span className="text-xs">{f.icon}</span>
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{f.label}</p>
-                        <p className="text-sm font-semibold text-slate-900">{f.value || <span className="text-slate-300 italic text-xs">Not set</span>}</p>
-                      </div>
-                    </div>
-                  ))}
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{user?.full_name || user?.username || "User"}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded ${roleColor}`}>{roleLabel}</span>
+                  <span className="text-xs text-gray-400 font-medium">{user?.username}</span>
                 </div>
               </div>
             </div>
 
-            {/* Change Password */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden" style={{ outline: "1px solid #e2e8f0" }}>
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Change Password</span>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
-                    <FiLock size={16} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Account Security</p>
-                    <p className="text-[10px] text-slate-400">Update your password to keep your account safe.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {fields.map((f, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="text-xs font-bold text-gray-400">{f.label}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-300">{f.icon}</span>
+                    <p className="text-sm font-semibold text-gray-900">{f.value || <span className="text-gray-300 italic">Not set</span>}</p>
                   </div>
                 </div>
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  {[
-                    { label: "Current Password", field: "current_password" },
-                    { label: "New Password", field: "new_password" },
-                    { label: "Confirm New Password", field: "confirm_password" },
-                  ].map(({ label, field }) => (
-                    <div key={field}>
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">{label}</label>
-                      <input
-                        type="password"
-                        required
-                        value={(pwForm as any)[field]}
-                        onChange={(e) => setPwForm((prev) => ({ ...prev, [field]: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                      />
-                    </div>
-                  ))}
+              ))}
+            </div>
+          </div>
+        </div>
 
-                  {pwMsg && (
-                    <div className={`p-3 rounded-xl text-[11px] font-bold ${pwMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}>
-                      {pwMsg.text}
-                    </div>
-                  )}
-
-                  <button type="submit" disabled={pwLoading} className="w-full py-3 rounded-xl bg-slate-900 hover:bg-black text-white text-[11px] font-bold uppercase tracking-widest transition-all disabled:opacity-50 mt-2">
-                    {pwLoading ? "Saving..." : "Update Password"}
-                  </button>
-                </form>
+        {/* Change Password */}
+        <div className="tactical-card">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <h3 className="text-sm font-bold text-gray-700">Security & Credentials</h3>
+          </div>
+          <div className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
+                <FiLock size={20} />
+              </div>
+              <div>
+                <p className="text-md font-bold text-gray-900">Update Password</p>
+                <p className="text-xs text-gray-400">Keep your mission access secure.</p>
               </div>
             </div>
+            
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              {[
+                { label: "Current Password", field: "current_password" },
+                { label: "New Password", field: "new_password" },
+                { label: "Confirm New Password", field: "confirm_password" },
+              ].map(({ label, field }) => (
+                <div key={field} className="space-y-2">
+                  <label className="text-xs font-bold text-gray-700">{label}</label>
+                  <input
+                    type="password"
+                    required
+                    value={(pwForm as any)[field]}
+                    onChange={(e) => setPwForm((prev) => ({ ...prev, [field]: e.target.value }))}
+                    className="tactical-input w-full h-11 bg-white border-gray-200"
+                  />
+                </div>
+              ))}
+
+              {pwMsg && (
+                <div className={`p-4 rounded-xl text-xs font-bold ${pwMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"}`}>
+                  {pwMsg.text}
+                </div>
+              )}
+
+              <button type="submit" disabled={pwLoading} className="tactical-btn-primary w-full h-12 mt-4">
+                {pwLoading ? "Saving..." : "Update Credentials"}
+              </button>
+            </form>
           </div>
         </div>
       </div>
       <EditProfileModal isOpen={isOpen} onClose={closeModal} />
-    </>
+    </div>
   );
 }

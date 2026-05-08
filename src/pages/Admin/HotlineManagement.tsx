@@ -105,7 +105,7 @@ const HotlineManagement: React.FC = () => {
 
   return (
     <div className="tactical-page">
-      <div className="tactical-container" style={{ fontFamily: 'Inter, Outfit, system-ui, sans-serif' }}>
+      <div className="tactical-container">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

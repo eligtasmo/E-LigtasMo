@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import * as XLSX from 'xlsx';
-import { FiSearch, FiUsers, FiDownload, FiUserPlus, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiMoreHorizontal, FiUserCheck, FiX, FiPlus, FiShield } from 'react-icons/fi';
+import { FiSearch, FiUsers, FiDownload, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiUserCheck, FiX, FiPlus, FiShield } from 'react-icons/fi';
 import { useAuth } from "../context/AuthContext";
 import { toast } from 'react-hot-toast';
 import { apiFetch } from "../utils/api";
@@ -35,38 +35,63 @@ const SortIcon = () => (
   </svg>
 );
 
-const UserManagement: React.FC = () => {
+const BrgyAccountManagement: React.FC = () => {
   const { user } = useAuth();
-  const isBrgy = user?.role === 'brgy';
-
+  
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [filterBrgy, setFilterBrgy] = useState(isBrgy ? (user?.brgy_name || '') : '');
+  const [filterBrgy, setFilterBrgy] = useState('');
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [page, setPage] = useState(1);
   const [sortCol, setSortCol] = useState<string>('full_name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createData, setCreateData] = useState({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+  const [creating, setCreating] = useState(false);
   const [allBrgys, setAllBrgys] = useState<string[]>([]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const brgyParam = isBrgy ? (user?.brgy_name || '') : filterBrgy;
-      const res = await apiFetch(`list-users.php?status=&brgy=${encodeURIComponent(brgyParam)}`);
+      // Fetch only brgy roles
+      const res = await apiFetch(`list-users.php?role=brgy&brgy=${encodeURIComponent(filterBrgy)}`);
       if (!res.ok) { setLoading(false); return; }
       const data = await res.json();
-      if (data.success) setUsers(data.users);
+      if (data.success) {
+        // Filter additionally just in case the API doesn't support the role param yet
+        setUsers(data.users.filter((u: User) => u.role === 'brgy'));
+      }
     } catch { }
     setLoading(false);
   };
 
+  const fetchBrgys = async () => {
+    const fallbackBrgys = [
+      'Alipit', 'Bagumbayan', 'Bubukal', 'Calios', 'Duhat', 'Gatid', 'Jasaan', 
+      'Labuin', 'Malinao', 'Oogong', 'Pagsawitan', 'Palasan', 'Patimbao', 
+      'Poblacion I', 'Poblacion II', 'Poblacion III', 'Poblacion IV', 'Poblacion V', 
+      'San Jose', 'San Juan', 'San Pablo Norte', 'San Pablo Sur', 'Santisima Cruz', 
+      'Santo Angel Central', 'Santo Angel Norte', 'Santo Angel Sur'
+    ];
+    try {
+      const res = await fetch("/api/list-barangays.php");
+      const data = await res.json();
+      if (data.success && data.barangays && data.barangays.length > 0) {
+        setAllBrgys(data.barangays.map((b: any) => b.name));
+      } else {
+        setAllBrgys(fallbackBrgys);
+      }
+    } catch {
+      setAllBrgys(fallbackBrgys);
+    }
+  };
+
   useEffect(() => { 
     fetchUsers(); 
+    fetchBrgys();
   }, [filterBrgy]);
 
-
-  const brgys = useMemo(() => Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean))), [users]);
 
   const filtered = useMemo(() => {
     let r = users;
@@ -130,22 +155,43 @@ const UserManagement: React.FC = () => {
     } catch { toast.error("Connection error"); }
   };
 
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin-create-user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createData),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Barangay account created successfully");
+        setShowCreateModal(false);
+        setCreateData({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+        fetchUsers();
+      } else {
+        toast.error(data.message || "Failed to create account");
+      }
+    } catch { toast.error("Connection error"); }
+    setCreating(false);
+  };
+
   const exportData = () => {
     if (!filtered.length) { toast.error('No data to export'); return; }
     const ws = XLSX.utils.json_to_sheet(filtered);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Residents');
-    XLSX.writeFile(wb, `residents_${Date.now()}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, 'BrgyAccounts');
+    XLSX.writeFile(wb, `brgy_accounts_${Date.now()}.xlsx`);
   };
 
-  const pageTitle = isBrgy ? `${user?.brgy_name || 'Barangay'} Residents` : 'Residents';
-
   const COLS = [
-    { key: 'full_name', label: 'Full Name' },
-    { key: 'username', label: 'Username' },
-    { key: 'email', label: 'Email' },
-    { key: 'contact_number', label: 'Contact' },
-    ...(!isBrgy ? [{ key: 'brgy_name', label: 'Barangay' }] : []),
+    { key: 'full_name', label: 'Official Name' },
+    { key: 'username', label: 'System ID' },
+    { key: 'email', label: 'Official Email' },
+    { key: 'contact_number', label: 'Hotline/Mobile' },
+    { key: 'brgy_name', label: 'Barangay' },
     { key: 'status', label: 'Status' },
     { key: 'created_at', label: 'Enrolled' },
   ];
@@ -157,29 +203,22 @@ const UserManagement: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{isBrgy ? "Resident database for your sector." : "System-wide user and resident database."}</p>
+            <h1 className="text-2xl font-bold text-gray-900">Barangay Accounts</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Manage and enroll local sector commanders and officials.</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-4 py-1.5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
-                <span className="text-sm font-black text-gray-400 uppercase tracking-widest">Export Options</span>
-              </div>
-              <div className="flex divide-x divide-gray-100">
-                <button 
-                  onClick={exportData} 
-                  className="px-6 py-2.5 text-sm font-black text-black uppercase tracking-tight hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FiDownload size={14} className="text-blue-500" /> XLSX
-                </button>
-                <button 
-                  onClick={exportData} 
-                  className="px-6 py-2.5 text-sm font-black text-black uppercase tracking-tight hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FiDownload size={14} className="text-slate-400 opacity-60" /> CSV
-                </button>
-              </div>
-            </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#1e1b4b] rounded-xl hover:bg-blue-900 transition-all shadow-sm"
+              >
+                <FiPlus size={16} /> Enroll New Official
+              </button>
+              <button 
+                onClick={exportData} 
+                className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+              >
+                <FiDownload size={14} /> Export Registry
+              </button>
           </div>
         </div>
 
@@ -190,22 +229,20 @@ const UserManagement: React.FC = () => {
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
             <input
               type="text"
-              placeholder="Search by name, username, or email..."
+              placeholder="Search by name, ID, or email..."
               className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 transition-all"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
-          {!isBrgy && (
-            <select
-              className="px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none min-w-[160px] cursor-pointer"
-              value={filterBrgy}
-              onChange={e => { setFilterBrgy(e.target.value); setPage(1); }}
-            >
-              <option value="">All Barangays</option>
-              {brgys.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-          )}
+          <select
+            className="px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none min-w-[160px] cursor-pointer"
+            value={filterBrgy}
+            onChange={e => { setFilterBrgy(e.target.value); setPage(1); }}
+          >
+            <option value="">All Barangays</option>
+            {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
           <button onClick={fetchUsers} className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50 transition-colors">
             <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -251,8 +288,8 @@ const UserManagement: React.FC = () => {
                   <tr>
                     <td colSpan={COLS.length + 2} className="tactical-td py-20 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <FiUsers size={32} className="text-gray-200" />
-                        <span className="text-sm text-gray-400">No residents found</span>
+                        <FiShield size={32} className="text-gray-200" />
+                        <span className="text-sm text-gray-400">No barangay accounts found</span>
                       </div>
                     </td>
                   </tr>
@@ -271,16 +308,16 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="tactical-td">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-[#1e1b4b] flex items-center justify-center text-sm font-semibold text-white shrink-0">
                           {(u.full_name || u.username || '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="font-medium text-gray-900">{u.full_name || '—'}</span>
                       </div>
                     </td>
-                    <td className="tactical-td text-gray-600">{u.username}</td>
+                    <td className="tactical-td text-gray-600 font-mono text-xs">{u.username}</td>
                     <td className="tactical-td text-gray-600 lowercase">{u.email || '—'}</td>
                     <td className="tactical-td text-gray-600 tabular-nums">{u.contact_number || '—'}</td>
-                    {!isBrgy && <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>}
+                    <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>
                     <td className="tactical-td">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium capitalize ${statusStyle(u.status)}`}>
                         {u.status}
@@ -326,7 +363,7 @@ const UserManagement: React.FC = () => {
           {/* Footer row */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-white">
             <span className="text-sm text-gray-500">
-              Showing <span className="font-medium text-gray-700">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium text-gray-700">{filtered.length}</span> residents
+              Showing <span className="font-medium text-gray-700">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium text-gray-700">{filtered.length}</span> officials
             </span>
             <div className="flex items-center gap-1.5">
               <button
@@ -336,23 +373,21 @@ const UserManagement: React.FC = () => {
               >
                 <FiChevronLeft size={14} /> Previous
               </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = totalPages <= 5 ? i + 1 : (page <= 3 ? i + 1 : page - 2 + i);
-                if (p > totalPages) return null;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === p ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              {totalPages > 5 && <span className="text-gray-400 px-1">…</span>}
-              {totalPages > 5 && (
-                <button onClick={() => setPage(totalPages)} className="w-8 h-8 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 border border-gray-200">{totalPages}</button>
-              )}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const p = totalPages <= 5 ? i + 1 : (page <= 3 ? i + 1 : page - 2 + i);
+                  if (p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === p ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
@@ -363,24 +398,119 @@ const UserManagement: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Bulk action bar */}
-        {selected.size > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-white border border-gray-200 rounded-2xl shadow-xl animate-in slide-in-from-bottom duration-200">
-            <span className="text-sm font-semibold text-gray-700">{selected.size} selected</span>
-            <div className="w-px h-4 bg-gray-200" />
-            <button onClick={exportData} className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
-              <FiDownload size={14} /> Export
-            </button>
-            <button onClick={() => setSelected(new Set())} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors ml-1">
-              ✕
-            </button>
-          </div>
-        )}
       </div>
 
+      {/* Create Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-10">
+              <div className="flex justify-between items-center mb-10">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Enroll Brgy Official</h2>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Registry Synchronization Node</p>
+                </div>
+                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <FiX size={24} className="text-gray-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateAccount} className="space-y-6">
+                <div>
+                  <label className="tactical-label">Lead_Full_Name</label>
+                  <input 
+                    required
+                    className="tactical-input w-full"
+                    value={createData.full_name}
+                    onChange={e => setCreateData({...createData, full_name: e.target.value})}
+                    placeholder="e.g. Juan Dela Cruz"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="tactical-label">System_ID (Username)</label>
+                    <input 
+                      required
+                      className="tactical-input w-full"
+                      value={createData.username}
+                      onChange={e => setCreateData({...createData, username: e.target.value})}
+                      placeholder="user_brgy"
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Comms_Key (Password)</label>
+                    <input 
+                      required
+                      type="password"
+                      className="tactical-input w-full"
+                      value={createData.password}
+                      onChange={e => setCreateData({...createData, password: e.target.value})}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="tactical-label">Official_Email</label>
+                    <input 
+                      required
+                      type="email"
+                      className="tactical-input w-full"
+                      value={createData.email}
+                      onChange={e => setCreateData({...createData, email: e.target.value})}
+                      placeholder="brgy@eligtasmo.gov"
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Comms_Target (Phone)</label>
+                    <input 
+                      required
+                      className="tactical-input w-full"
+                      value={createData.contact_number}
+                      onChange={e => setCreateData({...createData, contact_number: e.target.value})}
+                      placeholder="09123456789"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="tactical-label">Sector_Assignment (Barangay)</label>
+                  <select 
+                    required
+                    className="tactical-input w-full appearance-none cursor-pointer pr-10"
+                    value={createData.brgy_name}
+                    onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
+                  >
+                    <option value="">Select Sector...</option>
+                    {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex gap-4 pt-8">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCreateModal(false)}
+                    className="tactical-button-ghost flex-1"
+                  >
+                    Abort
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={creating}
+                    className="tactical-button-accent flex-1"
+                  >
+                    {creating ? 'Syncing...' : 'Confirm Enrollment'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default UserManagement;
+export default BrgyAccountManagement;

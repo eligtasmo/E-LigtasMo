@@ -45,7 +45,7 @@ const PHClock: React.FC = () => {
           <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
           <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">System Status</span>
         </div>
-        <span className="text-xs font-bold tracking-tight text-slate-900 leading-none">Operational</span>
+        <span className="navbar-text text-slate-900 leading-none">Operational</span>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ const AppHeader: React.FC = () => {
   const role = (user?.role || 'resident').toLowerCase();
 
   return (
-    <header className="h-[60px] flex items-center bg-white/80 backdrop-blur-xl border-b border-slate-100 transition-all duration-300 font-outfit w-full sticky top-0 z-50">
+    <header className="h-[60px] flex items-center bg-white/80 backdrop-blur-xl border-b border-slate-100 transition-all duration-300 font-sans w-full sticky top-0 z-50">
       <div className="w-full px-6">
         <div className="flex items-center justify-between h-full">
           {/* Left side */}

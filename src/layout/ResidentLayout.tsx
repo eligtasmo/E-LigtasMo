@@ -43,7 +43,7 @@ const LayoutContent: React.FC = () => {
   const isCentered = centeredRoutes.some((p) => location.pathname.startsWith(p));
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-500 font-sans">
       <AppHeader />
       <div className="flex flex-1 overflow-hidden relative pt-[64px]">
         <div>

@@ -42,7 +42,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://api.eligtasmo.site',
+        target: 'http://localhost/eligtasmo%20latest/api',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         secure: false,

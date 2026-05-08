@@ -27,7 +27,8 @@ function ensure_announcements_table($pdo) {
   $cols = [
     'category' => "VARCHAR(50) DEFAULT 'general' AFTER audience",
     'external_link' => "TEXT NULL AFTER category",
-    'is_urgent' => "TINYINT(1) DEFAULT 0 AFTER external_link"
+    'is_urgent' => "TINYINT(1) DEFAULT 0 AFTER external_link",
+    'sms_sent' => "INT DEFAULT 0 AFTER is_urgent"
   ];
   
   foreach ($cols as $name => $def) {

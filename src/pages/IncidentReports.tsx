@@ -234,7 +234,7 @@ const IncidentReports = () => {
   };
 
   return (
-    <div className="tactical-page">
+    <div className="tactical-page-map">
       <PageMeta title="Incident Registry | E-LigtasMo" description="Comprehensive mission log and incident signature database." />
       
       <div className="tactical-container">

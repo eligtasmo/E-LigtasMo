@@ -88,7 +88,7 @@ const EmergencyContacts: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white p-8 font-outfit">
+        <div className="min-h-screen bg-white p-8">
             <PageMeta title="Emergency Contacts | E-LigtasMo" description="Direct communication links for emergency services." />
             
             <div className="max-w-7xl mx-auto space-y-8">

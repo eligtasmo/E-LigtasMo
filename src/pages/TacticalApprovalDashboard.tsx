@@ -194,7 +194,7 @@ const TacticalApprovalDashboard: React.FC = () => {
   };
 
   return (
-    <div className="tactical-page !h-[calc(100vh-72px)] overflow-hidden">
+    <div className="tactical-page-map">
       <PageMeta title="Command Center | E-LigtasMo" description="Real-time incident oversight and tactical approval dashboard." />
       
       <div className="flex flex-col lg:flex-row h-full overflow-hidden">

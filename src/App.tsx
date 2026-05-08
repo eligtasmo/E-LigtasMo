@@ -29,6 +29,7 @@ import IncidentReportingWrapper from "./pages/IncidentReportingWrapper";
 import BarangayMapView from "./components/saferoutes/BarangayMapView";
 import Announcements from "./pages/Dashboard/Announcements";
 import TacticalApprovalDashboard from "./pages/TacticalApprovalDashboard";
+import BrgyAccountManagement from "./pages/BrgyAccountManagement";
 
 // Resident Pages
 import React, { Suspense } from "react";
@@ -313,6 +314,14 @@ const router = createBrowserRouter([
             element: (
               <ProtectedRoute requiredRole="admin">
                 <Announcements />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "brgy-accounts",
+            element: (
+              <ProtectedRoute requiredRole="admin">
+                <BrgyAccountManagement />
               </ProtectedRoute>
             ),
           },

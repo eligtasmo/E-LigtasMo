@@ -16,7 +16,7 @@ import {
   ProfileIcon, 
   BookIcon 
 } from "../components/TacticalIcons";
-import { FiDatabase as LogsIcon } from "react-icons/fi";
+import { FiDatabase as LogsIcon, FiActivity, FiShield } from "react-icons/fi";
 
 type NavItem = {
   name: string;
@@ -79,6 +79,12 @@ const intelItems: NavItem[] = [
 ];
 
 const communityItems: NavItem[] = [
+  {
+    icon: (active) => <FiShield size={20} className={active ? 'text-[#1e1b4b]' : 'text-blue-500'} />,
+    name: "Barangay Accounts",
+    roles: ["admin"],
+    path: "/admin/brgy-accounts",
+  },
   {
     icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />,
     name: "Resident Directory",
@@ -157,7 +163,7 @@ const AppSidebar: React.FC = () => {
               <li key={nav.name}>
                 <Link
                   to={target}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 group relative font-sans font-bold ${
                     active 
                       ? "bg-white text-[#1e1b4b] shadow-xl shadow-black/20 scale-[1.02]" 
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
@@ -167,7 +173,7 @@ const AppSidebar: React.FC = () => {
                     {nav.icon(active)}
                   </span>
                   {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className={`text-sm font-medium flex-1 truncate tracking-tight ${active ? "text-[#1e1b4b]" : "text-inherit"}`}>
+                    <span className={`sidebar-link-text flex-1 truncate ${active ? "text-[#1e1b4b]" : "text-inherit"}`}>
                       {getName(nav)}
                     </span>
                   )}
@@ -188,7 +194,7 @@ const AppSidebar: React.FC = () => {
   return (
     <>
       <aside
-        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-jetbrains shadow-2xl relative ${
+        className={`h-screen bg-[#1e1b4b] transition-all duration-300 z-[1200] flex flex-col font-sans shadow-2xl relative ${
           isExpanded || isHovered || isMobileOpen ? "w-[260px]" : "w-[80px]"
         } ${isMobileOpen ? "fixed inset-y-0 left-0 translate-x-0" : "hidden lg:flex"}`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
@@ -201,7 +207,7 @@ const AppSidebar: React.FC = () => {
             </div>
             {(isExpanded || isHovered || isMobileOpen) && (
               <div className="flex flex-col leading-none">
-                <span className="text-lg font-bold tracking-tight text-white italic">E-LigtasMo</span>
+                <span className="text-xl font-black tracking-tighter text-white italic">E-LigtasMo</span>
                 <span className="text-[10px] font-bold text-blue-300 tracking-tight mt-0.5">{role === 'admin' ? 'HQ Command' : 'Barangay Node'}</span>
               </div>
             )}

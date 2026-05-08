@@ -108,7 +108,7 @@ const ResidentSidebar: React.FC = () => {
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="font-bold tracking-tight flex-1 text-left truncate font-jetbrains">
+                <span className="font-bold tracking-tight flex-1 text-left truncate font-sans">
                   {nav.name}
                 </span>
               )}
@@ -164,7 +164,7 @@ const ResidentSidebar: React.FC = () => {
                       {homeNav.icon}
                     </span>
                     {(isExpanded || isHovered || isMobileOpen) && (
-                      <span className="font-bold tracking-tight flex-1 text-left truncate font-jetbrains">
+                      <span className="font-bold tracking-tight flex-1 text-left truncate font-sans">
                         {homeNav.name}
                       </span>
                     )}
@@ -176,7 +176,7 @@ const ResidentSidebar: React.FC = () => {
             {/* Primary SafeRoute Tools */}
             <div className="space-y-3">
               {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-jetbrains">
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
                   SafeRoute Tools
                 </div>
               )}
@@ -186,7 +186,7 @@ const ResidentSidebar: React.FC = () => {
             {/* Essential Information */}
             <div className="space-y-3">
               {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-jetbrains">
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
                   Stay Informed
                 </div>
               )}
@@ -196,7 +196,7 @@ const ResidentSidebar: React.FC = () => {
             {/* Support & Contacts */}
             <div className="space-y-3">
               {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-jetbrains">
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
                   Support
                 </div>
               )}

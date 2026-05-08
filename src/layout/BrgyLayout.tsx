@@ -40,7 +40,7 @@ const LayoutContent: React.FC = () => {
   const isCentered = centeredRoutes.some((p) => location.pathname === p || location.pathname.startsWith(p));
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-500 font-jetbrains">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-500 font-sans">
       {/* Fixed Full Height Sidebar */}
       <BrgySidebar />
       
@@ -62,7 +62,7 @@ const LayoutContent: React.FC = () => {
           />
 
           <div className="p-0 h-full w-full bg-transparent overflow-hidden">
-            <div className={`mx-auto h-full ${isFullWidth ? "max-w-none" : isCentered ? "max-w-7xl" : "max-w-none"}`}>
+            <div className="mx-auto h-full w-full">
               <Outlet />
             </div>
           </div>

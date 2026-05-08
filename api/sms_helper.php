@@ -67,12 +67,13 @@ class SMSService {
         
         $payload = [
             'recipient' => $recipientString,
-            'sender_id' => self::$senderId,
+            'sender_id' => 'PhilSMS', // User specified PhilSMS as sender or default
             'type' => 'plain',
             'message' => $message
         ];
         
-        curl_setopt($ch, CURLOPT_URL, 'https://app.philsms.com/api/v3/sms/send');
+        // Correct endpoint as per user request
+        curl_setopt($ch, CURLOPT_URL, 'https://dashboard.philsms.com/api/v3/sms/send');
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -83,13 +84,18 @@ class SMSService {
         ]);
         
         $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         
         $response = json_decode($output, true);
         
+        // Logging for tactical debugging
+        file_put_contents(__DIR__ . '/sms_log.txt', "[" . date('Y-m-d H:i:s') . "] TO: $recipientString | HTTP: $httpCode | RESP: $output\n", FILE_APPEND);
+
         return [
-            'success' => (isset($response['status']) && $response['status'] === 'success'),
-            'data' => $response
+            'success' => ($httpCode === 200 || $httpCode === 201 || (isset($response['status']) && $response['status'] === 'success')),
+            'data' => $response,
+            'http_code' => $httpCode
         ];
     }
 }
