@@ -7,10 +7,6 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 require_once 'db.php';
 require_once 'rbac.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Require view permission at minimum
 require_permission('users.view');
 

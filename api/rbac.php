@@ -23,10 +23,6 @@ function get_current_user_data() {
         }
     }
     
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
-    
     if (isset($_SESSION['user_id'])) {
         return [
             'id' => $_SESSION['user_id'],
@@ -100,31 +96,26 @@ function require_permission($permission) {
         }
     }
     if ($role === null) {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
         $role = $_SESSION['role'] ?? ($_SERVER['HTTP_X_ROLE'] ?? ($_GET['role'] ?? 'guest'));
         $role = strtolower($role);
     }
     if (!has_permission_for_role($role, $permission)) {
         http_response_code(403);
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Forbidden: insufficient permissions']);
+        echo json_encode(['success' => false, 'message' => 'Forbidden: insufficient permissions for ' . ($role ?: 'unknown')]);
         exit;
     }
 }
 
 function checkRole($allowedRoles) {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
     $role = $_SESSION['role'] ?? ($_SERVER['HTTP_X_ROLE'] ?? ($_GET['role'] ?? 'guest'));
     $role = strtolower($role);
     
     $allowed = array_map('strtolower', $allowedRoles);
     if (!in_array($role, $allowed)) {
         http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Unauthorized role']);
+        echo json_encode(['success' => false, 'message' => 'Unauthorized role: ' . ($role ?: 'unknown')]);
         exit;
     }
 }
+?>

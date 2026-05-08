@@ -8,7 +8,6 @@ error_reporting(E_ERROR | E_PARSE);
 require_once 'cors.php';
 require_once 'db.php';
 require_once 'tokens.php';
-require_once 'session_boot.php';
 
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
