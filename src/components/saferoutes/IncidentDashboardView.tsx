@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Polyline } from "react-leaflet";
 import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from "../../constants/geo";
 import "leaflet/dist/leaflet.css";
@@ -190,7 +191,7 @@ export default function IncidentDashboardView() {
   };
 
   // Filter incidents by date range
-  const filteredIncidents = incidents.filter(incident => {
+  const filteredIncidents = incidents.filter((incident: Incident) => {
     if (!dateFrom && !dateTo) return true;
     const date = new Date(incident.datetime);
     if (dateFrom && date < new Date(dateFrom)) return false;
@@ -209,7 +210,7 @@ export default function IncidentDashboardView() {
       'Type', 'Address', 'Date/Time', 'Description', 'Severity', 'Status', 'Reporter', 'Contact'
     ];
     csvRows.push(headers.join(','));
-    filteredIncidents.forEach(i => {
+    filteredIncidents.forEach((i: Incident) => {
       csvRows.push([
         i.type, i.address, i.datetime, i.description, i.severity, i.status, i.reporter, i.contact
       ].map(val => `"${val ?? ''}"`).join(','));
@@ -229,7 +230,7 @@ export default function IncidentDashboardView() {
       setShowToast('No incidents to export.');
       return;
     }
-    const ws = XLSX.utils.json_to_sheet(filteredIncidents.map(i => ({
+    const ws = XLSX.utils.json_to_sheet(filteredIncidents.map((i: Incident) => ({
       Type: i.type,
       Address: i.address,
       'Date/Time': i.datetime,
@@ -398,7 +399,7 @@ export default function IncidentDashboardView() {
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
           {/* Incident Markers */}
-          {incidents.map((incident) => {
+          {incidents.map((incident: Incident) => {
             const hasStartEnd = (incident as any).start_lat && (incident as any).start_lng && (incident as any).end_lat && (incident as any).end_lng;
             if (hasStartEnd) {
               const positions = [
@@ -445,7 +446,7 @@ export default function IncidentDashboardView() {
             );
           })}
           {/* Barangay Markers */}
-          {brgys.map((brgy) => (
+          {brgys.map((brgy: Barangay) => (
             <Marker key={brgy.id} position={[brgy.lat, brgy.lng]} icon={brgyIcon}>
               <Popup>
                 <strong>{brgy.name}</strong><br/>
@@ -473,19 +474,19 @@ export default function IncidentDashboardView() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 <div>
                   <label className="block text-sm font-semibold mb-1">Name</label>
-                  <input required className="w-full border rounded p-2" value={brgyForm.name} onChange={e => setBrgyForm(f => ({...f, name: e.target.value}))} />
+                  <input required className="w-full border rounded p-2" value={brgyForm.name} onChange={e => setBrgyForm((f: any) => ({...f, name: e.target.value}))} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">Type</label>
-                  <input className="w-full border rounded p-2" value={brgyForm.type} onChange={e => setBrgyForm(f => ({...f, type: e.target.value}))} />
+                  <input className="w-full border rounded p-2" value={brgyForm.type} onChange={e => setBrgyForm((f: any) => ({...f, type: e.target.value}))} />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold mb-1">Address</label>
-                  <input required className="w-full border rounded p-2" value={brgyForm.address} onChange={e => setBrgyForm(f => ({...f, address: e.target.value}))} />
+                  <input required className="w-full border rounded p-2" value={brgyForm.address} onChange={e => setBrgyForm((f: any) => ({...f, address: e.target.value}))} />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold mb-1">Contact</label>
-                  <input className="w-full border rounded p-2" value={brgyForm.contact} onChange={e => setBrgyForm(f => ({...f, contact: e.target.value}))} />
+                  <input className="w-full border rounded p-2" value={brgyForm.contact} onChange={e => setBrgyForm((f: any) => ({...f, contact: e.target.value}))} />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
