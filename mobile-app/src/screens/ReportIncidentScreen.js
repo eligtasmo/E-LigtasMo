@@ -712,19 +712,13 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         activeOpacity={0.7}
         style={[
           styles.optionCard,
-          { 
-            borderWidth: 1.5,
-            borderColor: active ? '#F5B235' : 'rgba(255,255,255,0.3)',
-            backgroundColor: active ? '#F5B235' + '20' : 'rgba(255,255,255,0.03)'
-          }
+          active && styles.optionCardActive
         ]}
       >
-        <Icon size={20} color={active ? '#F5B235' : 'rgba(255,255,255,0.85)'} strokeWidth={2.2} />
-        <Text style={[styles.optionLabel, { 
-          color: active ? '#FFF' : 'rgba(255,255,255,0.7)', 
-          marginTop: 8,
-          fontWeight: '700'
-        }]}>{item.label}</Text>
+        <View style={[styles.optionIconBox, active && { backgroundColor: item.tone + '20', borderColor: item.tone }]}>
+          <Icon size={22} color={active ? item.tone : 'rgba(255,255,255,0.4)'} strokeWidth={2.2} />
+        </View>
+        <Text style={[styles.optionLabel, active && styles.optionLabelActive]}>{item.label}</Text>
       </TouchableOpacity>
     );
   };
@@ -886,17 +880,39 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         )}
       </AnimatePresence>
 
-      <View style={[
-        styles.bottomSheetWrapper, 
-        stage === 'pick' && { height: 180 }
-      ]}>
-        <ScrollView 
-          style={styles.bottomSheet} 
-          contentContainerStyle={{ paddingBottom: insets.bottom + 200 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {stage === 'details' ? (
-            <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <AnimatePresence>
+        {stage === 'details' && (
+          <MotiView 
+            from={{ translateY: windowHeight * 0.55 }}
+            animate={{ translateY: 0 }}
+            exit={{ translateY: windowHeight * 0.55 }}
+            transition={{ type: 'timing', duration: 350 }}
+            style={styles.bottomSheetWrapper}
+          >
+            <View style={styles.sheetHeader}>
+              <View style={styles.dragHandle} />
+              <View style={styles.headerRow}>
+                <View>
+                  <Text style={styles.sheetTitle}>TACTICAL INTEL</Text>
+                  <Text style={styles.sheetSubtitle}>{incidentType.toUpperCase()} REPORT • {severity.toUpperCase()}</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setIncidentCoords(null);
+                    setPolygonPoints([]);
+                  }}
+                  style={styles.closeSheetBtn}
+                >
+                  <Lucide.X size={18} color="rgba(255,255,255,0.4)" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <ScrollView 
+              style={styles.bottomSheet} 
+              contentContainerStyle={{ paddingBottom: insets.bottom + 250 }}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.sheetSection}>
                 <Text style={styles.sectionTitle}>Incident Type</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
@@ -1005,14 +1021,6 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                   ))}
                 </View>
               </View>
-            </MotiView>
-          ) : (
-            <View style={styles.emptyState}>
-              <Lucide.MapPinned size={40} color="rgba(245, 178, 53, 0.2)" strokeWidth={1.5} />
-              <Text style={styles.emptyText}>Tap the map to provide field intel</Text>
-              <Text style={[styles.emptyText, { fontSize: 10, opacity: 0.4, marginTop: 4 }]}>Precision Mode: {user?.role === 'resident' ? 'Pinpoint Only' : 'Multi-Target'}</Text>
-            </View>
-          )}
         </ScrollView>
 
         <AnimatePresence>
@@ -1053,7 +1061,9 @@ const ReportIncidentScreen = ({ navigation, route }) => {
             </MotiView>
           )}
         </AnimatePresence>
-      </View>
+          </MotiView>
+        )}
+      </AnimatePresence>
 
       {/* ── MY REPORTS MODAL (RESIDENTS ONLY) ── */}
       <AnimatePresence>
@@ -1304,16 +1314,25 @@ const styles = {
   modeBtnActive: { backgroundColor: '#F5B235' },
   overlayHint: { position: 'absolute', top: '25%', alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.85)', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 30, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245, 178, 53, 0.3)' },
   hintText: { color: '#FFF', fontSize: 11, fontWeight: '800', letterSpacing: 1, marginLeft: 10, fontFamily: DS_FONT_UI },
-  bottomSheetWrapper: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', backgroundColor: '#0F0E0B', overflow: 'hidden' },
+  bottomSheetWrapper: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', backgroundColor: '#0D0D0D', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 20, overflow: 'hidden' },
+  sheetHeader: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  dragHandle: { width: 36, height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sheetTitle: { color: '#FFF', fontSize: 13, fontWeight: '900', letterSpacing: 1.5, fontFamily: DS_FONT_UI },
+  sheetSubtitle: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginTop: 4, fontFamily: DS_FONT_UI },
+  closeSheetBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   bottomSheet: { flex: 1, padding: 24 },
-  sheetSection: { marginBottom: 24 },
-  sectionTitle: { color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '800', letterSpacing: 0.5, marginBottom: 12, fontFamily: DS_FONT_UI },
+  sheetSection: { marginBottom: 32 },
+  sectionTitle: { color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: '800', letterSpacing: 1, marginBottom: 16, fontFamily: DS_FONT_UI, textTransform: 'uppercase' },
   horizontalScroll: { gap: 12 },
-  optionCard: { width: 90, height: 80, borderRadius: 4, borderWidth: 1, padding: 12, justifyContent: 'center', alignItems: 'center' },
-  optionLabel: { fontSize: 11, fontWeight: '700', fontFamily: DS_FONT_UI, textAlign: 'center', color: '#FFF' },
-  severityGrid: { flexDirection: 'row', gap: 8 },
-  severityBtn: { height: 48, borderRadius: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
-  severityLabel: { fontSize: 12, fontWeight: '700', fontFamily: DS_FONT_UI },
+  optionCard: { width: 96, height: 100, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.04)', backgroundColor: 'rgba(255,255,255,0.02)', padding: 12, alignItems: 'center', justifyContent: 'center' },
+  optionCardActive: { borderColor: '#F5B235', backgroundColor: 'rgba(245, 178, 53, 0.05)' },
+  optionIconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  optionLabel: { fontSize: 11, fontWeight: '700', fontFamily: DS_FONT_UI, color: 'rgba(255,255,255,0.4)', textAlign: 'center' },
+  optionLabelActive: { color: '#FFF' },
+  severityGrid: { flexDirection: 'row', gap: 10 },
+  severityBtn: { flex: 1, height: 50, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  severityLabel: { fontSize: 12, fontWeight: '800', fontFamily: DS_FONT_UI, letterSpacing: 0.5 },
   accessibilityRow: { flexDirection: 'row', gap: 10 },
   accessBtn: { flex: 1, height: 48, borderRadius: 14, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.03)', backgroundColor: 'rgba(255,255,255,0.02)', alignItems: 'center', justifyContent: 'center' },
   accessBtnText: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '800', letterSpacing: 1, fontFamily: DS_FONT_UI },
@@ -1324,11 +1343,10 @@ const styles = {
   radiusBtnActive: { backgroundColor: 'rgba(245, 178, 53, 0.15)', borderColor: '#F5B235' },
   radiusBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: '700', fontFamily: DS_FONT_UI },
   radiusBtnTextActive: { color: '#F5B235' },
-  vehicleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  vehicleBtn: { flex: 1, minWidth: '45%', height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  vehicleBtnActive: { backgroundColor: '#F5B235' },
-  vehicleBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: '700', marginLeft: 10, fontFamily: DS_FONT_UI },
-  vehicleBtnTextActive: { color: '#000' },
+  vehicleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  vehicleBtn: { flex: 1, minWidth: '47%', height: 48, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.02)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.05)' },
+  vehicleBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, fontWeight: '800', marginLeft: 12, fontFamily: DS_FONT_UI, letterSpacing: 0.5 },
+  detailsInput: { backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.05)', padding: 16, color: '#FFF', fontSize: 14, minHeight: 120, textAlignVertical: 'top', fontFamily: DS_FONT_INPUT },
   reportCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', padding: 14, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   reportIconBox: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 14, borderWidth: 1 },
   reportType: { color: '#FFF', fontSize: 15, fontWeight: '700', fontFamily: DS_FONT_UI },

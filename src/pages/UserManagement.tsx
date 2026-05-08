@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import * as XLSX from 'xlsx';
-import { FiSearch, FiUsers, FiDownload, FiUserPlus, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiMoreHorizontal } from 'react-icons/fi';
+import { FiSearch, FiUsers, FiDownload, FiUserPlus, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiMoreHorizontal, FiUserCheck, FiX, FiPlus, FiShield } from 'react-icons/fi';
 import { useAuth } from "../context/AuthContext";
 import { toast } from 'react-hot-toast';
 
@@ -46,6 +46,10 @@ const UserManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [sortCol, setSortCol] = useState<string>('full_name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createData, setCreateData] = useState({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+  const [creating, setCreating] = useState(false);
+  const [allBrgys, setAllBrgys] = useState<string[]>([]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -59,7 +63,18 @@ const UserManagement: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, [filterBrgy]);
+  const fetchBrgys = async () => {
+    try {
+      const res = await fetch("/api/list-barangays.php");
+      const data = await res.json();
+      if (data.success) setAllBrgys(data.data.map((b: any) => b.name));
+    } catch {}
+  };
+
+  useEffect(() => { 
+    fetchUsers(); 
+    if (!isBrgy) fetchBrgys();
+  }, [filterBrgy]);
 
 
   const brgys = useMemo(() => Array.from(new Set(users.map(u => u.brgy_name).filter(Boolean))), [users]);
@@ -107,6 +122,48 @@ const UserManagement: React.FC = () => {
     setPage(1);
   };
 
+  const handleApproveAction = async (userId: number, action: 'approve' | 'reject') => {
+    if (!window.confirm(`Are you sure you want to ${action} this account?`)) return;
+    try {
+      const res = await fetch("/api/approve-brgy-account.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, action }),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Account ${action}ed`);
+        fetchUsers();
+      } else {
+        toast.error(data.message || "Failed to update status");
+      }
+    } catch { toast.error("Connection error"); }
+  };
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin-create-user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createData),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Account created successfully");
+        setShowCreateModal(false);
+        setCreateData({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+        fetchUsers();
+      } else {
+        toast.error(data.message || "Failed to create account");
+      }
+    } catch { toast.error("Connection error"); }
+    setCreating(false);
+  };
+
   const exportData = () => {
     if (!filtered.length) { toast.error('No data to export'); return; }
     const ws = XLSX.utils.json_to_sheet(filtered);
@@ -142,22 +199,30 @@ const UserManagement: React.FC = () => {
               <FiDownload size={14} /> Export
             </button>
             {!isBrgy && (
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/invites-generate.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: 'brgy' }), credentials: "include" });
-                    const data = await res.json();
-                    if (data.success) {
-                      const link = `${window.location.origin}/brgy-signin?mode=brgy&invite=${data.code}`;
-                      navigator.clipboard.writeText(link);
-                      toast.success('Invite link copied');
-                    }
-                  } catch { toast.error('Failed'); }
-                }}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-black transition-colors shadow-sm"
-              >
-                <FiUserPlus size={14} /> Invite
-              </button>
+              <>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <FiPlus size={14} /> Create Account
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch("/api/invites-generate.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: 'brgy' }), credentials: "include" });
+                      const data = await res.json();
+                      if (data.success) {
+                        const link = `${window.location.origin}/brgy-signin?mode=brgy&invite=${data.code}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success('Invite link copied');
+                      }
+                    } catch { toast.error('Failed'); }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <FiUserPlus size={14} /> Invite
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -270,14 +335,29 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="tactical-td text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {u.status === 'pending' && (
+                          <>
+                            <button 
+                              onClick={() => handleApproveAction(u.id, 'approve')}
+                              className="p-1.5 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                              title="Approve"
+                            >
+                              <FiUserCheck size={14} />
+                            </button>
+                            <button 
+                              onClick={() => handleApproveAction(u.id, 'reject')}
+                              className="p-1.5 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                              title="Reject"
+                            >
+                              <FiX size={14} />
+                            </button>
+                          </>
+                        )}
                         <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
                           <FiEdit2 size={14} />
                         </button>
                         <button className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
                           <FiTrash2 size={14} />
-                        </button>
-                        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
-                          <FiMoreHorizontal size={14} />
                         </button>
                       </div>
                     </td>
@@ -342,6 +422,116 @@ const UserManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Create Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Enroll Coordinator</h2>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Direct System Registration</p>
+                </div>
+                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <FiX size={20} className="text-gray-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateAccount} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Lead_Full_Name</label>
+                  <input 
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                    value={createData.full_name}
+                    onChange={e => setCreateData({...createData, full_name: e.target.value})}
+                    placeholder="e.g. Juan Dela Cruz"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Username</label>
+                    <input 
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      value={createData.username}
+                      onChange={e => setCreateData({...createData, username: e.target.value})}
+                      placeholder="user_brgy"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Password</label>
+                    <input 
+                      required
+                      type="password"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      value={createData.password}
+                      onChange={e => setCreateData({...createData, password: e.target.value})}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Email_Address</label>
+                    <input 
+                      required
+                      type="email"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      value={createData.email}
+                      onChange={e => setCreateData({...createData, email: e.target.value})}
+                      placeholder="brgy@eligtasmo.gov"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Phone_Number</label>
+                    <input 
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      value={createData.contact_number}
+                      onChange={e => setCreateData({...createData, contact_number: e.target.value})}
+                      placeholder="09123456789"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Barangay_Assignment</label>
+                  <select 
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                    value={createData.brgy_name}
+                    onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
+                  >
+                    <option value="">Select Sector...</option>
+                    {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-6">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-3 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
+                  >
+                    Abort
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={creating}
+                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
+                  >
+                    {creating ? 'Syncing...' : 'Confirm Enrollment'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

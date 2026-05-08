@@ -281,10 +281,10 @@ const AnalyticsDashboard: React.FC = () => {
     const minutes = Math.floor(diff / 60000);
     
     if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return `${minutes} ${minutes === 1 ? 'min' : 'mins'} ago`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return timestamp.toLocaleDateString();
+    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    return timestamp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
   return (

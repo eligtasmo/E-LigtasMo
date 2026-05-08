@@ -20,13 +20,16 @@ const getTimeAgo = (iso?: string) => {
   if (isNaN(t)) return "Just now";
   const diff = Math.floor((Date.now() - t) / 1000);
   if (diff < 0) return "Just now";
-  if (diff < 60) return `${diff}s ago`;
-  const m = Math.floor(diff / 60);
-  if (m < 60) return `${m} min ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h} hour${h > 1 ? 's' : ''} ago`;
-  const days = Math.floor(h / 24);
-  return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (diff < 60) return "Just now";
+  if (diff < 3600) {
+    const mins = Math.floor(diff / 60);
+    return `${mins} ${mins === 1 ? 'min' : 'mins'} ago`;
+  }
+  if (diff < 86400) {
+    const hours = Math.floor(diff / 3600);
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  }
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
 // Metrics are derived below; keep lightweight defaults

@@ -156,9 +156,12 @@ const BrgyHome = () => {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hr ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'min' : 'mins'} ago`;
+    if (diffMins < 1440) {
+      const hours = Math.floor(diffMins / 60);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
   const handleReject = async (id: number) => {
