@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { Row, useResponsive, DS_FONT_UI, DS_FONT_INPUT } from '../DesignSystem';
 
 export const SearchHeader = ({
+  startLabel,
   destination,
   onStartSearch,
   onBack,
@@ -13,7 +14,9 @@ export const SearchHeader = ({
   insets,
   suggestions = [],
   onSelectSuggestion,
+  onUseMyLocation,
   onReport,
+  activeInput = 'dest', // 'start' | 'dest'
 }) => {
   const { theme, atomic } = useTheme();
   const { width, safeTop } = useResponsive();
@@ -105,48 +108,65 @@ export const SearchHeader = ({
 
         {/* Search Bar Pill & Dropdown */}
         <View style={{ zIndex: 3000 }}>
-          <View 
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#161412',
-              borderRadius: 24,
-              paddingHorizontal: 16,
-              height: 48,
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.08)',
-              shadowColor: '#000',
-              shadowOpacity: 0.25,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 6 },
-            }}
-          >
-            <Lucide.Search size={16} color="rgba(242,238,232,0.4)" strokeWidth={2.5} />
-            <TextInput
-              value={destination}
-              onChangeText={(t) => onStartSearch(t, 'dest')}
-              autoFocus={autoFocus}
-              placeholder="Search destination"
-              placeholderTextColor="rgba(242,238,232,0.50)"
-              style={{
-                flex: 1,
-                marginLeft: 10,
-                color: '#F3EEE6',
-                fontSize: 14,
-                fontWeight: '400',
-                paddingVertical: 0,
-                outlineStyle: 'none',
-                fontFamily: DS_FONT_INPUT,
-              }}
-            />
-            {(destination || '').length > 0 && (
-              <TouchableOpacity
-                onPress={() => onStartSearch('', 'dest')}
-                style={{ padding: 4 }}
-              >
-                <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.05)" />
-              </TouchableOpacity>
-            )}
+          <View style={{ backgroundColor: '#161412', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } }}>
+            
+            {/* Start Location Input */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
+              <View style={{ width: 16, alignItems: 'center' }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: '#2F7BFF' }} />
+              </View>
+              <TextInput
+                value={startLabel}
+                onChangeText={(t) => onStartSearch(t, 'start')}
+                placeholder="Starting point"
+                placeholderTextColor="rgba(242,238,232,0.40)"
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  color: '#F3EEE6',
+                  fontSize: 14,
+                  fontWeight: '400',
+                  paddingVertical: 0,
+                  fontFamily: DS_FONT_INPUT,
+                }}
+              />
+              <Row gap={8}>
+                <TouchableOpacity onPress={onUseMyLocation} style={{ padding: 6, backgroundColor: 'rgba(47, 123, 255, 0.1)', borderRadius: 8 }}>
+                  <Lucide.LocateFixed size={14} color="#2F7BFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </Row>
+            </View>
+
+            {/* Destination Input */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, paddingHorizontal: 16 }}>
+              <View style={{ width: 16, alignItems: 'center' }}>
+                <Lucide.MapPin size={14} color="#EF4444" strokeWidth={2.5} />
+              </View>
+              <TextInput
+                value={destination}
+                onChangeText={(t) => onStartSearch(t, 'dest')}
+                autoFocus={autoFocus}
+                placeholder="Search destination"
+                placeholderTextColor="rgba(242,238,232,0.40)"
+                style={{
+                  flex: 1,
+                  marginLeft: 12,
+                  color: '#F3EEE6',
+                  fontSize: 14,
+                  fontWeight: '400',
+                  paddingVertical: 0,
+                  fontFamily: DS_FONT_INPUT,
+                }}
+              />
+              {(destination || '').length > 0 && (
+                <TouchableOpacity
+                  onPress={() => onStartSearch('', 'dest')}
+                  style={{ padding: 4 }}
+                >
+                  <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.05)" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {/* Suggestions Dropdown */}
@@ -158,7 +178,7 @@ export const SearchHeader = ({
                 exit={{ opacity: 0, translateY: -10, scale: 0.98 }}
                 style={{
                   position: 'absolute',
-                  top: 60,
+                  top: 106,
                   left: 0,
                   right: 0,
                   backgroundColor: '#161412',

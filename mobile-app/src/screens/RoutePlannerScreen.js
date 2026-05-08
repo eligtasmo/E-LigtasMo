@@ -869,9 +869,11 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const insets = useSafeAreaInsets();
   const { width, height, isPortrait } = useResponsive();
   const isLandscape = !isPortrait;
+  const [startLabel, setStartLabel] = useState('My Location');
   const [destination, setDestination] = useState('');
   const [startCoords, setStartCoords] = useState(null);
   const [destCoords, setDestCoords] = useState(null);
+  const [activeSearchType, setActiveSearchType] = useState('dest'); // 'start' | 'dest'
   const [allRoutes, setAllRoutes] = useState([]);
   const [routesCache, setRoutesCache] = useState({});
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
@@ -1290,24 +1292,37 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     }
   };
 
-  const handleLocationSearch = async (text) => {
-    setDestination(text);
+  const handleLocationSearch = async (text, type = 'dest') => {
+    setActiveSearchType(type);
+    if (type === 'start') setStartLabel(text);
+    else setDestination(text);
+
     if (text.length >= 2) {
       try {
         const resp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(text)}.json?proximity=121.41,14.28&limit=5&access_token=${MAPBOX_ACCESS_TOKEN}`);
         const data = await resp.json();
-        if (data.features) setSuggestions(data.features.map(f => ({ id: f.id, name: f.text, address: f.place_name, lat: f.center[1], lon: f.center[0] })));
+        if (data.features) setSuggestions(data.features.map(f => ({ id: f.id, name: f.text, address: f.place_name, lat: f.center[1], lon: f.center[0], type })));
       } catch (e) { }
+    } else {
+      setSuggestions([]);
     }
   };
 
   const handleUseMyLocation = async () => {
     try {
+      setStartLabel('My Location');
       let loc = await Location.getLastKnownPositionAsync();
-      if (loc) { setStartCoords({ lat: loc.coords.latitude, lon: loc.coords.longitude }); webviewRef.current?.postMessage(JSON.stringify({ type: 'SYNC', userLoc: { lat: loc.coords.latitude, lon: loc.coords.longitude }, forceZoom: 17 })); }
+      if (loc) { 
+        setStartCoords({ lat: loc.coords.latitude, lon: loc.coords.longitude }); 
+        webviewRef.current?.postMessage(JSON.stringify({ type: 'SYNC', userLoc: { lat: loc.coords.latitude, lon: loc.coords.longitude }, forceZoom: 17 })); 
+      }
       loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       setStartCoords({ lat: loc.coords.latitude, lon: loc.coords.longitude });
       webviewRef.current?.postMessage(JSON.stringify({ type: 'SYNC', userLoc: { lat: loc.coords.latitude, lon: loc.coords.longitude }, forceZoom: 17.5 }));
+      
+      if (destCoords) {
+        calculateRoute(destCoords, { lat: loc.coords.latitude, lon: loc.coords.longitude });
+      }
     } catch (e) { }
   };
 
@@ -1433,17 +1448,26 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           {(!isNavigating && allRoutes.length === 0) ? (
             <SearchHeader
               title="Search"
+              startLabel={startLabel}
               destination={destination}
               onStartSearch={handleLocationSearch}
               onBack={() => navigation.canGoBack() && navigation.goBack()}
               insets={insets}
               suggestions={suggestions}
               onSelectSuggestion={(item) => {
-                setDestination(item.address || item.name);
-                setDestCoords({ lat: item.lat, lon: item.lon });
-                setSuggestions([]);
-                calculateRoute({ lat: item.lat, lon: item.lon });
+                if (activeSearchType === 'start') {
+                  setStartLabel(item.name);
+                  setStartCoords({ lat: item.lat, lon: item.lon });
+                  setSuggestions([]);
+                  if (destCoords) calculateRoute(destCoords, { lat: item.lat, lon: item.lon });
+                } else {
+                  setDestination(item.address || item.name);
+                  setDestCoords({ lat: item.lat, lon: item.lon });
+                  setSuggestions([]);
+                  calculateRoute({ lat: item.lat, lon: item.lon });
+                }
               }}
+              onUseMyLocation={handleUseMyLocation}
               onReport={() => navigation.navigate('ReportIncident')}
             />
           ) : null}
@@ -1458,7 +1482,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               >
                 <Row align="center" style={{ backgroundColor: 'rgba(26,22,18,0.92)', paddingTop: (insets.top || 0) + 12, paddingBottom: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.12)' }}>
                   <TouchableOpacity onPress={() => { setAllRoutes([]); setRoute(null); setDestination(''); }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}><Lucide.ChevronLeft size={24} color="#F3EEE6" /></TouchableOpacity>
-                  <Row align="center" style={{ flex: 1, paddingHorizontal: 16 }}><Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginRight: 8 }}>Your Location</Text><MaterialCommunityIcons name="arrow-right" size={16} color="rgba(255,255,255,0.4)" /><Text numberOfLines={1} style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '700', marginLeft: 8, flex: 1 }}>{destination}</Text></Row>
+                  <Row align="center" style={{ flex: 1, paddingHorizontal: 16 }}><Text numberOfLines={1} style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', maxWidth: 80 }}>{startLabel}</Text><MaterialCommunityIcons name="arrow-right" size={16} color="rgba(255,255,255,0.4)" style={{ marginHorizontal: 4 }} /><Text numberOfLines={1} style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '700', flex: 1 }}>{destination}</Text></Row>
                   <TouchableOpacity onPress={handleShareRoute} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: 4 }}><MaterialCommunityIcons name="share-variant" size={20} color="#fff" /></TouchableOpacity>
                 </Row>
               </MotiView>
