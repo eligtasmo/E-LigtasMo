@@ -138,7 +138,13 @@ try {
         $pdo->exec("ALTER TABLE users ADD COLUMN gender VARCHAR(20) NULL AFTER contact_number");
     }
 
-    $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, brgy_name, city, province, email, contact_number, gender, role, status, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // Check for created_at column
+    $createdCheck = $pdo->query("SHOW COLUMNS FROM users LIKE 'created_at'");
+    if ($createdCheck->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, brgy_name, city, province, email, contact_number, gender, role, status, lat, lng, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
     $ok = $stmt->execute([
         $data['username'],
         $hashedPassword,
