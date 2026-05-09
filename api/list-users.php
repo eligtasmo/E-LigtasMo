@@ -10,6 +10,16 @@ require_once 'rbac.php';
 // Require view permission at minimum
 require_permission('users.view');
 
+function ensure_users_table($pdo) {
+    // Check if created_at exists
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'created_at'");
+    if ($stmt && $stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+    }
+}
+
+ensure_users_table($pdo);
+
 $userRole = $_SESSION['role'] ?? null;
 $userBrgy = $_SESSION['brgy_name'] ?? null;
 
@@ -26,7 +36,7 @@ if ($isBrgyOfficial) {
     $brgyFilter = $userBrgy;
 }
 
-$query = "SELECT id, username, full_name, brgy_name, city, province, email, contact_number, role, status FROM users WHERE 1=1";
+$query = "SELECT id, username, full_name, brgy_name, city, province, email, contact_number, role, status, created_at FROM users WHERE 1=1";
 $params = [];
 
 if ($status) {
