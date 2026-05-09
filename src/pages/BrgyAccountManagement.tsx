@@ -42,7 +42,6 @@ const BrgyAccountManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterBrgy, setFilterBrgy] = useState('');
-  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [page, setPage] = useState(1);
   const [sortCol, setSortCol] = useState<string>('full_name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -110,46 +109,26 @@ const BrgyAccountManagement: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const toggleSelect = (id: number) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-  const allOnPageSelected = paginated.length > 0 && paginated.every(u => selected.has(u.id));
-  const toggleAll = () => {
-    if (allOnPageSelected) {
-      const next = new Set(selected);
-      paginated.forEach(u => next.delete(u.id));
-      setSelected(next);
-    } else {
-      const next = new Set(selected);
-      paginated.forEach(u => next.add(u.id));
-      setSelected(next);
-    }
-  };
-
   const handleSort = (col: string) => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortCol(col); setSortDir('asc'); }
     setPage(1);
   };
 
-  const handleApproveAction = async (userId: number, action: 'approve' | 'reject') => {
-    if (!window.confirm(`Are you sure you want to ${action} this account?`)) return;
+  const handleDeleteUser = async (userId: number) => {
+    if (!window.confirm("ARE YOU SURE? This will permanently delete this official account from the system registry. This action is IRREVERSIBLE.")) return;
     try {
-      const res = await apiFetch("approve-brgy-account.php", {
+      const res = await apiFetch("admin-delete-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, action }),
+        body: JSON.stringify({ user_id: userId }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Account ${action}ed`);
+        toast.success("Account deleted successfully");
         fetchUsers();
       } else {
-        toast.error(data.message || "Failed to update status");
+        toast.error(data.message || "Failed to delete account");
       }
     } catch { toast.error("Connection error"); }
   };
@@ -186,12 +165,11 @@ const BrgyAccountManagement: React.FC = () => {
 
   const COLS = [
     { key: 'full_name', label: 'Official Name' },
-    { key: 'username', label: 'System ID' },
-    { key: 'email', label: 'Official Email' },
-    { key: 'contact_number', label: 'Hotline/Mobile' },
+    { key: 'username', label: 'Username' },
+    { key: 'email', label: 'Email' },
+    { key: 'contact_number', label: 'Phone Number' },
     { key: 'brgy_name', label: 'Barangay' },
-    { key: 'status', label: 'Status' },
-    { key: 'created_at', label: 'Enrolled' },
+    { key: 'created_at', label: 'Account Created' },
   ];
 
   return (
@@ -252,14 +230,7 @@ const BrgyAccountManagement: React.FC = () => {
             <table className="tactical-table">
               <thead>
                 <tr>
-                  <th className="tactical-th" style={{ width: 40 }}>
-                    <input
-                      type="checkbox"
-                      checked={allOnPageSelected}
-                      onChange={toggleAll}
-                      className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
-                    />
-                  </th>
+                  {/* Removed checkbox column */}
                   {COLS.map(col => (
                     <th
                       key={col.key}
@@ -294,16 +265,9 @@ const BrgyAccountManagement: React.FC = () => {
                 ) : paginated.map(u => (
                   <tr
                     key={u.id}
-                    className={`group transition-colors ${selected.has(u.id) ? 'bg-[#f5f3ff]' : 'hover:bg-[#f9fafb]'}`}
+                    className="group transition-colors hover:bg-[#f9fafb]"
                   >
-                    <td className="tactical-td" style={{ width: 40 }}>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(u.id)}
-                        onChange={() => toggleSelect(u.id)}
-                        className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer"
-                      />
-                    </td>
+                    {/* Removed checkbox column */}
                     <td className="tactical-td">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-[#1e1b4b] flex items-center justify-center text-sm font-semibold text-white shrink-0">
@@ -326,28 +290,16 @@ const BrgyAccountManagement: React.FC = () => {
                     </td>
                     <td className="tactical-td text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {u.status === 'pending' && (
-                          <>
-                            <button 
-                              onClick={() => handleApproveAction(u.id, 'approve')}
-                              className="p-1.5 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
-                              title="Approve"
-                            >
-                              <FiUserCheck size={14} />
-                            </button>
-                            <button 
-                              onClick={() => handleApproveAction(u.id, 'reject')}
-                              className="p-1.5 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
-                              title="Reject"
-                            >
-                              <FiX size={14} />
-                            </button>
-                          </>
-                        )}
-                        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+                        <button 
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                          onClick={() => toast('Profile editing coming in next tactical update')}
+                        >
                           <FiEdit2 size={14} />
                         </button>
-                        <button className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                        <button 
+                          onClick={() => handleDeleteUser(u.id)}
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                        >
                           <FiTrash2 size={14} />
                         </button>
                       </div>
