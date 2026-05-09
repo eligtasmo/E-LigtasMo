@@ -16,6 +16,7 @@ interface User {
   contact_number: string;
   gender?: string;
   preferred_vehicle?: string | null;
+  access_token?: string;
 }
 
 interface AuthContextType {
@@ -68,7 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           province: data.province,
           contact_number: data.contact_number,
           gender: data.gender,
-          preferred_vehicle: data.preferred_vehicle ?? null
+          preferred_vehicle: data.preferred_vehicle ?? null,
+          access_token: localStorage.getItem('access_token') || undefined
         });
       } else {
         const path = location.pathname;
@@ -198,6 +200,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Clear local auth and redirect based on previous role
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('access_token');
 
     if (prevRole === 'admin') {
       window.location.assign('/signin');
@@ -229,6 +232,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const updatedUser = { ...user, preferred_vehicle: mode };
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        if (updatedUser.access_token) {
+           localStorage.setItem('access_token', updatedUser.access_token);
+        }
       }
     } catch (e) {
       // Non-blocking: keep UI responsive even if persistence fails

@@ -5,9 +5,15 @@ export const API_BASE = import.meta.env.VITE_API_URL || "/api";
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const cleanedPath = path.replace(/^\//, '');
   const url = `${API_BASE}/${cleanedPath}`;
+  const token = localStorage.getItem('access_token');
+  const headers = {
+    ...options.headers,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
   const opts: RequestInit = {
     credentials: 'include',
     ...options,
+    headers
   };
   try {
     const res = await fetch(url, opts);

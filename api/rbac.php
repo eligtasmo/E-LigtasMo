@@ -102,7 +102,7 @@ function require_permission($permission) {
     if (!has_permission_for_role($role, $permission)) {
         http_response_code(403);
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Forbidden: insufficient permissions for ' . ($role ?: 'unknown')]);
+        echo json_encode(['success' => false, 'message' => 'Forbidden: insufficient permissions for ' . ($role ?: 'guest')]);
         exit;
     }
 }
