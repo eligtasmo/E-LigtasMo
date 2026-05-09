@@ -36,7 +36,7 @@ if ($isBrgyOfficial) {
     $brgyFilter = $userBrgy;
 }
 
-$query = "SELECT id, username, full_name, brgy_name, city, province, email, contact_number, role, status, created_at FROM users WHERE 1=1";
+$query = "SELECT id, username, full_name, brgy_name, city, province, email, contact_number, role, status, IFNULL(created_at, NOW()) as created_at FROM users WHERE 1=1";
 $params = [];
 
 if ($status) {
