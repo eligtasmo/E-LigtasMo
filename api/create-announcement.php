@@ -25,8 +25,9 @@ function current_user_id_from_context() {
   return null;
 }
 
-function ensure_announcements_table($pdo) {
-  $sql = "CREATE TABLE IF NOT EXISTS announcements (
+function ensure_tables($pdo) {
+  // Announcements
+  $pdo->exec("CREATE TABLE IF NOT EXISTS announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
@@ -40,19 +41,57 @@ function ensure_announcements_table($pdo) {
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_audience (audience),
     INDEX idx_created_at (created_at)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-  $pdo->exec($sql);
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+  // Notifications
+  $pdo->exec("CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    type ENUM('info','warning','success','error') NOT NULL DEFAULT 'info',
+    audience ENUM('all','residents','barangay','brgy_specific') NOT NULL DEFAULT 'all',
+    category VARCHAR(50) DEFAULT 'general',
+    external_link TEXT NULL,
+    is_urgent TINYINT(1) DEFAULT 0,
+    brgy_name VARCHAR(100) NULL,
+    user_id INT NULL,
+    created_by INT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audience (audience),
+    INDEX idx_created_at (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   
-  // Add missing columns if they don't exist
-  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'general'"); } catch(Exception $e){}
-  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS external_link TEXT NULL"); } catch(Exception $e){}
-  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS is_urgent TINYINT(1) DEFAULT 0"); } catch(Exception $e){}
-  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS sms_sent INT DEFAULT 0"); } catch(Exception $e){}
-  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS sms_message TEXT NULL"); } catch(Exception $e){}
+  // Column Sync
+  $tables = [
+    'announcements' => [
+      'category' => "VARCHAR(50) DEFAULT 'general' AFTER audience",
+      'external_link' => "TEXT NULL AFTER category",
+      'is_urgent' => "TINYINT(1) DEFAULT 0 AFTER external_link",
+      'sms_sent' => "INT DEFAULT 0 AFTER is_urgent",
+      'sms_message' => "TEXT NULL AFTER sms_sent"
+    ],
+    'notifications' => [
+      'category' => "VARCHAR(50) DEFAULT 'general' AFTER audience",
+      'external_link' => "TEXT NULL AFTER category",
+      'is_urgent' => "TINYINT(1) DEFAULT 0 AFTER external_link",
+      'user_id' => "INT NULL AFTER brgy_name"
+    ]
+  ];
+  
+  foreach ($tables as $table => $cols) {
+    foreach ($cols as $name => $def) {
+      $stmt = $pdo->query("SHOW COLUMNS FROM $table LIKE '$name'");
+      if ($stmt && $stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE $table ADD COLUMN $name $def");
+      }
+    }
+    // Update audience ENUM
+    try { $pdo->exec("ALTER TABLE $table MODIFY COLUMN audience ENUM('all','residents','barangay','brgy_specific') NOT NULL DEFAULT 'all'"); } catch(Exception $e){}
+  }
 }
 
 try {
-  ensure_announcements_table($pdo);
+  ensure_tables($pdo);
   $data = json_decode(file_get_contents('php://input'), true);
   $title = isset($data['title']) ? trim($data['title']) : '';
   $message = isset($data['message']) ? trim($data['message']) : '';

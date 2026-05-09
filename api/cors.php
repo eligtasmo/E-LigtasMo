@@ -22,14 +22,14 @@ header('Access-Control-Allow-Credentials: true');
 
 // 3. Secure Session Bootstrapping
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    // Force secure flags for cross-origin cookie persistence
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
         'domain' => '',
-        'secure' => true, // Must be true for SameSite=None
+        'secure' => $isSecure,
         'httponly' => true,
-        'samesite' => 'None',
+        'samesite' => $isSecure ? 'None' : 'Lax',
     ]);
     session_start();
 }
