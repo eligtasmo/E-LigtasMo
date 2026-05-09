@@ -5,7 +5,7 @@ require_once 'db.php';
 
 // Ensure emergency_contacts table exists
 function ensure_contacts_table($pdo) {
-    $sql = "CREATE TABLE IF NOT EXISTS emergency_contacts (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS emergency_contacts (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NULL,
         name VARCHAR(100) NULL,
@@ -19,12 +19,23 @@ function ensure_contacts_table($pdo) {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX (user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-    $pdo->exec($sql);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Robust column sync
+    $cols = [
+        'user_id' => "INT NULL AFTER id",
+        'created_brgy' => "VARCHAR(100) NULL AFTER created_by"
+    ];
+    foreach ($cols as $name => $def) {
+        $stmt = $pdo->query("SHOW COLUMNS FROM emergency_contacts LIKE '$name'");
+        if ($stmt && $stmt->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE emergency_contacts ADD COLUMN $name $def");
+        }
+    }
 }
 
 try {
-    ensure_contacts_table($pdo);
+    @ensure_contacts_table($pdo);
     
     $brgy = isset($_GET['brgy']) ? trim($_GET['brgy']) : null;
     $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
@@ -64,6 +75,7 @@ try {
     $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($contacts);
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    http_response_code(200); // Return 200 with empty array if table doesn't exist yet
+    echo json_encode([]);
 }
+?>

@@ -38,9 +38,10 @@ try {
         exit;
     }
 
-    if ($report['status'] !== 'Pending') {
+    $allowedStatus = ['pending', 'approved', 'verified', 'active'];
+    if (!in_array(strtolower($report['status']), $allowedStatus)) {
         http_response_code(403);
-        echo json_encode(['error' => 'Only pending reports can be edited']);
+        echo json_encode(['error' => 'Only pending, approved, or active reports can be edited']);
         exit;
     }
 

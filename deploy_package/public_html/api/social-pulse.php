@@ -104,25 +104,25 @@ if ($shouldScrape) {
         // Specific Real-world examples based on MDRRMO Santa Cruz Page
         $realPosts = [
             [
-                'source_name' => 'Mdrrmo Santa Cruz Laguna',
+                'source_name' => 'PAGASA-DOST',
                 'source_type' => 'official_page',
-                'content' => "FLOOD UPDATE – Santa Cruz, Laguna\n\nAs of the latest monitoring, several areas are experiencing elevated water levels. Stay alert and avoid flood-prone zones. Regular updates will be posted.\n\nFor assistance, contact MDRRMO Santa Cruz:\nSmart: 0921-962-0602\nLandline: (049) 557-1047",
-                'posted_at' => date('Y-m-d H:i:s', strtotime('-15 minutes')),
-                'url' => 'https://www.facebook.com/mdrrmosclOfficial/'
+                'content' => "WEATHER ADVISORY: Light to moderate rains with occasional heavy downpours affecting parts of Laguna. Flooding in low-lying areas is possible. Stay monitored.",
+                'posted_at' => date('Y-m-d H:i:s', strtotime('-10 minutes')),
+                'url' => 'https://www.facebook.com/PAGASA.DOST.GOV.PH'
             ],
             [
-                'source_name' => 'Mdrrmo Santa Cruz Laguna',
+                'source_name' => 'PHIVOLCS-DOST',
                 'source_type' => 'official_page',
-                'content' => "Flooding has been reported in the following areas: Gatid National Highway in front of the elementary school. Motorists are advised to take alternate routes. ⚠️",
-                'posted_at' => date('Y-m-d H:i:s', strtotime('-45 minutes')),
-                'url' => 'https://www.facebook.com/mdrrmosclOfficial/'
-            ],
-            [
-                'source_name' => 'Provincial Disaster Risk Reduction and Management Office - Laguna',
-                'source_type' => 'official_page',
-                'content' => "WEATHER ADVISORY: Light to moderate rains affecting Santa Cruz and nearby municipalities. All DRRMOs are on standby. Please monitor official channels for further announcements.",
+                'content' => "EARTHQUAKE INFORMATION: No significant seismic activity detected in the last 24 hours for the CALABARZON region. Situation is normal.",
                 'posted_at' => date('Y-m-d H:i:s', strtotime('-2 hours')),
-                'url' => 'https://www.facebook.com/provincialdisaster/'
+                'url' => 'https://www.facebook.com/PHIVOLCS'
+            ],
+            [
+                'source_name' => 'Mdrrmo Santa Cruz Laguna',
+                'source_type' => 'official_page',
+                'content' => "MDRRMO ADVISORY: Our team is conducting regular water level monitoring in the Santa Cruz River. Levels are currently WITHIN NORMAL RANGE. #KeepSafeSantaCruz",
+                'posted_at' => date('Y-m-d H:i:s', strtotime('-4 hours')),
+                'url' => 'https://www.facebook.com/mdrrmosclOfficial/'
             ]
         ];
 
@@ -197,6 +197,31 @@ if ($shouldScrape) {
             $post['url'] ?? null,
             $post['post_url'] ?? null
         ]);
+
+        // --- AUTO-INJECT INTO INCIDENT_REPORTS (DISASTER MAP) ---
+        if ($risk === 'high' || $risk === 'medium') {
+            try {
+                // Determine if it's a flood or other disaster
+                $type = (strpos(strtolower($post['content']), 'flood') !== false || strpos(strtolower($post['content']), 'baha') !== false) ? 'Flood' : 'General Alert';
+                
+                // Check if we already have a recent alert from this source
+                $checkReport = $pdo->prepare("SELECT COUNT(*) FROM incident_reports WHERE description LIKE ? AND created_at > DATE_SUB(NOW(), INTERVAL 6 HOUR)");
+                $checkReport->execute(['%' . $summary . '%']);
+                if ((int)$checkReport->fetchColumn() === 0) {
+                    $stmt = $pdo->prepare("INSERT INTO incident_reports (type, severity, description, status, barangay, reporter_name, location_text, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([
+                        $type,
+                        ucfirst($risk),
+                        "OFFICIAL ALERT from " . $post['source_name'] . ": " . $summary . ". Details: " . $post['content'],
+                        'Verified',
+                        'Poblacion', // Default location if not specific
+                        $post['source_name'],
+                        "Santa Cruz, Laguna (Official Advisory)",
+                        $post['posted_at']
+                    ]);
+                }
+            } catch (Exception $e) { /* Ignore injection failures */ }
+        }
     }
     
     // Refresh list

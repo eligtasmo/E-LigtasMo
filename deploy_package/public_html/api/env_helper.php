@@ -26,10 +26,21 @@ function loadEnv($path) {
     }
 }
 
-// Load .env from the secure 'core' folder (outside public_html)
-loadEnv(__DIR__ . '/../../core/.env');
+// Load .env from various secure locations
+$envPaths = [
+    __DIR__ . '/../../core/.env',  // Standard: sibling to public_html
+    __DIR__ . '/../core/.env',     // Variation: inside parent folder
+    __DIR__ . '/core/.env',        // Variation: local core folder
+    __DIR__ . '/../.env'           // Local fallback
+];
 
-// Fallback to local if core doesn't exist (for development)
-if (!isset($_ENV['DB_NAME'])) {
-    loadEnv(__DIR__ . '/../.env');
+foreach ($envPaths as $path) {
+    if (file_exists($path)) {
+        loadEnv($path);
+    }
+}
+
+// Final check to ensure mission-critical data is present
+if (!isset($_ENV['DB_NAME']) && file_exists(__DIR__ . '/.env')) {
+    loadEnv(__DIR__ . '/.env');
 }

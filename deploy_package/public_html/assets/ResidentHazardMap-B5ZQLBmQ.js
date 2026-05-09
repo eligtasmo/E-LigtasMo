@@ -1,0 +1,1 @@
+import{J as r,r as s,j as a,s as n,W as o}from"./index-o-I-O6Au.js";const i=()=>{const e=r(),t=s.useMemo(()=>"hazards",[e.pathname]),[l,c]=s.useState(t);return a.jsxs(a.Fragment,{children:[a.jsx(n,{title:"Hazard Map",description:"View local hazard map and overlays."}),a.jsx("div",{className:"w-full h-full",children:a.jsx(o,{})})]})},p=()=>a.jsx(i,{});export{p as default};

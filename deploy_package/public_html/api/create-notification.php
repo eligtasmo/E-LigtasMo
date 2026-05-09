@@ -46,6 +46,7 @@ function ensure_notifications_table($pdo) {
   try { $pdo->exec("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'general'"); } catch(Exception $e){}
   try { $pdo->exec("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS external_link TEXT NULL"); } catch(Exception $e){}
   try { $pdo->exec("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_urgent TINYINT(1) DEFAULT 0"); } catch(Exception $e){}
+  try { $pdo->exec("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS sms_sent INT DEFAULT 0"); } catch(Exception $e){}
 }
 
 try {
@@ -79,18 +80,30 @@ try {
     // Limit length for SMS
     if (strlen($sms_msg) > 160) $sms_msg = substr($sms_msg, 0, 157) . "...";
 
+    // Audience logic for SMS targeting
     if ($audience === 'all') {
         $nStmt = $pdo->query("SELECT contact_number FROM users WHERE contact_number IS NOT NULL AND contact_number != ''");
         $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
+    } elseif ($audience === 'residents') {
+        $nStmt = $pdo->query("SELECT contact_number FROM users WHERE role = 'resident' AND contact_number IS NOT NULL AND contact_number != ''");
+        $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
     } elseif ($audience === 'barangay' && $brgy_name) {
+        // If it's a barangay broadcast, get everyone in that barangay
         $nStmt = $pdo->prepare("SELECT contact_number FROM users WHERE brgy_name = ? AND contact_number IS NOT NULL AND contact_number != ''");
         $nStmt->execute([$brgy_name]);
         $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     if (!empty($numbers)) {
+        // Remove duplicates and empty values
+        $numbers = array_unique(array_filter($numbers));
         $sms_res = SMSService::send($numbers, $sms_msg);
-        if ($sms_res['success']) $sms_count = count($numbers);
+        if ($sms_res['success']) {
+            $sms_count = count($numbers);
+            // Notifications table also needs sms_sent
+            $upd = $pdo->prepare("UPDATE notifications SET sms_sent = ? WHERE id = ?");
+            $upd->execute([$sms_count, $id]);
+        }
     }
   }
 

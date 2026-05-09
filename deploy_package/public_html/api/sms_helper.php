@@ -29,17 +29,17 @@ class SMSService {
         // Remove non-numeric characters
         $number = preg_replace('/[^0-9]/', '', $number);
         
-        // Convert 09XXXXXXXXX to 639XXXXXXXXX
-        if (substr($number, 0, 2) === '09' && strlen($number) === 11) {
-            $number = '63' . substr($number, 1);
+        // Strictly validate: must be exactly 11 digits and start with 09
+        if (strlen($number) === 11 && substr($number, 0, 2) === '09') {
+            return '63' . substr($number, 1);
         }
-        // Convert 9XXXXXXXXX to 639XXXXXXXXX
-        elseif (substr($number, 0, 1) === '9' && strlen($number) === 10) {
-            $number = '63' . $number;
-        }
-        // If already 639XXXXXXXXX, keep it
         
-        return $number;
+        // If it already starts with 639 and is 12 digits
+        if (strlen($number) === 12 && substr($number, 0, 3) === '639') {
+            return $number;
+        }
+
+        return null; // Invalid number
     }
 
     /**
@@ -59,20 +59,21 @@ class SMSService {
             $numbers = explode(',', $numbers);
         }
 
-        // Normalize all numbers to 639... format
-        $normalizedNumbers = array_map([self::class, 'normalize'], $numbers);
+        // Normalize all numbers to 639... format and filter out invalid ones
+        $normalizedNumbers = array_filter(array_map([self::class, 'normalize'], $numbers));
         $recipientString = implode(',', $normalizedNumbers);
 
         $ch = curl_init();
         
         $payload = [
             'recipient' => $recipientString,
-            'sender_id' => self::$senderId,
+            'sender_id' => 'PhilSMS', // User specified PhilSMS as sender or default
             'type' => 'plain',
             'message' => $message
         ];
         
-        curl_setopt($ch, CURLOPT_URL, 'https://app.philsms.com/api/v3/sms/send');
+        // Correct endpoint as per user request
+        curl_setopt($ch, CURLOPT_URL, 'https://dashboard.philsms.com/api/v3/sms/send');
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -83,13 +84,18 @@ class SMSService {
         ]);
         
         $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         
         $response = json_decode($output, true);
         
+        // Logging for tactical debugging
+        file_put_contents(__DIR__ . '/sms_log.txt', "[" . date('Y-m-d H:i:s') . "] TO: $recipientString | HTTP: $httpCode | RESP: $output\n", FILE_APPEND);
+
         return [
-            'success' => (isset($response['status']) && $response['status'] === 'success'),
-            'data' => $response
+            'success' => ($httpCode === 200 || $httpCode === 201 || (isset($response['status']) && $response['status'] === 'success')),
+            'data' => $response,
+            'http_code' => $httpCode
         ];
     }
 }
