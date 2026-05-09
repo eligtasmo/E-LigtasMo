@@ -28,7 +28,8 @@ function ensure_announcements_table($pdo) {
     'category' => "VARCHAR(50) DEFAULT 'general' AFTER audience",
     'external_link' => "TEXT NULL AFTER category",
     'is_urgent' => "TINYINT(1) DEFAULT 0 AFTER external_link",
-    'sms_sent' => "INT DEFAULT 0 AFTER is_urgent"
+    'sms_sent' => "INT DEFAULT 0 AFTER is_urgent",
+    'sms_message' => "TEXT NULL AFTER sms_sent"
   ];
   
   foreach ($cols as $name => $def) {
@@ -79,7 +80,7 @@ try {
   $stmt->execute($params);
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
   
-  echo json_encode(['success' => true, 'announcements' => $rows]);
+  echo json_encode(['success' => true, 'data' => $rows]);
 } catch (Exception $e) {
   http_response_code(500);
   echo json_encode([

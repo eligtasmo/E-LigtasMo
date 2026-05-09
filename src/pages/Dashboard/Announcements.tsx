@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { 
   FiAlertTriangle, FiBell, FiPlus, FiSend, FiInfo, FiActivity, FiX, 
   FiCheckCircle, FiSearch, FiRefreshCw, FiEdit, FiClock,
-  FiZap, FiDownload, FiSmartphone, FiMonitor, FiMail, FiShield
+  FiZap, FiDownload, FiSmartphone, FiMonitor, FiMail, FiShield,
+  FiMessageSquare, FiSmartphone as FiPhone
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../utils/api';
@@ -18,10 +19,12 @@ const CATEGORIES = [
 ];
 
 const TEMPLATES = [
-  { id: 'flood', name: 'Flood Warning', icon: 'flood', desc: 'Lvl 1/2/3 Alerts', color: '#FF5252' },
-  { id: 'evac', name: 'Evacuation Order', icon: 'emergency_home', desc: 'Zone-specific evac', color: '#FFA000' },
-  { id: 'weather', name: 'Weather Update', icon: 'thunderstorm', desc: 'PAGASA Bulletin', color: '#2196F3' },
+  { id: 'flood', name: 'Flood Warning', icon: 'flood', desc: 'Lvl 1/2/3 Alerts', color: '#EF4444' },
+  { id: 'evac', name: 'Evacuation Order', icon: 'emergency_home', desc: 'Zone-specific evac', color: '#F59E0B' },
+  { id: 'weather', name: 'Weather Update', icon: 'thunderstorm', desc: 'PAGASA Bulletin', color: '#3B82F6' },
 ];
+
+const GSM7_CHARS = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞ\x1bÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
 
 export default function Announcements() {
   const { user } = useAuth();
@@ -37,13 +40,13 @@ export default function Announcements() {
 
   const [form, setForm] = useState({
     title: 'SEVERE FLOOD WARNING: SANTA CRUZ RIVER',
-    message: 'Water levels in Santa Cruz River have exceeded critical threshold (Level 3). Residents in Brgy. Poblacion and Brgy. Bagumbayan are advised to relocate immediately to designated evacuation centers. Keep emergency kits ready.',
+    message: 'Water levels in Santa Cruz River have exceeded critical threshold (Level 3). Residents in Brgy. Poblacion and Brgy. Bagumbayan are advised to relocate immediately.',
+    smsMessage: 'SEVERE FLOOD WARNING: Santa Cruz River Level 3. Residents in Brgy. Poblacion & Bagumbayan must evacuate now. Keep emergency kits ready.',
     category: 'disaster',
-    audience: 'All Residents',
+    audience: 'all',
     isUrgent: true,
     alsoSendSms: true,
     sendPush: true,
-    sendSocial: false
   });
 
   const loadAnnouncements = async () => {
@@ -51,7 +54,9 @@ export default function Announcements() {
     try {
       const res = await apiFetch('list-announcements.php');
       const data = await res.json();
-      if (data.success) setAnnouncements(Array.isArray(data.data) ? data.data : []);
+      if (data.success) {
+        setAnnouncements(Array.isArray(data.data) ? data.data : []);
+      }
     } catch (err) {
       toast.error('Sync failed');
     } finally {
@@ -70,8 +75,9 @@ export default function Announcements() {
     try {
       const payload = {
         ...form,
-        brgy: role === 'admin' ? 'Global' : brgyName,
+        brgy_name: role === 'admin' ? 'Global' : brgyName,
         sender: user?.username,
+        also_send_sms: form.alsoSendSms
       };
 
       const res = await apiFetch('create-announcement.php', {
@@ -93,6 +99,26 @@ export default function Announcements() {
       setIsSending(false);
     }
   };
+
+  const smsMetrics = useMemo(() => {
+    const text = form.smsMessage || "";
+    const isUnicode = [...text].some(char => !GSM7_CHARS.includes(char));
+    const limit = isUnicode ? 70 : 160;
+    const multipartLimit = isUnicode ? 67 : 153;
+    
+    let segments = 1;
+    if (text.length > limit) {
+      segments = Math.ceil(text.length / multipartLimit);
+    }
+
+    return {
+      length: text.length,
+      limit,
+      segments,
+      isUnicode,
+      remaining: Math.max(0, limit - text.length)
+    };
+  }, [form.smsMessage]);
 
   const exportLogs = () => {
     if (!announcements.length) { toast.error('No logs to export'); return; }
@@ -126,232 +152,276 @@ export default function Announcements() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-mc text-on-surface-mc font-body-base p-gutter custom-scrollbar">
-      <PageMeta title="Public Hub | E-LigtasMo" description="Emergency Broadcast Command Center" />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans p-6 custom-scrollbar">
+      <PageMeta title="Announcements | E-LigtasMo" description="Emergency Broadcast Command Center" />
       
-      <div className="max-w-[1600px] mx-auto grid grid-cols-12 gap-gutter">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-12 gap-6">
         
         {/* Header & Stats */}
         <div className="col-span-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <span className="w-10 h-10 rounded-lg bg-primary-mc flex items-center justify-center text-on-primary-mc">
-                <FiZap size={24} />
+            <h1 className="text-2xl font-bold flex items-center gap-3 text-slate-800">
+              <span className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                <FiZap size={20} />
               </span>
-              Public Hub: Mission Control
+              Emergency Public Hub
             </h1>
-            <p className="text-on-surface-variant text-sm mt-1">Santa Cruz MDRRMO Operation Center - Emergency Broadcast Engine</p>
+            <p className="text-slate-500 text-sm mt-1 font-medium">Santa Cruz MDRRMO Operation Center - Broadcast Engine</p>
           </div>
           
-          <div className="flex gap-6 items-center">
-             <div className="text-right">
-                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Network Reach</p>
-                <p className="font-data-mono text-2xl text-primary-mc">{stats.reach.toLocaleString()} <span className="text-xs text-on-surface-variant">users</span></p>
+          <div className="flex gap-8 items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+             <div className="text-left">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 text-nowrap">Network Reach</p>
+                <p className="font-mono text-xl text-blue-600 font-bold">{stats.reach.toLocaleString()} <span className="text-xs text-slate-400">users</span></p>
              </div>
-             <div className="w-px h-10 bg-outline-variant-mc" />
-             <div className="text-right">
-                <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Active Alerts</p>
-                <p className="font-data-mono text-2xl text-error-mc">{stats.urgent}</p>
+             <div className="w-px h-8 bg-slate-100" />
+             <div className="text-left">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 text-nowrap">Active Alerts</p>
+                <p className="font-mono text-xl text-red-500 font-bold">{stats.urgent}</p>
              </div>
              <button 
                 onClick={loadAnnouncements}
-                className="p-3 bg-surface-container-high rounded-full border border-outline-variant-mc hover:bg-surface-variant transition-all text-on-surface-variant"
+                className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 hover:bg-slate-100 transition-all text-slate-600"
              >
-                <FiRefreshCw className={isLoading ? 'animate-spin' : ''} />
+                <FiRefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
              </button>
           </div>
         </div>
 
         {/* Broadcast Composer */}
-        <section className="col-span-12 lg:col-span-8 mc-tile rounded-2xl shadow-premium-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <FiEdit className="text-primary-mc" />
-              Emergency Broadcast Composer
+        <section className="col-span-12 lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+              <FiEdit className="text-blue-600" />
+              Compose Broadcast
             </h2>
             <div className="flex gap-2">
-              <span className="bg-success-500 text-black font-bold px-3 py-1 rounded text-[10px] flex items-center gap-1 uppercase tracking-tighter">
-                <FiCheckCircle size={12} /> Ready to Send
+              <span className="bg-emerald-50 text-emerald-600 font-bold px-3 py-1 rounded-full text-[10px] flex items-center gap-1.5 uppercase tracking-wider border border-emerald-100">
+                <FiCheckCircle size={12} /> System Ready
               </span>
             </div>
           </div>
 
           {/* Template Selector */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             {TEMPLATES.map(t => (
               <button 
                 key={t.id}
-                onClick={() => setForm(prev => ({ ...prev, title: t.name.toUpperCase(), category: t.id === 'weather' ? 'recovery' : 'disaster' }))}
-                className="border border-outline-variant-mc bg-surface-container-high p-4 flex flex-col items-start gap-1 rounded-xl hover:border-primary-mc transition-all group text-left active:scale-[0.98]"
+                onClick={() => setForm(prev => ({ 
+                  ...prev, 
+                  title: t.name.toUpperCase(), 
+                  category: t.id === 'weather' ? 'recovery' : 'disaster',
+                  isUrgent: t.id !== 'weather'
+                }))}
+                className="border border-slate-200 bg-slate-50 p-4 flex flex-col items-start gap-1 rounded-2xl hover:border-blue-400 hover:bg-blue-50 transition-all group text-left active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined text-2xl mb-1" style={{ color: t.color }}>{t.icon}</span>
-                <span className="text-sm font-bold text-on-surface-mc">{t.name}</span>
-                <span className="text-[10px] text-on-surface-variant uppercase tracking-tight">{t.desc}</span>
+                <span className="text-sm font-bold text-slate-700">{t.name}</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{t.desc}</span>
               </button>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <div className="flex flex-col gap-1">
-              <label className="mc-label">Alert Level</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Alert Level</label>
               <select 
-                className="mc-input appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23E1E2E5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-[right_1rem_center] bg-no-repeat"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
                 value={form.isUrgent ? 'Critical' : 'Notice'}
                 onChange={(e) => setForm(prev => ({ ...prev, isUrgent: e.target.value === 'Critical' }))}
               >
-                <option value="Critical">Critical (Red)</option>
-                <option value="High">High (Orange)</option>
-                <option value="Notice">Notice (Blue)</option>
+                <option value="Critical">Critical (Red Alert)</option>
+                <option value="High">High (Orange Alert)</option>
+                <option value="Notice">Notice (Blue Alert)</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="mc-label">Target Sector</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Target Sector</label>
               <select 
-                className="mc-input appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23E1E2E5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px_10px] bg-[right_1rem_center] bg-no-repeat"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
                 value={form.audience}
                 onChange={(e) => setForm(prev => ({ ...prev, audience: e.target.value }))}
               >
-                <option>All Residents</option>
-                <option>Coastal Areas</option>
-                <option>Riverside Zones</option>
-                <option>District 1 Officials</option>
+                <option value="all">All Residents</option>
+                <option value="residents">Registered Citizens</option>
+                <option value="barangay">Barangay Officials</option>
               </select>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 mt-2">
-            <label className="mc-label">Headline</label>
-            <input 
-              className="mc-input text-lg tracking-tight" 
-              type="text" 
-              value={form.title} 
-              onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-            />
+          <div className="space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">App Headline</label>
+              <input 
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-base font-bold text-slate-800 placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" 
+                type="text" 
+                placeholder="e.g. SEVERE WEATHER BULLETIN"
+                value={form.title} 
+                onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Full Detailed Message</label>
+              <textarea 
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all h-24 resize-none" 
+                placeholder="Enter the full details for the mobile app notification..."
+                value={form.message}
+                onChange={e => setForm(prev => ({ ...prev, message: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[11px] font-bold text-blue-600 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  <FiMessageSquare /> SMS Blast Message
+                </label>
+                <div className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${smsMetrics.length > smsMetrics.limit ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                  {smsMetrics.length}/{smsMetrics.limit} • {smsMetrics.segments} Segment{smsMetrics.segments > 1 ? 's' : ''} {smsMetrics.isUnicode && '• Unicode'}
+                </div>
+              </div>
+              <textarea 
+                className="w-full bg-white border border-blue-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all h-20 resize-none" 
+                placeholder="Short SMS version..."
+                value={form.smsMessage}
+                onChange={e => setForm(prev => ({ ...prev, smsMessage: e.target.value }))}
+              />
+              <p className="text-[9px] text-blue-400 font-medium italic mt-1 ml-1">
+                Note: Standard SMS is 160 chars. Emojis/Special chars reduce limit to 70.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1 mt-2">
-            <label className="mc-label">Detailed Message</label>
-            <textarea 
-              className="mc-input h-32 font-normal leading-relaxed" 
-              value={form.message}
-              onChange={e => setForm(prev => ({ ...prev, message: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 py-4 border-y border-outline-variant-mc/50 mt-2">
-            <label className="flex items-center gap-2 cursor-pointer group">
+          <div className="flex flex-wrap items-center gap-6 py-5 border-y border-slate-100 mt-6">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input 
                 type="checkbox" 
                 checked={form.alsoSendSms}
                 onChange={e => setForm(prev => ({ ...prev, alsoSendSms: e.target.checked }))}
-                className="w-4 h-4 rounded border-outline-variant-mc bg-surface-container-lowest text-primary-mc focus:ring-0" 
+                className="w-5 h-5 rounded-lg border-slate-300 bg-white text-blue-600 focus:ring-offset-0 focus:ring-2 focus:ring-blue-500/20" 
               />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-mc group-hover:text-primary-mc transition-colors">SMS Blast</span>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-700 group-hover:text-blue-600 transition-colors">SMS Network</span>
+                <span className="text-[9px] text-slate-400 font-medium">PhilSMS Gateway</span>
+              </div>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
+            <label className="flex items-center gap-3 cursor-pointer group">
               <input 
                 type="checkbox" 
                 checked={form.sendPush}
                 onChange={e => setForm(prev => ({ ...prev, sendPush: e.target.checked }))}
-                className="w-4 h-4 rounded border-outline-variant-mc bg-surface-container-lowest text-primary-mc focus:ring-0" 
+                className="w-5 h-5 rounded-lg border-slate-300 bg-white text-blue-600 focus:ring-offset-0 focus:ring-2 focus:ring-blue-500/20" 
               />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-mc group-hover:text-primary-mc transition-colors">App Push</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={form.sendSocial}
-                onChange={e => setForm(prev => ({ ...prev, sendSocial: e.target.checked }))}
-                className="w-4 h-4 rounded border-outline-variant-mc bg-surface-container-lowest text-primary-mc focus:ring-0" 
-              />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-on-surface-mc group-hover:text-primary-mc transition-colors">Social Feed</span>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-700 group-hover:text-blue-600 transition-colors">App Push</span>
+                <span className="text-[9px] text-slate-400 font-medium">Expo Push Service</span>
+              </div>
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 mt-4">
-            <button className="px-6 py-3 border border-outline-variant-mc rounded-xl font-bold text-on-surface-variant hover:bg-surface-variant transition-all active:scale-[0.98]">
+          <div className="flex justify-end gap-3 mt-6">
+            <button className="px-6 py-3 border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98] text-sm">
               Save Draft
             </button>
             <button 
               onClick={handleExecute}
               disabled={isSending}
-              className={`px-10 py-3 bg-red-600 text-white font-bold rounded-xl flex items-center gap-2 hover:bg-red-700 active:scale-[0.98] transition-all shadow-lg ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-10 py-3 bg-red-500 text-white font-bold rounded-2xl flex items-center gap-2 hover:bg-red-600 active:scale-[0.98] transition-all shadow-lg shadow-red-100 ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {isSending ? <FiRefreshCw className="animate-spin" /> : <FiSend />}
+              {isSending ? <FiRefreshCw size={18} className="animate-spin" /> : <FiSend size={18} />}
               EXECUTE BROADCAST
             </button>
           </div>
         </section>
 
         {/* Live Preview */}
-        <section className="col-span-12 lg:col-span-4 flex flex-col h-full">
-          <div className="mc-tile rounded-2xl h-full relative overflow-hidden flex flex-col shadow-premium-lg">
-            <div className="flex items-center justify-between mb-4">
-               <h2 className="text-[12px] font-bold uppercase tracking-[0.2em] text-on-surface-variant flex items-center gap-2">
-                 <FiSmartphone /> Live Preview
+        <section className="col-span-12 lg:col-span-5 flex flex-col h-full">
+          <div className="bg-white rounded-3xl border border-slate-200 h-full relative overflow-hidden flex flex-col shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-[12px] font-bold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                 <FiSmartphone /> Device Previews
                </h2>
-               <div className="flex gap-2">
+               <div className="flex gap-2 items-center">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-[9px] font-bold text-red-500 uppercase">Live Feed</span>
+                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Live View</span>
                </div>
             </div>
             
-            <div className="flex-grow flex items-center justify-center p-2 relative">
-              <div className="phone-frame scale-90 sm:scale-100 origin-center transition-transform">
-                {/* Phone Notch */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-20" />
-                
-                {/* Status Bar */}
-                <div className="absolute top-0 left-0 w-full h-10 flex justify-between items-center px-8 z-10 text-[10px] font-bold">
-                  <span>14:48</span>
-                  <div className="flex gap-1.5 items-center">
-                    <FiSmartphone size={10} />
-                    <FiActivity size={10} />
-                    <div className="w-4 h-2 border border-white/50 rounded-sm relative">
-                       <div className="absolute inset-px bg-white w-3" />
+            <div className="flex-grow flex flex-col items-center justify-start gap-8 py-4 overflow-y-auto no-scrollbar">
+              {/* Push Notification Mock */}
+              <div className="w-full max-w-[320px]">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                  <FiBell size={10} /> App Notification
+                </p>
+                <div className="bg-[#1a1c1e] rounded-3xl p-4 shadow-xl border border-white/5">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <FiShield className="text-[12px] text-white" />
+                      </div>
+                      <span className="text-[11px] font-bold text-white/90 uppercase tracking-tight">E-LigtasMo</span>
+                    </div>
+                    <span className="text-[10px] text-white/40">now</span>
+                  </div>
+                  <div className="text-[13px] font-bold text-white mb-1 leading-tight uppercase line-clamp-1">{form.title || 'Broadcast Title'}</div>
+                  <div className="text-[12px] text-white/70 line-clamp-3 leading-snug">{form.message || 'Details will appear here...'}</div>
+                </div>
+              </div>
+
+              {/* SMS Preview Mock */}
+              <div className="w-full max-w-[320px]">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                  <FiMessageSquare size={10} /> SMS Preview
+                </p>
+                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-lg">
+                  <div className="bg-slate-50 border-b border-slate-100 p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+                      <FiPhone size={14} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-slate-700">PHIL-SMS</div>
+                      <div className="text-[9px] text-slate-400">11:42 AM</div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-slate-50/30">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-3 rounded-tl-none shadow-sm max-w-[90%]">
+                      <p className="text-[12px] text-slate-700 leading-relaxed break-words">
+                        {form.smsMessage || 'Your SMS content will be shown here...'}
+                      </p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Screen Content */}
-                <div className="w-full h-full pt-12 px-4 flex flex-col gap-4 bg-[#111416]">
-                  {/* Push Notification Mock */}
-                  <div className="bg-surface-container-mc border-l-4 border-red-500 rounded-xl p-3 shadow-2xl animate-bounce-slow">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-primary-mc rounded flex items-center justify-center">
-                          <FiShield className="text-[10px] text-on-primary-mc" />
-                        </div>
-                        <span className="text-[10px] font-bold text-on-surface-mc uppercase">E-LigtasMo</span>
+              {/* Mobile App View Mock */}
+              <div className="w-full max-w-[320px]">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                  <FiPhone size={10} /> App Dashboard
+                </p>
+                <div className="border-[8px] border-slate-800 rounded-[3rem] h-[480px] w-full overflow-hidden bg-slate-50 relative shadow-2xl">
+                   {/* Notch */}
+                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-800 rounded-b-2xl z-20"></div>
+                   
+                   <div className="pt-10 px-4">
+                      <div className={`p-5 rounded-2xl border-2 flex flex-col items-center text-center gap-3 transition-colors ${form.isUrgent ? 'bg-red-50 border-red-100 text-red-600' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${form.isUrgent ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+                            <FiAlertTriangle size={24} />
+                         </div>
+                         <div className="space-y-1">
+                            <h3 className="text-xs font-black uppercase tracking-wider">{form.isUrgent ? 'Critical Alert' : 'Public Notice'}</h3>
+                            <p className="text-[10px] font-bold opacity-70">Santa Cruz MDRRMO HQ</p>
+                         </div>
                       </div>
-                      <span className="text-[9px] text-on-surface-variant">now</span>
-                    </div>
-                    <div className="text-[11px] font-bold text-on-surface-mc mb-1 leading-tight uppercase line-clamp-1">{form.title}</div>
-                    <div className="text-[10px] text-on-surface-variant line-clamp-2 leading-snug">{form.message}</div>
-                  </div>
-
-                  {/* App UI In-Phone */}
-                  <div className="mt-2 flex-grow rounded-t-3xl bg-surface-mc border-t border-x border-outline-variant-mc p-5 shadow-[0_-20px_40px_rgba(0,0,0,0.5)]">
-                    <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-6 opacity-30"></div>
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 bg-error-container-mc rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-                        <FiAlertTriangle size={32} />
+                      
+                      <div className="mt-4 space-y-2">
+                         <h2 className="text-sm font-bold text-slate-800 leading-tight uppercase">{form.title}</h2>
+                         <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-6">{form.message}</p>
                       </div>
-                      <div className="text-sm font-bold text-on-surface-mc uppercase tracking-wider">Emergency Alert</div>
-                      <div className="text-[10px] text-on-surface-variant mt-1">Santa Cruz MDRRMO HQ</div>
-                    </div>
-                    
-                    <div className="space-y-3 opacity-20">
-                      <div className="h-2 bg-surface-variant rounded-full w-full"></div>
-                      <div className="h-2 bg-surface-variant rounded-full w-11/12"></div>
-                      <div className="h-2 bg-surface-variant rounded-full w-4/5"></div>
-                      <div className="h-2 bg-surface-variant rounded-full w-1/2"></div>
-                    </div>
 
-                    <button className="w-full bg-red-600 h-12 mt-10 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-red-600/20">
-                      Acknowledge
-                    </button>
-                  </div>
+                      <button className={`w-full h-12 mt-8 rounded-2xl text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg ${form.isUrgent ? 'bg-red-500 shadow-red-100' : 'bg-blue-600 shadow-blue-100'}`}>
+                        Acknowledge
+                      </button>
+                   </div>
                 </div>
               </div>
             </div>
@@ -359,28 +429,28 @@ export default function Announcements() {
         </section>
 
         {/* Transmission History */}
-        <section className="col-span-12 mc-tile rounded-2xl shadow-premium-lg">
+        <section className="col-span-12 bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <FiClock className="text-primary-mc" />
-              Transmission History
+            <h2 className="text-xl font-bold flex items-center gap-3 text-slate-800">
+              <FiClock className="text-blue-600" />
+              Transmission Registry
             </h2>
             <div className="flex gap-3 w-full sm:w-auto">
                <div className="relative flex-1 sm:w-64">
-                  <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                  <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
                     type="text" 
                     placeholder="Search logs..." 
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant-mc rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-primary-mc transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-500/50 transition-all text-slate-700"
                   />
                </div>
                <button 
                 onClick={exportLogs}
-                className="bg-surface-container-high border border-outline-variant-mc px-5 py-2.5 rounded-xl flex items-center gap-2 text-on-surface-mc font-bold hover:bg-surface-variant transition-all active:scale-[0.98] text-sm"
+                className="bg-white border border-slate-200 px-5 py-2.5 rounded-xl flex items-center gap-2 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-[0.98] text-sm shadow-sm"
                >
-                <FiDownload /> Export Registry
+                <FiDownload /> Export
                </button>
             </div>
           </div>
@@ -389,65 +459,62 @@ export default function Announcements() {
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr>
-                  <th className="mc-table-th">Timestamp</th>
-                  <th className="mc-table-th">Alert Title</th>
-                  <th className="mc-table-th">Severity</th>
-                  <th className="mc-table-th">Target Sector</th>
-                  <th className="mc-table-th">Reach Rate</th>
-                  <th className="mc-table-th text-right">Status</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Timestamp</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Alert Title</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Severity</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Target</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Success Rate</th>
+                  <th className="py-4 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                    Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={6} className="mc-table-td"><div className="h-6 bg-surface-container-high rounded w-full opacity-50" /></td>
+                      <td colSpan={6} className="py-6 px-4"><div className="h-8 bg-slate-100 rounded-xl w-full" /></td>
                     </tr>
                    ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-on-surface-variant font-bold italic opacity-30">
+                    <td colSpan={6} className="py-20 text-center text-slate-300 font-bold italic">
                        NO RECORDED TRANSMISSIONS IN CURRENT CACHE
                     </td>
                   </tr>
                 ) : filtered.map((a: any) => (
-                  <tr key={a.id} className="hover:bg-surface-container-high/50 transition-colors group">
-                    <td className="mc-table-td font-data-mono text-[13px] text-primary-mc">
-                       <div className="flex items-center gap-2">
-                          <FiClock className="opacity-50" />
-                          {new Date(a.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                       </div>
+                  <tr key={a.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="py-5 px-4 font-mono text-[13px] text-blue-600 font-medium">
+                       {new Date(a.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                     </td>
-                    <td className="mc-table-td">
+                    <td className="py-5 px-4">
                        <div className="flex flex-col">
-                          <span className="font-bold text-on-surface-mc tracking-tight">{a.title}</span>
-                          <span className="text-[11px] text-on-surface-variant truncate max-w-sm font-normal">{a.message}</span>
+                          <span className="font-bold text-slate-700 tracking-tight">{a.title}</span>
+                          <span className="text-[11px] text-slate-400 truncate max-w-sm font-normal">{a.message}</span>
                        </div>
                     </td>
-                    <td className="mc-table-td">
-                      <span className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${
-                        a.is_urgent === "1" ? 'bg-error-container-mc text-error-mc border border-error-mc/20' : 'bg-secondary-container-mc text-on-secondary-container'
+                    <td className="py-5 px-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        a.is_urgent === "1" ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
                       }`}>
                         {a.is_urgent === "1" ? 'Critical' : 'Notice'}
                       </span>
                     </td>
-                    <td className="mc-table-td text-on-surface-variant font-bold text-[12px]">{a.audience || 'General Public'}</td>
-                    <td className="mc-table-td">
+                    <td className="py-5 px-4 text-slate-500 font-bold text-[12px] uppercase tracking-tight">{a.audience || 'General'}</td>
+                    <td className="py-5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-24 h-2 bg-surface-container-highest rounded-full overflow-hidden border border-outline-variant-mc/10">
+                        <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div 
-                            className={`h-full transition-all duration-1000 ${a.is_urgent === "1" ? 'bg-red-500' : 'bg-green-500'}`}
+                            className={`h-full transition-all duration-1000 ${a.is_urgent === "1" ? 'bg-red-400' : 'bg-emerald-400'}`}
                             style={{ width: `${Math.min(90 + (a.id % 10), 98)}%` }}
                           />
                         </div>
-                        <span className="font-data-mono text-[12px] text-on-surface-variant">
+                        <span className="font-mono text-[12px] text-slate-400">
                           {Math.min(90 + (a.id % 10), 98)}%
                         </span>
                       </div>
                     </td>
-                    <td className="mc-table-td text-right">
-                      <span className="text-success-500 flex items-center justify-end gap-1.5 font-bold text-[11px] tracking-widest uppercase">
-                        <FiCheckCircle size={14} /> Complete
+                    <td className="py-5 px-4 text-right">
+                      <span className="text-emerald-500 flex items-center justify-end gap-1.5 font-bold text-[11px] tracking-widest uppercase">
+                        <FiCheckCircle size={14} /> Delivered
                       </span>
                     </td>
                   </tr>
@@ -460,13 +527,8 @@ export default function Announcements() {
       </div>
 
       <style>{`
-        .animate-bounce-slow {
-          animation: bounce-slow 3s infinite;
-        }
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(-2%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
-          50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); }
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );

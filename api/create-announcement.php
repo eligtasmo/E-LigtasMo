@@ -47,6 +47,7 @@ function ensure_announcements_table($pdo) {
   try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS external_link TEXT NULL"); } catch(Exception $e){}
   try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS is_urgent TINYINT(1) DEFAULT 0"); } catch(Exception $e){}
   try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS sms_sent INT DEFAULT 0"); } catch(Exception $e){}
+  try { $pdo->exec("ALTER TABLE announcements ADD COLUMN IF NOT EXISTS sms_message TEXT NULL"); } catch(Exception $e){}
 }
 
 try {
@@ -54,6 +55,7 @@ try {
   $data = json_decode(file_get_contents('php://input'), true);
   $title = isset($data['title']) ? trim($data['title']) : '';
   $message = isset($data['message']) ? trim($data['message']) : '';
+  $sms_message_raw = isset($data['smsMessage']) ? trim($data['smsMessage']) : null;
   $type = isset($data['type']) ? trim($data['type']) : 'info';
   $audience = isset($data['audience']) ? trim($data['audience']) : 'all';
   $brgy_name = isset($data['brgy_name']) ? trim($data['brgy_name']) : null;
@@ -69,15 +71,18 @@ try {
     exit;
   }
   
-  $stmt = $pdo->prepare('INSERT INTO announcements (title, message, type, audience, brgy_name, category, external_link, is_urgent, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  $stmt->execute([$title, $message, $type, $audience, $brgy_name, $category, $external_link, $is_urgent, $created_by]);
+  $stmt = $pdo->prepare('INSERT INTO announcements (title, message, type, audience, brgy_name, category, external_link, is_urgent, created_by, sms_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  $stmt->execute([$title, $message, $type, $audience, $brgy_name, $category, $external_link, $is_urgent, $created_by, $sms_message_raw]);
   $id = intval($pdo->lastInsertId());
 
   $sms_count = 0;
   if ($also_send_sms) {
     $numbers = [];
-    $sms_msg = "[$type] $title: $message";
-    if (strlen($sms_msg) > 160) $sms_msg = substr($sms_msg, 0, 157) . "...";
+    $sms_msg = $sms_message_raw ?: "[$type] $title: $message";
+    
+    // We don't truncate here because SMSService::send handles multi-part if needed, 
+    // but usually, it's better to keep it clean.
+    // The user provided logic for limits, so we trust the input.
 
     // Audience logic for SMS targeting
     if ($audience === 'all') {
@@ -86,11 +91,17 @@ try {
     } elseif ($audience === 'residents') {
         $nStmt = $pdo->query("SELECT contact_number FROM users WHERE role = 'resident' AND contact_number IS NOT NULL AND contact_number != ''");
         $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
-    } elseif ($audience === 'barangay' && $brgy_name) {
+    } elseif ($audience === 'barangay') {
         // If it's a barangay broadcast, get everyone in that barangay
-        $nStmt = $pdo->prepare("SELECT contact_number FROM users WHERE brgy_name = ? AND contact_number IS NOT NULL AND contact_number != ''");
-        $nStmt->execute([$brgy_name]);
-        $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
+        if ($brgy_name && $brgy_name !== 'Global') {
+            $nStmt = $pdo->prepare("SELECT contact_number FROM users WHERE brgy_name = ? AND contact_number IS NOT NULL AND contact_number != ''");
+            $nStmt->execute([$brgy_name]);
+            $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
+        } else {
+            // All barangay officials
+            $nStmt = $pdo->query("SELECT contact_number FROM users WHERE role IN ('brgy', 'brgy_chair') AND contact_number IS NOT NULL AND contact_number != ''");
+            $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
+        }
     }
 
     if (!empty($numbers)) {
