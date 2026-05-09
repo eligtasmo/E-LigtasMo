@@ -3,8 +3,8 @@
 @theme {
   --font-sans: "Roboto", sans-serif;
   --font-jetbrains: "Roboto", sans-serif;
-  --font-size-xs: 14px;
-  --font-size-sm: 14px;
+  --text-xs: 14px;
+  --text-sm: 14px;
   --color-gray-900: #111111;
   --color-gray-950: #000000;
   --color-slate-900: #111111;
@@ -12,15 +12,9 @@
   --color-black: #000000;
   --color-gray-dark: #1e293b;
 
-  --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
   --breakpoint-xsm: 425px;
   --breakpoint-3xl: 2000px;
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
 
   --text-theme-xl: 20px;
   --text-theme-xl--line-height: 30px;
@@ -89,6 +83,121 @@
   --radius-2xl: 1rem;
   --radius-3xl: 1.5rem;
   --radius-full: 9999px;
+
+  /* Mission Control Spacing */
+  --spacing-unit: 4px;
+  --spacing-gutter: 12px;
+  --spacing-margin: 16px;
+  --spacing-container-padding: 12px;
+  --spacing-stack-sm: 8px;
+  --spacing-stack-md: 16px;
+
+  /* Mission Control Palette */
+  --color-surface-variant: #323537;
+  --color-on-secondary-container: #b6b8bd;
+  --color-error-mc: #ffb4ab;
+  --color-primary-fixed: #e2e2e5;
+  --color-on-tertiary-fixed-variant: #43474e;
+  --color-secondary-fixed: #e1e2e7;
+  --color-surface-mc: #111416;
+  --color-surface-container-lowest: #0c0e11;
+  --color-tertiary-fixed: #dfe2eb;
+  --color-primary-mc: #c6c6c9;
+  --color-on-surface-variant: #c5c6ca;
+  --color-on-surface-mc: #e1e2e5;
+  --color-secondary-fixed-dim: #c4c6cb;
+  --color-inverse-surface: #e1e2e5;
+  --color-background-mc: #111416;
+  --color-surface-dim: #111416;
+  --color-secondary-mc: #c4c6cb;
+  --color-on-primary-container: #838486;
+  --color-on-tertiary-container: #80848c;
+  --color-tertiary-container: #181c22;
+  --color-on-background-mc: #e1e2e5;
+  --color-primary-container-mc: #1a1c1e;
+  --color-surface-container-highest: #323537;
+  --color-surface-bright: #37393c;
+  --color-outline-variant-mc: #44474a;
+  --color-on-primary-mc: #2f3133;
+  --color-surface-tint: #c6c6c9;
+  --color-on-error-mc: #690005;
+  --color-inverse-primary: #5d5e61;
+  --color-on-error-container: #ffdad6;
+  --color-inverse-on-surface: #2e3133;
+  --color-tertiary-mc: #c3c6cf;
+  --color-on-primary-fixed: #1a1c1e;
+  --color-tertiary-fixed-dim: #c3c6cf;
+  --color-surface-container-low: #191c1e;
+  --color-on-secondary-fixed-variant: #44474b;
+  --color-secondary-container-mc: #46494d;
+  --color-surface-container-mc: #1d2022;
+  --color-on-primary-fixed-variant: #454749;
+  --color-on-secondary-mc: #2e3135;
+  --color-error-container-mc: #93000a;
+  --color-outline-mc: #8f9194;
+  --color-on-tertiary-fixed: #181c22;
+  --color-on-tertiary-mc: #2d3137;
+  --color-on-secondary-fixed: #191c20;
+  --color-primary-fixed-dim: #c6c6c9;
+  --color-surface-container-high: #282a2d;
+
+  /* Typography Extensions */
+  --font-body-base: "Inter", sans-serif;
+  --font-headline-md: "Inter", sans-serif;
+  --font-label-caps: "Inter", sans-serif;
+  --font-data-mono: "JetBrains Mono", monospace;
+  --font-display-lg: "Inter", sans-serif;
+
+  /* Font Sizes */
+  --text-body-base: 16px;
+  --text-headline-md: 24px;
+  --text-label-caps: 12px;
+  --text-data-mono: 14px;
+  --text-display-lg: 36px;
+}
+
+@utility text-theme-xs {
+  font-size: var(--text-theme-xs);
+  line-height: var(--text-theme-xs--line-height);
+}
+
+@utility text-theme-sm {
+  font-size: var(--text-theme-sm);
+  line-height: var(--text-theme-sm--line-height);
+}
+
+@utility text-theme-xl {
+  font-size: var(--text-theme-xl);
+  line-height: var(--text-theme-xl--line-height);
+}
+
+@utility text-label-caps {
+  font-size: var(--text-label-caps);
+  text-transform: uppercase;
+}
+
+@utility shadow-theme-xs {
+  box-shadow: var(--shadow-theme-xs);
+}
+
+@utility shadow-theme-sm {
+  box-shadow: var(--shadow-theme-sm);
+}
+
+@utility shadow-theme-md {
+  box-shadow: var(--shadow-theme-md);
+}
+
+@utility shadow-theme-lg {
+  box-shadow: var(--shadow-theme-lg);
+}
+
+@utility shadow-theme-xl {
+  box-shadow: var(--shadow-theme-xl);
+}
+
+@utility shadow-datepicker {
+  box-shadow: var(--shadow-datepicker);
 }
 
 
@@ -376,7 +485,8 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility menu-dropdown-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium;
+  font-size: var(--text-theme-sm);
 }
 
 @utility menu-dropdown-item-active {
@@ -435,7 +545,7 @@ header [class*="CustomDropdown"] * {
 /* ── Tactical Standard UI System ─────────────────── */
 
 @utility tactical-page {
-  @apply p-6 w-full font-sans overflow-y-auto h-full;
+  @apply min-h-screen bg-slate-50 font-sans text-slate-900 overflow-y-auto h-full p-6;
 }
 
 @utility tactical-page-map {
@@ -443,7 +553,7 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-container {
-  @apply w-full;
+  @apply max-w-7xl mx-auto px-6 py-6 lg:px-8 lg:py-8 space-y-6 w-full;
 }
 
 @utility tactical-header {
@@ -451,7 +561,7 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-title {
-  @apply text-2xl font-bold text-gray-900;
+  @apply text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-4;
 }
 
 @utility tactical-subtitle {
@@ -527,7 +637,8 @@ header [class*="CustomDropdown"] * {
 }
 
 .apexcharts-tooltip.apexcharts-theme-light {
-  @apply gap-1 !rounded-lg !border-gray-200 p-3 !shadow-theme-sm dark:!border-gray-800 dark:!bg-gray-900;
+  @apply gap-1 !rounded-lg !border-gray-200 p-3 dark:!border-gray-800 dark:!bg-gray-900;
+  box-shadow: var(--shadow-theme-sm) !important;
 }
 
 .apexcharts-tooltip-marker {
@@ -548,7 +659,8 @@ header [class*="CustomDropdown"] * {
   @apply !mb-0 !border-b-0 !bg-transparent !p-0 !text-[10px] !leading-4 !text-gray-800 dark:!text-white/90;
 }
 .apexcharts-tooltip-text {
-  @apply !text-theme-xs !text-gray-700 dark:!text-white/90;
+  @apply !text-gray-700 dark:!text-white/90;
+  font-size: var(--text-theme-xs) !important;
 }
 .apexcharts-tooltip-text-y-value {
   @apply !font-medium;
@@ -613,7 +725,8 @@ header [class*="CustomDropdown"] * {
   @apply w-full;
 }
 .flatpickr-calendar {
-  @apply mt-2 !bg-white !rounded-xl !p-5 !border !border-gray-200 !text-gray-500 dark:!bg-gray-dark dark:!border-gray-700 dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
+  @apply mt-2 !bg-white !rounded-xl !p-5 !border !border-gray-200 !text-gray-500 dark:!bg-gray-dark dark:!border-gray-700 dark:!text-gray-400 2xsm:!w-auto;
+  box-shadow: var(--shadow-theme-xl) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
@@ -643,11 +756,13 @@ header [class*="CustomDropdown"] * {
 }
 
 .flatpickr-weekday {
-  @apply !text-theme-sm !font-medium !text-gray-500 dark:!text-gray-400 !bg-transparent;
+  @apply !font-medium !text-gray-500 dark:!text-gray-400 !bg-transparent;
+  font-size: var(--text-theme-sm) !important;
 }
 
 .flatpickr-day {
-  @apply !flex !items-center !text-theme-sm !font-medium !text-gray-800 dark:!text-white/90 dark:hover:!border-gray-300 dark:hover:!bg-gray-900;
+  @apply !flex !items-center !font-medium !text-gray-800 dark:!text-white/90 dark:hover:!border-gray-300 dark:hover:!bg-gray-900;
+  font-size: var(--text-theme-sm) !important;
 }
 .flatpickr-day.nextMonthDay,
 .flatpickr-day.prevMonthDay {
@@ -696,7 +811,9 @@ span.flatpickr-weekday,
 }
 .flatpickr-day.inRange {
   box-shadow: -5px 0 0 #f9fafb, 5px 0 0 #f9fafb !important;
-  @apply dark:!shadow-datepicker;
+  &:is(.dark *) {
+    box-shadow: var(--shadow-datepicker) !important;
+  }
 }
 .flatpickr-day.inRange,
 .flatpickr-day.prevMonthDay.inRange,
@@ -935,7 +1052,8 @@ span.flatpickr-weekday,
 
 .carouselThree .swiper-pagination-bullet,
 .carouselFour .swiper-pagination-bullet {
-  @apply !m-0 h-2.5 w-2.5 bg-white opacity-100 shadow-theme-xs duration-200 ease-in-out;
+  @apply !m-0 h-2.5 w-2.5 bg-white opacity-100 duration-200 ease-in-out;
+  box-shadow: var(--shadow-theme-xs);
 }
 
 .carouselThree .swiper-pagination-bullet-active,
@@ -1292,26 +1410,36 @@ span.flatpickr-weekday,
 }
 
 
-/* ── Tactical Command Design System v2.0 ────────────────────────────────── */
+/* ── Mission Control Design System v2.0 ─────────────────── */
 
-@utility tactical-page {
-  @apply min-h-screen bg-slate-50 font-jetbrains text-slate-900;
+@utility mc-tile {
+  @apply bg-surface-container-low border border-outline-variant-mc flex flex-col;
+  padding: var(--spacing-margin);
+  gap: var(--spacing-stack-md);
 }
 
-@utility tactical-container {
-  @apply max-w-7xl mx-auto px-6 py-6 lg:px-8 lg:py-8 space-y-6;
+@utility mc-input {
+  @apply bg-surface-container-lowest border border-outline-variant-mc p-3 rounded font-bold focus:border-primary-mc focus:ring-0 outline-none transition-all;
+  font-size: var(--text-body-base);
 }
 
-@utility tactical-header {
-  @apply relative mb-12;
+@utility mc-label {
+  @apply uppercase text-on-surface-variant mb-1 block;
+  font-size: var(--text-label-caps);
 }
 
-@utility tactical-title {
-  @apply text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-4;
+@utility mc-table-th {
+  @apply pb-3 px-4 font-bold text-on-surface-variant uppercase border-b border-outline-variant-mc;
+  font-size: var(--text-label-caps);
 }
 
-@utility tactical-subtitle {
-  @apply text-slate-500 mt-3 text-sm font-medium max-w-2xl leading-relaxed;
+@utility mc-table-td {
+  @apply py-4 px-4 border-b border-outline-variant-mc/30;
+  font-size: var(--text-body-base);
+}
+
+@utility phone-frame {
+  @apply relative w-[280px] h-[560px] bg-black rounded-[40px] border-[6px] border-surface-variant overflow-hidden shadow-2xl;
 }
 
 @utility tactical-status-pill {
@@ -1324,10 +1452,6 @@ span.flatpickr-weekday,
 
 @utility tactical-grid {
   @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
-}
-
-@utility tactical-card {
-  @apply bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden;
 }
 
 @utility tactical-card-header {
