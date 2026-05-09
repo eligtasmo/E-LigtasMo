@@ -46,6 +46,9 @@ const UserManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [sortCol, setSortCol] = useState<string>('full_name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [updating, setUpdating] = useState(false);
   const [allBrgys, setAllBrgys] = useState<string[]>([]);
 
   const fetchUsers = async () => {
@@ -106,6 +109,31 @@ const UserManagement: React.FC = () => {
         toast.error(data.message || "Failed to delete resident");
       }
     } catch { toast.error("Connection error"); }
+  };
+  const handleEditUser = (u: User) => {
+    setEditData({ ...u, password: '' });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const res = await apiFetch("admin-update-user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Resident profile updated successfully");
+        setShowEditModal(false);
+        fetchUsers();
+      } else {
+        toast.error(data.message || "Failed to update profile");
+      }
+    } catch { toast.error("Connection error"); }
+    setUpdating(false);
   };
 
   const exportData = () => {
@@ -243,12 +271,7 @@ const UserManagement: React.FC = () => {
                     <td className="tactical-td text-gray-600">{u.username}</td>
                     <td className="tactical-td text-gray-600 lowercase">{u.email || '—'}</td>
                     <td className="tactical-td text-gray-600 tabular-nums">{u.contact_number || '—'}</td>
-                    {!isBrgy && <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>}
-                    <td className="tactical-td">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium capitalize ${statusStyle(u.status)}`}>
-                        {u.status}
-                      </span>
-                    </td>
+                    <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>
                     <td className="tactical-td text-gray-500 text-sm tabular-nums">
                       {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                     </td>
@@ -256,7 +279,7 @@ const UserManagement: React.FC = () => {
                       <div className="flex items-center justify-end gap-1">
                         <button 
                           className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                          onClick={() => toast('Profile editing coming in next tactical update')}
+                          onClick={() => handleEditUser(u)}
                         >
                           <FiEdit2 size={14} />
                         </button>
@@ -317,6 +340,108 @@ const UserManagement: React.FC = () => {
 
       </div>
 
+      {/* Edit Account Modal */}
+      {showEditModal && editData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-10">
+              <div className="flex justify-between items-center mb-10">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Edit Resident Profile</h2>
+                  <p className="text-xs font-semibold text-gray-400 mt-1">Update system credentials and sector assignment.</p>
+                </div>
+                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <FiX size={24} className="text-gray-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateUser} className="space-y-6">
+                <div>
+                  <label className="tactical-label">Full Name</label>
+                  <input 
+                    required
+                    className="tactical-input w-full"
+                    value={editData.full_name}
+                    onChange={e => setEditData({...editData, full_name: e.target.value})}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="tactical-label">Username</label>
+                    <input 
+                      disabled
+                      className="tactical-input w-full bg-gray-50 opacity-70 cursor-not-allowed"
+                      value={editData.username}
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Reset Password</label>
+                    <input 
+                      type="password"
+                      className="tactical-input w-full"
+                      value={editData.password || ''}
+                      onChange={e => setEditData({...editData, password: e.target.value})}
+                      placeholder="Leave blank to keep same"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="tactical-label">Resident Email</label>
+                    <input 
+                      required
+                      type="email"
+                      className="tactical-input w-full"
+                      value={editData.email}
+                      onChange={e => setEditData({...editData, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Phone Number</label>
+                    <input 
+                      required
+                      className="tactical-input w-full"
+                      value={editData.contact_number}
+                      onChange={e => setEditData({...editData, contact_number: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="tactical-label">Barangay Assignment</label>
+                  <select 
+                    required
+                    className="tactical-input w-full appearance-none cursor-pointer pr-10"
+                    value={editData.brgy_name}
+                    onChange={e => setEditData({...editData, brgy_name: e.target.value})}
+                  >
+                    {brgys.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex gap-4 pt-8">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowEditModal(false)}
+                    className="tactical-button-ghost flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={updating}
+                    className="tactical-button-accent flex-1"
+                  >
+                    {updating ? 'Updating...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

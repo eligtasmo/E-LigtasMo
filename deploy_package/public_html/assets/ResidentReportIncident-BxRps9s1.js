@@ -1,0 +1,1 @@
+import{r as e,j as c,K as a}from"./index-eSyO5apf.js";const i=()=>{const[t,s]=e.useState(!1),[r,n]=e.useState(null);return c.jsx(a,{showReceipt:t,setShowReceipt:s,referenceId:r,setReferenceId:o=>n(o)})};export{i as default};
