@@ -130,6 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.success) {
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token);
+        }
         setUser({
           id: data.user_id,
           username,
@@ -142,7 +145,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           province: data.province,
           contact_number: data.contact_number,
           gender: data.gender,
-          preferred_vehicle: data.preferred_vehicle ?? null
+          preferred_vehicle: data.preferred_vehicle ?? null,
+          access_token: data.access_token
         });
         
         // Log successful login

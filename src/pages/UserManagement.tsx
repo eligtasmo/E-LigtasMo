@@ -114,13 +114,12 @@ const UserManagement: React.FC = () => {
   const handleApproveAction = async (userId: number, action: 'approve' | 'reject') => {
     if (!window.confirm(`Are you sure you want to ${action} this account?`)) return;
     try {
-      const res = await fetch("/api/approve-brgy-account.php", {
+      const response = await apiFetch("approve-brgy-account.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, action }),
-        credentials: "include"
       });
-      const data = await res.json();
+      const data = await response.json();
       if (data.success) {
         toast.success(`Account ${action}ed`);
         fetchUsers();
