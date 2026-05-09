@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiPhone, FiPlus, FiTrash2, FiEdit2, FiSearch, FiRefreshCw, FiX, FiChevronLeft, FiChevronRight, FiMoreHorizontal } from 'react-icons/fi';
+import { FiPhone, FiPlus, FiTrash2, FiEdit2, FiSearch, FiRefreshCw, FiX, FiChevronLeft, FiChevronRight, FiUsers, FiShield, FiActivity, FiMapPin } from 'react-icons/fi';
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { toast } from 'react-hot-toast';
+import PageMeta from '../components/common/PageMeta';
 
 interface Contact {
   id: number; category: string; number: string; description: string;
@@ -11,19 +12,7 @@ interface Contact {
 }
 
 const CATEGORIES = ["Police", "Fire", "Medical/Health", "Rescue/DRRMO", "Coast/Water", "Emergency/911", "Barangay Coordinator", "Other"];
-const PAGE_SIZE = 10;
-
-const SortIcon = () => (
-  <svg className="inline ml-1 w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
-  </svg>
-);
-
-const priorityStyle = (p: string) => {
-  if (p === 'Critical') return 'bg-[#fef2f2] text-[#991b1b]';
-  if (p === 'High') return 'bg-[#fffbeb] text-[#92400e]';
-  return 'bg-[#f3f4f6] text-[#374151]';
-};
+const PAGE_SIZE = 12;
 
 const TacticalContactManager = () => {
   const { user } = useAuth();
@@ -38,7 +27,6 @@ const TacticalContactManager = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [formData, setFormData] = useState({ category: 'Police', number: '', description: '', type: 'Emergency', priority: 'Normal', image_url: '', created_brgy: isAdmin ? '' : (brgyName || '') });
 
   const loadContacts = async () => {
@@ -78,30 +66,27 @@ const TacticalContactManager = () => {
     e.preventDefault();
     try {
       const endpoint = isEditing ? 'contacts-update.php' : 'contacts-add.php';
-      const payload = { 
-        ...formData, 
-        id: currentId, 
-        created_brgy: formData.created_brgy || null,
-        created_by: user?.username 
-      };
+      const payload = { ...formData, id: currentId, created_by: user?.username };
       const res = await apiFetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const result = await res.json();
-      if (result.id || result.success) { toast.success(isEditing ? 'Updated' : 'Contact added'); setShowModal(false); loadContacts(); }
-      else toast.error(result.error || 'Failed');
-    } catch { toast.error('Network error'); }
+      if (result.success) { 
+        toast.success(isEditing ? 'Protocol Updated' : 'Asset Deployed'); 
+        setShowModal(false); 
+        loadContacts(); 
+      } else toast.error(result.message || 'Transmission Failed');
+    } catch { toast.error('Comms Error'); }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Remove this contact?')) return;
+    if (!confirm('Decommission this asset?')) return;
     try {
       const res = await apiFetch('contacts-delete.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
       const result = await res.json();
-      if (result.success) { toast.success('Removed'); loadContacts(); }
-    } catch { toast.error('Failed'); }
+      if (result.success) { toast.success('Asset Decommissioned'); loadContacts(); }
+    } catch { toast.error('Deletion Failed'); }
   };
 
   const filtered = useMemo(() => contacts.filter(c => {
-    if (!c) return false;
     const s = searchTerm.toLowerCase();
     return (c.category.toLowerCase().includes(s) || c.number.includes(s) || (c.description || '').toLowerCase().includes(s))
       && (filterCategory === 'All' || c.category === filterCategory);
@@ -110,221 +95,199 @@ const TacticalContactManager = () => {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const toggleSelect = (id: number) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const allOnPage = paginated.length > 0 && paginated.every(c => selected.has(c.id));
-  const toggleAll = () => {
-    if (allOnPage) { const n = new Set(selected); paginated.forEach(c => n.delete(c.id)); setSelected(n); }
-    else { const n = new Set(selected); paginated.forEach(c => n.add(c.id)); setSelected(n); }
-  };
-
-  const counts = useMemo(() => ({
-    all: contacts.length,
-    emergency: contacts.filter(c => c.type === 'Emergency').length,
-    global: contacts.filter(c => !c.created_brgy).length,
-    local: contacts.filter(c => !!c.created_brgy).length,
-  }), [contacts]);
-
-  const statCards = [
-    { label: 'Total Contacts', value: counts.all, dot: '#6366f1' },
-    { label: 'Emergency', value: counts.emergency, dot: '#ef4444' },
-    { label: 'Global', value: counts.global, dot: '#3b82f6' },
-    { label: 'Local Sector', value: counts.local, dot: '#10b981' },
-  ];
+  const stats = useMemo(() => [
+    { label: 'Tactical Assets', value: contacts.length, icon: <FiUsers className="text-blue-500" /> },
+    { label: 'Emergency Nodes', value: contacts.filter(c => c.type === 'Emergency').length, icon: <FiShield className="text-red-500" /> },
+    { label: 'Operational Reach', value: 'Global', icon: <FiMapPin className="text-green-500" /> },
+    { label: 'Sync Status', value: 'Active', icon: <FiRefreshCw className="text-orange-500 animate-spin-slow" /> },
+  ], [contacts]);
 
   return (
-    <div className="tactical-page">
-      <div className="tactical-container">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-8 font-['Outfit']">
+      <PageMeta title="Tactical Directory | E-LigtasMo" />
+      
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        
+        {/* Tactical Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Agency & Coordination Directory</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{isAdmin ? 'Official directory for emergency agencies, sector partners, and inter-agency coordination.' : `${brgyName} tactical directory for agency partners.`}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <h1 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Asset Intelligence</h1>
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Mission Control Directory</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={loadContacts} className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-500 hover:bg-gray-50 transition-colors">
-              <FiRefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-            </button>
-            <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-black transition-colors shadow-sm">
-              <FiPlus size={14} /> Add Contact
-            </button>
+          
+          <div className="flex items-center gap-3">
+             <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input 
+                  type="text" 
+                  placeholder="Search assets..." 
+                  className="pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/20 outline-none w-64 transition-all"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+             </div>
+             <button onClick={handleOpenAdd} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-slate-900/10">
+               <FiPlus size={14} /> Register Asset
+             </button>
           </div>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {statCards.map(s => (
-            <div key={s.label} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: s.dot }} />
-                <span className="text-xs text-gray-500">{s.label}</span>
-              </div>
-              <div className="text-2xl font-bold text-gray-900">{s.value}</div>
+        {/* Tactical Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map(s => (
+            <div key={s.label} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+               <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl shadow-inner">
+                 {s.icon}
+               </div>
+               <div>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{s.label}</p>
+                 <p className="text-xl font-black text-slate-800">{s.value}</p>
+               </div>
             </div>
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
-            <input type="text" placeholder="Search by category, number, or description..."
-              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 transition-all"
-              value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} />
-          </div>
-          <select className="px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none appearance-none min-w-[160px] cursor-pointer"
-            value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
-            <option value="All">All Categories</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-
-        {/* Table */}
-        <div className="tactical-table-wrapper">
-          <div className="overflow-x-auto">
-            <table className="tactical-table">
-              <thead>
-                <tr>
-                  <th className="tactical-th" style={{ width: 40 }}>
-                    <input type="checkbox" checked={allOnPage} onChange={toggleAll} className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer" />
-                  </th>
-                  {['Contact', 'Number', 'Type', 'Priority', 'Sector', 'Description'].map(h => (
-                    <th key={h} className="tactical-th">{h}<SortIcon /></th>
-                  ))}
-                  <th className="tactical-th text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={8} className="tactical-td"><div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" /></td></tr>
-                )) : paginated.length === 0 ? (
-                  <tr><td colSpan={8} className="tactical-td py-20 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <FiPhone size={32} className="text-gray-200" />
-                      <span className="text-sm text-gray-400">No contacts found</span>
+        {/* Directory Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white h-48 rounded-3xl border border-slate-100 animate-pulse" />
+            ))
+          ) : paginated.map(c => (
+            <div key={c.id} className="group bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all overflow-hidden relative">
+               <div className="p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${c.type === 'Emergency' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                      {c.type}
                     </div>
-                  </td></tr>
-                ) : paginated.map(c => (
-                  <tr key={c.id} className={`group transition-colors ${selected.has(c.id) ? 'bg-[#f5f3ff]' : 'hover:bg-[#f9fafb]'}`}>
-                    <td className="tactical-td" style={{ width: 40 }}>
-                      <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border-gray-300 accent-gray-900 cursor-pointer" />
-                    </td>
-                    <td className="tactical-td">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
-                          {c.image_url ? (
-                            <img src={c.image_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <FiPhone size={12} className="text-gray-400" />
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-900 leading-none mb-1">{c.category}</span>
-                          <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">{c.type || 'Contact'}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="tactical-td">
-                      <div className="flex items-center gap-2">
-                        <FiPhone size={12} className="text-gray-400" />
-                        <span className="font-semibold tabular-nums">{c.number}</span>
-                      </div>
-                    </td>
-                    <td className="tactical-td text-gray-600">{c.type || '—'}</td>
-                    <td className="tactical-td">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityStyle(c.priority)}`}>{c.priority || 'Normal'}</span>
-                    </td>
-                    <td className="tactical-td text-gray-600">{c.created_brgy || 'Global'}</td>
-                    <td className="tactical-td text-gray-500 max-w-[200px]"><span className="truncate block">{c.description || '—'}</span></td>
-                    <td className="tactical-td text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleOpenEdit(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors"><FiEdit2 size={14} /></button>
-                        <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"><FiTrash2 size={14} /></button>
-                        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><FiMoreHorizontal size={14} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-white">
-            <span className="text-sm text-gray-500">Showing <span className="font-medium text-gray-700">{filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span> of <span className="font-medium text-gray-700">{filtered.length}</span> contacts</span>
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"><FiChevronLeft size={14} /> Previous</button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => { const p = i + 1; if (p > totalPages) return null; return <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === p ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>{p}</button>; })}
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors">Next <FiChevronRight size={14} /></button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleOpenEdit(c)} className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-blue-500 transition-colors"><FiEdit2 size={12} /></button>
+                      <button onClick={() => handleDelete(c.id)} className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 transition-colors"><FiTrash2 size={12} /></button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 overflow-hidden shrink-0">
+                      {c.image_url ? (
+                        <img src={c.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <FiPhone size={20} className="text-slate-300" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-slate-800 text-sm truncate uppercase tracking-tight">{c.category}</h3>
+                      <p className="text-lg font-black text-blue-600 tabular-nums">{c.number}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] font-bold text-slate-400 line-clamp-2 h-8 leading-relaxed mb-4">
+                    {c.description || 'No operational brief available for this asset.'}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{c.created_brgy || 'Global Sector'}</span>
+                    <div className={`w-2 h-2 rounded-full ${c.priority === 'Critical' ? 'bg-red-500' : c.priority === 'High' ? 'bg-orange-500' : 'bg-slate-300'}`} title={`Priority: ${c.priority}`} />
+                  </div>
+               </div>
             </div>
-          </div>
+          ))}
         </div>
 
-        {/* Bulk action bar */}
-        {selected.size > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-white border border-gray-200 rounded-2xl shadow-xl animate-in slide-in-from-bottom duration-200">
-            <span className="text-sm font-semibold text-gray-700">{selected.size} selected</span>
-            <div className="w-px h-4 bg-gray-200" />
-            <button onClick={() => setSelected(new Set())} className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors">✕</button>
-          </div>
-        )}
+        {/* Pagination */}
+        <div className="flex items-center justify-between bg-white px-6 py-4 rounded-3xl border border-slate-100 shadow-sm">
+           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+             Nodes {filtered.length > 0 ? (page-1)*PAGE_SIZE + 1 : 0} - {Math.min(page*PAGE_SIZE, filtered.length)} / {filtered.length}
+           </span>
+           <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1}
+                className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all"
+              >
+                <FiChevronLeft size={16} />
+              </button>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page === totalPages}
+                className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all"
+              >
+                <FiChevronRight size={16} />
+              </button>
+           </div>
+        </div>
 
-        {/* Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-150 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-900">{isEditing ? 'Edit Contact' : 'Add Contact'}</h2>
-                <button onClick={() => setShowModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-all"><FiX size={15} /></button>
+      </div>
+
+      {/* Register Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-200">
+           <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl border border-white/50 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Asset Registration</p>
+                  <h2 className="text-xl font-black text-slate-800">{isEditing ? 'Modify Protocol' : 'Deploy New Asset'}</h2>
+                </div>
+                <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-white hover:text-slate-600 transition-all shadow-sm"><FiX size={18} /></button>
               </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              
+              <form onSubmit={handleSubmit} className="p-8 space-y-5">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Category</label>
-                    <select className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                    <select className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Number</label>
-                    <input type="text" required className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-all" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} placeholder="09xx..." />
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Contact Number</label>
+                    <input type="text" required className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} placeholder="09xx..." />
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Priority</label>
-                    <select className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
-                      <option value="Normal">Normal</option><option value="High">High</option><option value="Critical">Critical</option>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Threat Level (Priority)</label>
+                    <select className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
+                      <option value="Normal">NORMAL</option>
+                      <option value="High">HIGH</option>
+                      <option value="Critical">CRITICAL</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
-                    <select className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 appearance-none" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
-                      <option value="Emergency">Emergency</option><option value="Support">Support</option><option value="Information">Information</option>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Type</label>
+                    <select className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                      <option value="Emergency">EMERGENCY</option>
+                      <option value="Support">SUPPORT</option>
+                      <option value="Information">INFORMATION</option>
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Image URL (Icon/Logo)</label>
-                  <input type="text" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-all" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
+
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Identification (Image URL)</label>
+                  <input type="text" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all" value={formData.image_url} onChange={e => setFormData({ ...formData, image_url: e.target.value })} placeholder="https://..." />
                 </div>
-                {isAdmin && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1.5">Barangay (Optional - Leave blank for Global)</label>
-                    <input type="text" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 transition-all" value={formData.created_brgy || ''} onChange={e => setFormData({ ...formData, created_brgy: e.target.value })} placeholder="Barangay Name" />
-                  </div>
-                )}
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Description</label>
-                  <textarea className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 h-20 resize-none transition-all" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional details..." />
+
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Operational Brief (Description)</label>
+                  <textarea className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-600 outline-none focus:border-blue-500 transition-all h-24 resize-none" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Details on agency scope and protocols..." />
                 </div>
-                <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all">Cancel</button>
-                  <button type="submit" className="flex-1 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-black transition-all">{isEditing ? 'Update' : 'Add Contact'}</button>
-                </div>
+
+                <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98]">
+                  {isEditing ? 'Confirm Protocol Update' : 'Finalize Deployment'}
+                </button>
               </form>
-            </div>
-          </div>
-        )}
-      </div>
+           </div>
+        </div>
+      )}
+
+      <style>{`
+        .animate-spin-slow { animation: spin 3s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

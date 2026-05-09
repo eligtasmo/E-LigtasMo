@@ -24,10 +24,11 @@ const NotificationsScreen = ({ navigation }) => {
     try {
       const session = await AsyncStorage.getItem('CURRENT_USER');
       const user = session ? JSON.parse(session) : {};
+      const userId = user.id || 0;
+      const brgy = user.brgy_name || user.barangay || '';
+      const role = (user.role || 'resident').toLowerCase();
       
-      const response = await fetch(`${API_URL}/list-notifications.php?audience=all`, {
-        headers: { 'X-Role': user.role || 'guest' },
-      });
+      const response = await fetch(`${API_URL}/list-notifications.php?audience=${role === 'resident' ? 'residents' : 'barangay'}&user_id=${userId}&brgy=${encodeURIComponent(brgy)}`);
       const data = await response.json();
       setNotifications(data?.success ? data.notifications : []);
     } catch (error) {

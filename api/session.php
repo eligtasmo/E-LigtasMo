@@ -39,7 +39,7 @@ if ($connError !== null) {
     try { $res = $pdo->query("SHOW COLUMNS FROM users LIKE 'preferred_vehicle'"); $hasPref = $res && $res->rowCount() > 0; } catch (Exception $e) { $hasPref = false; }
 
     if ($hasPref) {
-        $stmt = $pdo->prepare("SELECT username, email, full_name, brgy_name, city, province, contact_number, preferred_vehicle FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT username, email, full_name, brgy_name, city, province, contact_number, preferred_vehicle, lat, lng FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $username = $row['username'] ?? null;
@@ -50,8 +50,10 @@ if ($connError !== null) {
         $province = $row['province'] ?? null;
         $contact_number = $row['contact_number'] ?? null;
         $preferred_vehicle = $row['preferred_vehicle'] ?? null;
+        $lat = $row['lat'] ?? null;
+        $lng = $row['lng'] ?? null;
     } else {
-        $stmt = $pdo->prepare("SELECT username, email, full_name, brgy_name, city, province, contact_number FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT username, email, full_name, brgy_name, city, province, contact_number, lat, lng FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $username = $row['username'] ?? null;
@@ -62,6 +64,8 @@ if ($connError !== null) {
         $province = $row['province'] ?? null;
         $contact_number = $row['contact_number'] ?? null;
         $preferred_vehicle = null;
+        $lat = $row['lat'] ?? null;
+        $lng = $row['lng'] ?? null;
     }
 
     $roleOut = ($payload['role'] ?? ($_SESSION['role'] ?? null));

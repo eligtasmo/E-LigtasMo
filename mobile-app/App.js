@@ -9,6 +9,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
@@ -68,6 +71,52 @@ import CurvedTabBar from './src/components/CurvedTabBar';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      console.warn('Failed to get push token for push notification!');
+      return;
+    }
+    try {
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      if (!projectId) {
+         console.warn('Project ID not found in expo config');
+      }
+      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    } catch (e) {
+      console.warn('Error fetching push token:', e);
+    }
+  } else {
+    console.warn('Must use physical device for Push Notifications');
+  }
+
+  return token;
+}
 
 // --- DRAWER WRAPPERS ---
 function ResidentDrawer() {
@@ -497,6 +546,23 @@ const linking = {
 const NavigationContent = ({ initialNavState, linking }) => {
   const { user, isLoading } = useAuth();
   
+  React.useEffect(() => {
+    if (user && user.id) {
+      registerForPushNotificationsAsync().then(token => {
+        if (token) {
+          console.log('[Push] Registered Token:', token);
+          // Update on server
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://eligtasmo.site/api';
+          fetch(`${apiUrl}/update-push-token.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ push_token: token })
+          }).catch(err => console.error('[Push] Update failed:', err));
+        }
+      });
+    }
+  }, [user]);
+
   if (isLoading) return <LandingScreen />;
 
   return (

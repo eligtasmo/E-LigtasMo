@@ -29,17 +29,17 @@ class SMSService {
         // Remove non-numeric characters
         $number = preg_replace('/[^0-9]/', '', $number);
         
-        // Convert 09XXXXXXXXX to 639XXXXXXXXX
-        if (substr($number, 0, 2) === '09' && strlen($number) === 11) {
-            $number = '63' . substr($number, 1);
+        // Strictly validate: must be exactly 11 digits and start with 09
+        if (strlen($number) === 11 && substr($number, 0, 2) === '09') {
+            return '63' . substr($number, 1);
         }
-        // Convert 9XXXXXXXXX to 639XXXXXXXXX
-        elseif (substr($number, 0, 1) === '9' && strlen($number) === 10) {
-            $number = '63' . $number;
-        }
-        // If already 639XXXXXXXXX, keep it
         
-        return $number;
+        // If it already starts with 639 and is 12 digits
+        if (strlen($number) === 12 && substr($number, 0, 3) === '639') {
+            return $number;
+        }
+
+        return null; // Invalid number
     }
 
     /**
@@ -59,8 +59,8 @@ class SMSService {
             $numbers = explode(',', $numbers);
         }
 
-        // Normalize all numbers to 639... format
-        $normalizedNumbers = array_map([self::class, 'normalize'], $numbers);
+        // Normalize all numbers to 639... format and filter out invalid ones
+        $normalizedNumbers = array_filter(array_map([self::class, 'normalize'], $numbers));
         $recipientString = implode(',', $normalizedNumbers);
 
         $ch = curl_init();

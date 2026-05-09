@@ -12,7 +12,7 @@ function ensure_notifications_table($pdo) {
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     type ENUM('info','warning','success','error') NOT NULL DEFAULT 'info',
-    audience ENUM('all','residents','barangay') NOT NULL DEFAULT 'all',
+    audience ENUM('all','residents','barangay','brgy_specific') NOT NULL DEFAULT 'all',
     category VARCHAR(50) DEFAULT 'general',
     external_link TEXT NULL,
     is_urgent TINYINT(1) DEFAULT 0,

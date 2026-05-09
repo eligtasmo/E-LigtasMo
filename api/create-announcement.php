@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 require_once 'db.php';
 require_once 'rbac.php';
 require_once 'sms_helper.php';
+require_once 'push_helper.php';
 
 require_permission('alerts.manage');
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
@@ -30,7 +31,7 @@ function ensure_announcements_table($pdo) {
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     type ENUM('info','warning','success','error') NOT NULL DEFAULT 'info',
-    audience ENUM('all','residents','barangay') NOT NULL DEFAULT 'all',
+    audience ENUM('all','residents','barangay','brgy_specific') NOT NULL DEFAULT 'all',
     category VARCHAR(50) DEFAULT 'general',
     external_link TEXT NULL,
     is_urgent TINYINT(1) DEFAULT 0,
@@ -63,6 +64,7 @@ try {
   $external_link = isset($data['external_link']) ? trim($data['external_link']) : null;
   $is_urgent = isset($data['is_urgent']) ? (int)$data['is_urgent'] : 0;
   $also_send_sms = isset($data['also_send_sms']) ? (bool)$data['also_send_sms'] : false;
+  $send_push = isset($data['sendPush']) ? (bool)$data['sendPush'] : false;
   $created_by = current_user_id_from_context();
 
   if ($title === '' || $message === '') {
@@ -71,53 +73,73 @@ try {
     exit;
   }
   
+  // Insert into announcements
   $stmt = $pdo->prepare('INSERT INTO announcements (title, message, type, audience, brgy_name, category, external_link, is_urgent, created_by, sms_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   $stmt->execute([$title, $message, $type, $audience, $brgy_name, $category, $external_link, $is_urgent, $created_by, $sms_message_raw]);
-  $id = intval($pdo->lastInsertId());
+  $ann_id = intval($pdo->lastInsertId());
+
+  // Dual-insert into notifications for mobile app history
+  $notif_stmt = $pdo->prepare('INSERT INTO notifications (title, message, type, audience, brgy_name, category, external_link, is_urgent, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  $notif_stmt->execute([$title, $message, $type, $audience, $brgy_name, $category, $external_link, $is_urgent, $created_by]);
 
   $sms_count = 0;
-  if ($also_send_sms) {
-    $numbers = [];
-    $sms_msg = $sms_message_raw ?: "[$type] $title: $message";
-    
-    // We don't truncate here because SMSService::send handles multi-part if needed, 
-    // but usually, it's better to keep it clean.
-    // The user provided logic for limits, so we trust the input.
+  $push_count = 0;
 
-    // Audience logic for SMS targeting
-    if ($audience === 'all') {
-        $nStmt = $pdo->query("SELECT contact_number FROM users WHERE contact_number IS NOT NULL AND contact_number != ''");
-        $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
-    } elseif ($audience === 'residents') {
-        $nStmt = $pdo->query("SELECT contact_number FROM users WHERE role = 'resident' AND contact_number IS NOT NULL AND contact_number != ''");
-        $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
-    } elseif ($audience === 'barangay') {
-        // If it's a barangay broadcast, get everyone in that barangay
-        if ($brgy_name && $brgy_name !== 'Global') {
-            $nStmt = $pdo->prepare("SELECT contact_number FROM users WHERE brgy_name = ? AND contact_number IS NOT NULL AND contact_number != ''");
-            $nStmt->execute([$brgy_name]);
-            $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
-        } else {
-            // All barangay officials
-            $nStmt = $pdo->query("SELECT contact_number FROM users WHERE role IN ('brgy', 'brgy_chair') AND contact_number IS NOT NULL AND contact_number != ''");
-            $numbers = $nStmt->fetchAll(PDO::FETCH_COLUMN);
-        }
-    }
+  // Audience filtering logic
+  $audience_filters = "1=1";
+  $audience_params = [];
 
-    if (!empty($numbers)) {
-        // Remove duplicates and empty values
-        $numbers = array_unique(array_filter($numbers));
-        $sms_res = SMSService::send($numbers, $sms_msg);
-        if ($sms_res['success']) {
-            $sms_count = count($numbers);
-            // Update the record with the actual SMS count sent
-            $upd = $pdo->prepare("UPDATE announcements SET sms_sent = ? WHERE id = ?");
-            $upd->execute([$sms_count, $id]);
-        }
-    }
+  if ($audience === 'residents') {
+      $audience_filters .= " AND role = 'resident'";
+  } elseif ($audience === 'barangay') {
+      $audience_filters .= " AND role IN ('brgy', 'brgy_chair')";
+  } elseif ($audience === 'brgy_specific') {
+      if ($brgy_name) {
+          $audience_filters .= " AND brgy_name = ?";
+          $audience_params[] = $brgy_name;
+      }
   }
 
-  echo json_encode(['success' => true, 'id' => $id, 'sms_sent' => $sms_count]);
+  // Handle SMS
+  if ($also_send_sms) {
+      $smsStmt = $pdo->prepare("SELECT contact_number FROM users WHERE contact_number IS NOT NULL AND contact_number != '' AND $audience_filters");
+      $smsStmt->execute($audience_params);
+      $numbers = $smsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+      if (!empty($numbers)) {
+          $sms_msg = $sms_message_raw ?: "[$category] $title: $message";
+          $numbers = array_unique(array_filter($numbers));
+          $sms_res = SMSService::send($numbers, $sms_msg);
+          if ($sms_res['success']) {
+              $sms_count = count($numbers);
+              $upd = $pdo->prepare("UPDATE announcements SET sms_sent = ? WHERE id = ?");
+              $upd->execute([$sms_count, $ann_id]);
+          }
+      }
+  }
+
+  // Handle Push Notifications
+  if ($send_push) {
+      $pushStmt = $pdo->prepare("SELECT push_token FROM users WHERE push_token IS NOT NULL AND push_token != '' AND $audience_filters");
+      $pushStmt->execute($audience_params);
+      $tokens = $pushStmt->fetchAll(PDO::FETCH_COLUMN);
+
+      if (!empty($tokens)) {
+          $tokens = array_unique(array_filter($tokens));
+          $push_res = PushService::send($tokens, $title, $message, ['id' => $ann_id, 'type' => 'announcement']);
+          if ($push_res['success']) {
+              $push_count = count($tokens);
+          }
+      }
+  }
+
+  echo json_encode([
+      'success' => true, 
+      'id' => $ann_id, 
+      'sms_sent' => $sms_count, 
+      'push_sent' => $push_count
+  ]);
+
 } catch (Exception $e) {
   http_response_code(500);
   echo json_encode(['success' => false, 'message' => $e->getMessage()]);

@@ -182,10 +182,17 @@ const HomeScreen = ({ navigation }) => {
 
   const loadAnnouncements = async () => {
     try {
+      const session = await AuthService.checkSession();
+      const userId = session?.id || 0;
+      const brgy = session?.brgy_name || session?.barangay || '';
+      const role = (session?.role || 'resident').toLowerCase();
+
+      // Fetch both targeted notifications and general announcements
       const [notifRes, annRes] = await Promise.all([
-        fetch(`${API_URL}/list-notifications.php?audience=all`, { headers: { 'X-Token': 'RESCUE_PH_TOKEN' } }),
-        fetch(`${API_URL}/list-announcements.php?limit=10`, { headers: { 'X-Token': 'RESCUE_PH_TOKEN' } })
+        fetch(`${API_URL}/list-notifications.php?audience=${role === 'resident' ? 'residents' : 'barangay'}&user_id=${userId}&brgy=${encodeURIComponent(brgy)}`),
+        fetch(`${API_URL}/list-announcements.php?limit=10`)
       ]);
+      
       const notifData = await notifRes.json();
       const annData = await annRes.json();
 
@@ -197,15 +204,17 @@ const HomeScreen = ({ navigation }) => {
         combined = [...combined, ...annData.announcements.map(a => ({ ...a, _source: 'news' }))];
       }
 
+      // De-duplicate if same ID exists in both (unlikely but safe)
+      const seen = new Set();
+      combined = combined.filter(item => {
+        const key = `${item._source}-${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
       combined.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
       setAnnouncements(combined);
-
-      // Check for urgent ones (is_urgent === 1 or alert type)
-      // const urgent = combined.find(a => (a.is_urgent === 1 || a._source === 'alert') && a.status !== 'archived');
-      // if (urgent) {
-      //   setUrgentAnnouncement(urgent);
-      //   setShowUrgentModal(true);
-      // }
     } catch (error) {
       console.error('Error loading announcements:', error);
     }
