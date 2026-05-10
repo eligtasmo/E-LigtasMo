@@ -7,24 +7,18 @@ require_once __DIR__ . '/rbac.php';
 require_permission('users.manage');
 
 $raw = file_get_contents("php://input");
-$data = json_decode($raw, true);
-
-if (!$data || empty($data['brgy_name']) || empty($data['first_name']) || empty($data['last_name'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Missing required fields (First Name, Last Name, Barangay).']);
-    exit;
-}
+$data = json_decode($raw, true) ?? [];
 
 try {
     // Check if invites table exists
     $pdo->exec("CREATE TABLE IF NOT EXISTS registration_invites (
         id INT AUTO_INCREMENT PRIMARY KEY,
         token VARCHAR(100) UNIQUE NOT NULL,
-        first_name VARCHAR(100) NOT NULL,
-        last_name VARCHAR(100) NOT NULL,
-        email VARCHAR(255),
-        contact_number VARCHAR(20),
-        brgy_name VARCHAR(100) NOT NULL,
+        first_name VARCHAR(100) NULL,
+        last_name VARCHAR(100) NULL,
+        email VARCHAR(255) NULL,
+        contact_number VARCHAR(20) NULL,
+        brgy_name VARCHAR(100) NULL,
         role VARCHAR(20) DEFAULT 'brgy',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         expires_at DATETIME,
@@ -37,11 +31,11 @@ try {
     $stmt = $pdo->prepare("INSERT INTO registration_invites (token, first_name, last_name, email, contact_number, brgy_name, role, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $token,
-        $data['first_name'],
-        $data['last_name'],
+        $data['first_name'] ?? null,
+        $data['last_name'] ?? null,
         $data['email'] ?? null,
         $data['contact_number'] ?? null,
-        $data['brgy_name'],
+        $data['brgy_name'] ?? null,
         $data['role'] ?? 'brgy',
         $expires_at
     ]);

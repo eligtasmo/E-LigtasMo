@@ -152,11 +152,6 @@ const BrgyAccountManagement: React.FC = () => {
   const handleGenerateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!createData.first_name.trim() || !createData.last_name.trim() || !createData.brgy_name) {
-      toast.error("First Name, Last Name, and Barangay are required");
-      return;
-    }
-
     setCreating(true);
     try {
       const res = await apiFetch("admin-create-invite.php", {
@@ -431,103 +426,38 @@ const BrgyAccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleGenerateInvite} className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">01. Identity Profile</span>
-                    <div className="h-px flex-1 bg-slate-100"></div>
+              <div className="space-y-8">
+                <div className="bg-slate-50 rounded-[24px] p-8 border border-slate-100 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-6">
+                    <FiShield size={32} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">First Name</label>
-                      <input 
-                        required
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.first_name}
-                        onChange={e => setCreateData({...createData, first_name: e.target.value})}
-                        placeholder="Juan"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Last Name</label>
-                      <input 
-                        required
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.last_name}
-                        onChange={e => setCreateData({...createData, last_name: e.target.value})}
-                        placeholder="Dela Cruz"
-                      />
-                    </div>
-                  </div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Generate Mission Token</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed px-4">
+                    This will create a unique registration link. The official will be able to set their own name, barangay, and credentials privately.
+                  </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">02. Contact Information</span>
-                    <div className="h-px flex-1 bg-slate-100"></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Email Address</label>
-                      <input 
-                        required
-                        type="email"
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.email}
-                        onChange={e => setCreateData({...createData, email: e.target.value})}
-                        placeholder="brgy@eligtasmo.gov"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Phone Number</label>
-                      <input 
-                        required
-                        maxLength={11}
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.contact_number}
-                        onChange={e => setCreateData({...createData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
-                        placeholder="09123456789"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">03. Jurisdiction</span>
-                    <div className="h-px flex-1 bg-slate-100"></div>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Barangay Assignment</label>
-                    <select 
-                      required
-                      className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all appearance-none cursor-pointer pr-10 shadow-sm"
-                      value={createData.brgy_name}
-                      onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
-                    >
-                      <option value="">Select Sector...</option>
-                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-4">
                   <button 
                     type="button" 
                     onClick={() => setShowCreateModal(false)}
-                    className="flex-1 h-12 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 border border-transparent transition-all uppercase tracking-widest"
+                    className="flex-1 h-14 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest"
                   >
                     Cancel
                   </button>
                   <button 
-                    type="submit"
+                    onClick={handleGenerateInvite}
                     disabled={creating}
-                    className="flex-1 h-12 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-[0_8px_16px_-4px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_12px_20px_-4px_rgba(79,70,229,0.4)] transition-all uppercase tracking-widest disabled:opacity-50"
+                    className="flex-[2] h-14 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-[0_8px_16px_-4px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_12px_20px_-4px_rgba(79,70,229,0.4)] transition-all uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {creating ? 'Generating...' : 'Generate Invite Link'}
+                    {creating ? 'Generating...' : (
+                      <>
+                        Create Invite Link <FiPlus />
+                      </>
+                    )}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>

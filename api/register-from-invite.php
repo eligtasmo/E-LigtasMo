@@ -34,18 +34,30 @@ try {
         exit;
     }
 
-    // 3. Create user
+    // 3. Resolve identity and jurisdiction
+    $firstName = $invite['first_name'] ?? ($data['first_name'] ?? '');
+    $lastName = $invite['last_name'] ?? ($data['last_name'] ?? '');
+    $email = $invite['email'] ?? ($data['email'] ?? '');
+    $contact = $invite['contact_number'] ?? ($data['contact_number'] ?? '');
+    $brgyName = $invite['brgy_name'] ?? ($data['brgy_name'] ?? '');
+
+    if (empty($firstName) || empty($lastName) || empty($brgyName)) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Missing required fields (Name and Barangay).']);
+        exit;
+    }
+
+    $fullName = "$firstName, $lastName";
     $hashed = password_hash($data['password'], PASSWORD_DEFAULT);
-    $fullName = $invite['first_name'] . ', ' . $invite['last_name'];
     
     $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, brgy_name, email, contact_number, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', NOW())");
     $stmt->execute([
         $data['username'],
         $hashed,
         $fullName,
-        $invite['brgy_name'],
-        $invite['email'],
-        $invite['contact_number'],
+        $brgyName,
+        $email,
+        $contact,
         $invite['role'],
     ]);
 
