@@ -138,12 +138,17 @@ const BrgyAccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = createData.contact_number.replace(/[^0-9]/g, '');
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('09')) {
+      toast.error("Please enter a valid 11-digit phone number starting with 09");
+      return;
+    }
     setCreating(true);
     try {
       const res = await apiFetch("admin-create-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createData),
+        body: JSON.stringify({ ...createData, contact_number: cleanPhone }),
       });
       const data = await res.json();
       if (data.success) {
@@ -165,12 +170,17 @@ const BrgyAccountManagement: React.FC = () => {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = editData.contact_number?.replace(/[^0-9]/g, '');
+    if (cleanPhone && (cleanPhone.length !== 11 || !cleanPhone.startsWith('09'))) {
+      toast.error("Please enter a valid 11-digit phone number starting with 09");
+      return;
+    }
     setUpdating(true);
     try {
       const res = await apiFetch("admin-update-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
+        body: JSON.stringify({ ...editData, contact_number: cleanPhone }),
       });
       const data = await res.json();
       if (data.success) {
@@ -441,9 +451,10 @@ const BrgyAccountManagement: React.FC = () => {
                     <label className="tactical-label">Phone Number</label>
                     <input 
                       required
+                      maxLength={11}
                       className="tactical-input w-full"
                       value={createData.contact_number}
-                      onChange={e => setCreateData({...createData, contact_number: e.target.value})}
+                      onChange={e => setCreateData({...createData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
                       placeholder="09123456789"
                     />
                   </div>
@@ -545,9 +556,10 @@ const BrgyAccountManagement: React.FC = () => {
                     <label className="tactical-label">Phone Number</label>
                     <input 
                       required
+                      maxLength={11}
                       className="tactical-input w-full"
                       value={editData.contact_number}
-                      onChange={e => setEditData({...editData, contact_number: e.target.value})}
+                      onChange={e => setEditData({...editData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
                     />
                   </div>
                 </div>

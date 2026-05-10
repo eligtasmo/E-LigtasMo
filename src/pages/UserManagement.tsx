@@ -58,7 +58,10 @@ const UserManagement: React.FC = () => {
       const res = await apiFetch(`list-users.php?status=&brgy=${encodeURIComponent(brgyParam)}`);
       if (!res.ok) { setLoading(false); return; }
       const data = await res.json();
-      if (data.success) setUsers(data.users);
+      if (data.success) {
+        const residentsOnly = data.users.filter((u: any) => u.role === 'resident');
+        setUsers(residentsOnly);
+      }
     } catch { }
     setLoading(false);
   };
@@ -117,12 +120,17 @@ const UserManagement: React.FC = () => {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = editData.contact_number?.replace(/[^0-9]/g, '');
+    if (cleanPhone && (cleanPhone.length !== 11 || !cleanPhone.startsWith('09'))) {
+      toast.error("Please enter a valid 11-digit phone number starting with 09");
+      return;
+    }
     setUpdating(true);
     try {
       const res = await apiFetch("admin-update-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
+        body: JSON.stringify({ ...editData, contact_number: cleanPhone }),
       });
       const data = await res.json();
       if (data.success) {
@@ -402,9 +410,10 @@ const UserManagement: React.FC = () => {
                     <label className="tactical-label">Phone Number</label>
                     <input 
                       required
+                      maxLength={11}
                       className="tactical-input w-full"
                       value={editData.contact_number}
-                      onChange={e => setEditData({...editData, contact_number: e.target.value})}
+                      onChange={e => setEditData({...editData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
                     />
                   </div>
                 </div>

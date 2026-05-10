@@ -37,13 +37,22 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
+// Validate & Standardize Phone Number (Fixed 09 format, 11 digits)
+$cleanPhone = preg_replace('/[^0-9]/', '', $contact_number);
+if (strlen($cleanPhone) !== 11 || substr($cleanPhone, 0, 2) !== '09') {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Please enter a valid 11-digit phone number starting with 09']);
+    exit;
+}
+$contact_number = $cleanPhone;
+
 try {
-    // Check if user already exists
-    $check = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-    $check->execute([$username, $email]);
+    // Check if user already exists (Check username, email, AND phone)
+    $check = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? OR contact_number = ?");
+    $check->execute([$username, $email, $contact_number]);
     if ($check->rowCount() > 0) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Username or Email already exists']);
+        echo json_encode(['success' => false, 'message' => 'Username, Email, or Phone Number already exists']);
         exit;
     }
 
