@@ -1,6 +1,4 @@
-<?php
 require_once __DIR__ . '/cors.php';
-require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/db.php';
 // session_boot removed as session_start is handled by cors.php
 ini_set('display_errors', 0);
@@ -99,23 +97,31 @@ if ($connError !== null) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, username, email, contact_number FROM users WHERE username = ? OR email = ? OR contact_number = ?");
-    $stmt->execute([$data['username'], $data['email'], $data['contact_number']]);
-    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($existing) {
-        $conflict = '';
-        if ($existing['username'] === $data['username']) $conflict = 'username';
-        elseif ($existing['email'] === $data['email']) $conflict = 'email address';
-        elseif ($existing['contact_number'] === $data['contact_number']) $conflict = 'phone number';
+    // Check for existing users more specifically to provide better feedback
+    $checks = [
+        'username' => $data['username'],
+        'email' => $data['email'],
+        'contact_number' => $data['contact_number']
+    ];
 
-        http_response_code(200);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Account already exists', 
-            'details' => "The $conflict you entered is already registered to another account."
-        ]);
-        exit;
+    foreach ($checks as $field => $value) {
+        if (!empty($value)) {
+            $stmt = $pdo->prepare("SELECT id, role FROM users WHERE $field = ? LIMIT 1");
+            $stmt->execute([$value]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($existing) {
+                $roleLabel = ($existing['role'] === 'resident') ? 'Resident' : 'Official/Admin';
+                http_response_code(200);
+                echo json_encode([
+                    'success' => false, 
+                    'code' => 'ALREADY_EXISTS',
+                    'message' => 'Account already exists', 
+                    'details' => "The " . str_replace('_', ' ', $field) . " you entered is already registered to an existing $roleLabel account."
+                ]);
+                exit;
+            }
+        }
     }
 } catch (Exception $e) {
     http_response_code(200);

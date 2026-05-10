@@ -11,6 +11,7 @@ import iconUrl from 'leaflet/dist/images/marker-icon.png';
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
 
 import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
+import { apiFetch } from '../../utils/api';
 
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -124,6 +125,25 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
   const [verifying, setVerifying] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const [dynamicBrgys, setDynamicBrgys] = useState<string[]>([]);
+
+  // Fetch barangays
+  useEffect(() => {
+    const fetchBrgys = async () => {
+      try {
+        const res = await apiFetch("list-barangays.php");
+        const data = await res.json();
+        if (data.success) {
+          const names = data.barangays.map((b: any) => b.name);
+          setDynamicBrgys(names);
+        }
+      } catch (err) {
+        console.error("Failed to fetch brgys:", err);
+      }
+    };
+    fetchBrgys();
+  }, []);
 
   // Cooldown timer
   useEffect(() => {
@@ -441,7 +461,7 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
                   <select name="brgy" value={form.brgy} onChange={handleChange} required
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
                     <option value="">Select Barangay</option>
-                    {brgys.map(b => <option key={b} value={b}>{b}</option>)}
+                    {(dynamicBrgys.length > 0 ? dynamicBrgys : brgys).map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 <div className="w-1/2">

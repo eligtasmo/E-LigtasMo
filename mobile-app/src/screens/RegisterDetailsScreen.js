@@ -44,7 +44,15 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
     province: 'Laguna',
   });
 
-  const [barangays, setBarangays] = useState([]);
+  const [barangays, setBarangays] = useState([
+    "Alipit", "Bagumbayan", "Bubukal", "Calios", "Duhat", 
+    "Gatid", "Jasaan", "Labuin", "Malinao", "Oogong", 
+    "Pagsawitan", "Palasan", "Patimbao", "Poblacion I", 
+    "Poblacion II", "Poblacion III", "Poblacion IV", "Poblacion V", 
+    "San Jose", "San Juan", "San Pablo Norte", "San Pablo Sur", 
+    "Santisima Cruz", "Santo Angel Central", "Santo Angel Norte", 
+    "Santo Angel Sur"
+  ]);
   const [brgyPickerVisible, setBrgyPickerVisible] = useState(false);
   const [brgyQuery, setBrgyQuery] = useState('');
 
@@ -56,7 +64,7 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
     try {
       const res = await fetch(`${API_URL}/list-barangays.php`);
       const data = await res.json();
-      if (data.success && data.barangays) {
+      if (data.success && data.barangays && data.barangays.length > 0) {
         setBarangays(data.barangays.map(b => b.name));
       }
     } catch (e) {
@@ -122,7 +130,9 @@ const RegisterDetailsScreen = ({ navigation, route }) => {
           { text: 'OK', onPress: () => navigation.replace('Login') }
         ]);
       } else {
-        setErrorText(result.message || 'Registration failed. Please try again.');
+        // Show detailed message if available, otherwise fallback
+        const msg = result.details || result.message || 'Registration failed. Please try again.';
+        setErrorText(msg);
       }
     } catch (error) {
       setErrorText('Network error. Please check your connection.');

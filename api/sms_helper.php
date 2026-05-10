@@ -12,7 +12,11 @@ class SMSService {
 
     private static function init() {
         if (self::$apiToken === null) {
-            self::$apiToken = getenv('PHILSMS_API_TOKEN') ?: ($_ENV['PHILSMS_API_TOKEN'] ?? ($_SERVER['PHILSMS_API_TOKEN'] ?? null));
+            $raw = getenv('PHILSMS_API_TOKEN') ?: ($_ENV['PHILSMS_API_TOKEN'] ?? ($_SERVER['PHILSMS_API_TOKEN'] ?? null));
+            self::$apiToken = $raw ? trim($raw) : null;
+            
+            // Critical Debug: Write raw token to see if it starts with "your"
+            file_put_contents(__DIR__ . '/token_debug.txt', "[" . date('Y-m-d H:i:s') . "] RAW TOKEN: " . self::$apiToken . "\n", FILE_APPEND);
         }
     }
 
@@ -67,46 +71,40 @@ class SMSService {
             return ['success' => false, 'message' => 'No valid recipients found'];
         }
 
-        $ch = curl_init();
+        $maskedToken = substr(self::$apiToken, 0, 4) . '...' . substr(self::$apiToken, -4);
         
-        // PhilSMS v3 expects 'recipient' as a string for single, or array for multiple
+        $senderId = getenv('PHILSMS_SENDER_ID') ?: ($_ENV['PHILSMS_SENDER_ID'] ?? 'PhilSMS');
+        
         $payload = [
-            'sender_id' => 'PhilSMS',
-            'type' => 'plain',
-            'message' => $message,
-            'recipient' => (count($normalizedNumbers) === 1) ? $normalizedNumbers[0] : $normalizedNumbers
+            'recipient' => implode(',', $normalizedNumbers),
+            'sender_id' => $senderId,
+            'type' => 'plain', // PhilSMS standard for SMS. If 'VOICE' appears, 'plain' may be the default fallback for unrecognized types on some accounts.
+            'message' => $message
         ];
         
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . self::$apiToken,
-            'Accept: application/json'
-        ];
+        $jsonPayload = json_encode($payload);
+        $safePayload = escapeshellarg($jsonPayload);
+        $safeToken = escapeshellarg(self::$apiToken);
         
-        curl_setopt($ch, CURLOPT_URL, 'https://dashboard.philsms.com/api/v3/sms/send');
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
-        $output = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-        
+        // Use system curl to bypass PHP library quirks which were causing Unauthenticated errors
+        $cmd = "curl -s -X POST https://dashboard.philsms.com/api/v3/sms/send " .
+               "-H \"Content-Type: application/json\" " .
+               "-H \"Accept: application/json\" " .
+               "-H \"Authorization: Bearer " . self::$apiToken . "\" " .
+               "-d $safePayload";
+               
+        $output = shell_exec($cmd);
         $response = json_decode($output, true);
         
+        $isOk = (isset($response['status']) && ($response['status'] === 'success' || $response['status'] === true));
+        
         // Tactical Logging
-        $maskedToken = substr(self::$apiToken, 0, 4) . '...' . substr(self::$apiToken, -4);
-        $logEntry = "[" . date('Y-m-d H:i:s') . "] TO: " . implode(',', $normalizedNumbers) . " | HTTP: $httpCode | ERR: $curlError | TOKEN: $maskedToken | RESP: $output\n";
+        $logEntry = "[" . date('Y-m-d H:i:s') . "] EXEC CURL TO: " . count($normalizedNumbers) . " | OK: " . ($isOk ? 'YES' : 'NO') . " | TOKEN: $maskedToken | RESP: $output\n";
         file_put_contents(__DIR__ . '/philsms_v3.log', $logEntry, FILE_APPEND);
 
-        $isSuccess = ($httpCode === 200 || $httpCode === 201 || (isset($response['status']) && ($response['status'] === 'success' || $response['status'] === true)));
-
         return [
-            'success' => $isSuccess,
+            'success' => $isOk,
             'data' => $response,
-            'http_code' => $httpCode,
             'recipients_count' => count($normalizedNumbers)
         ];
     }

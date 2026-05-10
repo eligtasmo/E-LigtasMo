@@ -40,7 +40,8 @@ try {
     $brgy = isset($_GET['brgy']) ? trim($_GET['brgy']) : null;
     $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
     
-    $sql = 'SELECT id, user_id, name, category, number, description, type, priority, created_by, created_brgy, created_at, updated_at FROM emergency_contacts';
+    // Use * or check columns to avoid crashes
+    $sql = 'SELECT * FROM emergency_contacts';
     $params = [];
     $where = [];
 

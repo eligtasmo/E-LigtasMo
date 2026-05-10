@@ -8,7 +8,8 @@ $status = [
     "mapbox_token" => isset($_ENV['EXPO_PUBLIC_MAPBOX_TOKEN']) ? "PRESENT (" . substr($_ENV['EXPO_PUBLIC_MAPBOX_TOKEN'], 0, 8) . "...)" : "MISSING",
     "server_ip" => $_SERVER['SERVER_ADDR'] ?? 'Unknown',
     "host" => $_SERVER['HTTP_HOST'] ?? 'Unknown',
-    "remote_ip" => $_SERVER['REMOTE_ADDR'] ?? 'Unknown'
+    "remote_ip" => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
+    "file_path" => __FILE__
 ];
 
 header('Content-Type: application/json');
