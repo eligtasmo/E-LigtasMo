@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import * as XLSX from 'xlsx';
-import { FiSearch, FiUsers, FiDownload, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiUserCheck, FiX, FiPlus, FiShield } from 'react-icons/fi';
+import { FiSearch, FiUsers, FiDownload, FiRefreshCw, FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2, FiUserCheck, FiX, FiPlus, FiShield, FiCopy } from 'react-icons/fi';
 import { useAuth } from "../context/AuthContext";
 import { toast } from 'react-hot-toast';
 import { apiFetch } from "../utils/api";
@@ -154,7 +154,7 @@ const BrgyAccountManagement: React.FC = () => {
 
     setCreating(true);
     try {
-      const res = await apiFetch("admin-create-invite.php", {
+      const res = await apiFetch("admin-generate-mission-token.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createData),
@@ -468,26 +468,27 @@ const BrgyAccountManagement: React.FC = () => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
             <div className="p-8 sm:p-12 text-center">
-              <div className="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-indigo-100">
                 <FiUserCheck size={40} />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Invite Ready</h2>
-              <p className="text-sm text-slate-500 mb-8 px-4">Send this link to the official. They can use it once to set up their private credentials.</p>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Mission Token Ready</h2>
+              <p className="text-sm text-slate-500 mb-8 px-4 font-medium">Send this secure link to the official. They can use it to privately activate their credentials.</p>
               
               <div className="relative mb-8 group">
                 <input 
                   readOnly
-                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-24 text-sm font-medium text-slate-600 focus:outline-none"
+                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-16 text-sm font-bold text-indigo-600 focus:outline-none shadow-inner"
                   value={inviteLink}
                 />
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(inviteLink);
-                    toast.success("Link copied to clipboard");
+                    toast.success("Mission token copied to clipboard");
                   }}
-                  className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all"
+                  className="absolute right-2 top-2 bottom-2 w-12 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-all shadow-md group-hover:scale-105"
+                  title="Copy to Clipboard"
                 >
-                  Copy
+                  <FiCopy size={18} />
                 </button>
               </div>
 
