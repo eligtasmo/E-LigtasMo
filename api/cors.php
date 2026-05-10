@@ -7,29 +7,13 @@
 
 // 1. Detect and Validate Origin
 $origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? null;
-// Explicitly trust primary mission domains
-$allowedOrigins = [
-    'https://eligtasmo.site',
-    'https://www.eligtasmo.site',
-    'http://localhost:5173',
-    'http://localhost:3000'
-];
-
-if ($origin) {
-    // Strip trailing slash if any
-    $origin = rtrim($origin, '/');
-    // If it's a subpath of eligtasmo.site, allow it
-    if (strpos($origin, 'eligtasmo.site') !== false) {
-        header("Access-Control-Allow-Origin: $origin");
-    } else if (in_array($origin, $allowedOrigins)) {
-        header("Access-Control-Allow-Origin: $origin");
-    } else {
-        // Fallback to primary domain for safety
-        header("Access-Control-Allow-Origin: https://eligtasmo.site");
-    }
-} else {
-    header("Access-Control-Allow-Origin: https://eligtasmo.site");
+if (!$origin || $origin === '*') {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $origin = "$protocol://" . ($_SERVER['HTTP_HOST'] ?? 'api.eligtasmo.site');
 }
+
+// 2. Broadcast Absolute CORS Policy
+header("Access-Control-Allow-Origin: $origin");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Token, X-Role, X-User-ID, Accept, Origin, Cookie");
 header("Access-Control-Expose-Headers: Content-Length, X-JSON, Set-Cookie");

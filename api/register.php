@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/cors.php';
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/session_boot.php';
+require_once __DIR__ . '/db.php';
+// session_boot removed as session_start is handled by cors.php
 ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ERROR | E_PARSE);
@@ -206,7 +207,7 @@ try {
     } else {
         echo json_encode(['success' => false, 'message' => 'Registration failed.']);
     }
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Registration failed.']);
+} catch (\Throwable $e) {
+    echo json_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
 }
 ?> 

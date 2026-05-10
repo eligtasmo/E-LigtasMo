@@ -74,8 +74,8 @@ try {
     $stmt->execute($params);
     $contacts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($contacts);
-} catch (Exception $e) {
-    http_response_code(200); // Return 200 with empty array if table doesn't exist yet
+} catch (\Throwable $e) {
+    http_response_code(200);
     echo json_encode([]);
 }
 ?>
