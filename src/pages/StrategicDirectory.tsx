@@ -96,7 +96,7 @@ const StrategicDirectory = () => {
       type: 'Emergency',
       priority: 'Normal',
       image_url: '',
-      isPublic: true
+      isPublic: isAdmin // Default to false for brgy
     });
     setShowModal(true);
   };
@@ -193,8 +193,8 @@ const StrategicDirectory = () => {
       {/* Header */}
       <div className="tactical-header">
         <div>
-          <h1 className="tactical-title">Contact Directory</h1>
-          <p className="tactical-subtitle">Agency coordination and public channels.</p>
+          <h1 className="tactical-title">{isAdmin ? 'Contact Directory' : 'Barangay Manage Contacts'}</h1>
+          <p className="tactical-subtitle">{isAdmin ? 'Agency coordination and public channels.' : `Internal directory for ${brgyName}.`}</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -398,14 +398,15 @@ const StrategicDirectory = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">Visibility</label>
-                  <label className="flex items-center gap-4 h-[44px] bg-gray-50 px-4 rounded-xl border border-gray-200 cursor-pointer">
+                  <label className={`flex items-center gap-4 h-[44px] bg-gray-50 px-4 rounded-xl border border-gray-200 ${!isAdmin ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
                     <input 
                       type="checkbox" 
                       className="w-5 h-5 rounded border-gray-300 accent-blue-600"
                       checked={formData.isPublic}
+                      disabled={!isAdmin}
                       onChange={e => setFormData({...formData, isPublic: e.target.checked})}
                     />
-                    <span className="text-sm font-bold text-gray-700">App Visible</span>
+                    <span className="text-sm font-bold text-gray-700">{isAdmin ? 'App Visible' : 'Restricted to Barangay'}</span>
                   </label>
                 </div>
               </div>
