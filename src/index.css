@@ -545,7 +545,7 @@ header [class*="CustomDropdown"] * {
 /* ── Tactical Standard UI System ─────────────────── */
 
 @utility tactical-page {
-  @apply min-h-screen bg-slate-50 font-sans text-slate-900 overflow-y-auto h-full p-6;
+  @apply min-h-screen bg-slate-50 font-sans text-slate-900 overflow-y-auto h-full p-[10px];
 }
 
 @utility tactical-page-map {
@@ -553,7 +553,7 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-container {
-  @apply max-w-7xl mx-auto px-6 py-6 lg:px-8 lg:py-8 space-y-6 w-full;
+  @apply max-w-7xl mx-auto px-[10px] py-[10px] space-y-4 w-full;
 }
 
 @utility tactical-header {
@@ -577,11 +577,11 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-th {
-  @apply bg-gray-50 border-b border-gray-200 text-sm font-normal text-black tracking-tight px-6 py-4;
+  @apply bg-gray-50 border-b border-gray-200 text-[11px] font-black text-gray-400 uppercase tracking-widest px-4 py-3;
 }
 
 @utility tactical-td {
-  @apply px-6 py-4 text-sm font-medium text-gray-900;
+  @apply px-4 py-2.5 text-sm font-medium text-gray-900 border-b border-gray-50;
 }
 
 @utility tactical-btn-primary {

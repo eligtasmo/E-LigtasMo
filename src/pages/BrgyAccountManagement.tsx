@@ -129,12 +129,13 @@ const BrgyAccountManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
+    if (!userId) { toast.error("Invalid User ID"); return; }
     if (!window.confirm("ARE YOU SURE? This will permanently delete this official account from the system registry. This action is IRREVERSIBLE.")) return;
     try {
       const res = await apiFetch("admin-delete-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
+        body: JSON.stringify({ user_id: Number(userId) }),
       });
       const data = await res.json();
       if (data.success) {
@@ -266,23 +267,23 @@ const BrgyAccountManagement: React.FC = () => {
       <div className="tactical-container">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Barangay Accounts</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Manage and enroll local sector commanders and officials.</p>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Barangay Accounts</h1>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Manage and enroll local sector commanders and officials.</p>
           </div>
           <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#1e1b4b] rounded-xl hover:bg-blue-900 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-black text-white bg-[#1e1b4b] rounded-lg hover:bg-blue-900 transition-all shadow-sm uppercase tracking-widest"
               >
-                <FiPlus size={16} /> Enroll New Official
+                <FiPlus size={14} /> Enroll Official
               </button>
               <button 
                 onClick={exportData} 
-                className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
+                className="px-4 py-2 text-xs font-black text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 uppercase tracking-widest"
               >
-                <FiDownload size={14} /> Export Registry
+                <FiDownload size={14} /> Export
               </button>
           </div>
         </div>
@@ -369,8 +370,8 @@ const BrgyAccountManagement: React.FC = () => {
                     <td className="tactical-td text-gray-600 lowercase">{u.email || '—'}</td>
                     <td className="tactical-td text-gray-600 tabular-nums">{u.contact_number || '—'}</td>
                     <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>
-                    <td className="tactical-td text-gray-500 text-sm tabular-nums">
-                      {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    <td className="tactical-td text-gray-500 tabular-nums">
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
                     </td>
                     <td className="tactical-td text-right">
                       <div className="flex items-center justify-end gap-1">

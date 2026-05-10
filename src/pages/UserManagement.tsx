@@ -97,12 +97,13 @@ const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
+    if (!userId) { toast.error("Invalid Resident ID"); return; }
     if (!window.confirm("CRITICAL ACTION: Are you sure you want to delete this resident's profile? This will permanently remove their data and emergency record. This action cannot be undone.")) return;
     try {
       const res = await apiFetch("admin-delete-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
+        body: JSON.stringify({ user_id: Number(userId) }),
       });
       const data = await res.json();
       if (data.success) {
@@ -168,31 +169,18 @@ const UserManagement: React.FC = () => {
       <div className="tactical-container">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{isBrgy ? "Resident database for your sector." : "System-wide user and resident database."}</p>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">{pageTitle}</h1>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{isBrgy ? "Resident database for your sector." : "System-wide user and resident database."}</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-4 py-1.5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
-                <span className="text-sm font-black text-gray-400 uppercase tracking-widest">Export Options</span>
-              </div>
-              <div className="flex divide-x divide-gray-100">
-                <button 
-                  onClick={exportData} 
-                  className="px-6 py-2.5 text-sm font-black text-black uppercase tracking-tight hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FiDownload size={14} className="text-blue-500" /> XLSX
-                </button>
-                <button 
-                  onClick={exportData} 
-                  className="px-6 py-2.5 text-sm font-black text-black uppercase tracking-tight hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  <FiDownload size={14} className="text-slate-400 opacity-60" /> CSV
-                </button>
-              </div>
-            </div>
+              <button 
+                onClick={exportData} 
+                className="px-4 py-2 text-xs font-black text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2 uppercase tracking-widest"
+              >
+                <FiDownload size={14} className="text-blue-500" /> Export XLSX
+              </button>
           </div>
         </div>
 
@@ -280,8 +268,8 @@ const UserManagement: React.FC = () => {
                     <td className="tactical-td text-gray-600 lowercase">{u.email || '—'}</td>
                     <td className="tactical-td text-gray-600 tabular-nums">{u.contact_number || '—'}</td>
                     <td className="tactical-td text-gray-700 font-medium">{u.brgy_name || '—'}</td>
-                    <td className="tactical-td text-gray-500 text-sm tabular-nums">
-                      {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    <td className="tactical-td text-gray-500 tabular-nums">
+                      {u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
                     </td>
                     <td className="tactical-td text-right">
                       <div className="flex items-center justify-end gap-1">
