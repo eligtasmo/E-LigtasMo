@@ -31,7 +31,7 @@ try {
     $pdo->exec("ALTER TABLE registration_invites MODIFY brgy_name VARCHAR(100) NULL");
 
     $token = bin2hex(random_bytes(16)); // Secure 32-char token
-    $expires_at = date('Y-m-d H:i:s', strtotime('+7 days'));
+    $expires_at = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
     $stmt = $pdo->prepare("INSERT INTO registration_invites (token, first_name, last_name, email, contact_number, brgy_name, role, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
@@ -45,13 +45,9 @@ try {
         $expires_at
     ]);
 
-    // Construct the invite link pointing to the frontend domain
+    // Construct the invite link pointing to the frontend domain (hardcoded to eligtasmo.site)
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-    $host = $_SERVER['HTTP_HOST'];
-    
-    // If the host is api.eligtasmo.site, strip the 'api.' to point to the frontend
-    $frontendHost = str_replace('api.', '', $host);
-    $invite_link = "$protocol://$frontendHost/auth/register-official?token=$token";
+    $invite_link = "$protocol://eligtasmo.site/auth/register-official?token=$token";
 
     echo json_encode([
         'success' => true,
