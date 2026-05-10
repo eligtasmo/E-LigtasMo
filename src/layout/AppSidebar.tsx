@@ -93,7 +93,8 @@ const communityItems: NavItem[] = [
   },
   {
     icon: (active) => <BellIcon active={active} className={`w-5 h-5 ${active ? 'text-orange-600' : 'text-orange-400'}`} />,
-    name: "Public Hub",
+    name: "Announcements",
+    nameByRole: { admin: "Announcements & Transmission", brgy: "Announcements & Transmission", resident: "Public Hub" },
     roles: ["admin", "brgy", "resident"],
     pathByRole: { admin: "/admin/announcements", brgy: "/brgy/announcements", resident: "/announcements" },
   },

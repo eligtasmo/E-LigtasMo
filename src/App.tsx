@@ -632,11 +632,28 @@ const router = createBrowserRouter([
   },
 ]);
 
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <MapProvider>
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              className: 'tactical-toast',
+              style: {
+                background: '#1e293b',
+                color: '#fff',
+                borderRadius: '12px',
+                border: '1px solid #334155',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                padding: '12px 16px',
+              },
+            }}
+          />
           <RouterProvider router={router} />
         </MapProvider>
       </ThemeProvider>

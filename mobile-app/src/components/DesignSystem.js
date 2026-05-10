@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { MotiView, MotiText, AnimatePresence } from 'moti';
 import * as LucideIcons from 'lucide-react-native';
 import { FONT_UI, FONT_BODY, ensureSharedFonts } from '../constants/typography';
+export { TextInput };
 
 ensureSharedFonts();
 export const DS_FONT_UI = FONT_UI;

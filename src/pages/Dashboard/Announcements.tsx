@@ -62,13 +62,17 @@ export default function Announcements() {
       const annData = await annRes.json();
       const brgyData = await brgyRes.json();
 
+      console.log('[Broadcast] Sync Intelligence:', annData);
       if (annData.success) {
-        setAnnouncements(Array.isArray(annData.data) ? annData.data : []);
+        // Fix: list-announcements.php returns { announcements: [...] }, not { data: [...] }
+        const rows = annData.announcements || annData.data || [];
+        setAnnouncements(Array.isArray(rows) ? rows : []);
       }
       if (brgyData.success) {
         setBarangays(brgyData.barangays?.map((b: any) => b.name) || []);
       }
     } catch (err) {
+      console.error('[Broadcast] Sync Failure:', err);
       toast.error('Sync failed');
     } finally {
       setIsLoading(false);
@@ -78,6 +82,7 @@ export default function Announcements() {
   useEffect(() => { loadData(); }, []);
 
   const handleExecute = async () => {
+    console.log('[Broadcast] Initiating Transmission...', form);
     if (!form.title || !form.message) {
       toast.error('Fields are incomplete');
       return;

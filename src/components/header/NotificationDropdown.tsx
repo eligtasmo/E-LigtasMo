@@ -102,47 +102,45 @@ export default function NotificationDropdown({ notificationCount = 0 }: Notifica
       setNotifying(all.length > 0);
     };
     load();
-    // removed polling; show static timestamps
   }, [role]);
   
   return (
     <div className="relative">
       <button
-        className="relative flex items-center justify-center text-gray-600 transition-all duration-200 bg-white border border-gray-100 rounded-xl dropdown-toggle hover:text-gray-800 h-11 w-11 hover:bg-gray-50 hover:border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white shadow-sm hover:shadow-md"
+        className="relative flex items-center justify-center text-slate-500 transition-all duration-300 bg-white border border-slate-100 rounded-xl dropdown-toggle hover:text-blue-600 h-11 w-11 hover:bg-blue-50/50 hover:border-blue-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400 shadow-sm hover:shadow-md group"
         onClick={handleClick}
       >
-        {/* Notification Count Badge */}
+        {/* Notification Count Badge - Tactical Style */}
         {computedCount > 0 && (
-          <span className="absolute -top-1 -right-1 z-10 flex items-center justify-center min-w-[18px] h-[18px] text-xs font-medium text-white bg-red-500 rounded-full px-1">
+          <span className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-blue-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
             {computedCount > 99 ? '99+' : computedCount}
           </span>
         )}
 
-        {/* Animated Pulse Indicator: hidden when count is shown to avoid overlap */}
-        {computedCount === 0 && (
-          <span
-            className={`absolute -right-2 top-0.5 z-0 h-2 w-2 rounded-full bg-orange-400 ${
-              !notifying ? "hidden" : "flex"
-            }`}
-          >
-            <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
+        {/* Tactical Pulse Indicator */}
+        {computedCount > 0 && (
+          <span className="absolute -right-0.5 top-0.5 z-0 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
           </span>
         )}
+
         <svg
-          className="fill-current"
+          className="transition-transform duration-300 group-hover:scale-110"
           width="20"
           height="20"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"
-            fill="currentColor"
-          />
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
       </button>
+
       <CustomDropdown
         isOpen={isOpen}
         onClose={closeDropdown}

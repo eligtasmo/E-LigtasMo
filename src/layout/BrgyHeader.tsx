@@ -72,8 +72,9 @@ const BrgyHeader: React.FC = () => {
           </nav>
 
           {/* Right side - Notifications and User dropdown */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <NotificationDropdown notificationCount={3} />
+            <div className="w-px h-8 bg-slate-100 mx-1" />
             <UserDropdown />
           </div>
         </div>
