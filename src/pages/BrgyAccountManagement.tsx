@@ -154,7 +154,7 @@ const BrgyAccountManagement: React.FC = () => {
 
     setCreating(true);
     try {
-      const res = await apiFetch("admin-generate-mission-token.php", {
+      const res = await apiFetch("admin-create-invite.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createData),
