@@ -48,7 +48,7 @@ const BrgyAccountManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState<any>(null);
-  const [createData, setCreateData] = useState({ username: '', password: '', confirmPassword: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+  const [createData, setCreateData] = useState({ username: '', password: '', confirmPassword: '', first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [allBrgys, setAllBrgys] = useState<string[]>([]);
@@ -79,16 +79,17 @@ const BrgyAccountManagement: React.FC = () => {
     try {
       const res = await apiFetch("list-barangays.php");
       const data = await res.json();
-      if (data.success && data.barangays && data.barangays.length > 0) {
-        // Filter out purely numeric or invalid names that might be showing as "84"
-        const validBrgys = data.barangays
+      if (data.success && Array.isArray(data.barangays)) {
+        // Extract names and filter out purely numeric values
+        const apiBrgys = data.barangays
           .map((b: any) => b.name)
-          .filter((name: string) => name && isNaN(Number(name)) && name.length > 2);
+          .filter((n: string) => n && isNaN(Number(n)) && n.length > 2);
         
-        if (validBrgys.length > 0) {
-          setAllBrgys(validBrgys);
-        } else {
+        // Use fallbacks if API returns suspicious or empty data
+        if (apiBrgys.length < 5) {
           setAllBrgys(fallbackBrgys);
+        } else {
+          setAllBrgys(apiBrgys);
         }
       } else {
         setAllBrgys(fallbackBrgys);
@@ -147,9 +148,11 @@ const BrgyAccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    // 1. Full Name Validation (First name, Last name)
-    if (!createData.full_name.includes(',')) {
-      toast.error("Full Name must be in 'First name, Last name' format (e.g. Juan, Dela Cruz)");
+    const fullName = `${createData.first_name}, ${createData.last_name}`;
+
+    // 1. Name Validation
+    if (!createData.first_name.trim() || !createData.last_name.trim()) {
+      toast.error("Both First Name and Last Name are required");
       return;
     }
 
@@ -183,13 +186,13 @@ const BrgyAccountManagement: React.FC = () => {
       const res = await apiFetch("admin-create-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...createData, contact_number: cleanPhone }),
+        body: JSON.stringify({ ...createData, full_name: fullName, contact_number: cleanPhone }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success("Barangay account created successfully");
         setShowCreateModal(false);
-        setCreateData({ username: '', password: '', confirmPassword: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+        setCreateData({ username: '', password: '', confirmPassword: '', first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
         fetchUsers();
       } else {
         toast.error(data.message || "Failed to create account");
@@ -199,14 +202,17 @@ const BrgyAccountManagement: React.FC = () => {
   };
 
   const handleEditUser = (u: User) => {
-    setEditData({ ...u, password: '' });
+    const [fname, lname] = (u.full_name || '').split(',').map(s => s.trim());
+    setEditData({ ...u, first_name: fname || '', last_name: lname || '', password: '' });
     setShowEditModal(true);
   };
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editData.full_name && !editData.full_name.includes(',')) {
-      toast.error("Full Name must be in 'First name, Last name' format");
+    const fullName = `${editData.first_name}, ${editData.last_name}`;
+
+    if (!editData.first_name?.trim() || !editData.last_name?.trim()) {
+      toast.error("Both First Name and Last Name are required");
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -224,7 +230,7 @@ const BrgyAccountManagement: React.FC = () => {
       const res = await apiFetch("admin-update-user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editData, contact_number: cleanPhone }),
+        body: JSON.stringify({ ...editData, full_name: fullName, contact_number: cleanPhone }),
       });
       const data = await res.json();
       if (data.success) {
@@ -443,36 +449,61 @@ const BrgyAccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateAccount} className="space-y-6">
-                <div>
-                  <label className="tactical-label">Full Name</label>
-                  <input 
-                    required
-                    className="tactical-input w-full"
-                    value={createData.full_name}
-                    onChange={e => setCreateData({...createData, full_name: e.target.value})}
-                    placeholder="e.g. Juan, Dela Cruz"
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Required Format: First name, Last name</p>
+              <form onSubmit={handleCreateAccount} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="tactical-label">First Name</label>
+                    <input 
+                      required
+                      className="tactical-input w-full h-10 py-1"
+                      value={createData.first_name}
+                      onChange={e => setCreateData({...createData, first_name: e.target.value})}
+                      placeholder="Juan"
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Last Name</label>
+                    <input 
+                      required
+                      className="tactical-input w-full h-10 py-1"
+                      value={createData.last_name}
+                      onChange={e => setCreateData({...createData, last_name: e.target.value})}
+                      placeholder="Dela Cruz"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="tactical-label">Username</label>
                     <input 
                       required
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={createData.username}
                       onChange={e => setCreateData({...createData, username: e.target.value})}
                       placeholder="user_brgy"
                     />
                   </div>
                   <div>
+                    <label className="tactical-label">Email Address</label>
+                    <input 
+                      required
+                      type="email"
+                      className="tactical-input w-full h-10 py-1"
+                      value={createData.email}
+                      onChange={e => setCreateData({...createData, email: e.target.value})}
+                      placeholder="brgy@eligtasmo.gov"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <label className="tactical-label">Password</label>
                     <input 
                       required
                       type="password"
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={createData.password}
                       onChange={e => setCreateData({...createData, password: e.target.value})}
                       placeholder="••••••••"
@@ -483,7 +514,7 @@ const BrgyAccountManagement: React.FC = () => {
                     <input 
                       required
                       type="password"
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={createData.confirmPassword}
                       onChange={e => setCreateData({...createData, confirmPassword: e.target.value})}
                       placeholder="••••••••"
@@ -491,56 +522,44 @@ const BrgyAccountManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="tactical-label">Email Address</label>
-                    <input 
-                      required
-                      type="email"
-                      className="tactical-input w-full"
-                      value={createData.email}
-                      onChange={e => setCreateData({...createData, email: e.target.value})}
-                      placeholder="brgy@eligtasmo.gov"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="tactical-label">Phone Number</label>
                     <input 
                       required
                       maxLength={11}
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={createData.contact_number}
                       onChange={e => setCreateData({...createData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
                       placeholder="09123456789"
                     />
                   </div>
+                  <div>
+                    <label className="tactical-label">Barangay Assignment</label>
+                    <select 
+                      required
+                      className="tactical-input w-full h-10 py-1 appearance-none cursor-pointer pr-10"
+                      value={createData.brgy_name}
+                      onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
+                    >
+                      <option value="">Select Sector...</option>
+                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="tactical-label">Barangay Assignment</label>
-                  <select 
-                    required
-                    className="tactical-input w-full appearance-none cursor-pointer pr-10"
-                    value={createData.brgy_name}
-                    onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
-                  >
-                    <option value="">Select Sector...</option>
-                    {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </div>
-
-                <div className="flex gap-4 pt-8">
+                <div className="flex gap-4 pt-4">
                   <button 
                     type="button" 
                     onClick={() => setShowCreateModal(false)}
-                    className="tactical-button-ghost flex-1"
+                    className="tactical-button-ghost flex-1 h-10"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={creating}
-                    className="tactical-button-accent flex-1"
+                    className="tactical-button-accent flex-1 h-10"
                   >
                     {creating ? 'Confirming...' : 'Confirm'}
                   </button>
@@ -565,85 +584,96 @@ const BrgyAccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateUser} className="space-y-6">
-                <div>
-                  <label className="tactical-label">Full Name</label>
-                  <input 
-                    required
-                    className="tactical-input w-full"
-                    value={editData.full_name}
-                    onChange={e => setEditData({...editData, full_name: e.target.value})}
-                  />
+              <form onSubmit={handleUpdateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="tactical-label">First Name</label>
+                    <input 
+                      required
+                      className="tactical-input w-full h-10 py-1"
+                      value={editData.first_name}
+                      onChange={e => setEditData({...editData, first_name: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Last Name</label>
+                    <input 
+                      required
+                      className="tactical-input w-full h-10 py-1"
+                      value={editData.last_name}
+                      onChange={e => setEditData({...editData, last_name: e.target.value})}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="tactical-label">Username</label>
                     <input 
                       disabled
-                      className="tactical-input w-full bg-gray-50 opacity-70 cursor-not-allowed"
+                      className="tactical-input w-full h-10 py-1 bg-gray-50 opacity-70 cursor-not-allowed"
                       value={editData.username}
                     />
                   </div>
-                  <div>
-                    <label className="tactical-label">Reset Password</label>
-                    <input 
-                      type="password"
-                      className="tactical-input w-full"
-                      value={editData.password || ''}
-                      onChange={e => setEditData({...editData, password: e.target.value})}
-                      placeholder="Leave blank to keep same"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="tactical-label">Official Email</label>
                     <input 
                       required
                       type="email"
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={editData.email}
                       onChange={e => setEditData({...editData, email: e.target.value})}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="tactical-label">Phone Number</label>
                     <input 
                       required
                       maxLength={11}
-                      className="tactical-input w-full"
+                      className="tactical-input w-full h-10 py-1"
                       value={editData.contact_number}
                       onChange={e => setEditData({...editData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
                     />
                   </div>
+                  <div>
+                    <label className="tactical-label">Barangay Assignment</label>
+                    <select 
+                      required
+                      className="tactical-input w-full h-10 py-1 appearance-none cursor-pointer pr-10"
+                      value={editData.brgy_name}
+                      onChange={e => setEditData({...editData, brgy_name: e.target.value})}
+                    >
+                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="tactical-label">Barangay Assignment</label>
-                  <select 
-                    required
-                    className="tactical-input w-full appearance-none cursor-pointer pr-10"
-                    value={editData.brgy_name}
-                    onChange={e => setEditData({...editData, brgy_name: e.target.value})}
-                  >
-                    {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
+                <div className="space-y-2">
+                  <label className="tactical-label">Reset Password</label>
+                  <input 
+                    type="password"
+                    className="tactical-input w-full h-10 py-1"
+                    value={editData.password || ''}
+                    onChange={e => setEditData({...editData, password: e.target.value})}
+                    placeholder="Leave blank to keep same"
+                  />
                 </div>
 
-                <div className="flex gap-4 pt-8">
+                <div className="flex gap-4 pt-4">
                   <button 
                     type="button" 
                     onClick={() => setShowEditModal(false)}
-                    className="tactical-button-ghost flex-1"
+                    className="tactical-button-ghost flex-1 h-10"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={updating}
-                    className="tactical-button-accent flex-1"
+                    className="tactical-button-accent flex-1 h-10"
                   >
                     {updating ? 'Updating...' : 'Save Changes'}
                   </button>
