@@ -86,33 +86,44 @@ function has_permission_for_role($role, $permission) {
 
 function require_permission($permission) {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? ($_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '')));
+    $auth = $headers['Authorization'] 
+        ?? ($headers['authorization'] 
+        ?? ($_SERVER['HTTP_AUTHORIZATION'] 
+        ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '')));
     
     $role = null;
+    $auth_type = 'Guest';
+
+    // 1. Try Bearer JWT first
     if (stripos($auth, 'Bearer ') === 0) {
         $token = substr($auth, 7);
         $payload = jwt_decode($token);
         if ($payload && isset($payload['role'])) {
             $role = strtolower($payload['role']);
+            $auth_type = 'JWT';
         }
     }
-    if ($role === null) {
-        $role = $_SESSION['role'] ?? ($_SERVER['HTTP_X_ROLE'] ?? ($_GET['role'] ?? 'guest'));
-        $role = strtolower($role);
+
+    // 2. Fall back to PHP session (set at login)
+    if ($role === null && isset($_SESSION['role'])) {
+        $role = strtolower($_SESSION['role']);
+        $auth_type = 'Session';
     }
+
+    // 3. Default to guest — do NOT allow $_GET['role'] bypass
+    if ($role === null) {
+        $role = 'guest';
+    }
+
     if (!has_permission_for_role($role, $permission)) {
         http_response_code(403);
         header('Content-Type: application/json');
-        $auth_type = stripos($auth, 'Bearer ') === 0 ? 'JWT' : (isset($_SESSION['user_id']) ? 'Session' : 'Guest');
-        
-        // Log the failure for server-side debugging
         error_log("RBAC Denied: Role '$role' lacks permission '$permission' (Auth: $auth_type)");
-
         echo json_encode([
             'success' => false, 
             'message' => 'Forbidden: insufficient permissions',
             'debug' => [
-                'detected_role' => $role ?: 'guest',
+                'detected_role' => $role,
                 'permission_required' => $permission,
                 'auth_method' => $auth_type,
                 'is_logged_in' => isset($_SESSION['user_id'])

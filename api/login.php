@@ -135,11 +135,14 @@ if ($row) {
             $_SESSION['user_id'] = $id;
             $_SESSION['role'] = $roleLower;
             $_SESSION['brgy_name'] = $brgy_name;
-            $token = jwt_encode(['sub' => $id, 'role' => $roleLower, 'brgy_name' => $brgy_name], 3600);
+            // TTL: 8 hours so working sessions don't expire mid-shift
+            $token = jwt_encode(['sub' => $id, 'role' => $roleLower, 'brgy_name' => $brgy_name, 'username' => $username, 'full_name' => $full_name], 28800);
             echo json_encode([
                 "success" => true,
                 "message" => "Login successful",
-                "token" => $token,
+                "token" => $token,        // mobile app key
+                "access_token" => $token, // web dashboard key (apiFetch reads this)
+                "user_id" => $id,
                 "id" => $id,
                 "username" => $username,
                 "role" => $role,
