@@ -72,8 +72,8 @@ try {
     $pdo->commit();
     echo json_encode([
         'success' => true, 
-        'version' => '2.2',
-        'message' => 'Account claimed successfully! Mission parameters synchronized.'
+        'version' => '2.3',
+        'message' => 'Mission account active! You can now sign in with your credentials.'
     ]);
 
 } catch (Exception $e) {

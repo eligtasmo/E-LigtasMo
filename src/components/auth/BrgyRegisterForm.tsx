@@ -322,7 +322,7 @@ const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
       const data = await response.json();
       setLoading(false);
       if (data.success) {
-        setSuccess(mode === 'brgy' ? "Your registration successfully, please wait the approval of MDRRMO admin" : "Registration successful! You can now sign in.");
+        setSuccess((mode === 'brgy' && !token) ? "Your registration successfully, please wait the approval of MDRRMO admin" : "Registration successful! You can now sign in.");
         if (onSuccess) onSuccess();
       } else {
         if (data.details) {
