@@ -46,6 +46,7 @@ const ResidentReports = React.lazy(() => import("./pages/Resident/ResidentReport
 // Auth Pages
 import SignIn from "./pages/AuthPages/SignIn";
 import Register from "./pages/AuthPages/Register";
+import RegisterOfficial from "./pages/AuthPages/RegisterOfficial";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 
 // Analytics Dashboard (keeping the new analytics)
@@ -588,6 +589,14 @@ const router = createBrowserRouter([
           {
             path: "signin",
             element: <SignIn />,
+          },
+          {
+            path: "register",
+            element: <Register />,
+          },
+          {
+            path: "register-official",
+            element: <RegisterOfficial />,
           },
           {
             path: "forgot-password",

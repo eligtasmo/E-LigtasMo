@@ -47,8 +47,10 @@ const BrgyAccountManagement: React.FC = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteLink, setInviteLink] = useState('');
   const [editData, setEditData] = useState<any>(null);
-  const [createData, setCreateData] = useState({ username: '', password: '', confirmPassword: '', first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+  const [createData, setCreateData] = useState({ first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [allBrgys, setAllBrgys] = useState<string[]>([]);
@@ -147,56 +149,30 @@ const BrgyAccountManagement: React.FC = () => {
     } catch { toast.error("Connection error"); }
   };
 
-  const handleCreateAccount = async (e: React.FormEvent) => {
+  const handleGenerateInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fullName = `${createData.first_name}, ${createData.last_name}`;
 
-    // 1. Name Validation
-    if (!createData.first_name.trim() || !createData.last_name.trim()) {
-      toast.error("Both First Name and Last Name are required");
-      return;
-    }
-
-    // 2. Email Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(createData.email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-
-    // 3. Phone Validation
-    const cleanPhone = createData.contact_number.replace(/[^0-9]/g, '');
-    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('09')) {
-      toast.error("Please enter a valid 11-digit phone number starting with 09");
-      return;
-    }
-
-    // 4. Password Confirmation
-    if (createData.password !== createData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (createData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    if (!createData.first_name.trim() || !createData.last_name.trim() || !createData.brgy_name) {
+      toast.error("First Name, Last Name, and Barangay are required");
       return;
     }
 
     setCreating(true);
     try {
-      const res = await apiFetch("admin-create-user.php", {
+      const res = await apiFetch("admin-create-invite.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...createData, full_name: fullName, contact_number: cleanPhone }),
+        body: JSON.stringify(createData),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("Barangay account created successfully");
+        toast.success("Invite link generated successfully");
+        setInviteLink(data.invite_link);
         setShowCreateModal(false);
-        setCreateData({ username: '', password: '', confirmPassword: '', first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
-        fetchUsers();
+        setShowInviteModal(true);
+        setCreateData({ first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
       } else {
-        toast.error(data.message || "Failed to create account");
+        toast.error(data.message || "Failed to generate invite");
       }
     } catch { toast.error("Connection error"); }
     setCreating(false);
@@ -277,7 +253,7 @@ const BrgyAccountManagement: React.FC = () => {
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 px-4 py-2 text-xs font-black text-white bg-[#1e1b4b] rounded-lg hover:bg-blue-900 transition-all shadow-sm uppercase tracking-widest"
               >
-                <FiPlus size={14} /> Enroll Official
+                <FiPlus size={14} /> Generate Invite Link
               </button>
               <button 
                 onClick={exportData} 
@@ -455,7 +431,7 @@ const BrgyAccountManagement: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateAccount} className="space-y-6">
+              <form onSubmit={handleGenerateInvite} className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">01. Identity Profile</span>
@@ -487,20 +463,10 @@ const BrgyAccountManagement: React.FC = () => {
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">02. Credentials</span>
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">02. Contact Information</span>
                     <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Username</label>
-                      <input 
-                        required
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.username}
-                        onChange={e => setCreateData({...createData, username: e.target.value})}
-                        placeholder="user_brgy"
-                      />
-                    </div>
                     <div>
                       <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Email Address</label>
                       <input 
@@ -512,40 +478,6 @@ const BrgyAccountManagement: React.FC = () => {
                         placeholder="brgy@eligtasmo.gov"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Password</label>
-                      <input 
-                        required
-                        type="password"
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.password}
-                        onChange={e => setCreateData({...createData, password: e.target.value})}
-                        placeholder="••••••••"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Confirm Password</label>
-                      <input 
-                        required
-                        type="password"
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
-                        value={createData.confirmPassword}
-                        onChange={e => setCreateData({...createData, confirmPassword: e.target.value})}
-                        placeholder="••••••••"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">03. Jurisdiction</span>
-                    <div className="h-px flex-1 bg-slate-100"></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Phone Number</label>
                       <input 
@@ -557,18 +489,25 @@ const BrgyAccountManagement: React.FC = () => {
                         placeholder="09123456789"
                       />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Barangay Assignment</label>
-                      <select 
-                        required
-                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all appearance-none cursor-pointer pr-10 shadow-sm"
-                        value={createData.brgy_name}
-                        onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
-                      >
-                        <option value="">Select Sector...</option>
-                        {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
-                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">03. Jurisdiction</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Barangay Assignment</label>
+                    <select 
+                      required
+                      className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+                      value={createData.brgy_name}
+                      onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
+                    >
+                      <option value="">Select Sector...</option>
+                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
                   </div>
                 </div>
 
@@ -585,10 +524,49 @@ const BrgyAccountManagement: React.FC = () => {
                     disabled={creating}
                     className="flex-1 h-12 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-[0_8px_16px_-4px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_12px_20px_-4px_rgba(79,70,229,0.4)] transition-all uppercase tracking-widest disabled:opacity-50"
                   >
-                    {creating ? 'Processing...' : 'Confirm Enrollment'}
+                    {creating ? 'Generating...' : 'Generate Invite Link'}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Success Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="p-8 sm:p-12 text-center">
+              <div className="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mx-auto mb-6">
+                <FiUserCheck size={40} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Invite Ready</h2>
+              <p className="text-sm text-slate-500 mb-8 px-4">Send this link to the official. They can use it once to set up their private credentials.</p>
+              
+              <div className="relative mb-8 group">
+                <input 
+                  readOnly
+                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-24 text-sm font-medium text-slate-600 focus:outline-none"
+                  value={inviteLink}
+                />
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(inviteLink);
+                    toast.success("Link copied to clipboard");
+                  }}
+                  className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all"
+                >
+                  Copy
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowInviteModal(false)}
+                className="w-full h-12 rounded-2xl border border-slate-200 text-sm font-bold text-slate-900 hover:bg-slate-50 transition-all uppercase tracking-widest"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
