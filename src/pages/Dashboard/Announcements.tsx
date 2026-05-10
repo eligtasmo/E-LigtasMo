@@ -87,6 +87,7 @@ export default function Announcements() {
       const payload = {
         ...form,
         brgy_name: role === 'admin' ? 'Global' : brgyName,
+        brgy_name_target: form.audience === 'brgy_specific' ? form.brgy_name : null,
         sender: user?.username,
         also_send_sms: form.alsoSendSms,
         sendPush: form.sendPush

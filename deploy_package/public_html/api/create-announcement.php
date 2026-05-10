@@ -128,15 +128,22 @@ try {
   $audience_filters = "1=1";
   $audience_params = [];
 
+  // If brgy_name is provided and not 'Global', we scope EVERYTHING to that barangay
+  // unless the user specifically wants 'Global Reach' (admin only)
+  if ($brgy_name && $brgy_name !== 'Global') {
+      $audience_filters .= " AND brgy_name = ?";
+      $audience_params[] = $brgy_name;
+  }
+
   if ($audience === 'residents') {
       $audience_filters .= " AND role = 'resident'";
   } elseif ($audience === 'barangay') {
-      $audience_filters .= " AND role IN ('brgy', 'brgy_chair')";
-  } elseif ($audience === 'brgy_specific') {
-      if ($brgy_name) {
-          $audience_filters .= " AND brgy_name = ?";
-          $audience_params[] = $brgy_name;
-      }
+      $audience_filters .= " AND role IN ('brgy', 'brgy_chair', 'coordinator')";
+  } elseif ($audience === 'brgy_specific' && $data['brgy_name_target']) {
+      // Allow targeting a DIFFERENT barangay if admin
+      // But for brgy role, they are restricted by the block above
+      $audience_filters = "brgy_name = ?";
+      $audience_params = [$data['brgy_name_target']];
   }
 
   // Handle SMS
@@ -176,7 +183,14 @@ try {
       'success' => true, 
       'id' => $ann_id, 
       'sms_sent' => $sms_count, 
-      'push_sent' => $push_count
+      'push_sent' => $push_count,
+      'debug' => [
+          'audience' => $audience,
+          'brgy_name' => $brgy_name,
+          'sms_recipients_found' => count($numbers ?? []),
+          'push_tokens_found' => count($tokens ?? []),
+          'filters' => $audience_filters
+      ]
   ]);
 
 } catch (Exception $e) {
