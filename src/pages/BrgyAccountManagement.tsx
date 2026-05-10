@@ -162,7 +162,9 @@ const BrgyAccountManagement: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         toast.success("Invite link generated successfully");
-        setInviteLink(data.invite_link);
+        // Fail-safe: ensure the link always points to the primary domain without the api subdomain
+        const cleanedLink = data.invite_link.replace('api.eligtasmo.site', 'eligtasmo.site');
+        setInviteLink(cleanedLink);
         setShowCreateModal(false);
         setShowInviteModal(true);
         setCreateData({ first_name: '', last_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
