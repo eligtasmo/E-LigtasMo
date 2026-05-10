@@ -43,8 +43,8 @@ export default function Announcements() {
     message: 'Relief goods will be distributed today at the Municipal Gym starting 1:00 PM. Please bring your family ID and observe social distancing.',
     smsMessage: 'RELIEF NOTICE: Distribution at Municipal Gym today, 1PM. Bring Family ID. Stay safe!',
     category: 'Relief',
-    audience: 'all',
-    brgy_name: '',
+    audience: role === 'admin' ? 'all' : 'brgy_specific',
+    brgy_name: role === 'admin' ? '' : brgyName,
     isUrgent: false,
     alsoSendSms: true,
     sendPush: true,
@@ -143,8 +143,16 @@ export default function Announcements() {
       const s = search.toLowerCase();
       list = list.filter(a => a.title.toLowerCase().includes(s) || a.message.toLowerCase().includes(s));
     }
+    if (role === 'brgy' || role === 'brgy_chair') {
+      list = list.filter(a => 
+        a.audience === 'all' || 
+        a.brgy_name === brgyName || 
+        a.brgy_name_target === brgyName ||
+        a.sender === user?.username
+      );
+    }
     return list;
-  }, [announcements, selectedCategory, search]);
+  }, [announcements, selectedCategory, search, role, brgyName, user?.username]);
 
   const stats = useMemo(() => {
     const list = announcements || [];
@@ -247,10 +255,19 @@ export default function Announcements() {
                   value={form.audience}
                   onChange={(e) => setForm(prev => ({ ...prev, audience: e.target.value }))}
                 >
-                  <option value="all">ALL: Global Reach</option>
-                  <option value="residents">RESIDENTS: Public</option>
-                  <option value="barangay">COORDINATORS: All</option>
-                  <option value="brgy_specific">BRGY: Specific Sector</option>
+                  {role === 'admin' ? (
+                    <>
+                      <option value="all">ALL: Global Reach</option>
+                      <option value="residents">RESIDENTS: Public</option>
+                      <option value="barangay">COORDINATORS: All</option>
+                      <option value="brgy_specific">BRGY: Specific Sector</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="brgy_specific">MY SECTOR: {brgyName}</option>
+                      <option value="residents">RESIDENTS: Local</option>
+                    </>
+                  )}
                 </select>
               </div>
               {form.audience === 'brgy_specific' && (

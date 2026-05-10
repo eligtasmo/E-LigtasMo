@@ -21,9 +21,9 @@ const BrgyHeader: React.FC = () => {
     { name: 'Dashboard', path: '/brgy', icon: <FiHome size={18} /> },
     { name: 'Shelters', path: '/brgy/shelters', icon: <FiShield size={18} /> },
     { name: 'Residents', path: '/brgy/residents', icon: <FiUsers size={18} /> },
-    { name: 'Reports', path: '/brgy/reports', icon: <FiBarChart size={18} /> },
-    { name: 'Incidents', path: '/brgy/incidents', icon: <FiAlertTriangle size={18} /> },
-    { name: 'Routes', path: '/brgy/routes', icon: <FiMap size={18} /> }
+    { name: 'Reports', path: '/brgy/flood-reports', icon: <FiBarChart size={18} /> },
+    { name: 'Incidents', path: '/brgy/report-incident', icon: <FiAlertTriangle size={18} /> },
+    { name: 'Routes', path: '/brgy/safe-routes', icon: <FiMap size={18} /> }
   ];
 
   return (
