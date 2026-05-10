@@ -39,7 +39,6 @@ const communityItems: NavItem[] = [
   { icon: (active) => <ResidentsIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Resident Directory", path: "/brgy/residents" },
   { icon: (active) => <BellIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-orange-400'}`} />, name: "Community Alerts", path: "/brgy/announcements" },
   { icon: (active) => <PhoneIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Manage Contacts", path: "/brgy/directory" },
-  { icon: (active) => <HotlineIcon active={active} className={`w-5 h-5 ${active ? 'text-[#1e1b4b]' : 'text-blue-400'}`} />, name: "Barangay Hotlines", path: "/brgy/directory" },
 ];
 
 const monitoringItems: NavItem[] = [

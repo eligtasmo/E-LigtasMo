@@ -270,7 +270,7 @@ export default function Announcements() {
                   )}
                 </select>
               </div>
-              {form.audience === 'brgy_specific' && (
+              {role === 'admin' && form.audience === 'brgy_specific' && (
                 <div className="space-y-1 animate-in zoom-in-95 duration-200">
                   <label className="text-[9px] font-black text-blue-500 uppercase tracking-widest ml-1">Select Barangay</label>
                   <select 
