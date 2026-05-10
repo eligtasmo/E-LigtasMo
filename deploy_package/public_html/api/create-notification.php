@@ -107,7 +107,36 @@ try {
     }
   }
 
-  echo json_encode(['success' => true, 'id' => $id, 'sms_sent' => $sms_count]);
+  // Integrated Expo Push Notification logic
+  require_once 'push_helper.php';
+  $push_tokens = [];
+  if ($audience === 'all') {
+      $pStmt = $pdo->query("SELECT push_token FROM users WHERE push_token IS NOT NULL AND push_token != ''");
+      $push_tokens = $pStmt->fetchAll(PDO::FETCH_COLUMN);
+  } elseif ($audience === 'residents') {
+      $pStmt = $pdo->query("SELECT push_token FROM users WHERE role = 'resident' AND push_token IS NOT NULL AND push_token != ''");
+      $push_tokens = $pStmt->fetchAll(PDO::FETCH_COLUMN);
+  } elseif ($audience === 'barangay') {
+      // If brgy_name is provided, target that specific barangay, else all officials
+      if ($brgy_name) {
+          $pStmt = $pdo->prepare("SELECT push_token FROM users WHERE brgy_name = ? AND push_token IS NOT NULL AND push_token != ''");
+          $pStmt->execute([$brgy_name]);
+      } else {
+          $pStmt = $pdo->query("SELECT push_token FROM users WHERE role = 'brgy' AND push_token IS NOT NULL AND push_token != ''");
+      }
+      $push_tokens = $pStmt->fetchAll(PDO::FETCH_COLUMN);
+  }
+
+  if (!empty($push_tokens)) {
+      PushService::send(
+          array_unique($push_tokens),
+          $title,
+          $message,
+          ['notification_id' => $id, 'type' => $type, 'category' => $category]
+      );
+  }
+
+  echo json_encode(['success' => true, 'id' => $id, 'sms_sent' => $sms_count, 'push_sent' => count($push_tokens)]);
 } catch (Exception $e) {
   http_response_code(500);
   echo json_encode(['success' => false, 'message' => $e->getMessage()]);

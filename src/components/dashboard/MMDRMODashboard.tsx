@@ -339,7 +339,7 @@ const MMDRMODashboard: React.FC = () => {
   const checkApiHealth = async () => {
     const endpoints = [
       { name: 'Authentication', path: 'session.php' },
-      { name: 'Incident Engine', path: 'fetch_incidents.php' },
+      { name: 'Incident Engine', path: 'list-incident-reports.php' },
       { name: 'Hazard Intel', path: 'list-hazards.php' },
       { name: 'Shelter Comms', path: 'shelters-list.php' },
       { name: 'Danger Zone API', path: 'list-danger-zones.php' }
