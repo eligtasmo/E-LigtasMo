@@ -97,7 +97,8 @@ const PrivacyBanner = ({ onDismiss }: { onDismiss: () => void }) => (
   </div>
 );
 
-const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy' }: BrgyRegisterFormProps) => {
+const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
+  const { onSuccess, formClassName = "space-y-6", mode = 'brgy', token } = props;
   const TOTAL_STEPS = mode === 'brgy' ? 4 : 3;
 
   const [step, setStep] = useState(1);
