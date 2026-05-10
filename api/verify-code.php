@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/cors.php';
-require_once __DIR__ . '/session_boot.php';
+require_once __DIR__ . '/db.php';
 header('Content-Type: application/json');
 
 try {
@@ -18,15 +18,9 @@ try {
         exit;
     }
 
-    // Check DB first (More reliable for mobile)
     $stmt = $pdo->prepare("SELECT * FROM verification_codes WHERE email = ? ORDER BY id DESC LIMIT 1");
     $stmt->execute([$email]);
-    $dbRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // Backup: Check Session
-    $sessionRecord = $_SESSION['email_verification'][$email] ?? null;
-
-    $record = $dbRecord ?: $sessionRecord;
+    $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$record) {
         http_response_code(200);
@@ -40,11 +34,8 @@ try {
     }
 
     if (time() > ($record['expires_at'] ?? $record['expires'] ?? 0)) {
-        if ($dbRecord) {
-            $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE email = ?");
-            $stmt->execute([$email]);
-        }
-        unset($_SESSION['email_verification'][$email]);
+        $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE email = ?");
+        $stmt->execute([$email]);
         http_response_code(200);
         echo json_encode(['success' => false, 'error' => 'Verification code expired']);
         exit;
@@ -57,14 +48,8 @@ try {
         exit;
     }
 
-    // Mark as verified in DB
     $stmt = $pdo->prepare("UPDATE verification_codes SET verified = 1 WHERE email = ?");
     $stmt->execute([$email]);
-
-    // Mark as verified in Session
-    if (isset($_SESSION['email_verification'][$email])) {
-        $_SESSION['email_verification'][$email]['verified'] = true;
-    }
 
     echo json_encode([
         'success' => true,
