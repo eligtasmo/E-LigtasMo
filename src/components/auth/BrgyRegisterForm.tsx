@@ -37,6 +37,7 @@ interface BrgyRegisterFormProps {
   onSuccess?: () => void;
   formClassName?: string;
   mode?: 'brgy' | 'resident';
+  token?: string | null;
 }
 
 const LocationPicker = ({ position, setPosition }: { position: { lat: number, lng: number } | null, setPosition: (pos: { lat: number, lng: number }) => void }) => {
@@ -128,22 +129,39 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
 
   const [dynamicBrgys, setDynamicBrgys] = useState<string[]>([]);
 
-  // Fetch barangays
+  // Fetch barangays and validate token if present
   useEffect(() => {
-    const fetchBrgys = async () => {
+    const init = async () => {
       try {
-        const res = await apiFetch("list-barangays.php");
-        const data = await res.json();
-        if (data.success) {
-          const names = data.barangays.map((b: any) => b.name);
+        const brgyRes = await apiFetch("list-barangays.php");
+        const brgyData = await brgyRes.json();
+        if (brgyData.success) {
+          const names = brgyData.barangays.map((b: any) => b.name);
           setDynamicBrgys(names);
         }
+
+        if (token) {
+          const inviteRes = await apiFetch(`validate-invite.php?token=${token}`);
+          const inviteData = await inviteRes.json();
+          if (inviteData.success) {
+            const { first_name, last_name, email, contact_number, brgy_name } = inviteData.invite;
+            setForm(prev => ({
+              ...prev,
+              fullName: (first_name && last_name) ? `${first_name}, ${last_name}` : "",
+              email: email || "",
+              contact: contact_number || "",
+              brgy: brgy_name || "",
+            }));
+            // If email is already provided and verified via invite, we could skip step 1
+            // but the user wants the "exact same flow", so we keep it.
+          }
+        }
       } catch (err) {
-        console.error("Failed to fetch brgys:", err);
+        console.error("Initialization failed:", err);
       }
     };
-    fetchBrgys();
-  }, []);
+    init();
+  }, [token]);
 
   // Cooldown timer
   useEffect(() => {
@@ -273,10 +291,28 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
       lng: location?.lng
     };
     try {
-      const response = await fetch("/api/register.php", {
+      const endpoint = token ? "/api/register-from-invite.php" : "/api/register.php";
+      
+      // Split full name back for the invite API if needed
+      const [fname, lname] = form.fullName.split(',').map(s => s.trim());
+
+      const finalPayload = token ? {
+        token,
+        username: form.username,
+        password: form.password,
+        first_name: fname || form.fullName,
+        last_name: lname || "",
+        email: form.email,
+        contact_number: form.contact,
+        brgy_name: form.brgy,
+        city: form.city,
+        province: form.province
+      } : payload;
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(finalPayload),
         credentials: "include"
       });
       const data = await response.json();

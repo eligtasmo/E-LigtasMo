@@ -10,7 +10,7 @@ $raw = file_get_contents("php://input");
 $data = json_decode($raw, true) ?? [];
 
 try {
-    // Check if invites table exists
+    // Ensure table exists and has correct nullability
     $pdo->exec("CREATE TABLE IF NOT EXISTS registration_invites (
         id INT AUTO_INCREMENT PRIMARY KEY,
         token VARCHAR(100) UNIQUE NOT NULL,
@@ -24,6 +24,11 @@ try {
         expires_at DATETIME,
         used_at DATETIME DEFAULT NULL
     )");
+
+    // Relax constraints for existing tables
+    $pdo->exec("ALTER TABLE registration_invites MODIFY first_name VARCHAR(100) NULL");
+    $pdo->exec("ALTER TABLE registration_invites MODIFY last_name VARCHAR(100) NULL");
+    $pdo->exec("ALTER TABLE registration_invites MODIFY brgy_name VARCHAR(100) NULL");
 
     $token = bin2hex(random_bytes(16)); // Secure 32-char token
     $expires_at = date('Y-m-d H:i:s', strtotime('+7 days'));
