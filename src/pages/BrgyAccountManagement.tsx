@@ -437,115 +437,138 @@ const BrgyAccountManagement: React.FC = () => {
 
       {/* Create Account Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-10">
-              <div className="flex justify-between items-center mb-10">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Enroll Brgy Official</h2>
-                  <p className="text-xs font-semibold text-gray-400 mt-1">Direct system registration for sector officials.</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] w-full max-w-xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="p-8 sm:p-12">
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <FiShield size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Enroll Official</h2>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Secure Sector Commander Registration</p>
+                  </div>
                 </div>
-                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <FiX size={24} className="text-gray-400" />
+                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all group">
+                  <FiX size={20} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
                 </button>
               </div>
 
-              <form onSubmit={handleCreateAccount} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">First Name</label>
-                    <input 
-                      required
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.first_name}
-                      onChange={e => setCreateData({...createData, first_name: e.target.value})}
-                      placeholder="Juan"
-                    />
+              <form onSubmit={handleCreateAccount} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">01. Identity Profile</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
-                  <div>
-                    <label className="tactical-label">Last Name</label>
-                    <input 
-                      required
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.last_name}
-                      onChange={e => setCreateData({...createData, last_name: e.target.value})}
-                      placeholder="Dela Cruz"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">Username</label>
-                    <input 
-                      required
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.username}
-                      onChange={e => setCreateData({...createData, username: e.target.value})}
-                      placeholder="user_brgy"
-                    />
-                  </div>
-                  <div>
-                    <label className="tactical-label">Email Address</label>
-                    <input 
-                      required
-                      type="email"
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.email}
-                      onChange={e => setCreateData({...createData, email: e.target.value})}
-                      placeholder="brgy@eligtasmo.gov"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">First Name</label>
+                      <input 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.first_name}
+                        onChange={e => setCreateData({...createData, first_name: e.target.value})}
+                        placeholder="Juan"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Last Name</label>
+                      <input 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.last_name}
+                        onChange={e => setCreateData({...createData, last_name: e.target.value})}
+                        placeholder="Dela Cruz"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">Password</label>
-                    <input 
-                      required
-                      type="password"
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.password}
-                      onChange={e => setCreateData({...createData, password: e.target.value})}
-                      placeholder="••••••••"
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">02. Credentials</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
-                  <div>
-                    <label className="tactical-label">Confirm Password</label>
-                    <input 
-                      required
-                      type="password"
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.confirmPassword}
-                      onChange={e => setCreateData({...createData, confirmPassword: e.target.value})}
-                      placeholder="••••••••"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Username</label>
+                      <input 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.username}
+                        onChange={e => setCreateData({...createData, username: e.target.value})}
+                        placeholder="user_brgy"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Email Address</label>
+                      <input 
+                        required
+                        type="email"
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.email}
+                        onChange={e => setCreateData({...createData, email: e.target.value})}
+                        placeholder="brgy@eligtasmo.gov"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Password</label>
+                      <input 
+                        required
+                        type="password"
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.password}
+                        onChange={e => setCreateData({...createData, password: e.target.value})}
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Confirm Password</label>
+                      <input 
+                        required
+                        type="password"
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.confirmPassword}
+                        onChange={e => setCreateData({...createData, confirmPassword: e.target.value})}
+                        placeholder="••••••••"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">Phone Number</label>
-                    <input 
-                      required
-                      maxLength={11}
-                      className="tactical-input w-full h-10 py-1"
-                      value={createData.contact_number}
-                      onChange={e => setCreateData({...createData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
-                      placeholder="09123456789"
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">03. Jurisdiction</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
-                  <div>
-                    <label className="tactical-label">Barangay Assignment</label>
-                    <select 
-                      required
-                      className="tactical-input w-full h-10 py-1 appearance-none cursor-pointer pr-10"
-                      value={createData.brgy_name}
-                      onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
-                    >
-                      <option value="">Select Sector...</option>
-                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Phone Number</label>
+                      <input 
+                        required
+                        maxLength={11}
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={createData.contact_number}
+                        onChange={e => setCreateData({...createData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
+                        placeholder="09123456789"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Barangay Assignment</label>
+                      <select 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+                        value={createData.brgy_name}
+                        onChange={e => setCreateData({...createData, brgy_name: e.target.value})}
+                      >
+                        <option value="">Select Sector...</option>
+                        {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -553,16 +576,16 @@ const BrgyAccountManagement: React.FC = () => {
                   <button 
                     type="button" 
                     onClick={() => setShowCreateModal(false)}
-                    className="tactical-button-ghost flex-1 h-10"
+                    className="flex-1 h-12 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 border border-transparent transition-all uppercase tracking-widest"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={creating}
-                    className="tactical-button-accent flex-1 h-10"
+                    className="flex-1 h-12 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-[0_8px_16px_-4px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_12px_20px_-4px_rgba(79,70,229,0.4)] transition-all uppercase tracking-widest disabled:opacity-50"
                   >
-                    {creating ? 'Confirming...' : 'Confirm'}
+                    {creating ? 'Processing...' : 'Confirm Enrollment'}
                   </button>
                 </div>
               </form>
@@ -572,111 +595,134 @@ const BrgyAccountManagement: React.FC = () => {
       )}
       {/* Edit Account Modal */}
       {showEditModal && editData && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-10">
-              <div className="flex justify-between items-center mb-10">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Edit Official Profile</h2>
-                  <p className="text-xs font-semibold text-gray-400 mt-1">Update system credentials and sector assignment.</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] w-full max-w-xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+            <div className="p-8 sm:p-12">
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <FiShield size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Edit Profile</h2>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Secure Sector Commander Management</p>
+                  </div>
                 </div>
-                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <FiX size={24} className="text-gray-400" />
+                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all group">
+                  <FiX size={20} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateUser} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">First Name</label>
-                    <input 
-                      required
-                      className="tactical-input w-full h-10 py-1"
-                      value={editData.first_name}
-                      onChange={e => setEditData({...editData, first_name: e.target.value})}
-                    />
+              <form onSubmit={handleUpdateUser} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">01. Identity Profile</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
-                  <div>
-                    <label className="tactical-label">Last Name</label>
-                    <input 
-                      required
-                      className="tactical-input w-full h-10 py-1"
-                      value={editData.last_name}
-                      onChange={e => setEditData({...editData, last_name: e.target.value})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">First Name</label>
+                      <input 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={editData.first_name}
+                        onChange={e => setEditData({...editData, first_name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Last Name</label>
+                      <input 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={editData.last_name}
+                        onChange={e => setEditData({...editData, last_name: e.target.value})}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">Username</label>
-                    <input 
-                      disabled
-                      className="tactical-input w-full h-10 py-1 bg-gray-50 opacity-70 cursor-not-allowed"
-                      value={editData.username}
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">02. Credentials</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Username</label>
+                      <input 
+                        disabled
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 opacity-60 cursor-not-allowed"
+                        value={editData.username}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Reset Password</label>
+                      <input 
+                        type="password"
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={editData.password || ''}
+                        onChange={e => setEditData({...editData, password: e.target.value})}
+                        placeholder="Leave blank to keep same"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="tactical-label">Official Email</label>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Email Address</label>
                     <input 
                       required
                       type="email"
-                      className="tactical-input w-full h-10 py-1"
+                      className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
                       value={editData.email}
                       onChange={e => setEditData({...editData, email: e.target.value})}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="tactical-label">Phone Number</label>
-                    <input 
-                      required
-                      maxLength={11}
-                      className="tactical-input w-full h-10 py-1"
-                      value={editData.contact_number}
-                      onChange={e => setEditData({...editData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
-                    />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">03. Jurisdiction</span>
+                    <div className="h-px flex-1 bg-slate-100"></div>
                   </div>
-                  <div>
-                    <label className="tactical-label">Barangay Assignment</label>
-                    <select 
-                      required
-                      className="tactical-input w-full h-10 py-1 appearance-none cursor-pointer pr-10"
-                      value={editData.brgy_name}
-                      onChange={e => setEditData({...editData, brgy_name: e.target.value})}
-                    >
-                      {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Phone Number</label>
+                      <input 
+                        required
+                        maxLength={11}
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all shadow-sm"
+                        value={editData.contact_number}
+                        onChange={e => setEditData({...editData, contact_number: e.target.value.replace(/[^0-9]/g, '')})}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Barangay Assignment</label>
+                      <select 
+                        required
+                        className="tactical-input w-full h-11 bg-slate-50/50 border-slate-200 focus:bg-white transition-all appearance-none cursor-pointer pr-10 shadow-sm"
+                        value={editData.brgy_name}
+                        onChange={e => setEditData({...editData, brgy_name: e.target.value})}
+                      >
+                        {allBrgys.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="tactical-label">Reset Password</label>
-                  <input 
-                    type="password"
-                    className="tactical-input w-full h-10 py-1"
-                    value={editData.password || ''}
-                    onChange={e => setEditData({...editData, password: e.target.value})}
-                    placeholder="Leave blank to keep same"
-                  />
                 </div>
 
                 <div className="flex gap-4 pt-4">
                   <button 
                     type="button" 
                     onClick={() => setShowEditModal(false)}
-                    className="tactical-button-ghost flex-1 h-10"
+                    className="flex-1 h-12 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 border border-transparent transition-all uppercase tracking-widest"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={updating}
-                    className="tactical-button-accent flex-1 h-10"
+                    className="flex-1 h-12 rounded-2xl bg-indigo-600 text-white text-sm font-bold shadow-[0_8px_16px_-4px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_12px_20px_-4px_rgba(79,70,229,0.4)] transition-all uppercase tracking-widest disabled:opacity-50"
                   >
-                    {updating ? 'Updating...' : 'Save Changes'}
+                    {updating ? 'Saving...' : 'Update Official'}
                   </button>
                 </div>
               </form>
