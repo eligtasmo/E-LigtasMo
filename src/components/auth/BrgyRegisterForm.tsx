@@ -3,23 +3,14 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { CustomButton } from "../common";
 import { MailIcon, EnvelopeIcon, ChevronLeftIcon } from '../../icons';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import Map, { NavigationControl, GeolocateControl, Marker } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import TacticalMarker from '../maps/TacticalMarker';
 
 import { DEFAULT_MAP_STATE, SANTA_CRUZ_BOUNDS_LEAFLET } from '../../constants/geo';
 import { apiFetch } from '../../utils/api';
 
-// Fix Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
-});
+// Removed Leaflet fix
 
 
 const brgys = [
@@ -40,17 +31,21 @@ interface BrgyRegisterFormProps {
   token?: string | null;
 }
 
-const LocationPicker = ({ position, setPosition }: { position: { lat: number, lng: number } | null, setPosition: (pos: { lat: number, lng: number }) => void }) => {
-  useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-    },
-  });
-  return position ? (
-    <Marker position={position}>
-      <Popup>Barangay Hall Location</Popup>
-    </Marker>
-  ) : null;
+const MapPicker = ({ location, setLocation }: { location: { lat: number, lng: number } | null, setLocation: (pos: { lat: number, lng: number }) => void }) => {
+  return (
+    <>
+      <GeolocateControl position="top-right" />
+      <NavigationControl position="top-right" />
+      {location && (
+        <TacticalMarker 
+          latitude={location.lat} 
+          longitude={location.lng} 
+          type="brgy" 
+          label="Barangay Hall"
+        />
+      )}
+    </>
+  );
 };
 
 /* ── Step Progress Indicator ── */
@@ -539,20 +534,25 @@ const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
           {isMapStep && (
             <div className="animate-fade-in space-y-4">
               <Label>Pin Barangay Hall Location <span className="text-gray-400 font-normal text-sm ml-1">(Optional)</span></Label>
-              <div className="h-64 w-full rounded-xl border overflow-hidden relative z-0">
-                <MapContainer 
-                  center={[DEFAULT_MAP_STATE.latitude, DEFAULT_MAP_STATE.longitude]} 
-                  zoom={DEFAULT_MAP_STATE.zoom} 
-                  minZoom={DEFAULT_MAP_STATE.minZoom} 
-                  maxBounds={SANTA_CRUZ_BOUNDS_LEAFLET} 
-                  attributionControl={false}
-                  style={{ height: "100%", width: "100%" }}
+              <div className="h-72 w-full rounded-3xl border-2 border-gray-100 overflow-hidden relative shadow-inner">
+                <Map
+                  initialViewState={{
+                    latitude: DEFAULT_MAP_STATE.latitude,
+                    longitude: DEFAULT_MAP_STATE.longitude,
+                    zoom: DEFAULT_MAP_STATE.zoom
+                  }}
+                  mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+                  mapStyle="mapbox://styles/mapbox/navigation-night-v1"
+                  style={{ width: '100%', height: '100%' }}
+                  onClick={(e) => setLocation({ lat: e.lngLat.lat, lng: e.lngLat.lng })}
+                  maxBounds={DEFAULT_MAP_STATE.maxBounds}
                 >
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <LocationPicker position={location} setPosition={setLocation} />
-                </MapContainer>
+                  <MapPicker location={location} setLocation={setLocation} />
+                </Map>
               </div>
-              <p className="text-xs text-gray-400">Click on the map to pin the exact location.</p>
+              <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider text-center bg-blue-50 py-2 rounded-xl border border-blue-100">
+                Tap on the map to mark your Barangay Hall
+              </p>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={handleBack}
                   className="flex items-center justify-center gap-1.5 px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-medium transition-all">
@@ -569,39 +569,37 @@ const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
           {/* ═══════ FINAL STEP: Account Info ═══════ */}
           {isAccountStep && (
             <div className="animate-fade-in space-y-4">
-              <div>
-                <Label>Full Name {mode === 'brgy' && "(Brgy Official)"} <span className="text-error-500">*</span></Label>
-                <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder={mode === 'brgy' ? "Full Name (Brgy Official)" : "Full Name"} className="rounded-xl" />
-              </div>
-              <div>
-                <Label>Username <span className="text-error-500">*</span></Label>
-                <Input name="username" value={form.username} onChange={handleChange} placeholder="Username" className="rounded-xl" />
-              </div>
-              <div>
-                <Label>Contact Number <span className="text-error-500">*</span></Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><EnvelopeIcon className="w-5 h-5" /></span>
-                  <Input name="contact" value={form.contact} onChange={handleChange} placeholder="e.g. 0917 123 4567" className="pl-10 rounded-xl" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label>Full Name {mode === 'brgy' && "(Official)"} <span className="text-error-500">*</span></Label>
+                  <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder={mode === 'brgy' ? "First Name, Last Name" : "Full Name"} className="rounded-xl h-11" />
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="w-1/2">
+                <div>
+                  <Label>Username <span className="text-error-500">*</span></Label>
+                  <Input name="username" value={form.username} onChange={handleChange} placeholder="Tactical ID" className="rounded-xl h-11" />
+                </div>
+                <div>
+                  <Label>Contact Number <span className="text-error-500">*</span></Label>
+                  <Input name="contact" value={form.contact} onChange={handleChange} placeholder="0917..." className="rounded-xl h-11" />
+                </div>
+                <div className="col-span-1">
                   <Label>Password <span className="text-error-500">*</span></Label>
-                  <Input type="password" name="password" value={form.password} onChange={handleChange} placeholder="Password" className="rounded-xl" />
+                  <Input type="password" name="password" value={form.password} onChange={handleChange} placeholder="••••••••" className="rounded-xl h-11" />
                 </div>
-                <div className="w-1/2">
-                  <Label>Confirm Password <span className="text-error-500">*</span></Label>
-                  <Input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Confirm" className="rounded-xl" />
+                <div className="col-span-1">
+                  <Label>Confirm <span className="text-error-500">*</span></Label>
+                  <Input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="••••••••" className="rounded-xl h-11" />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
+              
+              <div className="flex gap-3 pt-4 border-t border-gray-50">
                 <button type="button" onClick={handleBack}
-                  className="flex items-center justify-center gap-1.5 px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-medium transition-all">
-                  <ChevronLeftIcon className="w-4 h-4" /> Back
+                  className="flex items-center justify-center gap-1.5 px-6 py-2.5 border-2 border-gray-200 rounded-xl hover:border-gray-300 text-gray-600 text-sm font-bold transition-all">
+                  <ChevronLeftIcon className="w-4 h-4" /> BACK
                 </button>
                 <button type="submit" disabled={loading}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20">
-                  {loading ? "Registering..." : (mode === 'brgy' ? "Register Barangay" : "Register Resident")}
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 active:scale-[0.98]">
+                  {loading ? "PROCESSING..." : (mode === 'brgy' ? "FINALIZE REGISTRATION" : "CLAIM ACCOUNT")}
                 </button>
               </div>
             </div>
