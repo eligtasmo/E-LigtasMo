@@ -86,7 +86,8 @@ function has_permission_for_role($role, $permission) {
 
 function require_permission($permission) {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? '');
+    $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? ($_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '')));
+    
     $role = null;
     if (stripos($auth, 'Bearer ') === 0) {
         $token = substr($auth, 7);

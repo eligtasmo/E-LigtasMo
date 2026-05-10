@@ -8,8 +8,8 @@ function b64url_decode($data) {
 }
 function jwt_secret() {
     require_once __DIR__ . '/env_helper.php';
-    $s = getenv('ELIGTASMO_JWT_SECRET');
-    return $s ? $s : 'change_me';
+    $s = $_ENV['ELIGTASMO_JWT_SECRET'] ?? ($_SERVER['ELIGTASMO_JWT_SECRET'] ?? getenv('ELIGTASMO_JWT_SECRET'));
+    return $s ? $s : 'change_me_to_something_secure';
 }
 function jwt_encode($payload, $ttlSeconds = 3600) {
     $header = ['alg' => 'HS256', 'typ' => 'JWT'];
@@ -37,4 +37,4 @@ function jwt_decode($token) {
     if (isset($payload['exp']) && time() >= (int)$payload['exp']) { return null; }
     return $payload;
 }
-?> 
+?>
