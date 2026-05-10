@@ -12,7 +12,7 @@ class SMSService {
 
     private static function init() {
         if (self::$apiToken === null) {
-            self::$apiToken = getenv('PHILSMS_API_TOKEN');
+            self::$apiToken = getenv('PHILSMS_API_TOKEN') ?: ($_ENV['PHILSMS_API_TOKEN'] ?? ($_SERVER['PHILSMS_API_TOKEN'] ?? null));
         }
     }
 
