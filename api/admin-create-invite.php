@@ -53,8 +53,8 @@ try {
         'success' => true,
         'token' => $token,
         'invite_link' => $invite_link,
-        'version' => '2.2',
-        'message' => 'Invite link generated successfully.'
+        'version' => '2.3',
+        'message' => 'Mission link generated (HARDCODED: eligtasmo.site)'
     ]);
 
 } catch (Exception $e) {
