@@ -48,7 +48,7 @@ const BrgyAccountManagement: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editData, setEditData] = useState<any>(null);
-  const [createData, setCreateData] = useState({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+  const [createData, setCreateData] = useState({ username: '', password: '', confirmPassword: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [allBrgys, setAllBrgys] = useState<string[]>([]);
@@ -80,7 +80,16 @@ const BrgyAccountManagement: React.FC = () => {
       const res = await apiFetch("list-barangays.php");
       const data = await res.json();
       if (data.success && data.barangays && data.barangays.length > 0) {
-        setAllBrgys(data.barangays.map((b: any) => b.name));
+        // Filter out purely numeric or invalid names that might be showing as "84"
+        const validBrgys = data.barangays
+          .map((b: any) => b.name)
+          .filter((name: string) => name && isNaN(Number(name)) && name.length > 2);
+        
+        if (validBrgys.length > 0) {
+          setAllBrgys(validBrgys);
+        } else {
+          setAllBrgys(fallbackBrgys);
+        }
       } else {
         setAllBrgys(fallbackBrgys);
       }
@@ -138,11 +147,37 @@ const BrgyAccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    // 1. Full Name Validation (First name, Last name)
+    if (!createData.full_name.includes(',')) {
+      toast.error("Full Name must be in 'First name, Last name' format (e.g. Juan, Dela Cruz)");
+      return;
+    }
+
+    // 2. Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(createData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // 3. Phone Validation
     const cleanPhone = createData.contact_number.replace(/[^0-9]/g, '');
     if (cleanPhone.length !== 11 || !cleanPhone.startsWith('09')) {
       toast.error("Please enter a valid 11-digit phone number starting with 09");
       return;
     }
+
+    // 4. Password Confirmation
+    if (createData.password !== createData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (createData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
     setCreating(true);
     try {
       const res = await apiFetch("admin-create-user.php", {
@@ -154,7 +189,7 @@ const BrgyAccountManagement: React.FC = () => {
       if (data.success) {
         toast.success("Barangay account created successfully");
         setShowCreateModal(false);
-        setCreateData({ username: '', password: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
+        setCreateData({ username: '', password: '', confirmPassword: '', full_name: '', email: '', contact_number: '', brgy_name: '', role: 'brgy' });
         fetchUsers();
       } else {
         toast.error(data.message || "Failed to create account");
@@ -170,6 +205,15 @@ const BrgyAccountManagement: React.FC = () => {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (editData.full_name && !editData.full_name.includes(',')) {
+      toast.error("Full Name must be in 'First name, Last name' format");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (editData.email && !emailRegex.test(editData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     const cleanPhone = editData.contact_number?.replace(/[^0-9]/g, '');
     if (cleanPhone && (cleanPhone.length !== 11 || !cleanPhone.startsWith('09'))) {
       toast.error("Please enter a valid 11-digit phone number starting with 09");
@@ -407,8 +451,9 @@ const BrgyAccountManagement: React.FC = () => {
                     className="tactical-input w-full"
                     value={createData.full_name}
                     onChange={e => setCreateData({...createData, full_name: e.target.value})}
-                    placeholder="e.g. Juan Dela Cruz"
+                    placeholder="e.g. Juan, Dela Cruz"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Required Format: First name, Last name</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
@@ -430,6 +475,17 @@ const BrgyAccountManagement: React.FC = () => {
                       className="tactical-input w-full"
                       value={createData.password}
                       onChange={e => setCreateData({...createData, password: e.target.value})}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div>
+                    <label className="tactical-label">Confirm Password</label>
+                    <input 
+                      required
+                      type="password"
+                      className="tactical-input w-full"
+                      value={createData.confirmPassword}
+                      onChange={e => setCreateData({...createData, confirmPassword: e.target.value})}
                       placeholder="••••••••"
                     />
                   </div>
