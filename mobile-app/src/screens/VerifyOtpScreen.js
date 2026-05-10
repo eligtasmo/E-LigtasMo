@@ -81,14 +81,10 @@ const VerifyOtpScreen = ({ navigation, route }) => {
   return (
     <AuthScreenShell title="Verify Account" onBack={() => navigation.goBack()} step={2} totalSteps={4}>
       <View style={{ alignItems: 'flex-start', marginTop: 10, marginBottom: 30 }}>
-        <RNImage
-          source={require('../../assets/eligtasmo_logo.png')}
-          style={{ width: 64, height: 64, marginBottom: 20 }}
-          resizeMode="contain"
-        />
+        <RNImage source={require('../../assets/eligtasmo_logo.png')} style={{ width: 64, height: 64, marginBottom: 20 }} resizeMode="contain" />
         <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontFamily: FONT_INPUT, lineHeight: 22 }}>
-            Enter the confirmation code sent to{'\n'}
-            <Text style={{ fontWeight: '600', color: '#FFFFFF' }}>{email}</Text>
+          Enter the confirmation code sent to{"\n"}
+          <Text style={{ fontWeight: '600', color: '#FFFFFF' }}>{email || 'your email'}</Text>
         </Text>
       </View>
 

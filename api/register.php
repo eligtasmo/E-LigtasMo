@@ -65,6 +65,12 @@ if (!empty($errors)) {
     exit;
 }
 
+if (!preg_match('/^[A-Za-z\s]+$/', $data['full_name'])) {
+    http_response_code(200);
+    echo json_encode(['success' => false, 'code' => 'VALIDATION_ERROR', 'message' => 'Name must only contain letters and spaces.']);
+    exit;
+}
+
 $data['brgy_name'] = isset($data['brgy_name']) ? trim($data['brgy_name']) : '';
 $data['city'] = isset($data['city']) ? trim($data['city']) : '';
 $data['province'] = isset($data['province']) ? trim($data['province']) : '';

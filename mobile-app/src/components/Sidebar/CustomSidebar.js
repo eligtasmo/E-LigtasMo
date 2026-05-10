@@ -66,10 +66,13 @@ const CustomSidebar = (props) => {
 
         {/* User Profile Section */}
         <View style={styles.profileSection}>
-          <RNImage
-            source={user?.profile_image ? { uri: user.profile_image } : require('../../../assets/eligtasmo_logo.png')}
-            style={styles.avatar}
-          />
+          {user?.profile_image ? (
+            <RNImage source={{ uri: user.profile_image }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+              <Lucide.User size={24} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+            </View>
+          )}
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.full_name || 'Darwin Piodos'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'darwinpiodos@gmail.com'}</Text>

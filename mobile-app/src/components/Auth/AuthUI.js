@@ -188,11 +188,11 @@ export const AuthField = ({ label, icon: Icon, children, error, hint, required, 
 
   return (
     <View style={{ marginBottom: 28 }}>
-      {label && (
+      {label ? (
         <Text style={styles.fieldLabel}>
           {label}{required ? ' *' : ''}
         </Text>
-      )}
+      ) : null}
       {noContainer ? (
         <View>{children}</View>
       ) : (
@@ -220,11 +220,11 @@ export const AuthField = ({ label, icon: Icon, children, error, hint, required, 
           {Icon && <Icon size={20} color="#FFFFFF" strokeWidth={2} style={{ marginLeft: 12 }} />}
         </View>
       )}
-      {hint && (
+      {hint ? (
         <Text style={{ fontSize: 15, color: '#FFFFFF', marginTop: 10, lineHeight: 22, fontWeight: '600', fontFamily: DS_FONT_UI }}>
            {hint}
         </Text>
-      )}
+      ) : null}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -245,11 +245,11 @@ export const AuthTextInput = React.forwardRef(({ style, editable = true, onClear
       ]}
       {...props}
     />
-    {onClear && value && value.length > 0 && (
+    {(onClear && value && value.length > 0) ? (
       <TouchableOpacity onPress={onClear} style={{ padding: 4 }}>
         <Lucide.X size={20} color="#FFFFFF" strokeWidth={2} />
       </TouchableOpacity>
-    )}
+    ) : null}
   </View>
 ));
 
@@ -261,7 +261,7 @@ export const AuthGlassCard = ({ children, style }) => (
 
 export const AuthTextLink = ({ prefix, linkLabel, onPress }) => (
   <Row justify="center" align="center" style={{ marginTop: 24 }}>
-    {prefix && <Text style={{ color: '#9CA3AF', fontSize: 14, fontFamily: DS_FONT_UI }}>{prefix} </Text>}
+    {prefix ? <Text style={{ color: '#9CA3AF', fontSize: 14, fontFamily: DS_FONT_UI }}>{prefix} </Text> : null}
     <TouchableOpacity onPress={onPress}>
       <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600', fontFamily: DS_FONT_UI, textDecorationLine: 'underline' }}>{linkLabel}</Text>
     </TouchableOpacity>
@@ -345,7 +345,7 @@ export const AuthChoiceGrid = ({ options, selected, onSelect, value, onChange, r
 
 export const AuthSelect = ({ value, label, onPress, error }) => (
   <View style={{ marginBottom: 28 }}>
-    {label && <Text style={styles.fieldLabel}>{label}</Text>}
+    {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
     <TouchableOpacity
       onPress={onPress}
       style={[

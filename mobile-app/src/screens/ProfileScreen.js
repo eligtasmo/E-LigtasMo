@@ -73,10 +73,13 @@ const ProfileScreen = ({ navigation }) => {
           transition={{ type: 'timing', duration: 800 }}
           style={styles.avatarContainer}
         >
-          <RNImage 
-            source={user?.profile_image ? { uri: user.profile_image } : require('../../assets/eligtasmo_logo.png')} 
-            style={styles.avatar}
-          />
+          {user?.profile_image ? (
+            <RNImage source={{ uri: user.profile_image }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+              <Lucide.User size={40} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+            </View>
+          )}
           <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.8}>
             <Lucide.Camera size={16} color="#000" strokeWidth={2.5} />
           </TouchableOpacity>

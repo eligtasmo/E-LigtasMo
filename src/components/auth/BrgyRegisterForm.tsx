@@ -267,6 +267,19 @@ const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
       setError("Please fill in all fields.");
       return;
     }
+
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(form.fullName)) {
+      setError("Name must only contain letters and spaces.");
+      return;
+    }
+
+    const phoneRegex = /^09\d{9}$/;
+    if (!phoneRegex.test(form.contact)) {
+      setError("Contact number must be exactly 11 digits and start with 09.");
+      return;
+    }
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -572,7 +585,7 @@ const BrgyRegisterForm = (props: BrgyRegisterFormProps) => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <Label>Full Name {mode === 'brgy' && "(Official)"} <span className="text-error-500">*</span></Label>
-                  <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder={mode === 'brgy' ? "First Name, Last Name" : "Full Name"} className="rounded-xl h-11" />
+                  <Input name="fullName" value={form.fullName} onChange={handleChange} placeholder="First Name Last Name" className="rounded-xl h-11" />
                 </div>
                 <div>
                   <Label>Username <span className="text-error-500">*</span></Label>

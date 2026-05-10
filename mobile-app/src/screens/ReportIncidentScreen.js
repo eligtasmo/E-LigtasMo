@@ -277,16 +277,16 @@ const buildMapHtml = ({ currentCoords, incidentCoords, isDark, incidentLabel, dr
           const shelters = ${JSON.stringify(tacticalData.shelters)};
           const barangays = ${JSON.stringify(tacticalData.barangays)};
 
-          hazards.forEach(h => {
-            if (!h.lng || !h.lat) return;
-            const el = document.createElement('div');
-            el.className = 'hazard-marker';
-            el.title = h.type + ': ' + (h.address || '');
-            el.innerHTML = '<span class="mdi mdi-alert" style="color: #EF4444; font-size: 18px; line-height: 1;"></span>';
-            new mapboxgl.Marker({ element: el, anchor: 'center' })
-              .setLngLat([parseFloat(h.lng), parseFloat(h.lat)])
-              .addTo(map);
-          });
+          // hazards.forEach(h => {
+          //   if (!h.lng || !h.lat) return;
+          //   const el = document.createElement('div');
+          //   el.className = 'hazard-marker';
+          //   el.title = h.type + ': ' + (h.address || '');
+          //   el.innerHTML = '<span class="mdi mdi-alert" style="color: #EF4444; font-size: 18px; line-height: 1;"></span>';
+          //   new mapboxgl.Marker({ element: el, anchor: 'center' })
+          //     .setLngLat([parseFloat(h.lng), parseFloat(h.lat)])
+          //     .addTo(map);
+          // });
 
           shelters.forEach(s => {
             const lng = parseFloat(s.longitude || s.lng);
@@ -388,21 +388,9 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   const [submitting, setSubmitting] = useState(false);
   const [isRefreshingMap, setIsRefreshingMap] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [finalReportId, setFinalReportId] = useState('');
-  const [isViewingHistoryReport, setIsViewingHistoryReport] = useState(false);
-  const [selectedReportCoords, setSelectedReportCoords] = useState(null);
-
-  // My Reports State
-  const [myReports, setMyReports] = useState([]);
-  const [reportFilter, setReportFilter] = useState('All');
-  const [fetchingReports, setFetchingReports] = useState(false);
-
-  // Search State
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [tacticalData, setTacticalData] = useState({ hazards: [], shelters: [], barangays: [] });
 
   const fetchTacticalData = async () => {
@@ -467,35 +455,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
     }
   };
 
-  const fetchMyReports = useCallback(async () => {
-    if (!user?.id) return;
-    setFetchingReports(true);
-    try {
-      const res = await fetch(`${API_URL}/list-incident-reports.php?user_id=${user.id}&all_time=true`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setMyReports(data);
-      }
-    } catch (err) {
-      console.error('Error fetching reports:', err);
-    } finally {
-      setFetchingReports(false);
-    }
-  }, [user?.id]);
-
-  const formatRelativeTime = (dateString) => {
-    if (!dateString) return 'Just now';
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 84600) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return date.toLocaleDateString();
-  };
-
   const handleReportClick = useCallback((report) => {
-    setShowHistory(false);
     navigation.navigate('HazardMap', { focusId: report.id });
   }, [navigation]);
 
@@ -508,7 +468,6 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       }
       return () => {
         // Reset state when navigating away
-        setIsViewingHistoryReport(false);
         setIncidentCoords(null);
         setPolygonPoints([]);
         setDetails('');
@@ -520,31 +479,10 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   );
 
   useEffect(() => {
-    if (user?.id) fetchMyReports();
-  }, [user?.id, fetchMyReports]);
+    // Mission history fetched on Hazard Map now
+  }, [user?.id]);
 
-  const filteredReports = useMemo(() => {
-    let base = myReports;
-    if (reportFilter !== 'All') {
-      base = myReports.filter(r => {
-        const status = (r.status || 'Pending').toLowerCase();
-        const filter = reportFilter.toLowerCase();
-        if (filter === 'approved' && status === 'verified') return true;
-        return status === filter;
-      });
-    }
-
-    if (historySearchQuery.trim()) {
-      const q = historySearchQuery.toLowerCase();
-      base = base.filter(r => 
-        (r.type || '').toLowerCase().includes(q) || 
-        (r.location_text || '').toLowerCase().includes(q) ||
-        (r.description || '').toLowerCase().includes(q)
-      );
-    }
-
-    return base;
-  }, [myReports, reportFilter, historySearchQuery]);
+  // Filtered reports moved to Hazard Map screen
 
   useEffect(() => {
     const init = async () => {
@@ -779,14 +717,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
-          {user?.role === 'resident' && (
-            <TouchableOpacity 
-              onPress={() => setShowHistory(true)} 
-              style={[styles.backBtn, { marginLeft: 10 }]}
-            >
-              <Lucide.History size={20} color="#F5B235" />
-            </TouchableOpacity>
-          )}
+          {/* Mission history button moved to Hazard Map */}
         </View>
 
         {/* Search Bar (Route Planner Style) */}
@@ -846,27 +777,12 @@ const ReportIncidentScreen = ({ navigation, route }) => {
           <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} exit={{ opacity: 0, translateY: 20 }} style={styles.overlayHint}>
             <Lucide.Crosshair size={24} color="#3B82F6" strokeWidth={2} />
             <Text style={styles.hintText}>
-              {isViewingHistoryReport ? 'Viewing tactical entry' : (drawMode === 'pinpoint' ? 'Tap map to mark incident' : 'Tap 3+ points to define zone')}
+              {drawMode === 'pinpoint' ? 'Tap map to mark incident' : 'Tap 3+ points to define zone'}
             </Text>
           </MotiView>
         )}
 
-        {isViewingHistoryReport && (
-          <MotiView from={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={styles.exitViewWrapper}>
-            <TouchableOpacity 
-              onPress={() => {
-                setIsViewingHistoryReport(false);
-                if (webViewRef.current && currentCoords) {
-                   webViewRef.current.postMessage(JSON.stringify({ type: 'fly_to', lat: currentCoords.lat, lng: currentCoords.lng }));
-                }
-              }}
-              style={styles.exitViewBtn}
-            >
-              <Lucide.X size={18} color="#000" />
-              <Text style={styles.exitViewText}>Exit view</Text>
-            </TouchableOpacity>
-          </MotiView>
-        )}
+
       </AnimatePresence>
 
       <AnimatePresence>
@@ -1013,7 +929,6 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         </ScrollView>
 
         <AnimatePresence>
-          {!isViewingHistoryReport && (
             <MotiView 
               from={{ translateY: 150 }} 
               animate={{ translateY: 0 }} 
@@ -1048,130 +963,12 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               ) : null}
             </MotiView>
-          )}
         </AnimatePresence>
           </MotiView>
         )}
       </AnimatePresence>
 
-      {/* ── MY REPORTS MODAL (RESIDENTS ONLY) ── */}
-      <AnimatePresence>
-        {showHistory && (
-          <MotiView 
-            from={{ opacity: 0, translateY: 100 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            exit={{ opacity: 0, translateY: 100 }}
-            style={[styles.historyModal, { paddingTop: insets.top + 20 }]}
-          >
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <View style={styles.trayTitleRow}>
-                <Lucide.ClipboardList size={22} color="#F5B235" />
-                <View>
-                  <Text style={styles.modalTitle}>Mission history</Text>
-                  <Text style={styles.modalSubtitle}>{myReports.length} intel packets synced</Text>
-                </View>
-              </View>
-              <TouchableOpacity 
-                onPress={() => setShowHistory(false)}
-                style={styles.modalCloseBtn}
-              >
-                <Lucide.X size={20} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Modal Search Bar */}
-            <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
-              <View style={styles.modalSearchBar}>
-                <Lucide.Search size={16} color="rgba(255,255,255,0.3)" />
-                <TextInput
-                  value={historySearchQuery}
-                  onChangeText={setHistorySearchQuery}
-                  placeholder="Filter by type or location..."
-                  placeholderTextColor="rgba(255,255,255,0.2)"
-                  style={styles.modalSearchInput}
-                />
-                {historySearchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setHistorySearchQuery('')}>
-                    <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-
-            {/* Filters */}
-            <View style={{ paddingHorizontal: 24, marginBottom: 20 }}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-                {['All', 'Pending', 'Approved', 'Resolved', 'Rejected'].map(f => (
-                  <TouchableOpacity 
-                    key={f}
-                    onPress={() => setReportFilter(f)}
-                    style={[styles.filterBtn, reportFilter === f && styles.filterBtnActive]}
-                  >
-                    <Text style={[styles.filterBtnText, reportFilter === f && styles.filterBtnTextActive]}>{f}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            {/* List */}
-            <ScrollView 
-              style={styles.reportsList}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 40 }}
-            >
-              {fetchingReports ? (
-                <View style={styles.listLoading}>
-                  <ActivityIndicator color="#F5B235" size="small" />
-                </View>
-              ) : filteredReports.length === 0 ? (
-                <View style={styles.listEmpty}>
-                  <Lucide.SearchX size={40} color="rgba(255,255,255,0.1)" />
-                  <Text style={styles.listEmptyText}>NO DATA IN SECTOR</Text>
-                </View>
-              ) : (
-                filteredReports.map((report) => {
-                  const severity = String(report.severity || 'Moderate').toLowerCase();
-                  let color = '#3B82F6';
-                  if (severity === 'moderate' || severity === 'warning') color = '#F5B235';
-                  if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444';
-                  
-                  const typeInfo = INCIDENT_TYPES.find(t => t.id === report.type) || { icon: 'AlertCircle' };
-                  const Icon = Lucide[typeInfo.icon] || Lucide.AlertCircle;
-
-                  return (
-                    <TouchableOpacity 
-                      key={report.id}
-                      activeOpacity={0.8}
-                      onPress={() => handleReportClick(report)}
-                      style={styles.reportCard}
-                    >
-                      <View style={[styles.reportIconBox, { backgroundColor: color + '15', borderColor: color + '30' }]}>
-                        <Icon size={20} color={color} strokeWidth={2.2} />
-                      </View>
-                      
-                      <View style={{ flex: 1 }}>
-                        <Row justify="space-between" align="center">
-                          <Text style={styles.reportType}>{report.type || 'Intel packet'}</Text>
-                          <Text style={styles.reportTime}>{formatRelativeTime(report.time)}</Text>
-                        </Row>
-                        <Row align="center" gap={8} style={{ marginTop: 4 }}>
-                           <View style={[styles.statusBadgeCompact, { backgroundColor: color + '20', borderColor: color + '30' }]}>
-                             <Text style={[styles.statusBadgeTextCompact, { color: color }]}>{(report.status || 'Pending').toUpperCase()}</Text>
-                           </View>
-                           <Text style={styles.reportAddress} numberOfLines={1}>{report.barangay || 'Unknown Sector'}</Text>
-                        </Row>
-                      </View>
-                      
-                      <Lucide.ChevronRight size={16} color="rgba(255,255,255,0.2)" />
-                    </TouchableOpacity>
-                  );
-                })
-              )}
-            </ScrollView>
-          </MotiView>
-        )}
-      </AnimatePresence>
+      {/* MISSION HISTORY MOVED TO HAZARD MAP SCREEN */}
 
       {/* MISSION CONFIRMATION MODAL */}
       <AnimatePresence>

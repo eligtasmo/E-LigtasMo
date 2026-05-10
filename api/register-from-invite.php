@@ -25,14 +25,22 @@ try {
         exit;
     }
 
-    // 2. Check if username exists
-    $check = $pdo->prepare("SELECT id FROM users WHERE username = ?");
-    $check->execute([$data['username']]);
-    if ($check->fetch()) {
+    $check = $pdo->prepare("SELECT id, role FROM users WHERE username = ? OR email = ? OR contact_number = ?");
+    $check->execute([$data['username'], $data['email'] ?? '', $data['contact_number'] ?? '']);
+    if ($existing = $check->fetch(PDO::FETCH_ASSOC)) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'message' => 'Username already taken.']);
+        echo json_encode(['success' => false, 'message' => 'Username, email, or contact number is already registered.']);
         exit;
     }
+
+    $contact = $invite['contact_number'] ?? ($data['contact_number'] ?? '');
+    $cleanPhone = preg_replace('/[^0-9]/', '', $contact);
+    if (strlen($cleanPhone) !== 11 || substr($cleanPhone, 0, 2) !== '09') {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Please enter a valid 11-digit phone number starting with 09.']);
+        exit;
+    }
+    $contact = $cleanPhone;
 
     // 3. Resolve identity and jurisdiction
     $firstName = $invite['first_name'] ?? ($data['first_name'] ?? '');
@@ -51,7 +59,13 @@ try {
         exit;
     }
 
-    $fullName = "$firstName, $lastName";
+    if (!preg_match('/^[A-Za-z\s]+$/', $firstName) || (!empty($lastName) && !preg_match('/^[A-Za-z\s]+$/', $lastName))) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Name must only contain letters and spaces.']);
+        exit;
+    }
+
+    $fullName = trim("$firstName $lastName");
     $hashed = password_hash($data['password'], PASSWORD_DEFAULT);
     
     $stmt = $pdo->prepare("INSERT INTO users (username, password, full_name, brgy_name, email, contact_number, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', NOW())");
