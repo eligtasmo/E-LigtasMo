@@ -5,13 +5,14 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
+const AIR_QUALITY_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 
 export const fetchWeatherForecast = async (latitude, longitude) => {
   try {
     const params = new URLSearchParams({
       latitude: latitude,
       longitude: longitude,
-      current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,visibility',
+      current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,surface_pressure,visibility',
       hourly: 'temperature_2m,precipitation_probability,weather_code',
       daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset,uv_index_max',
       forecast_days: 10,
@@ -19,17 +20,29 @@ export const fetchWeatherForecast = async (latitude, longitude) => {
     });
 
     const response = await fetch(`${BASE_URL}?${params.toString()}`);
-    
-    if (!response.ok) {
-      throw new Error('Weather data fetch failed');
-    }
+    if (!response.ok) throw new Error('Weather data fetch failed');
+    const weatherData = await response.json();
 
-    const data = await response.json();
+    // Fetch Air Quality in parallel
+    const aqParams = new URLSearchParams({
+      latitude: latitude,
+      longitude: longitude,
+      current: 'us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone',
+      timezone: 'auto'
+    });
+    
+    let aqData = null;
+    try {
+      const aqRes = await fetch(`${AIR_QUALITY_URL}?${aqParams.toString()}`);
+      if (aqRes.ok) aqData = await aqRes.json();
+    } catch (e) {}
+
+    const combinedData = { ...weatherData, air_quality: aqData };
     const key = `weather:${latitude},${longitude}`;
     try {
-      await AsyncStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+      await AsyncStorage.setItem(key, JSON.stringify({ data: combinedData, timestamp: Date.now() }));
     } catch {}
-    return data;
+    return combinedData;
   } catch (error) {
     const key = `weather:${latitude},${longitude}`;
     try {

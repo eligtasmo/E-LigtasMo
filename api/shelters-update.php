@@ -73,7 +73,15 @@ try {
         $photos_json = json_encode($saved_paths);
     }
 
-    $stmt = $pdo->prepare('UPDATE shelters SET name=?, lat=?, lng=?, capacity=?, occupancy=?, status=?, contact_person=?, contact_number=?, address=?, category=?, photos=?, updated_by=?, updated_brgy=?, updated_at=NOW() WHERE id=?');
+    // For admins, allow selecting the barangay. For others, use their own.
+    $targetBrgy = $existing['created_brgy']; // Default to existing
+    if ($user['role'] === 'admin' || $user['role'] === 'mmdrmo') {
+        if (isset($data['created_brgy'])) {
+            $targetBrgy = $data['created_brgy'];
+        }
+    }
+
+    $stmt = $pdo->prepare('UPDATE shelters SET name=?, lat=?, lng=?, capacity=?, occupancy=?, status=?, contact_person=?, contact_number=?, address=?, category=?, photos=?, updated_by=?, updated_brgy=?, updated_at=NOW(), created_brgy=? WHERE id=?');
     $stmt->execute([
         $data['name'],
         $data['lat'],
@@ -88,6 +96,7 @@ try {
         $photos_json,
         $user['full_name'] ?? $user['username'],
         $user['brgy_name'],
+        $targetBrgy, // Updated created_brgy (for admin moves)
         $data['id']
     ]);
     

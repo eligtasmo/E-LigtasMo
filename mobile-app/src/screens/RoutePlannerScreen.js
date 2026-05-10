@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Keyboard, Alert, TouchableOpacity, useWindowDimensions, StyleSheet, Share, Platform } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, FlatList, Keyboard, Alert, TouchableOpacity, useWindowDimensions, StyleSheet, Share, Platform } from 'react-native';
 import * as Lucide from 'lucide-react-native';
+import { TacticalIntelCard } from '../components/Intelligence/TacticalIntelCard';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -347,6 +348,12 @@ const createMapHTML = (token) => `
 
           const sendAppMsg = (data) => { try { const msg = JSON.stringify(data); if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) { window.ReactNativeWebView.postMessage(msg); } } catch (e) {} };
           map.on('movestart', (e) => { if (e.originalEvent) { window.manualMode = true; sendAppMsg({ type: 'MAP_INTERACTION', manual: true }); } });
+          map.on('click', (e) => {
+            if (window.manualMode || window.pinpointActive) {
+                sendAppMsg({ type: 'MAP_CLICK', coords: { lat: e.lngLat.lat, lon: e.lngLat.lng } });
+            }
+          });
+
           map.on('zoomstart', (e) => { if (e.originalEvent) { window.manualMode = true; sendAppMsg({ type: 'MAP_INTERACTION', manual: true }); } });
           
           window.loaded = true;
@@ -364,6 +371,7 @@ const createMapHTML = (token) => `
           if (!window.loaded) { window.pendingMessages.push(data); return; }
           if (data.type === 'SYNC') {
               if (data.recenter) { window.manualMode = false; }
+              if (data.pinpointActive !== undefined) { window.pinpointActive = data.pinpointActive; }
 
               var routeGeom = data.routeGeom;
               if (routeGeom !== undefined) {
@@ -719,18 +727,39 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets, 
                 />
               </Row>
 
-              {marker.allowed_modes && Array.isArray(marker.allowed_modes) && marker.allowed_modes.length > 0 && (
-                <View style={{ marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', marginBottom: 8 }}>ALLOWED MODES</Text>
-                  <Row wrap gap={6}>
-                    {marker.allowed_modes.map(mode => (
-                      <View key={mode} style={{ backgroundColor: 'rgba(47, 123, 255, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(47, 123, 255, 0.2)' }}>
-                        <Text style={{ color: '#2F7BFF', fontSize: 9, fontWeight: '900', textTransform: 'uppercase' }}>{mode.replace(/-/g, ' ')}</Text>
+              <View style={{ marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', marginBottom: 12 }}>TRANSPORT PASSABILITY</Text>
+                <Row wrap gap={10}>
+                  {['walking', 'motorcycle', 'car', 'truck'].map(mode => {
+                    const isAllowed = marker.allowed_modes?.includes(mode) || marker.is_passable;
+                    let iconName = 'walk';
+                    if (mode === 'motorcycle') iconName = 'motorbike';
+                    else if (mode === 'car') iconName = 'car';
+                    else if (mode === 'truck') iconName = 'truck';
+                    
+                    return (
+                      <View key={mode} style={{ 
+                        flex: 1, 
+                        minWidth: '45%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: isAllowed ? 'rgba(39,174,96,0.1)' : 'rgba(239,68,68,0.1)', 
+                        paddingHorizontal: 10, 
+                        paddingVertical: 10, 
+                        borderRadius: 10, 
+                        borderWidth: 1, 
+                        borderColor: isAllowed ? 'rgba(39,174,96,0.2)' : 'rgba(239,68,68,0.2)' 
+                      }}>
+                        <MaterialCommunityIcons name={iconName} size={16} color={isAllowed ? '#27AE60' : '#EF4444'} />
+                        <View style={{ marginLeft: 8 }}>
+                           <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' }}>{mode}</Text>
+                           <Text style={{ color: isAllowed ? '#27AE60' : '#EF4444', fontSize: 8, fontWeight: '700' }}>{isAllowed ? 'PASSABLE' : 'BLOCKED'}</Text>
+                        </View>
                       </View>
-                    ))}
-                  </Row>
-                </View>
-              )}
+                    );
+                  })}
+                </Row>
+              </View>
 
               <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 }}>
                 <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '800', marginBottom: 4 }}>DESCRIPTION</Text>
@@ -750,7 +779,7 @@ const TacticalMarkerBriefing = ({ marker, onSetAsDestination, onCancel, insets, 
         >
           <Row align="center">
             <MaterialCommunityIcons name="navigation-variant" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 }}>SET_AS_DESTINATION</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 }}>GO TO MISSION TARGET</Text>
           </Row>
         </TouchableOpacity>
       </MotiView>
@@ -880,6 +909,8 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const [route, setRoute] = useState(null);
   const [isPlannerCollapsed, setIsPlannerCollapsed] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+  const [hazardConflict, setHazardConflict] = useState(null); // { type: 'start' | 'end' | 'both', message: string }
   const [isMissionBriefing, setIsMissionBriefing] = useState(false);
   const [isPendingBriefing, setIsPendingBriefing] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -889,7 +920,11 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [bearing, setBearing] = useState(0);
   const [isUserInteraction, setIsUserInteraction] = useState(false);
+  const [isPinpointing, setIsPinpointing] = useState(false);
+  const [userCoords, setUserCoords] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
+  const [activeHazards, setActiveHazards] = useState([]);
+  const [showIntelPanel, setShowIntelPanel] = useState(false);
   const [tacticalMarkers, setTacticalMarkers] = useState([]);
   const [travelMode, setTravelMode] = useState('driving-car');
   const [transportModes, setTransportModes] = useState([]);
@@ -902,6 +937,9 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const webviewRef = useRef(null);
   const locationWatchRef = useRef(null);
   const paramsProcessedRef = useRef(false);
+  const startLabelRef = useRef('My Location');
+
+  useEffect(() => { startLabelRef.current = startLabel; }, [startLabel]);
 
   useEffect(() => { tacticalMarkersRef.current = tacticalMarkers; }, [tacticalMarkers]);
   useEffect(() => { isNavRef.current = isNavigating; }, [isNavigating]);
@@ -1054,11 +1092,47 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       } catch (e) { console.warn("[Tactical] Marker fetch failed:", e); }
     };
     fetchTactical();
+    fetchHazards();
     const interval = setInterval(fetchTactical, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // State moved to top for stability
+  const fetchHazards = async () => {
+    try {
+      const res = await fetch(`${API_URL}/list-hazards.php`, {
+        headers: {
+          'X-Role': user?.role || 'resident',
+          'X-Token': user?.token || 'RESCUE_PH_TOKEN'
+        }
+      });
+      const data = await res.json();
+      if (data.success) setActiveHazards(data.hazards);
+    } catch(e) {}
+  };
+
+  const validateMissionSafety = (coords, type = 'destination') => {
+    if (!coords || !activeHazards.length) return true;
+    
+    // Filter for non-passable hazards
+    const nonPassable = activeHazards.filter(h => String(h.is_passable) === '0');
+    
+    for (const h of nonPassable) {
+      const hLat = parseFloat(h.lat);
+      const hLon = parseFloat(h.lng || h.lon);
+      const radius = parseFloat(h.radius || 100);
+      
+      const dist = distanceInMeters(coords, { lat: hLat, lon: hLon });
+      
+      if (dist <= radius) {
+        return {
+          safe: false,
+          hazard: h,
+          message: `The selected ${type} is located within a NON-PASSABLE hazard zone (${h.type || 'Hazard'}). Navigation may be dangerous or impossible.`
+        };
+      }
+    }
+    return { safe: true };
+  };
 
   const handleShareRoute = async () => {
     if (!destCoords) return;
@@ -1097,9 +1171,6 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     }
   };
 
-  // Move useEffect to bottom of component to fix hoisting
-
-
   const mapHtml = useMemo(() => ({ html: createMapHTML(MAPBOX_ACCESS_TOKEN) }), []);
 
   useEffect(() => {
@@ -1119,7 +1190,10 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         locationWatchRef.current = await Location.watchPositionAsync({ accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 1 }, (loc) => {
           if (!isMounted) return;
           const newCoords = { lat: loc.coords.latitude, lon: loc.coords.longitude };
-          setStartCoords(newCoords);
+          setUserCoords(newCoords);
+          if (startLabelRef.current === 'My Location' || !startCoords) {
+            setStartCoords(newCoords);
+          }
           if (loc.coords.speed !== null) setCurrentSpeed(loc.coords.speed * 3.6);
           webviewRef.current?.postMessage(JSON.stringify({
             type: 'SYNC',
@@ -1163,10 +1237,37 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     } catch (e) { }
   };
 
-  const calculateRoute = async (overrideDest = null) => {
+  const calculateRoute = async (overrideDest = null, overrideStart = null) => {
     const targetDest = overrideDest || destCoords;
-    if (!startCoords || !targetDest) return;
+    const targetStart = overrideStart || startCoords;
+    if (!targetStart || !targetDest) return;
+
+    // Safety Validation
+    const startSafety = validateMissionSafety(targetStart, 'starting point');
+    const destSafety = validateMissionSafety(targetDest, 'destination');
+
+    if (!startSafety.safe || !destSafety.safe) {
+      const unsafe = !startSafety.safe ? startSafety : destSafety;
+      Alert.alert(
+        '⚠️ TACTICAL WARNING',
+        unsafe.message,
+        [
+          { text: 'Cancel Mission', style: 'cancel', onPress: () => { if (!startSafety.safe) setStartLabel('My Location'); else setDestination(''); } },
+          { text: 'Continue Anyways', style: 'destructive', onPress: () => proceedWithCalculation(targetDest, targetStart) }
+        ]
+      );
+      return;
+    }
+
+    proceedWithCalculation(targetDest, targetStart);
+  };
+
+  const proceedWithCalculation = async (targetDest, targetStart = null) => {
+    const activeStart = targetStart || startCoords;
+    if (!activeStart || !targetDest) return;
+
     setIsCalculating(true);
+    setAllRoutes([]);
 
     try {
       const createCircle = (lat, lng, radiusKm = 0.4, points = 64) => {
@@ -1205,7 +1306,8 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
             type: 'Feature',
             properties: {
               is_passable: item.is_passable,
-              type: item.type
+              type: item.type,
+              allowed_modes: item.allowed_modes
             },
             geometry: geom
           });
@@ -1213,13 +1315,13 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       });
 
       const body = {
-        start: [startCoords.lon, startCoords.lat],
+        start: [activeStart.lon, activeStart.lat],
         end: [targetDest.lon, targetDest.lat],
         profile: travelMode, // Crucial: This must be the current selected profile
         avoid_zones: avoidZones
       };
 
-      console.log(`[Tactical] Requesting Route: START[${startCoords.lon}, ${startCoords.lat}] -> END[${targetDest.lon}, ${targetDest.lat}]`);
+      console.log(`[Tactical] Requesting Route: START[${activeStart.lon}, ${activeStart.lat}] -> END[${targetDest.lon}, ${targetDest.lat}]`);
       
       const resp = await fetch(`${API_URL}/mapbox-directions.php`, {
         method: 'POST',
@@ -1234,6 +1336,22 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         data = JSON.parse(text);
       } catch (err) {
         throw new Error("Invalid Mission Data: The server returned an unreadable response.");
+      }
+
+      // Check for start/end hazard intersection
+      if (data?.metadata?.start_in_hazard || data?.metadata?.end_in_hazard) {
+        let msg = "";
+        if (data.metadata.start_in_hazard && data.metadata.end_in_hazard) {
+          msg = "Both your start position and destination are currently within a non-passable hazard zone. Proceed with extreme caution.";
+        } else if (data.metadata.start_in_hazard) {
+          msg = "Your start position is located within a non-passable hazard zone. Do you wish to continue the mission?";
+        } else {
+          msg = "Your destination is located within a non-passable hazard zone. Do you wish to continue the mission?";
+        }
+        setHazardConflict({ 
+          type: data.metadata.start_in_hazard && data.metadata.end_in_hazard ? 'both' : (data.metadata.start_in_hazard ? 'start' : 'end'), 
+          message: msg 
+        });
       }
 
       if (data?.error) {
@@ -1326,6 +1444,59 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     } catch (e) { }
   };
 
+  const handlePinOnMap = (type) => {
+    setActiveSearchType(type);
+    setIsPinpointing(true);
+    setSuggestions([]);
+    
+    // Notify the map that pinpointing is active
+    webviewRef.current?.postMessage(JSON.stringify({
+      type: 'SYNC',
+      pinpointActive: true
+    }));
+  };
+
+  const handleMapClick = async (coords) => {
+    if (!isPinpointing) return;
+    
+    setIsPinpointing(false);
+    setIsCalculating(true); // Show loader while geocoding
+    
+    try {
+      const resp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lon},${coords.lat}.json?access_token=${MAPBOX_ACCESS_TOKEN}`);
+      const data = await resp.json();
+      const name = data.features?.[0]?.text || data.features?.[0]?.place_name || `Pinned Location (${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)})`;
+      
+      if (activeSearchType === 'start') {
+        setStartCoords(coords);
+        setStartLabel(name);
+        if (destCoords) calculateRoute(destCoords, coords);
+      } else {
+        setDestCoords(coords);
+        setDestination(name);
+        calculateRoute(coords);
+      }
+    } catch (e) {
+      console.warn('[Geocoding] Failed:', e);
+      const fallbackName = `Pinned: ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`;
+      if (activeSearchType === 'start') {
+        setStartCoords(coords);
+        setStartLabel(fallbackName);
+        if (destCoords) calculateRoute(destCoords, coords);
+      } else {
+        setDestCoords(coords);
+        setDestination(fallbackName);
+        calculateRoute(coords);
+      }
+    } finally {
+      setIsCalculating(false);
+      webviewRef.current?.postMessage(JSON.stringify({
+        type: 'SYNC',
+        pinpointActive: false
+      }));
+    }
+  };
+
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371000; // Earth radius in meters
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1361,9 +1532,6 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
     setDestCoords({ lat: asset.lat, lon: asset.lng });
     setIsNavigating(false);
   };
-
-  // Tactical state and fetchers moved to top for stability
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1431,6 +1599,10 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               const d = JSON.parse(e.nativeEvent.data);
               if (d.type === 'MAP_INTERACTION') {
                 setIsUserInteraction(d.manual);
+              } else if (d.type === 'MAP_CLICK') {
+                if (isPinpointing) {
+                  handleMapClick(d.coords);
+                }
               } else if (d.type === 'MARKER_CLICK') {
                 setSelectedMarker(d.marker);
                 webviewRef.current?.postMessage(JSON.stringify({
@@ -1468,6 +1640,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
                 }
               }}
               onUseMyLocation={handleUseMyLocation}
+              onPinOnMap={handlePinOnMap}
               onReport={() => navigation.navigate('ReportIncident')}
             />
           ) : null}
@@ -1497,6 +1670,34 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               >
                 <ActivityIndicator size="large" color="#2F7BFF" />
                 <Text style={{ color: '#F3EEE6', marginTop: 16 }}>Optimizing tactical mission path...</Text>
+              </MotiView>
+            ) : null}
+            {isPinpointing ? (
+              <MotiView
+                key="pinpoint-overlay"
+                from={{ opacity: 0, translateY: 50 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                exit={{ opacity: 0, translateY: 50 }}
+                style={{ position: 'absolute', bottom: 40, left: 20, right: 20, backgroundColor: 'rgba(11,10,8,0.95)', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: activeSearchType === 'start' ? '#2F7BFF' : '#EF4444', alignItems: 'center', zIndex: 9000 }}
+              >
+                <Row align="center" gap={12}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: activeSearchType === 'start' ? 'rgba(47, 123, 255, 0.2)' : 'rgba(239, 68, 68, 0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Lucide.MapPin size={20} color={activeSearchType === 'start' ? '#2F7BFF' : '#EF4444'} />
+                  </View>
+                  <Col>
+                    <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '700' }}>{activeSearchType === 'start' ? 'Select Starting Point' : 'Select Destination'}</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Tap anywhere on the tactical map</Text>
+                  </Col>
+                  <TouchableOpacity 
+                    onPress={() => {
+                        setIsPinpointing(false);
+                        webviewRef.current?.postMessage(JSON.stringify({ type: 'SYNC', pinpointActive: false }));
+                    }}
+                    style={{ padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10 }}
+                  >
+                    <Lucide.X size={18} color="#FFF" />
+                  </TouchableOpacity>
+                </Row>
               </MotiView>
             ) : null}
           </AnimatePresence>
@@ -1533,9 +1734,6 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
             />
           )}
 
-          {/* Floating Report Button Removed - Moved to SearchHeader Top Right */}
-
-
           {allRoutes.length > 0 && !isNavigating && !isMissionBriefing ? (
             <RouteOptionsSheet
               allRoutes={allRoutes}
@@ -1547,9 +1745,45 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               destinationLabel={destination}
               transportModes={transportModes}
               selectedTravelMode={travelMode}
-              onSelectTravelMode={setTravelMode}
-              insets={insets}
-            />
+              onSelectTravelMode={(mode) => setTravelMode(mode)}
+            >
+              {/* Mission Intelligence Extension */}
+              <View style={{ marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+                 <Row justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                    <Row align="center" gap={8}>
+                       <Lucide.ShieldAlert size={16} color="#F5B235" />
+                       <Text style={{ fontSize: 13, fontWeight: '700', color: '#F3EEE6', textTransform: 'uppercase', letterSpacing: 1 }}>Mission Intelligence</Text>
+                    </Row>
+                    <Badge label={`${activeHazards.length} ACTIVE`} variant="warning" />
+                 </Row>
+                 
+                 <ScrollView 
+                   horizontal 
+                   showsHorizontalScrollIndicator={false} 
+                   contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
+                 >
+                    {activeHazards.length > 0 ? activeHazards.slice(0, 5).map((hazard) => (
+                      <TacticalIntelCard 
+                        key={hazard.id}
+                        item={hazard}
+                        variant="grid"
+                        onPress={() => {
+                          webviewRef.current?.postMessage(JSON.stringify({
+                            type: 'SYNC',
+                            forceZoom: 17,
+                            recenter: true,
+                            targetLoc: { lat: parseFloat(hazard.lat), lon: parseFloat(hazard.lng) }
+                          }));
+                        }}
+                      />
+                    )) : (
+                      <View style={{ padding: 20, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 16, width: 200 }}>
+                        <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, textAlign: 'center' }}>No active hazards detected in current sector.</Text>
+                      </View>
+                    )}
+                 </ScrollView>
+              </View>
+            </RouteOptionsSheet>
           ) : null}
 
           {selectedMarker && (
@@ -1560,9 +1794,11 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
                 currentUser={user}
                 onCancel={() => setSelectedMarker(null)}
                 onSetAsDestination={(m) => {
+                  const coords = { lat: m.lat, lon: m.lng || m.lon };
                   setDestination(m.name || m.type);
-                  setDestCoords({ lat: m.lat, lon: m.lng });
+                  setDestCoords(coords);
                   setSelectedMarker(null);
+                  calculateRoute(coords);
                 }}
               />
             </AnimatePresence>
@@ -1605,6 +1841,48 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
                 >
                   <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, fontWeight: '600' }}>Cancel</Text>
                 </TouchableOpacity>
+              </View>
+            </MotiView>
+          )}
+          
+          {hazardConflict && (
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 10000, alignItems: 'center', justifyContent: 'center', padding: 24 }]}
+            >
+              <View style={{ backgroundColor: '#1A1816', padding: 24, borderRadius: 28, width: '100%', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 30 }}>
+                 <Row align="center" gap={12} style={{ marginBottom: 20 }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(239,68,68,0.15)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)' }}>
+                       <Lucide.AlertTriangle size={24} color="#EF4444" />
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#F3EEE6', letterSpacing: 0.5 }}>HAZARD CONFLICT</Text>
+                 </Row>
+                 
+                 <Text style={{ fontSize: 14, color: 'rgba(243,238,230,0.7)', lineHeight: 22, marginBottom: 24 }}>
+                    {hazardConflict.message}
+                 </Text>
+                 
+                 <View style={{ gap: 12 }}>
+                    <TouchableOpacity 
+                       onPress={() => setHazardConflict(null)}
+                       style={{ height: 50, borderRadius: 25, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                       <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 14 }}>CONTINUE MISSION ANYWAY</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                       onPress={() => {
+                         setHazardConflict(null);
+                         setAllRoutes([]);
+                         setRoute(null);
+                         setDestCoords(null);
+                         setDestination('');
+                       }}
+                       style={{ height: 50, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
+                    >
+                       <Text style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '700', fontSize: 14 }}>ABORT & RE-ROUTE</Text>
+                    </TouchableOpacity>
+                 </View>
               </View>
             </MotiView>
           )}

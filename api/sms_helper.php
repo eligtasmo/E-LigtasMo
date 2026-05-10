@@ -78,7 +78,8 @@ class SMSService {
         $payload = [
             'recipient' => implode(',', $normalizedNumbers),
             'sender_id' => $senderId,
-            'type' => 'plain', // PhilSMS standard for SMS. If 'VOICE' appears, 'plain' may be the default fallback for unrecognized types on some accounts.
+            // Omitting 'type' entirely often defaults to 'SMS' on v3 APIs when 'plain' is misbehaving.
+            // 'type' => 'plain', 
             'message' => $message
         ];
         

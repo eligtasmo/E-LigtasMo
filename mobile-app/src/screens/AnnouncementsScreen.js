@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, RefreshControl, FlatList, ScrollView, Tex
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
-import { MotiView } from 'moti';
+import { MotiView, AnimatePresence } from 'moti';
 import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '../context/ThemeContext';
@@ -38,6 +38,7 @@ const AnnouncementsScreen = ({ navigation }) => {
   });
 
   const [barangays, setBarangays] = useState([]);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
   useEffect(() => {
     checkUserRole();
@@ -283,6 +284,7 @@ const AnnouncementsScreen = ({ navigation }) => {
               <AnnouncementCard 
                 item={item} 
                 isAdmin={userRole === 'admin' || userRole === 'brgy'} 
+                onPress={() => setSelectedAnnouncement(item)}
                 onEdit={(a) => {
                   setIsEditing(true);
                   setEditId(a.id);
@@ -339,6 +341,71 @@ const AnnouncementsScreen = ({ navigation }) => {
         isEditing={isEditing}
         barangays={barangays}
       />
+
+      <AnimatePresence>
+        {selectedAnnouncement && (
+          <MotiView
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.95)',
+              zIndex: 1000,
+              padding: 24,
+              paddingTop: insets.top + 40
+            }}
+          >
+            <Row justify="space-between" align="center" style={{ marginBottom: 32 }}>
+              <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(245,178,53,0.15)' }}>
+                <Text style={{ color: '#F5B235', fontSize: 10, fontWeight: '800', letterSpacing: 1 }}>NEWS UPDATE</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setSelectedAnnouncement(null)}
+                style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Lucide.X size={24} color="#FFF" />
+              </TouchableOpacity>
+            </Row>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 28, fontWeight: '800', color: '#FFF', marginBottom: 12, lineHeight: 36, fontFamily: DS_FONT_UI }}>
+                {selectedAnnouncement.title}
+              </Text>
+              
+              <Row align="center" gap={8} style={{ marginBottom: 24 }}>
+                <Lucide.Calendar size={14} color="rgba(255,255,255,0.4)" />
+                <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '500' }}>
+                  {new Date(selectedAnnouncement.created_at).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}
+                </Text>
+              </Row>
+
+              <View style={{ width: 40, height: 4, backgroundColor: '#F5B235', borderRadius: 2, marginBottom: 24 }} />
+
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, lineHeight: 28, fontFamily: DS_FONT_INPUT }}>
+                {selectedAnnouncement.message}
+              </Text>
+            </ScrollView>
+
+            <TouchableOpacity 
+              onPress={() => setSelectedAnnouncement(null)}
+              style={{ 
+                marginTop: 20,
+                height: 56, 
+                borderRadius: 18, 
+                backgroundColor: 'rgba(255,255,255,0.08)', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)'
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Close Details</Text>
+            </TouchableOpacity>
+          </MotiView>
+        )}
+      </AnimatePresence>
             </Screen>
   );
 };

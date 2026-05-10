@@ -59,15 +59,15 @@ function has_permission_for_role($role, $permission) {
             'users.view','users.manage',
             'incident.create','incident.view',
             'dispatch.manage','sop.view','sop.update','sop.complete','activity.log',
-            'contacts.manage',
+            'contacts.manage','alerts.manage',
             'routes.view','invites.manage'
         ],
         'brgy' => [
             'users.view','users.manage',
             'incident.create','incident.view',
-            'dispatch.manage','sop.view','sop.update','activity.log','alerts.manage',
+            'dispatch.manage','sop.view','sop.update','sop.complete','activity.log','alerts.manage',
             'contacts.manage',
-            'routes.view'
+            'routes.view','invites.manage'
         ],
         'responder' => [
             'incident.view','sop.view','activity.log','routes.view'
@@ -104,13 +104,18 @@ function require_permission($permission) {
         http_response_code(403);
         header('Content-Type: application/json');
         $auth_type = stripos($auth, 'Bearer ') === 0 ? 'JWT' : (isset($_SESSION['user_id']) ? 'Session' : 'Guest');
+        
+        // Log the failure for server-side debugging
+        error_log("RBAC Denied: Role '$role' lacks permission '$permission' (Auth: $auth_type)");
+
         echo json_encode([
             'success' => false, 
             'message' => 'Forbidden: insufficient permissions',
             'debug' => [
-                'role' => $role ?: 'guest',
+                'detected_role' => $role ?: 'guest',
                 'permission_required' => $permission,
-                'auth_method' => $auth_type
+                'auth_method' => $auth_type,
+                'is_logged_in' => isset($_SESSION['user_id'])
             ]
         ]);
         exit;

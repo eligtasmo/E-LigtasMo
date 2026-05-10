@@ -48,7 +48,11 @@ export const AuthService = {
           full_name: data.full_name,
           token: data.token,
           brgy_name: data.brgy_name,
-          email: data.email
+          email: data.email,
+          contact_number: data.contact_number,
+          gender: data.gender,
+          city: data.city,
+          province: data.province
         };
         await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
         data.user = user;

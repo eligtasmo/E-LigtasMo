@@ -8,7 +8,8 @@ import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '../context/ThemeContext';
 import { API_URL } from '../config';
-import { Screen, Card, Row, Col, Heading, Container, Section, SearchPanel } from '../components/DesignSystem';
+import { Screen, Card, Row, Col, Heading, Container, Section } from '../components/DesignSystem';
+import { SearchPanel } from '../components/shared/PrimitiveLayouts';
 
 // Sub-components
 import { ShelterStats, ShelterCard } from '../components/Shelters/ShelterComponents';

@@ -542,7 +542,7 @@ export const PageHeader = ({ title, subtitle, onBack, rightElement, withDrawer =
 
             {withDrawer && (
               <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
+                onPress={() => navigation.openDrawer?.()}
                 style={{
                   width: 44,
                   height: 44,

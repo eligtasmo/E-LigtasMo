@@ -118,7 +118,7 @@ export default function BarangayMapView() {
         ...((newBrgy && { lat: newBrgy.lat, lng: newBrgy.lng }) || (editingBrgy && { lat: editingBrgy.lat, lng: editingBrgy.lng })),
         id: editingBrgy?.id,
       };
-      const endpoint = editingBrgy ? 'update-brgy.php' : 'add-brgy.php';
+      const endpoint = editingBrgy ? 'update-barangay.php' : 'add-barangay.php';
       const res = await apiFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -141,7 +141,7 @@ export default function BarangayMapView() {
 
   const handleDeleteBrgy = async (id: number) => {
     try {
-      const res = await apiFetch('delete-brgy.php', {
+      const res = await apiFetch('delete-barangay.php', {
         method: 'POST',
         body: JSON.stringify({ id })
       });

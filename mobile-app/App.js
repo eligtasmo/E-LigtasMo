@@ -591,10 +591,10 @@ const NavigationContent = ({ initialNavState, linking }) => {
           // --- APP STACK ---
           <>
             {/* Role Based Initial Screen Selection */}
-            {user.role === 'admin' && <Stack.Screen name="AdminDashboard" component={AdminDrawer} />}
-            {user.role === 'coordinator' && <Stack.Screen name="CoordinatorDashboard" component={CoordinatorDrawer} />}
-            {user.role === 'brgy' && <Stack.Screen name="BrgyDashboard" component={BrgyDrawer} />}
-            {(!user.role || user.role === 'resident') && <Stack.Screen name="Main" component={ResidentDrawer} />}
+            {user.role === 'admin' && <Stack.Screen name="Main" component={AdminDrawer} />}
+            {user.role === 'coordinator' && <Stack.Screen name="Main" component={CoordinatorDrawer} />}
+            {user.role === 'brgy' && <Stack.Screen name="Main" component={BrgyDrawer} />}
+            {(!user.role || user.role === 'resident') && <Stack.Screen name="Main" component={ResidentTabs} />}
 
             {/* Common Tactical Screens */}
             <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} />

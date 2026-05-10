@@ -105,8 +105,9 @@ if ($stmt->fetch()) {
 
 // Update user information
 try {
-    $stmt = $pdo->prepare("UPDATE users SET username = ?, full_name = ?, email = ?, contact_number = ?, brgy_name = ?, city = ?, province = ?, gender = ? WHERE id = ?");
-    $result = $stmt->execute([
+    // Optional Password Change
+    $passwordUpdate = "";
+    $params = [
         $data['username'],
         $data['full_name'],
         $data['email'],
@@ -114,18 +115,47 @@ try {
         $data['brgy_name'],
         $data['city'],
         $data['province'],
-        $data['gender'],
-        $user_id
-    ]);
+        $data['gender']
+    ];
+
+    if (!empty($data['new_password'])) {
+        if (empty($data['current_password'])) {
+            echo json_encode(['success' => false, 'message' => 'Current password is required to set a new password']);
+            exit;
+        }
+        
+        // Verify current password
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $userRow = $stmt->fetch();
+        if (!$userRow || !password_verify($data['current_password'], $userRow['password'])) {
+            echo json_encode(['success' => false, 'message' => 'Current password is incorrect']);
+            exit;
+        }
+        
+        $passwordUpdate = ", password = ?";
+        $params[] = password_hash($data['new_password'], PASSWORD_DEFAULT);
+    }
+
+    $params[] = $user_id;
+
+    $sql = "UPDATE users SET username = ?, full_name = ?, email = ?, contact_number = ?, brgy_name = ?, city = ?, province = ?, gender = ? $passwordUpdate WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    $result = $stmt->execute($params);
+    
+    // Check if anything actually changed or if it just succeeded
+    $rowCount = $stmt->rowCount();
     
     if ($result) {
-        log_debug("Update successful for User ID $user_id");
+        log_debug("Update successful for User ID $user_id. Rows affected: $rowCount");
+        
         // Fetch updated user data to return
         $stmt = $pdo->prepare("SELECT id, username, role, full_name, brgy_name, contact_number, email, city, province, gender, preferred_vehicle FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        echo json_encode(['success' => true, 'message' => 'Profile updated successfully', 'user' => $user]);
+        $message = $rowCount > 0 ? 'Profile updated successfully' : 'No changes were made';
+        echo json_encode(['success' => true, 'message' => $message, 'user' => $user, 'changed' => $rowCount > 0]);
     } else {
         log_debug("Update returned false");
         echo json_encode(['success' => false, 'message' => 'Failed to update profile']);

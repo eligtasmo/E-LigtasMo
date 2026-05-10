@@ -11,7 +11,7 @@ import { API_URL } from '../config';
 import { Screen, Row, Heading, Container, Section, PageHeader, Card, TextInput } from '../components/DesignSystem';
 
 // Sub-components
-import { ReportCard } from '../components/Reports/ReportCard';
+import { TacticalIntelCard } from '../components/Intelligence/TacticalIntelCard';
 
 const ReportsScreen = ({ navigation, route }) => {
   const { theme, isDark, atomic } = useTheme();
@@ -91,6 +91,10 @@ const ReportsScreen = ({ navigation, route }) => {
         setLoading(false);
         setRefreshing(false);
     }
+  };
+
+  const handleZoom = (item) => {
+    navigation.navigate('HazardMap', { focusId: item.id });
   };
 
   useEffect(() => {
@@ -227,9 +231,11 @@ const ReportsScreen = ({ navigation, route }) => {
                    animate={{ opacity: 1, translateY: 0 }}
                    transition={{ delay: idx * 50 }}
                  >
-                   <ReportCard 
-                     report={report}
+                   <TacticalIntelCard 
+                     item={report}
+                     variant="list"
                      onPress={() => navigation.navigate('ReportDetails', { report })}
+                     onZoom={handleZoom}
                    />
                  </MotiView>
                ))

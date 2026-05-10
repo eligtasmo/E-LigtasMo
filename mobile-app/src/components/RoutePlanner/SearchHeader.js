@@ -16,6 +16,7 @@ export const SearchHeader = ({
   onSelectSuggestion,
   onUseMyLocation,
   onReport,
+  onPinOnMap,
   activeInput = 'dest', // 'start' | 'dest'
 }) => {
   const { theme, atomic } = useTheme();
@@ -131,6 +132,9 @@ export const SearchHeader = ({
                 }}
               />
               <Row gap={8}>
+                <TouchableOpacity onPress={() => onPinOnMap('start')} style={{ padding: 6, backgroundColor: 'rgba(47, 123, 255, 0.1)', borderRadius: 8 }}>
+                  <Lucide.MapPin size={14} color="#2F7BFF" strokeWidth={2.5} />
+                </TouchableOpacity>
                 <TouchableOpacity onPress={onUseMyLocation} style={{ padding: 6, backgroundColor: 'rgba(47, 123, 255, 0.1)', borderRadius: 8 }}>
                   <Lucide.LocateFixed size={14} color="#2F7BFF" strokeWidth={2.5} />
                 </TouchableOpacity>
@@ -158,14 +162,19 @@ export const SearchHeader = ({
                   fontFamily: DS_FONT_INPUT,
                 }}
               />
-              {(destination || '').length > 0 && (
-                <TouchableOpacity
-                  onPress={() => onStartSearch('', 'dest')}
-                  style={{ padding: 4 }}
-                >
-                  <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.05)" />
+              <Row gap={8}>
+                <TouchableOpacity onPress={() => onPinOnMap('dest')} style={{ padding: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 8 }}>
+                   <Lucide.MapPin size={14} color="#EF4444" strokeWidth={2.5} />
                 </TouchableOpacity>
-              )}
+                {(destination || '').length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => onStartSearch('', 'dest')}
+                    style={{ padding: 4 }}
+                  >
+                    <Lucide.XCircle size={14} color="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.05)" />
+                  </TouchableOpacity>
+                )}
+              </Row>
             </View>
           </View>
 

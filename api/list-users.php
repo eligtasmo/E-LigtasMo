@@ -45,7 +45,7 @@ if ($status) {
 }
 
 if ($brgyFilter) {
-    $query .= " AND brgy_name = ?";
+    $query .= " AND LOWER(TRIM(brgy_name)) = LOWER(TRIM(?))";
     $params[] = $brgyFilter;
 }
 

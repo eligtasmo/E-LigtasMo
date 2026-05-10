@@ -277,22 +277,41 @@ try {
     }
 
     // ── Build Avoid Rings ───────────────────────────────────────────────────────
+    // Map internal profile to allowed_modes keys
+    $currentMode = 'car'; 
+    if (strpos($profile, 'walking') !== false || strpos($profile, 'foot') !== false) $currentMode = 'walking';
+    else if (strpos($profile, 'cycling') !== false || strpos($profile, 'motorcycle') !== false) $currentMode = 'motorcycle';
+    else if (strpos($profile, 'hgv') !== false || strpos($profile, 'truck') !== false) $currentMode = 'truck';
+
     $avoidRings = [];
     foreach ($avoidZones as $zone) {
-        // Only avoid zones that are explicitly NOT passable
         $props = $zone['properties'] ?? [];
-        if (isset($props['is_passable']) && $props['is_passable'] === true) {
+        $isPassableGlobal = isset($props['is_passable']) && ($props['is_passable'] === true || $props['is_passable'] === 1 || $props['is_passable'] === "1");
+        
+        $allowedModes = $props['allowed_modes'] ?? [];
+        if (is_string($allowedModes)) {
+            $allowedModes = json_decode($allowedModes, true) ?: [];
+        }
+
+        // A zone is avoided IF:
+        // 1. It is globally NOT passable AND the current mode is NOT explicitly allowed.
+        // 2. OR if it is globally passable but explicitly restricts this mode (unlikely but possible).
+        
+        $isModeAllowed = in_array($currentMode, $allowedModes);
+
+        if ($isPassableGlobal || $isModeAllowed) {
             continue;
         }
 
         $rings = extractRings($zone);
-        foreach ($rings as $r)
+        foreach ($rings as $r) {
             $avoidRings[] = $r;
+        }
     }
     error_log("Evaluating route with " . count($avoidRings) . " avoid rings.");
     $hasAvoid = !empty($avoidRings);
-    // Add radiuses to prevent snapping to dead-end alleys (500m tolerance)
-    $snapRadius = "500;500;500";
+    // Add radiuses to prevent snapping to dead-end alleys (1000m tolerance for rural missions)
+    $snapRadius = "1000;1000;1000";
 
     // ── High-Resiliency Network Fetcher ───────────────────────────────────────
     function tacticalFetch($url)
@@ -320,7 +339,7 @@ try {
     $safetyDefaults = ['intersects' => false, 'hard_block' => false, 'hazard_dist' => 0];
 
     // Phase 1: Request Primary & Natural Alternatives (Mapbox Native)
-    $directUrl = "{$baseUrl}/{$startLng},{$startLat};{$endLng},{$endLat}{$baseParams}&alternatives=true&radiuses=50;50";
+    $directUrl = "{$baseUrl}/{$startLng},{$startLat};{$endLng},{$endLat}{$baseParams}&alternatives=true&radiuses=1000;1000";
     $res = tacticalFetch($directUrl);
     file_put_contents(__DIR__ . '/route_debug.txt', "--- [" . date('Y-m-d H:i:s') . "] RAW RESPONSE ---\n" . ($res ?? 'NULL') . "\n\n", FILE_APPEND);
 
@@ -330,6 +349,10 @@ try {
 
     $data = json_decode($res, true);
     if (isset($data['code']) && $data['code'] !== 'Ok') {
+        $errCode = (string)($data['code'] ?? '');
+        if (strtolower($errCode) === 'nosegment') {
+            throw new Exception("Tactical Error: Mapbox could not find a navigable road near your pinned location (within 1km). Please try pinpointing closer to a street or established path.");
+        }
         throw new Exception("Mission Error: Mapbox returned '{$data['code']}' - " . ($data['message'] ?? 'Unknown tactical error'));
     }
 
@@ -411,7 +434,7 @@ try {
                 foreach ($offsets as $off) {
                     $px = $cX + $off[0];
                     $py = $cY + $off[1];
-                    $detourUrl = "{$baseUrl}/{$startLng},{$startLat};{$px},{$py};{$endLng},{$endLat}{$baseParams}&radiuses=50;50;50";
+                    $detourUrl = "{$baseUrl}/{$startLng},{$startLat};{$px},{$py};{$endLng},{$endLat}{$baseParams}&radiuses=1000;1000;1000";
                     $detourRes = tacticalFetch($detourUrl);
                     if ($detourRes) {
                         $dData = json_decode($detourRes, true);
@@ -483,13 +506,20 @@ try {
         }
     }
 
-    $isTotalBlock = count($tier1) === 0 && count($tier2) === 0 && count($tier3) > 0;
+    $startInHazard = false;
+    $endInHazard = false;
+    foreach ($avoidRings as $ring) {
+        if (pointInPolygon($startLng, $startLat, $ring['coords'])) $startInHazard = true;
+        if (pointInPolygon($endLng, $endLat, $ring['coords'])) $endInHazard = true;
+    }
 
     echo json_encode([
         'success' => true,
         'features' => $finalRoutes,
         'metadata' => [
             'is_total_block' => $isTotalBlock,
+            'start_in_hazard' => $startInHazard,
+            'end_in_hazard' => $endInHazard,
             'tier1_count' => count($tier1),
             'tier2_count' => count($tier2),
             'tier3_count' => count($tier3),

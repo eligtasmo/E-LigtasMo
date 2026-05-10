@@ -496,19 +496,8 @@ const ReportIncidentScreen = ({ navigation, route }) => {
 
   const handleReportClick = useCallback((report) => {
     setShowHistory(false);
-    setIsViewingHistoryReport(true);
-    
-    const lat = parseFloat(report.lat || report.latitude);
-    const lon = parseFloat(report.lng || report.longitude);
-    
-    if (webViewRef.current) {
-      webViewRef.current.postMessage(JSON.stringify({
-        type: 'fly_to',
-        lat,
-        lng: lon
-      }));
-    }
-  }, []);
+    navigation.navigate('HazardMap', { focusId: report.id });
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {

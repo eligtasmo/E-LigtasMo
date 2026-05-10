@@ -93,7 +93,7 @@ export const RegisterStep1 = ({
             onChangeText={(text) => updateField('password', text)}
             secureTextEntry={!showPassword}
             placeholder="Create a password"
-            style={{ flex: 1 }}
+            style={{ flex: 1, textAlign: 'left' }}
           />
           <TouchableOpacity onPress={() => setShowPassword?.(!showPassword)} style={{ padding: 8 }}>
             {showPassword ? <Lucide.EyeOff size={22} color="#FFFFFF" /> : <Lucide.Eye size={22} color="#FFFFFF" />}
@@ -108,7 +108,7 @@ export const RegisterStep1 = ({
             onChangeText={(text) => updateField('confirmPassword', text)}
             secureTextEntry={!showConfirmPassword}
             placeholder="Repeat password"
-            style={{ flex: 1 }}
+            style={{ flex: 1, textAlign: 'left' }}
           />
           <TouchableOpacity onPress={() => setShowConfirmPassword?.(!showConfirmPassword)} style={{ padding: 8 }}>
             {showConfirmPassword ? <Lucide.EyeOff size={22} color="#FFFFFF" /> : <Lucide.Eye size={22} color="#FFFFFF" />}

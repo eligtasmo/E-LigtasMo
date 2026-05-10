@@ -39,6 +39,7 @@ import {
 } from '../components/DesignSystem';
 import UniversalWebView from '../components/UniversalWebView';
 import { HazardAddControls, HazardModal } from '../components/Map/HazardAddControls';
+import { TacticalIntelCard } from '../components/Intelligence/TacticalIntelCard';
 
 const DEFAULT_REGION = { lat: 14.2833, lng: 121.4167 };
 
@@ -107,8 +108,19 @@ const HazardMapScreen = ({ navigation, route }) => {
       const lat = parseFloat(route.params.shelter.lat);
       const lng = parseFloat(route.params.shelter.lng);
       setRegion({ lat, lng });
+    } else if (route.params?.focusId) {
+      // Deferred focus after hazards are loaded
     }
   };
+
+  useEffect(() => {
+    if (hazards.length > 0 && route.params?.focusId) {
+      const match = hazards.find(h => String(h.id) === String(route.params.focusId));
+      if (match) {
+        setTimeout(() => focusHazard(match, 'map'), 500);
+      }
+    }
+  }, [hazards, route.params?.focusId]);
 
   const fetchHazards = async (user) => {
     setLoading(true);
@@ -660,51 +672,15 @@ const HazardMapScreen = ({ navigation, route }) => {
               contentContainerStyle={{ width: pageWidth, alignSelf: 'center', paddingBottom: 150 }}
             >
               <View style={{ height: 24 }} />
-              {filteredHazards.map((hazard) => {
-                const kind = getHazardKind(hazard);
-                const accent = HAZARD_ACCENTS[kind];
-                const Icon = Lucide[HAZARD_ICONS[kind]];
-                return (
-                  <Card key={hazard.id} variant="none" noPadding style={[styles.listCard, { width: pageWidth - 32 }]}>
-                    <View style={{ padding: 16 }}>
-                      <Row justify="space-between" align="center" style={{ marginBottom: 12 }}>
-                        <Row gap={12} align="center">
-                          <View style={[styles.cardIconBoxSmall, { backgroundColor: accent + '20', borderColor: accent + '40' }]}>
-                             <Icon size={18} color={accent} strokeWidth={2.5} />
-                          </View>
-                          <View>
-                             <Text style={styles.listCardTitle}>{hazard.type || kind}</Text>
-                             <Text style={styles.listCardSub} numberOfLines={1}>{hazard.description || 'detected near Sector - Stay Alert!'}</Text>
-                          </View>
-                        </Row>
-                      </Row>
-
-                      <View style={styles.listMiniMap}>
-                         <RNImage source={{ uri: buildStaticPreview(hazard) }} style={{ width: '100%', height: '100%' }} />
-                         <View style={[styles.listPulseCircle, { borderColor: accent + '50', backgroundColor: accent + '20' }]}>
-                            <View style={[styles.listPulseDot, { backgroundColor: accent }]} />
-                         </View>
-                      </View>
-
-                      <Row gap={12} style={{ marginTop: 16 }}>
-                         <TouchableOpacity 
-                           onPress={() => focusHazard(hazard, 'map')}
-                           style={styles.listPrimaryBtn}
-                         >
-                            <Text style={styles.listPrimaryBtnText}>View Map</Text>
-                         </TouchableOpacity>
-                         <TouchableOpacity 
-                           onPress={() => handleMarkSafe(hazard)}
-                           style={styles.listSafeBtn}
-                         >
-                            <Lucide.Activity size={16} color="#10B981" />
-                            <Text style={styles.listSafeBtnText}>Mark Safe</Text>
-                         </TouchableOpacity>
-                      </Row>
-                    </View>
-                  </Card>
-                );
-              })}
+              {filteredHazards.map((hazard) => (
+                  <TacticalIntelCard 
+                    key={hazard.id}
+                    item={hazard}
+                    variant="list"
+                    onPress={() => focusHazard(hazard)}
+                    onZoom={() => focusHazard(hazard, 'map')}
+                  />
+                ))}
             </ScrollView>
           </MotiView>
         )}

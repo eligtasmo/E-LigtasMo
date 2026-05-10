@@ -371,12 +371,12 @@ const ReportDetailsScreen = ({ navigation, route }) => {
       <View style={[styles.footer, { bottom: Math.max(insets.bottom, 24) }]}>
           <TouchableOpacity 
               onPress={() => {
-                  navigation.navigate('ReportIncident', { report: fullReport || reportParam, directView: true });
+                  navigation.navigate('HazardMap', { focusId: fullReport?.id || reportParam.id });
               }}
               style={styles.navBtn}
           >
-              <Lucide.Navigation size={20} color="#000" fill="#000" />
-              <Text style={styles.navBtnText}>Take me there</Text>
+              <Lucide.Map size={20} color="#000" />
+              <Text style={styles.navBtnText}>View Map</Text>
           </TouchableOpacity>
       </View>
     </Screen>

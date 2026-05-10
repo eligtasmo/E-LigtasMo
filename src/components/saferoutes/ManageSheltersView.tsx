@@ -56,6 +56,8 @@ export default function ManageSheltersView() {
   const [selectedShelterId, setSelectedShelterId] = useState<number | null>(null);
   const [selectedShelter, setSelectedShelter] = useState<ShelterForm | null>(null);
   const navigate = useNavigate();
+  const [selectedBarangay, setSelectedBarangay] = useState<string>("");
+  const [barangays, setBarangays] = useState<any[]>([]);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
   const mapRef = useRef<any>(null);
@@ -68,20 +70,28 @@ export default function ManageSheltersView() {
   useEffect(() => {
     const fetchShelters = async () => {
       try {
-        const response = await apiFetch('shelters-list.php');
+        const url = `shelters-list.php${selectedBarangay ? `?barangay=${encodeURIComponent(selectedBarangay)}` : ''}`;
+        const response = await apiFetch(url);
         const data = await response.json();
-        
-        // Filter: only show shelters they made if they are not an admin
-        const filteredData = (user?.role === 'admin') 
-          ? data 
-          : data.filter((s: ShelterForm) => s.created_by === user?.username);
-          
-        setShelters(filteredData);
+        setShelters(data);
       } catch (error) {
         console.error("Failed to fetch shelters:", error);
       }
     };
     fetchShelters();
+  }, [user, selectedBarangay]);
+
+  useEffect(() => {
+    if (user?.role === 'admin' || user?.role === 'mmdrmo') {
+      const fetchBrgys = async () => {
+        try {
+          const res = await apiFetch('list-barangays.php');
+          const data = await res.json();
+          if (data.success) setBarangays(data.barangays || []);
+        } catch (e) {}
+      };
+      fetchBrgys();
+    }
   }, [user]);
 
   const handleMapClick = async (latlng: { lat: number; lng: number }) => {
@@ -95,7 +105,7 @@ export default function ManageSheltersView() {
     setForm({
       name: "", lat: latlng.lat, lng: latlng.lng, capacity: 100, occupancy: 0,
       status: "available", contact_person: "", contact_number: "", address,
-      created_by: user?.username || "", created_brgy: user?.brgy_name || ""
+      created_by: user?.username || "", created_brgy: selectedBarangay || user?.brgy_name || ""
     });
     
     // Smooth zoom to the picked location
@@ -147,7 +157,7 @@ export default function ManageSheltersView() {
       name: "", lat: lat, lng: lng, capacity: 100, occupancy: 0,
       status: "available", contact_person: "", contact_number: "", 
       address: result.place_name,
-      created_by: user?.username || "", created_brgy: user?.brgy_name || ""
+      created_by: user?.username || "", created_brgy: selectedBarangay || user?.brgy_name || ""
     });
 
     setSearchResults([]);
@@ -431,6 +441,27 @@ export default function ManageSheltersView() {
                 </div>
               )}
               
+              {(user?.role === 'admin' || user?.role === 'mmdrmo') && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-3" style={{outline:'1px solid rgba(0,0,0,0.08)'}}>
+                  <div className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">Sector Filtering</span>
+                    <FaSearch className="text-slate-500 text-[10px]" />
+                  </div>
+                  <div className="p-3">
+                    <select 
+                      className="w-full text-[11px] font-bold bg-slate-50 border-none outline-none p-2 rounded-lg cursor-pointer text-slate-900"
+                      value={selectedBarangay}
+                      onChange={(e) => setSelectedBarangay(e.target.value)}
+                    >
+                      <option value="">ALL SECTORS (GLOBAL)</option>
+                      {barangays.map(b => (
+                        <option key={b.id} value={b.name}>{b.name.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+              
               <button
                 className="w-full font-bold py-3 rounded-xl text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700 active:scale-95"
                 onClick={() => { setAdding(!adding); setEditId(null); setForm(null); }}
@@ -594,6 +625,22 @@ export default function ManageSheltersView() {
                       <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Hotline</label>
                       <input className="w-full text-[11px] font-bold bg-gray-50 border-none outline-none p-2 rounded-lg" name="contact_number" value={form.contact_number} onChange={handleFormChange} />
                     </div>
+                    {(user?.role === 'admin' || user?.role === 'mmdrmo') && (
+                      <div className="p-3">
+                        <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Jurisdictional Assignment (Barangay)</label>
+                        <select 
+                          className="w-full text-[11px] font-bold uppercase bg-gray-50 border-none outline-none p-2 rounded-lg cursor-pointer" 
+                          name="created_brgy" 
+                          value={form.created_brgy || ''} 
+                          onChange={handleFormChange}
+                        >
+                          <option value="">SELECT BARANGAY</option>
+                          {barangays.map(b => (
+                            <option key={b.id} value={b.name}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                   <div className="flex divide-x divide-gray-100 border-t border-gray-100">
                     <button onClick={handleCancel} className="flex-1 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-gray-50">Abort</button>
@@ -717,6 +764,14 @@ export default function ManageSheltersView() {
             >
               DEPLOY MISSION ROUTE
             </button>
+          </div>
+        </div>
+      )}
+      {showToast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl border border-white/10 animate-in slide-in-from-bottom duration-300">
+          <div className="flex items-center gap-3">
+            <FaCheckCircle className="text-emerald-500" />
+            <span className="text-[12px] font-bold tracking-wider uppercase">{showToast}</span>
           </div>
         </div>
       )}

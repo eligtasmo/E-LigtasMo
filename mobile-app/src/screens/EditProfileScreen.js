@@ -31,6 +31,7 @@ const TacticalInput = ({ label, icon: Icon, value, onChangeText, placeholder, ..
 
 const EditProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
+  const [initialData, setInitialData] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
@@ -38,25 +39,41 @@ const EditProfileScreen = ({ navigation }) => {
     phone: '',
     gender: 'Male',
     address: '',
+    currentPassword: '',
+    newPassword: '',
   });
 
+  const [barangays, setBarangays] = useState([]);
+  const [showBrgyPicker, setShowBrgyPicker] = useState(false);
+
   useEffect(() => {
-    const loadUserData = async () => {
+    const init = async () => {
       try {
         const user = await AuthService.checkSession();
         if (user) {
-          setFormData({
+          const data = {
             fullName: user.full_name || '',
             username: user.username || '',
             email: user.email || '',
             phone: user.contact_number || '',
             gender: user.gender || 'Male',
             address: user.brgy_name || user.barangay || '',
-          });
+            currentPassword: '',
+            newPassword: '',
+          };
+          setFormData(data);
+          setInitialData(data);
+        }
+
+        // Fetch Barangays
+        const bRes = await fetch(`${API_URL}/list-barangays.php`);
+        const bData = await bRes.json();
+        if (bData.success) {
+          setBarangays(bData.barangays.map(b => b.name));
         }
       } catch (error) {}
     };
-    loadUserData();
+    init();
   }, []);
 
   const handleChange = (field, value) => {
@@ -64,17 +81,50 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
+    // Check if anything changed (excluding passwords unless they are being set)
+    const hasProfileChanged = 
+      formData.fullName !== initialData.fullName ||
+      formData.username !== initialData.username ||
+      formData.email !== initialData.email ||
+      formData.phone !== initialData.phone ||
+      formData.gender !== initialData.gender ||
+      formData.address !== initialData.address;
+    
+    const isChangingPassword = formData.newPassword.length > 0;
+
+    if (!hasProfileChanged && !isChangingPassword) {
+      Alert.alert('No Changes', 'You haven\'t modified any information.');
+      return;
+    }
+
     setLoading(true);
+
     if (!formData.phone || formData.phone.length !== 11 || !formData.phone.startsWith('09')) {
       Alert.alert('Invalid Number', 'Please enter a valid 11-digit phone number starting with 09.');
       setLoading(false);
       return;
     }
 
+    if (isChangingPassword && formData.newPassword.length < 6) {
+      Alert.alert('Short Password', 'New password must be at least 6 characters.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      const session = await AuthService.checkSession();
+      if (!session || !session.token) {
+        Alert.alert('Error', 'Session expired. Please login again.');
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch(`${API_URL}/update-user.php`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token}`
+        },
         body: JSON.stringify({
           username: formData.username,
           full_name: formData.fullName,
@@ -83,13 +133,22 @@ const EditProfileScreen = ({ navigation }) => {
           brgy_name: formData.address,
           city: 'Santa Cruz',
           province: 'Laguna',
-          gender: formData.gender
+          gender: formData.gender,
+          current_password: formData.currentPassword,
+          new_password: formData.newPassword
         })
       });
       const data = await res.json();
       if (data.success) {
-        Alert.alert('Success', 'Profile updated successfully.');
-        navigation.goBack();
+        if (data.user) {
+          // Update local session with new data
+          const updatedUser = { ...session, ...data.user };
+          await AsyncStorage.setItem('CURRENT_USER', JSON.stringify(updatedUser));
+        }
+        Alert.alert('Success', data.message);
+        if (data.changed || isChangingPassword) {
+          navigation.goBack();
+        }
       } else {
         Alert.alert('Error', data.message || 'Failed to update profile.');
       }
@@ -106,7 +165,7 @@ const EditProfileScreen = ({ navigation }) => {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <Container style={{ flex: 1, paddingTop: 16 }}>
           <TacticalHeader 
-            title="Edit Profile" 
+            title="Account Settings" 
             showBack 
             onBack={() => navigation.goBack()}
             hideSubtitle
@@ -185,28 +244,41 @@ const EditProfileScreen = ({ navigation }) => {
               </View>
             </View>
 
-            <TacticalInput 
-              label="Barangay / Address" 
-              icon={Lucide.MapPin} 
-              value={formData.address} 
-              onChangeText={(t) => handleChange('address', t)}
-              placeholder="Enter your barangay"
-            />
+            <TouchableOpacity 
+              onPress={() => setShowBrgyPicker(true)}
+              style={{ marginBottom: 16 }}
+            >
+              <Text style={styles.inputLabel}>Barangay (Santa Cruz, Laguna)</Text>
+              <View style={styles.inputContainer}>
+                <Lucide.MapPin size={18} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+                <Text style={[styles.textInput, { color: formData.address ? '#FFF' : 'rgba(255,255,255,0.3)' }]}>
+                  {formData.address || 'Select Barangay'}
+                </Text>
+                <Lucide.ChevronDown size={16} color="rgba(255,255,255,0.2)" />
+              </View>
+            </TouchableOpacity>
 
             {/* SECURITY SECTION */}
             <View style={{ marginTop: 24, marginBottom: 12 }}>
-                <Text style={styles.inputLabel}>Security & Auth</Text>
-                <TouchableOpacity 
-                  onPress={() => {
-                    console.log('[EditProfile] Navigating to ForgotPassword');
-                    navigation.navigate('ForgotPassword');
-                  }}
-                  style={styles.securityBtn}
-                >
-                  <Lucide.KeyRound size={16} color="rgba(255,255,255,0.6)" />
-                  <Text style={styles.securityBtnText}>Change Account Password</Text>
-                  <Lucide.ChevronRight size={14} color="rgba(255,255,255,0.2)" />
-                </TouchableOpacity>
+                <Text style={styles.inputLabel}>Change Password (Optional)</Text>
+                
+                <TacticalInput 
+                  label="Current Password" 
+                  icon={Lucide.Lock} 
+                  value={formData.currentPassword} 
+                  onChangeText={(t) => handleChange('currentPassword', t)}
+                  secureTextEntry
+                  placeholder="Required to change password"
+                />
+
+                <TacticalInput 
+                  label="New Password" 
+                  icon={Lucide.Key} 
+                  value={formData.newPassword} 
+                  onChangeText={(t) => handleChange('newPassword', t)}
+                  secureTextEntry
+                  placeholder="Min 6 characters"
+                />
             </View>
 
             <TouchableOpacity 
@@ -223,6 +295,57 @@ const EditProfileScreen = ({ navigation }) => {
           </ScrollView>
         </Container>
       </SafeAreaView>
+
+      {/* Barangay Picker Modal */}
+      {showBrgyPicker && (
+        <View style={StyleSheet.absoluteFillObject}>
+           <TouchableOpacity 
+             style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)' }} 
+             onPress={() => setShowBrgyPicker(false)} 
+           />
+           <MotiView 
+             from={{ translateY: 300 }} 
+             animate={{ translateY: 0 }}
+             style={{ 
+               position: 'absolute', 
+               bottom: 0, 
+               left: 0, 
+               right: 0, 
+               height: '60%', 
+               backgroundColor: '#0D0D0D', 
+               borderTopLeftRadius: 32, 
+               borderTopRightRadius: 32,
+               padding: 24
+             }}
+           >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                 <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>Select Barangay</Text>
+                 <TouchableOpacity onPress={() => setShowBrgyPicker(false)}>
+                    <Lucide.X size={20} color="#FFF" />
+                 </TouchableOpacity>
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                 {barangays.map((b) => (
+                   <TouchableOpacity 
+                     key={b} 
+                     onPress={() => { handleChange('address', b); setShowBrgyPicker(false); }}
+                     style={{ 
+                       paddingVertical: 16, 
+                       borderBottomWidth: 1, 
+                       borderBottomColor: 'rgba(255,255,255,0.05)',
+                       flexDirection: 'row',
+                       alignItems: 'center',
+                       justifyContent: 'space-between'
+                     }}
+                   >
+                      <Text style={{ color: formData.address === b ? '#F5B235' : '#FFF', fontSize: 14 }}>{b}</Text>
+                      {formData.address === b && <Lucide.Check size={16} color="#F5B235" />}
+                   </TouchableOpacity>
+                 ))}
+              </ScrollView>
+           </MotiView>
+        </View>
+      )}
     </View>
   );
 };

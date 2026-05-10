@@ -35,6 +35,7 @@ import {
   TacticalQuickActions,
 } from '../components/Home/TacticalComponents';
 import TacticalAnnouncementModal from '../components/Home/TacticalAnnouncementModal';
+import { TacticalIntelCard } from '../components/Intelligence/TacticalIntelCard';
 
 const LAT = 14.2833;
 const LONG = 121.4167;
@@ -81,6 +82,10 @@ const HomeScreen = ({ navigation }) => {
   const [urgentAnnouncement, setUrgentAnnouncement] = useState(null);
   const [showUrgentModal, setShowUrgentModal] = useState(false);
   const [tacticalDetail, setTacticalDetail] = useState(null);
+
+  const handleZoom = (item) => {
+    navigation.navigate('HazardMap', { focusId: item.id });
+  };
 
   useEffect(() => {
     let routeParams = navigation.getState()?.routes[navigation.getState()?.index]?.params;
@@ -226,7 +231,7 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const locationLabel = user?.brgy_name || user?.barangay ? `Brgy. ${user?.brgy_name || user?.barangay}` : 'Santa Cruz, Laguna';
+  const locationLabel = 'Santa Cruz, Laguna';
 
   const weatherDisplay = useMemo(() => {
     if (!weather?.current) {
@@ -291,6 +296,7 @@ const HomeScreen = ({ navigation }) => {
     if (id === 'more') navigation.navigate('Notifications');
   };
 
+
   const floodReports = useMemo(() => {
     return verifiedReports
       .filter(r => (r.type || '').toLowerCase().includes('flood') || (r.description || '').toLowerCase().includes('baha'))
@@ -310,9 +316,7 @@ const HomeScreen = ({ navigation }) => {
         contentContainerStyle={{ paddingBottom: 140, paddingTop: 16 }}
       >
         <Container>
-          <View
-            style={{ gap: 18 }}
-          >
+          <View style={{ gap: 18 }}>
             <TacticalHeader
               title="E-LigtasMo"
               subtitle={locationLabel}
@@ -330,90 +334,12 @@ const HomeScreen = ({ navigation }) => {
             />
 
             <TacticalWeatherCard
-              location={locationLabel.replace('Brgy. ', '')}
+              location="Santa Cruz, Laguna"
               temp={weatherDisplay.temp}
               condition={weatherDisplay.desc}
               hourly={weatherDisplay.hourly}
               onPress={() => navigation.navigate('Weather')}
             />
-
-            {floodReports.length > 0 && (
-              <View style={styles.floodSection}>
-                <Row justify="space-between" align="center" style={{ marginBottom: 14 }}>
-                  <Text style={styles.communityHeading}>Recent Flood Reports</Text>
-                  <TouchableOpacity onPress={() => navigation.navigate('Reports', { filter: 'Flood' })} activeOpacity={0.85}>
-                    <Text style={styles.communityLink}>View All</Text>
-                  </TouchableOpacity>
-                </Row>
-                
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {floodReports.slice(0, 6).map((report, idx) => {
-                    const severity = String(report.severity || 'Moderate').toLowerCase();
-                    let color = '#3B82F6';
-                    if (severity === 'moderate' || severity === 'warning') color = '#F5B235';
-                    if (severity === 'high' || severity === 'critical' || severity === 'severe') color = '#EF4444';
-
-                    return (
-                      <TouchableOpacity 
-                        key={report.id || idx}
-                        onPress={() => navigation.navigate('ReportDetails', { report })}
-                        activeOpacity={0.8}
-                        style={{ 
-                          width: (windowWidth - 32 - 20) / 3,
-                          backgroundColor: color + '15',
-                          borderRadius: 20,
-                          padding: 12,
-                          borderWidth: 1.5,
-                          borderColor: color + '25',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          minHeight: 115, 
-                        }}
-                      >
-                        <View style={{ alignItems: 'center', width: '100%' }}>
-                          <View style={{ 
-                            width: 34, 
-                            height: 34, 
-                            borderRadius: 12, 
-                            backgroundColor: color + '20', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            marginBottom: 6,
-                            borderWidth: 1,
-                            borderColor: color + '35'
-                          }}>
-                            <Lucide.Waves size={18} color={color} strokeWidth={2.5} />
-                          </View>
-                          <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '800', color: '#fff', textAlign: 'center', fontFamily: DS_FONT_UI, letterSpacing: -0.2 }}>
-                            {report.barangay || 'Sector'}
-                          </Text>
-                          <View style={{ 
-                            marginTop: 4, 
-                            paddingHorizontal: 6, 
-                            paddingVertical: 2, 
-                            borderRadius: 6, 
-                            backgroundColor: color + '25',
-                            borderWidth: 1,
-                            borderColor: color + '35'
-                          }}>
-                            <Text style={{ fontSize: 7, fontWeight: '900', color: color, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                              {report.severity || 'Normal'}
-                            </Text>
-                          </View>
-                        </View>
-                        
-                        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingTop: 6, marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                          <Lucide.Clock size={8} color="rgba(255,255,255,0.3)" />
-                          <Text style={{ fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.3)', fontFamily: DS_FONT_INPUT }}>
-                            {formatRelativeTime(report.created_at)}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
 
             <View style={styles.communitySection}>
               <Row justify="space-between" align="center" style={{ marginBottom: 14 }}>
@@ -435,7 +361,14 @@ const HomeScreen = ({ navigation }) => {
                     <TouchableOpacity
                       key={uniqueKey}
                       activeOpacity={0.86}
-                      onPress={() => isAlert ? navigation.navigate('DisasterAlerts') : navigation.navigate('Announcements')}
+                      onPress={() => {
+                        if (isAlert) {
+                          navigation.navigate('DisasterAlerts');
+                        } else {
+                          setUrgentAnnouncement(announcements[index]);
+                          setShowUrgentModal(true);
+                        }
+                      }}
                       style={styles.communityCard}
                     >
                       <View style={styles.communityMeta}>
@@ -491,34 +424,28 @@ const HomeScreen = ({ navigation }) => {
                             <Lucide.Share2 size={20} color="rgba(255,255,255,0.6)" />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setTacticalDetail(null)} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' }}>
-                            <Lucide.X size={24} color="#fff" />
+                            <Lucide.X size={20} color="rgba(255,255,255,0.6)" />
                         </TouchableOpacity>
                     </Row>
                 </Row>
 
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <Text style={{ fontSize: 32, fontWeight: '800', color: '#fff', marginBottom: 8 }}>{tacticalDetail.name || tacticalDetail.barangay_name || 'Resource Node'}</Text>
-                    <Row align="center" gap={8} style={{ marginBottom: 24 }}>
-                        <Lucide.MapPin size={16} color="rgba(255,255,255,0.4)" />
-                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>{tacticalDetail.location || tacticalDetail.address || 'Santa Cruz, Laguna'}</Text>
-                    </Row>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+                    <View style={{ marginBottom: 32 }}>
+                        <Text style={{ color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: -1 }}>{tacticalDetail.name || tacticalDetail.barangay_name}</Text>
+                        <Row gap={8} align="center" style={{ marginTop: 8 }}>
+                            <Lucide.MapPin size={14} color="#2F7BFF" />
+                            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600' }}>Santa Cruz Sector</Text>
+                        </Row>
+                    </View>
 
-                    {tacticalDetail._tacticalType === 'shelter' && (
-                        <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-                            <Row justify="space-between" align="center" style={{ marginBottom: 16 }}>
-                                <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '600' }}>CAPACITY LOGISTICS</Text>
-                                <Text style={{ color: tacticalDetail.status === 'Open' ? '#27AE60' : '#FF4B4B', fontWeight: '800', fontSize: 12 }}>{tacticalDetail.status?.toUpperCase() || 'OPEN'}</Text>
+                    {tacticalDetail.flood_depth_cm !== undefined && (
+                        <View style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+                            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '800', letterSpacing: 1, marginBottom: 12 }}>SENSOR TELEMETRY</Text>
+                            <Row align="baseline" gap={4}>
+                                <Text style={{ color: '#fff', fontSize: 36, fontWeight: '900' }}>{tacticalDetail.flood_depth_cm}</Text>
+                                <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 16, fontWeight: '700' }}>CM</Text>
                             </Row>
-                            
-                            <Row justify="space-between" style={{ marginBottom: 8 }}>
-                                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Occupancy</Text>
-                                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{tacticalDetail.occupancy} / {tacticalDetail.capacity}</Text>
-                            </Row>
-
-                            <View style={{ height: 8, width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
-                                <View style={{ height: '100%', width: `${Math.min(100, (tacticalDetail.occupancy / (tacticalDetail.capacity || 1)) * 100)}%`, backgroundColor: '#2F7BFF' }} />
-                            </View>
-                            <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 12 }}>Updated: {new Date().toLocaleTimeString()}</Text>
+                            <Text style={{ color: tacticalDetail.status_level === 'safe' ? '#10B981' : '#F5B235', fontSize: 12, fontWeight: '800', marginTop: 8, textTransform: 'uppercase' }}>Status: {tacticalDetail.status_level}</Text>
                         </View>
                     )}
 
@@ -529,15 +456,13 @@ const HomeScreen = ({ navigation }) => {
 
                 <TouchableOpacity 
                     onPress={() => {
-                        const lat = tacticalDetail.lat || tacticalDetail.latitude;
-                        const lon = tacticalDetail.lng || tacticalDetail.longitude;
                         setTacticalDetail(null);
-                        navigation.navigate('RoutePlanner', { lat, lon, name: tacticalDetail.name || tacticalDetail.barangay_name });
+                        navigation.navigate('HazardMap', { focusId: tacticalDetail.id });
                     }}
                     style={{ backgroundColor: '#2F7BFF', height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 12, shadowColor: '#2F7BFF', shadowOpacity: 0.3, shadowRadius: 15, shadowOffset: { width: 0, height: 8 } }}
                 >
-                    <Lucide.Navigation size={22} color="#fff" fill="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>Take Me Here</Text>
+                    <Lucide.Map size={22} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700' }}>View Map</Text>
                 </TouchableOpacity>
             </MotiView>
         )}

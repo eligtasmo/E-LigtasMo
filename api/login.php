@@ -104,7 +104,8 @@ if ($row) {
 
     if (password_verify($password, $hashedPassword)) {
         $roleLower = strtolower((string)$role);
-        $valid = ['admin','brgy','resident'];
+        // Expand valid roles to include all tactical roles from rbac.php
+        $valid = ['admin', 'brgy', 'mmdrmo', 'brgy_chair', 'resident', 'responder'];
         if (!in_array($roleLower, $valid, true)) {
             $roleLower = 'resident';
             $role = 'resident';

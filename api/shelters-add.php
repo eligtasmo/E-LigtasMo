@@ -48,6 +48,12 @@ try {
         $photos_json = json_encode($saved_paths);
     }
 
+    // For admins, allow selecting the barangay. For others, use their own.
+    $targetBrgy = $user['brgy_name'];
+    if (($user['role'] === 'admin' || $user['role'] === 'mmdrmo') && isset($data['created_brgy'])) {
+        $targetBrgy = $data['created_brgy'];
+    }
+
     $stmt = $pdo->prepare('INSERT INTO shelters (name, lat, lng, capacity, occupancy, status, contact_person, contact_number, address, category, photos, created_by, created_brgy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $data['name'],
@@ -62,7 +68,7 @@ try {
         $data['category'] ?? null,
         $photos_json,
         $user['full_name'] ?? $user['username'],
-        $user['brgy_name']
+        $targetBrgy
     ]);
     $id = $pdo->lastInsertId();
     $stmt = $pdo->prepare('SELECT * FROM shelters WHERE id = ?');

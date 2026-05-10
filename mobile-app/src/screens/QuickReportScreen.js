@@ -122,7 +122,7 @@ const QuickReportScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <MaterialCommunityIcons name="chevron-left" size={28} color={theme.text} />
           </TouchableOpacity>
-          <Heading size="md" style={atomic.ml12}>{isEditing ? 'Edit Report' : 'Report Flood'}</Heading>
+          <Heading size="md" style={atomic.ml12}>{isEditing ? 'Edit Report' : 'Tactical Intel'}</Heading>
         </Row>
       </SafeAreaView>
 

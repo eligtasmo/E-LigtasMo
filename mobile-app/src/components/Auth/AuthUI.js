@@ -82,7 +82,8 @@ const styles = StyleSheet.create({
     flex: 1, 
     fontSize: 16, 
     color: '#FFFFFF', 
-    fontFamily: DS_FONT_UI 
+    fontFamily: DS_FONT_UI,
+    textAlign: 'left',
   },
   errorText: { 
     fontSize: 12, 

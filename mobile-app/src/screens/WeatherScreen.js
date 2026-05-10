@@ -50,6 +50,16 @@ const WeatherScreen = () => {
     }
   };
 
+  const getWeatherIcon = (code) => {
+    if (code === 0) return Lucide.Sun;
+    if (code <= 3) return Lucide.Cloud;
+    if (code <= 48) return Lucide.CloudFog;
+    if (code <= 55) return Lucide.CloudDrizzle;
+    if (code <= 65) return Lucide.CloudRain;
+    if (code <= 82) return Lucide.CloudRain;
+    return Lucide.CloudLightning;
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     loadWeather();
@@ -164,10 +174,11 @@ const WeatherScreen = () => {
                     {weather?.hourly.time.slice(0, 24).map((time, i) => {
                         const hourNum = new Date(time).getHours();
                         const isNow = i === 0;
+                        const Icon = getWeatherIcon(weather.hourly.weather_code[i]);
                         return (
                             <View key={i} style={[styles.hourlyItem, isNow && styles.hourlyItemActive]}>
                                 <Text style={styles.hourLabel}>{isNow ? 'NOW' : (hourNum % 12 || 12) + (hourNum >= 12 ? 'PM' : 'AM')}</Text>
-                                <Lucide.Cloud size={20} color={isNow ? "#000" : "#F5B235"} style={{ marginVertical: 8 }} />
+                                <Icon size={20} color={isNow ? "#000" : "#F5B235"} style={{ marginVertical: 8 }} />
                                 <Text style={[styles.hourTemp, isNow && { color: '#000' }]}>{Math.round(weather.hourly.temperature_2m[i])}°</Text>
                             </View>
                         );
@@ -178,11 +189,20 @@ const WeatherScreen = () => {
             {/* ATMOSPHERIC INTEL GRID */}
             <View style={styles.metricsGrid}>
                 {renderTacticalMetric('UV Index', current?.uv_index || 0, Lucide.Sun, (current?.uv_index || 0) > 5 ? 'High Risk' : 'Low Risk')}
-                {renderTacticalMetric('Feels Like', `${Math.round(current?.apparent_temperature)}°`, Lucide.Thermometer, 'Humidity Adjusted')}
-                {renderTacticalMetric('Wind Speed', `${Math.round(current?.wind_speed_10m)} km/h`, Lucide.Wind, 'North East')}
+                {renderTacticalMetric('Feels Like', `${Math.round(current?.apparent_temperature)}°`, Lucide.Thermometer, 'Heat Index')}
+                {renderTacticalMetric('Wind Speed', `${Math.round(current?.wind_speed_10m)} km/h`, Lucide.Wind, `Gusts ${Math.round(current?.wind_gusts_10m || 0)} km/h`)}
                 {renderTacticalMetric('Humidity', `${current?.relative_humidity_2m}%`, Lucide.Droplets, 'Surface Level')}
-                {renderTacticalMetric('Visibility', '10 km', Lucide.Eye, 'Clear Skies')}
-                {renderTacticalMetric('Air Pressure', '1012 hPa', Lucide.Activity, 'Stable')}
+                {renderTacticalMetric('Visibility', `${(current?.visibility || 10000) / 1000} km`, Lucide.Eye, 'Clear Skies')}
+                {renderTacticalMetric('Air Quality', weather?.air_quality?.current?.us_aqi || 'N/A', Lucide.Wind, (() => {
+                  const aqi = weather?.air_quality?.current?.us_aqi;
+                  if (!aqi) return 'Unknown';
+                  if (aqi <= 50) return 'Good';
+                  if (aqi <= 100) return 'Moderate';
+                  if (aqi <= 150) return 'Sensitive';
+                  if (aqi <= 200) return 'Unhealthy';
+                  return 'Poor';
+                })())}
+                {renderTacticalMetric('Pressure', `${Math.round(current?.surface_pressure || 1012)} hPa`, Lucide.Activity, 'Surface Level')}
             </View>
 
             {/* 7-DAY FORECAST */}
@@ -192,21 +212,24 @@ const WeatherScreen = () => {
                     <Text style={styles.sectionHeading}>7-DAY MISSION OUTLOOK</Text>
                 </Row>
                 <View style={styles.forecastList}>
-                    {daily?.time.slice(0, 7).map((time, index) => (
-                        <View key={index} style={styles.forecastRow}>
-                            <Text style={styles.forecastDay}>{index === 0 ? 'TODAY' : new Date(time).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()}</Text>
-                            <View style={{ flex: 1, alignItems: 'center' }}>
-                                <Lucide.Cloud size={18} color="#F5B235" />
-                            </View>
-                            <Row align="center" gap={12} style={{ width: 100, justifyContent: 'flex-end' }}>
-                                <Text style={styles.forecastTempMin}>{Math.round(daily.temperature_2m_min[index])}°</Text>
-                                <View style={styles.forecastBar}>
-                                    <View style={[styles.forecastBarFill, { width: '60%', left: '20%' }]} />
+                    {daily?.time.slice(0, 7).map((time, index) => {
+                        const Icon = getWeatherIcon(daily.weather_code[index]);
+                        return (
+                            <View key={index} style={styles.forecastRow}>
+                                <Text style={styles.forecastDay}>{index === 0 ? 'TODAY' : new Date(time).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()}</Text>
+                                <View style={{ flex: 1, alignItems: 'center' }}>
+                                    <Icon size={18} color="#F5B235" />
                                 </View>
-                                <Text style={styles.forecastTempMax}>{Math.round(daily.temperature_2m_max[index])}°</Text>
-                            </Row>
-                        </View>
-                    ))}
+                                <Row align="center" gap={12} style={{ width: 100, justifyContent: 'flex-end' }}>
+                                    <Text style={styles.forecastTempMin}>{Math.round(daily.temperature_2m_min[index])}°</Text>
+                                    <View style={styles.forecastBar}>
+                                        <View style={[styles.forecastBarFill, { width: '60%', left: '20%' }]} />
+                                    </View>
+                                    <Text style={styles.forecastTempMax}>{Math.round(daily.temperature_2m_max[index])}°</Text>
+                                </Row>
+                            </View>
+                        );
+                    })}
                 </View>
             </View>
         </Container>
