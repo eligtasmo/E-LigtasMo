@@ -5,9 +5,9 @@ require_once 'db.php';
 require_once 'auth_helper.php';
 
 $user = get_current_user_data();
-if (!$user || !in_array($user['role'], ['admin', 'mmdrmo'])) {
+if (!$user || !in_array($user['role'], ['admin', 'mmdrmo', 'brgy', 'brgy_chair'])) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Only Admin or MDRRMO can register new barangays.']);
+    echo json_encode(['success' => false, 'error' => 'Insufficient permissions to register assets.']);
     exit;
 }
 

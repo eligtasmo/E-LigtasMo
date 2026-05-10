@@ -17,9 +17,10 @@ try {
     $params = [];
 
     if ($role === 'brgy' || $role === 'brgy_chair') {
-        $query .= " WHERE (LOWER(TRIM(created_brgy)) = LOWER(TRIM(?)) OR LOWER(TRIM(created_by)) = LOWER(TRIM(?)))";
+        $query .= " WHERE (LOWER(TRIM(created_brgy)) = LOWER(TRIM(?)) OR LOWER(TRIM(created_by)) = LOWER(TRIM(?)) OR LOWER(TRIM(created_by)) = LOWER(TRIM(?)))";
         $params[] = $user['brgy_name'] ?: '';
         $params[] = $user['username'] ?: '';
+        $params[] = $user['full_name'] ?: '';
     } elseif ($role === 'admin' || $role === 'mmdrmo') {
         if (isset($_GET['barangay']) && $_GET['barangay'] !== '') {
             $query .= " WHERE LOWER(TRIM(created_brgy)) = LOWER(TRIM(?))";

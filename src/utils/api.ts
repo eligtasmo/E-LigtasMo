@@ -15,6 +15,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     ...options,
     headers
   };
+  console.log(`[Tactical Comms] Fetching: ${url}`, opts);
   try {
     const res = await fetch(url, opts);
     if (!res.ok && res.status === 404) {

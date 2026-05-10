@@ -73,9 +73,18 @@ export default function ManageSheltersView() {
         const url = `shelters-list.php${selectedBarangay ? `?barangay=${encodeURIComponent(selectedBarangay)}` : ''}`;
         const response = await apiFetch(url);
         const data = await response.json();
-        setShelters(data);
+        if (Array.isArray(data)) {
+          setShelters(data);
+        } else {
+          console.error("Invalid shelter data format:", data);
+          setShelters([]);
+          if (data.error || data.message) {
+            console.warn("API Error:", data.error || data.message);
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch shelters:", error);
+        setShelters([]);
       }
     };
     fetchShelters();
@@ -242,8 +251,13 @@ export default function ManageSheltersView() {
           body: JSON.stringify(form)
         });
         const newShelter = await response.json();
-        if (newShelter.error) throw new Error(newShelter.error);
-        setShelters([...shelters, newShelter]);
+        if (newShelter.error || newShelter.message) throw new Error(newShelter.error || newShelter.message);
+        // Ensure newShelter has correct photos format
+        if (newShelter.photos && typeof newShelter.photos === 'string') {
+          try { newShelter.photos = JSON.parse(newShelter.photos); } catch { newShelter.photos = []; }
+        }
+        setShelters(prev => [newShelter, ...prev]);
+        setShowToast("Asset Deployed Successfully");
       }
       setForm(null);
     } catch (error) {

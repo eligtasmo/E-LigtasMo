@@ -52,9 +52,16 @@ export default function BarangayMapView() {
     try {
       const res = await apiFetch('list-barangays.php');
       const data = await res.json();
-      if (data.success) setBarangays(data.brgys || []);
-      else setBarangays([]);
-    } catch { setBarangays([]); }
+      if (data.success && Array.isArray(data.brgys || data.barangays)) {
+        setBarangays(data.brgys || data.barangays || []);
+      } else {
+        console.error("Invalid barangay data format:", data);
+        setBarangays([]);
+      }
+    } catch (err) { 
+      console.error("Fetch Barangays Error:", err);
+      setBarangays([]); 
+    }
   };
   useEffect(() => { fetchBarangays(); }, []);
 
@@ -333,7 +340,7 @@ export default function BarangayMapView() {
                           )}
                         </div>
 
-                        {(user?.role === 'admin' || (user?.role === 'brgy' && brgy.added_by === user?.username)) && (
+                        {(user?.role === 'admin' || (user?.role === 'brgy' && (brgy.added_by === user?.username || brgy.added_by === user?.full_name))) && (
                           <div className="flex divide-x divide-gray-100 border-t border-gray-50">
                             <button 
                               className="flex-1 py-2 text-[9px] font-bold text-slate-900 uppercase tracking-widest hover:bg-gray-50"
