@@ -55,6 +55,7 @@ try {
         'success' => true,
         'token' => $token,
         'invite_link' => $invite_link,
+        'version' => '2.2',
         'message' => 'Invite link generated successfully.'
     ]);
 

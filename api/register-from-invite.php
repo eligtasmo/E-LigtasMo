@@ -43,7 +43,11 @@ try {
 
     if (empty($firstName) || empty($lastName) || empty($brgyName)) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'message' => 'Missing required fields (Name and Barangay).']);
+        echo json_encode([
+            'success' => false, 
+            'version' => '2.2',
+            'message' => 'Deployment failure: Missing mission credentials (First Name, Last Name, or Barangay).'
+        ]);
         exit;
     }
 
@@ -66,7 +70,11 @@ try {
     $stmt->execute([$invite['id']]);
 
     $pdo->commit();
-    echo json_encode(['success' => true, 'message' => 'Account created successfully! You can now sign in.']);
+    echo json_encode([
+        'success' => true, 
+        'version' => '2.2',
+        'message' => 'Account claimed successfully! Mission parameters synchronized.'
+    ]);
 
 } catch (Exception $e) {
     $pdo->rollBack();

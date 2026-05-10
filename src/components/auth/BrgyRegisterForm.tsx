@@ -291,17 +291,25 @@ const BrgyRegisterForm = ({ onSuccess, formClassName = "space-y-6", mode = 'brgy
       lng: location?.lng
     };
     try {
-      const endpoint = token ? "/api/register-from-invite.php" : "/api/register.php";
+      const endpoint = token ? `/api/register-from-invite.php?_t=${Date.now()}` : `/api/register.php?_t=${Date.now()}`;
       
-      // Split full name back for the invite API if needed
-      const [fname, lname] = form.fullName.split(',').map(s => s.trim());
+      // Robust name splitting: try comma first, then space, then fallback to whole string as first name
+      let fname = form.fullName;
+      let lname = "";
+      if (form.fullName.includes(',')) {
+        [fname, lname] = form.fullName.split(',').map(s => s.trim());
+      } else if (form.fullName.includes(' ')) {
+        const parts = form.fullName.trim().split(/\s+/);
+        lname = parts.pop() || "";
+        fname = parts.join(' ');
+      }
 
       const finalPayload = token ? {
         token,
         username: form.username,
         password: form.password,
-        first_name: fname || form.fullName,
-        last_name: lname || "",
+        first_name: fname,
+        last_name: lname,
         email: form.email,
         contact_number: form.contact,
         brgy_name: form.brgy,
