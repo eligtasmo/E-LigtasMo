@@ -104,7 +104,7 @@ const TacticalContactManager = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-8 font-['Outfit']">
-      <PageMeta title="Tactical Directory | E-LigtasMo" />
+      <PageMeta title="Tactical Directory | E-LigtasMo" description="Tactical Contacts Directory" />
       
       <div className="max-w-[1400px] mx-auto space-y-6">
         

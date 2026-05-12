@@ -10,7 +10,7 @@ export default function RegisterOfficial() {
 
   return (
     <>
-      <PageMeta title="Official Registration | E-LigtasMo" />
+      <PageMeta title="Official Registration | E-LigtasMo" description="Register as a Barangay Official" />
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-outfit py-12">
         <div className="w-full max-w-md bg-white rounded-[32px] p-8 sm:p-10 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-500">
            {/* Re-using the standard BrgyRegisterForm for consistent "Old Flow" experience */}

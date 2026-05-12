@@ -43,7 +43,8 @@ import {
   FaSkullCrossbones,
   FaWind,
   FaAmbulance,
-  FaFire
+  FaFire,
+  FaHome
 } from 'react-icons/fa';
 import { DEFAULT_MAP_STATE } from '../../constants/geo';
 import React, { useEffect, useState } from "react";
@@ -243,7 +244,50 @@ export default function Home() {
                 const pA = priority[a.status_level?.toLowerCase()] || 0;
                 const pB = priority[b.status_level?.toLowerCase()] || 0;
                 if (pA !== pB) return pB - pA;
-                
+                return (b.flood_depth_cm || 0) - (a.flood_depth_cm || 0);
+             });
+             setBarangayLevels(sorted);
+          }
+        }
+
+        const activeCount = incidents.filter((x: any) => String(x.status || '').toLowerCase() === 'approved').length;
+        const resolvedWithTimes = incidents.filter((x: any) => String(x.status || '').toLowerCase() === 'resolved' && x.created_at && x.reviewed_at);
+        let avgMins = 0;
+        if (resolvedWithTimes.length) {
+          const sums = resolvedWithTimes.map((x: any) => {
+            const start = new Date(x.created_at).getTime();
+            const end = new Date(x.reviewed_at).getTime();
+            return Math.max(0, end - start);
+          });
+          avgMins = Math.round((sums.reduce((a: number, b: number) => a + b, 0) / resolvedWithTimes.length) / 60000);
+        }
+
+        const activeHazards = (Array.isArray(hazards) ? hazards : []).filter((h: any) => String(h.status || '').toLowerCase() === 'active').length;
+
+        setKeyMetrics({
+          activeIncidents: { value: activeCount, trend: 0, status: 'stable' },
+          sheltersAvailable: {
+            value: shelterStats ? Math.max(0, (shelterStats.totalShelters || 0) - (shelterStats.status?.offline || 0)) : shelters.length,
+            total: shelterStats ? (shelterStats.totalShelters || 0) : shelters.length,
+            occupancy: shelterStats ? Math.round((shelterStats.capacityUtilizationPct || 0)) : 0,
+            trend: 0
+          },
+          hazardZones: { value: hazards.length, active: activeHazards, trend: 0 },
+          totalResidents: { value: totalResidents, evacuated: 0, trend: 0 },
+          responseTime: { value: avgMins, unit: 'min', trend: 0 },
+          weatherAlert: { level: 'moderate', type: 'Thunderstorms', trend: 'stable' }
+        });
+      } catch (e) {
+      } finally {
+        setLoadingIncidents(false);
+        setLoadingHazards(false);
+        setLoadingLevels(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+
   return (
     <>
       <PageMeta
@@ -380,7 +424,7 @@ export default function Home() {
                     <div className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-1">Local Time</div>
                   </div>
                   <div className="w-px h-8 bg-white/10"></div>
-                  <TacticalCommsStatus />
+                  <TacticalCommsStatus sectors={brgyLevels} />
                </div>
             </div>
           </div>
@@ -527,5 +571,3 @@ export default function Home() {
     </>
   );
 };
-
-export default Home;
