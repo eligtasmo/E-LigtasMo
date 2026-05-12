@@ -50,7 +50,7 @@ const SheltersScreen = ({ navigation }) => {
 
   const fetchShelters = async () => {
     try {
-      const resp = await fetch(`${API_URL}/shelters-list.php`);
+      const resp = await fetch(`${API_URL}/shelters.php`);
       const data = await resp.json();
       const list = Array.isArray(data) ? data : (data?.shelters || []);
       setShelters(list);

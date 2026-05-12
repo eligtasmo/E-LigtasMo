@@ -17,6 +17,7 @@ import {
   Image as RNImage,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as Lucide from 'lucide-react-native';
 import { MotiView, AnimatePresence } from 'moti';
@@ -135,13 +136,25 @@ const HazardMapScreen = ({ navigation, route }) => {
   };
 
   const fetchMyReports = async (userId) => {
-    const id = userId || user?.id;
+    const u = user || (await AuthService.checkSession());
+    const id = userId || u?.id;
     if (!id) return;
     setFetchingReports(true);
     try {
-      const res = await fetch(`${API_URL}/list-incident-reports.php?user_id=${id}&all_time=true`);
+      // Fetch both personal reports AND all active hazards for situational awareness
+      const isAdmin = ['admin', 'coordinator', 'brgy'].includes(u.role);
+      let url = `${API_URL}/incident-reports.php?all_time=true`;
+      
+      // If resident, we show their reports + all active verified reports
+      // If admin, we show all for their sector
+      if (u.barangay || u.brgy_name) {
+         url += `&barangay=${encodeURIComponent(u.barangay || u.brgy_name)}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
       if (Array.isArray(data)) {
+        // Filter to only show relevant intel (Active/Pending/Verified)
         setMyReports(data);
       }
     } catch (err) {
@@ -150,6 +163,13 @@ const HazardMapScreen = ({ navigation, route }) => {
       setFetchingReports(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.id) fetchMyReports(user.id);
+      fetchHazards(user);
+    }, [user?.id])
+  );
 
   const formatRelativeTime = (dateString) => {
     if (!dateString) return 'Just now';
@@ -183,6 +203,7 @@ const HazardMapScreen = ({ navigation, route }) => {
       base = base.filter(r => 
         (r.type || '').toLowerCase().includes(q) || 
         (r.location_text || '').toLowerCase().includes(q) ||
+        (r.barangay || '').toLowerCase().includes(q) ||
         (r.description || '').toLowerCase().includes(q)
       );
     }
@@ -199,26 +220,113 @@ const HazardMapScreen = ({ navigation, route }) => {
     }
   }, [hazards, route.params?.focusId]);
 
-  const fetchHazards = async (user) => {
+  const fetchHazards = async (currentUser) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/list-hazards.php`, {
-        headers: { 
-          'X-Role': user?.role || 'resident',
-          'X-Token': user?.token || 'RESCUE_PH_TOKEN'
-        }
-      });
-      const data = await response.json();
-      if (data?.success && Array.isArray(data.hazards)) {
-        setHazards(data.hazards);
-        if (data.hazards.length > 0) {
-          // No auto-selection as requested
+      const u = currentUser || user || (await AuthService.checkSession());
+      
+      // Fetch only hazard/incident sources for the Hazard Map
+      const [hRes, iRes] = await Promise.all([
+        fetch(`${API_URL}/list-map-overlays.php`).catch(() => null),
+        fetch(`${API_URL}/incident-reports.php?official_only=true?status=All`).catch(() => null)
+      ]);
+      
+      const markers = [];
+
+      if (hRes) {
+        const hData = await hRes.json();
+        if (hData?.success) {
+          const allowedStats = ['ACTIVE', 'APPROVED', 'VERIFIED'];
+          (hData.reports || [])
+            .filter(h => allowedStats.includes((h.status || '').toUpperCase()))
+            .forEach(h => markers.push({
+              ...h,
+              id: `h${h.id}`, realId: h.id, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
+              type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
+              severity: h.severity || 'Normal',
+              is_passable: h.is_passable === undefined ? true : (h.is_passable === true || h.is_passable === 1 || h.is_passable === "1")
+            }));
         }
       }
+
+      if (iRes) {
+        const iData = await iRes.json();
+        if (iData?.success && iData.incidents) {
+          const allowedStats = ['ACTIVE', 'APPROVED', 'VERIFIED'];
+          iData.incidents
+            .filter(r => allowedStats.includes((r.status || '').toUpperCase()))
+            .forEach(r => markers.push({
+              ...r,
+              id: `i${r.id}`, realId: r.id, lat: parseFloat(r.lat), lng: parseFloat(r.lng),
+              type: (r.type || 'incident').toLowerCase(), area_geojson: r.area_geojson,
+              severity: r.severity || 'Moderate',
+              is_passable: r.is_passable === undefined ? true : (r.is_passable === true || r.is_passable === 1 || r.is_passable === "1"),
+              status: r.status,
+              description: r.description,
+              time: r.time,
+              user_id: r.user_id,
+              allowed_modes: r.allowed_modes
+            }));
+        }
+      }
+
+      setHazards(markers);
     } catch (error) {
       console.error('Error fetching hazards:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveHazard = async () => {
+    if (!createForm.description) {
+      Alert.alert('Incomplete Intelligence', 'Please describe the hazard for tactical awareness.');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const u = user || (await AuthService.checkSession());
+      const payload = {
+        ...createForm,
+        lat: region.lat,
+        lng: region.lng,
+        barangay: u?.brgy_name || u?.barangay || '',
+        user_id: u?.id || 0,
+        reporter_name: u?.full_name || u?.username || 'Command'
+      };
+
+      const res = await fetch(`${API_URL}/hazards.php`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Role': u?.role || 'brgy',
+          'X-Token': u?.token || ''
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        Alert.alert('Synchronized', 'Tactical hazard has been broadcasted to all units.');
+        setAddModalVisible(false);
+        setIsAddMode(false);
+        setCreateForm({
+          type: 'Flood',
+          description: '',
+          severity: 'Medium',
+          address: 'Pinned Location',
+          allowedVehicles: ['driving-car', 'driving-hgv', 'cycling-regular', 'foot-walking'],
+          medias: []
+        });
+        fetchHazards(u);
+      } else {
+        Alert.alert('Sync Failure', data.error || 'Check tactical connection.');
+      }
+    } catch (err) {
+      Alert.alert('Network Failure', 'Unable to reach tactical command center.');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -236,9 +344,13 @@ const HazardMapScreen = ({ navigation, route }) => {
   };
 
   const filteredHazards = useMemo(() => {
+    const allowed = ['ACTIVE', 'APPROVED', 'VERIFIED'];
+    const activeHazards = hazards.filter(h => allowed.includes((h.status || '').toUpperCase()));
+    
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return hazards;
-    return hazards.filter((hazard) => {
+    if (!query) return activeHazards;
+    
+    return activeHazards.filter((hazard) => {
       const haystack = [
         hazard.type,
         hazard.description,
@@ -296,6 +408,7 @@ const HazardMapScreen = ({ navigation, route }) => {
     setSuggestions([]);
     Keyboard.dismiss();
     if (nextMode) setViewMode(nextMode);
+    else setViewMode('map');
 
     if (mapRef.current) {
       mapRef.current.postMessage(
@@ -363,23 +476,34 @@ const HazardMapScreen = ({ navigation, route }) => {
 
     return `https://api.mapbox.com/styles/v1/mapbox/${styleId}/static/pin-s+${accent}(${lng},${lat})/${lng},${lat},11.8,0/900x340?access_token=${MAPBOX_ACCESS_TOKEN}`;
   };
+  useEffect(() => {
+    if (mapRef.current) {
+      const payload = centeredHazards.map((hazard) => {
+        const kind = getHazardKind(hazard);
+        const accent = HAZARD_ACCENTS[kind] || HAZARD_ACCENTS.Other;
+        return {
+          id: hazard.id,
+          lat: hazard.lat,
+          lng: hazard.lng,
+          type: hazard.type || kind,
+          accent,
+          area_geojson: hazard.area_geojson || null,
+          is_passable: hazard.is_passable,
+          severity: hazard.severity
+        };
+      });
+
+      mapRef.current.postMessage(
+        JSON.stringify({
+          type: 'SYNC_HAZARDS',
+          hazards: payload,
+          region: { lat: region.lat, lng: region.lng }
+        })
+      );
+    }
+  }, [centeredHazards, region.lat, region.lng]);
 
   const mapHTML = useMemo(() => {
-    const payload = centeredHazards.map((hazard) => {
-      const kind = getHazardKind(hazard);
-      const accent = HAZARD_ACCENTS[kind] || HAZARD_ACCENTS.Other;
-      return {
-        id: hazard.id,
-        lat: hazard.lat,
-        lng: hazard.lng,
-        type: hazard.type || kind,
-        accent,
-        area: hazard.area_geojson || null,
-        is_passable: hazard.is_passable,
-        severity: hazard.severity
-      };
-    });
-
     return `
       <!DOCTYPE html>
       <html>
@@ -407,17 +531,16 @@ const HazardMapScreen = ({ navigation, route }) => {
         <div id="map"></div>
         <script>
           mapboxgl.accessToken = '${MAPBOX_ACCESS_TOKEN}';
-          const hazards = ${JSON.stringify(payload)}.map(h => ({
-            ...h,
-            area: typeof h.area === 'string' ? JSON.parse(h.area) : h.area
-          }));
-          const markers = [];
+          const markers = {};
+          let hazardData = [];
+          let isLoaded = false;
+          let pendingMessages = [];
 
           const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/${isDark ? 'dark-v11' : 'streets-v12'}',
-            center: [${region.lng}, ${region.lat}],
-            zoom: ${selectedHazard ? 12.7 : 10.8},
+            center: [121.4167, 14.2833],
+            zoom: 11,
             antialias: true
           });
 
@@ -435,7 +558,7 @@ const HazardMapScreen = ({ navigation, route }) => {
               ret.push([coords.lng + dLng, coords.lat + dLat]);
             }
             ret.push(ret[0]);
-            return { type: 'Polygon', coordinates: [ret] };
+            return [ret];
           }
 
           function post(payload) {
@@ -446,90 +569,135 @@ const HazardMapScreen = ({ navigation, route }) => {
           }
 
           function drawHazards() {
-            markers.forEach((m) => m.remove());
-            hazards.forEach((hazard) => {
+            const polyFeatures = [];
+            const currentIds = hazardData.map(h => String(h.id));
+            
+            hazardData.forEach((hazard) => {
+              const markerId = String(hazard.id);
               const isPassable = String(hazard.is_passable) === '1' || hazard.is_passable === true;
-              const hazardColor = isPassable ? '#F59E0B' : '#EF4444';
+              const hazardColor = isPassable ? '#F5B235' : '#EF4444';
+              const type = (hazard.type || '').toLowerCase();
+              const severity = hazard.severity || 'Moderate';
               
-              // 1. Draw Area Polygons / Pinpoint Radius
-              const sourceId = 'source-' + hazard.id;
-              const layerId = 'layer-' + hazard.id;
-              const borderId = 'border-' + hazard.id;
-
-              if (!map.getSource(sourceId)) {
-                let geometry = hazard.area;
-                if (!geometry) {
-                  // Fallback to pinpoint radius
-                  geometry = createCircle([hazard.lng, hazard.lat], 0.35);
-                }
-
-                map.addSource(sourceId, {
-                  type: 'geojson',
-                  data: {
-                    type: 'Feature',
-                    properties: { id: hazard.id },
-                    geometry: geometry
-                  }
+              // 1. Resolve Geometry (Area or Radius)
+              let geom = hazard.area_geojson;
+              if (typeof geom === 'string') { try { geom = JSON.parse(geom); } catch(e) { geom = null; } }
+              
+              const finalGeom = geom ? (geom.type === 'Feature' ? geom.geometry : geom) : null;
+              
+              if (finalGeom) {
+                polyFeatures.push({ 
+                  type: 'Feature', 
+                  properties: { id: hazard.id, type, severity, is_passable: isPassable ? 1 : 0 }, 
+                  geometry: finalGeom 
                 });
+              } else {
+                let radius = 0.3;
+                const sev = severity.toLowerCase();
+                if (sev.includes('critical')) radius = 0.6;
+                else if (sev.includes('high')) radius = 0.45;
+                else if (sev.includes('moderate')) radius = 0.3;
+                else radius = 0.2;
 
-                map.addLayer({
-                  id: layerId,
-                  type: 'fill',
-                  source: sourceId,
-                  paint: {
-                    'fill-color': hazardColor,
-                    'fill-opacity': 0.22
-                  }
+                polyFeatures.push({ 
+                  type: 'Feature', 
+                  properties: { id: hazard.id, type, severity, is_passable: isPassable ? 1 : 0 }, 
+                  geometry: {
+                    type: 'Polygon',
+                    coordinates: createCircle([hazard.lng, hazard.lat], radius) 
+                  } 
                 });
-
-                map.addLayer({
-                  id: borderId,
-                  type: 'line',
-                  source: sourceId,
-                  paint: {
-                    'line-color': hazardColor,
-                    'line-width': 2,
-                    'line-dasharray': [3, 2]
-                  }
-                });
-
-                map.on('click', layerId, () => post({ type: 'select-hazard', id: hazard.id }));
               }
 
               // 2. Draw Points/Markers
-              const el = document.createElement('div');
-              el.className = 'hazard-marker';
-              el.onclick = () => post({ type: 'select-hazard', id: hazard.id });
-              
-              const type = (hazard.type || '').toLowerCase();
-              let icon = 'alert';
-              if (type.includes('fire')) icon = 'fire';
-              else if (type.includes('flood')) icon = 'waves';
-              else if (type.includes('hazard')) icon = 'alert-octagon';
-              else if (type.includes('incident')) icon = 'alert';
-              else if (type.includes('earthquake')) icon = 'activity';
-              else if (type.includes('storm')) icon = 'cloud-lightning';
-              else if (type.includes('landslide')) icon = 'mountain';
+              if (!markers[markerId]) {
+                const el = document.createElement('div');
+                el.className = 'hazard-marker';
+                el.onclick = () => post({ type: 'select-hazard', id: hazard.id });
+                
+                let icon = 'alert';
+                if (type.includes('fire')) icon = 'fire';
+                else if (type.includes('flood')) icon = 'waves';
+                else if (type.includes('shelter')) icon = 'home-heart';
+                else if (type.includes('hall') || type.includes('barangay')) icon = 'shield-home';
+                else if (type.includes('hazard')) icon = 'alert-octagon';
+                else if (type.includes('incident')) icon = 'alert';
+                else if (type.includes('earthquake')) icon = 'activity';
+                else if (type.includes('storm')) icon = 'cloud-lightning';
+                else if (type.includes('landslide')) icon = 'mountain';
 
-              el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
-                  '<div style="position: absolute; inset: 0; background: ' + hazardColor + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
-                  '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + hazardColor + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
-                  '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + hazardColor + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
-                  '<div style="position: absolute; width: 14px; height: 14px; background: ' + hazardColor + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
-                    '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
-                  '</div>' +
-                '</div>';
+                el.innerHTML = '<div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">' +
+                    '<div style="position: absolute; inset: 0; background: ' + hazardColor + '; opacity: 0.18; border-radius: 50%; filter: blur(1px);"></div>' +
+                    '<div style="position: absolute; width: 34px; height: 34px; border: 2px solid ' + hazardColor + '; opacity: 0.35; border-radius: 50%; box-sizing: border-box;"></div>' +
+                    '<div style="position: absolute; width: 24px; height: 24px; background: white; border: 2px solid ' + hazardColor + '; opacity: 0.9; border-radius: 50%; box-sizing: border-box;"></div>' +
+                    '<div style="position: absolute; width: 14px; height: 14px; background: ' + hazardColor + '; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">' +
+                      '<i class="mdi mdi-' + icon + '" style="color: white; font-size: 9px; line-height: 1;"></i>' +
+                    '</div>' +
+                  '</div>';
 
-              const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-                .setLngLat([hazard.lng, hazard.lat])
-                .addTo(map);
-              markers.push(marker);
+                const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+                  .setLngLat([hazard.lng, hazard.lat])
+                  .addTo(map);
+                markers[markerId] = marker;
+              } else {
+                markers[markerId].setLngLat([hazard.lng, hazard.lat]);
+              }
             });
+
+            // Cleanup removed markers
+            Object.keys(markers).forEach(id => {
+              if (!currentIds.includes(id)) {
+                markers[id].remove();
+                delete markers[id];
+              }
+            });
+
+            // 3. Batch Add Polygons
+            if (map.getSource('tactical-polygons')) {
+                map.getSource('tactical-polygons').setData({ type: 'FeatureCollection', features: polyFeatures });
+            } else {
+                map.addSource('tactical-polygons', { type: 'geojson', data: { type: 'FeatureCollection', features: polyFeatures } });
+                map.addLayer({ 
+                    id: 'tactical-polygons-fill', 
+                    type: 'fill', 
+                    source: 'tactical-polygons', 
+                    paint: { 
+                      'fill-color': [
+                        'case',
+                        ['==', ['get', 'is_passable'], 0], '#EF4444',
+                        '#F5B235'
+                      ], 
+                      'fill-opacity': 0.18 
+                    } 
+                });
+                map.addLayer({ 
+                    id: 'tactical-polygons-line', 
+                    type: 'line', 
+                    source: 'tactical-polygons', 
+                    paint: { 
+                      'line-color': [
+                        'case',
+                        ['==', ['get', 'is_passable'], 0], '#EF4444',
+                        '#F59E0B'
+                      ], 
+                      'line-width': 2.5, 
+                      'line-dasharray': [2, 1.5] 
+                    } 
+                });
+            }
           }
 
           window.handleSync = function(data) {
             if (!data) return;
-            if (data.type === 'FOCUS_HAZARD') {
+            if (!isLoaded) { pendingMessages.push(data); return; }
+            
+            if (data.type === 'SYNC_HAZARDS') {
+              hazardData = data.hazards;
+              if (data.region) {
+                 map.jumpTo({ center: [data.region.lng, data.region.lat] });
+              }
+              drawHazards();
+            } else if (data.type === 'FOCUS_HAZARD') {
               map.flyTo({
                 center: [data.lng, data.lat],
                 zoom: data.zoom || 13.8,
@@ -538,14 +706,24 @@ const HazardMapScreen = ({ navigation, route }) => {
             }
           };
 
+          const syncHandler = (e) => {
+            try {
+              const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+              if (d) window.handleSync(d);
+            } catch(err){}
+          };
+          window.addEventListener('message', syncHandler);
+          document.addEventListener('message', syncHandler);
+
           map.on('load', () => {
-            drawHazards();
+            isLoaded = true;
+            while (pendingMessages.length) window.handleSync(pendingMessages.shift());
           });
         </script>
       </body>
       </html>
     `;
-  }, [centeredHazards, isDark, region.lat, region.lng, selectedHazard]);
+  }, [isDark]);
 
   const selectedAccent = selectedHazard
     ? HAZARD_ACCENTS[getHazardKind(selectedHazard)] || HAZARD_ACCENTS.Other
@@ -554,6 +732,7 @@ const HazardMapScreen = ({ navigation, route }) => {
   const SelectedIcon = Lucide[HAZARD_ICONS[selectedHazard ? getHazardKind(selectedHazard) : 'Other']] || Lucide.MapPinned;
 
   return (
+    <>
     <Screen withOrnament={false} style={{ backgroundColor: '#080808' }}>
       <StatusBar style="light" />
 
@@ -563,24 +742,25 @@ const HazardMapScreen = ({ navigation, route }) => {
           ref={mapRef}
           source={{ html: mapHTML }}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-          onMessage={(event) => {
+          onMessage={useCallback((event) => {
             try {
               const data = JSON.parse(event.nativeEvent.data);
               if (data.type === 'select-hazard') {
-                const match = hazards.find((item) => item.id === data.id);
+                const match = hazards.find((item) => String(item.id) === String(data.id));
                 if (match) focusHazard(match);
               }
             } catch (error) {
               console.error('Hazard map message error:', error);
             }
-          }}
+          }, [hazards])}
+          pointerEvents="auto"
         />
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.1)' }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.1)' }} pointerEvents="none" />
       </View>
 
 
       {/* 2. TACTICAL TOP OVERLAY */}
-      <View style={[styles.topOverlay, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.topOverlay, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
          <View style={{ width: pageWidth, alignSelf: 'center', paddingHorizontal: 16 }}>
             <Row align="center" justify="space-between" style={styles.headerRow}>
                <Row align="center" gap={12}>
@@ -595,78 +775,74 @@ const HazardMapScreen = ({ navigation, route }) => {
                </Row>
                <Row gap={10}>
                  <TouchableOpacity 
-                   onPress={() => fetchHazards()} 
-                   style={styles.headerBtn}
-                 >
-                   {loading ? <ActivityIndicator size="small" color="#F5B235" /> : <Lucide.RefreshCw size={18} color="#F4F0E8" strokeWidth={2.2} />}
-                 </TouchableOpacity>
-                 <TouchableOpacity 
                    onPress={() => setShowHistory(true)}
                    style={styles.headerBtn}
                  >
                    <Lucide.History size={18} color="#F5B235" strokeWidth={2.2} />
                  </TouchableOpacity>
-                 <TouchableOpacity style={styles.headerBtn}>
-                   <Lucide.Layers size={18} color="#F4F0E8" strokeWidth={2.2} />
+                 <TouchableOpacity 
+                   onPress={() => navigation.navigate('RoutePlanner')} 
+                   style={styles.headerBtn}
+                 >
+                   <Lucide.Navigation size={18} color="#F5B235" strokeWidth={2.4} />
                  </TouchableOpacity>
                </Row>
             </Row>
 
             {viewMode === 'list' && (
-              <View style={styles.searchConsole}>
-                 <Lucide.Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.4} />
-                 <TextInput 
-                    placeholder="Search"
-                    placeholderTextColor="rgba(255,255,255,0.25)"
-                    value={searchQuery}
-                    onChangeText={handleSearch}
-                    style={styles.searchInput}
-                 />
-              </View>
-            )}
+              <View style={{ gap: 12 }}>
+                <View style={styles.viewToggleContainer}>
+                   <TouchableOpacity 
+                     onPress={() => { setViewMode('map'); setSelectedHazardId(null); }}
+                     style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+                   >
+                     <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
+                   </TouchableOpacity>
+                   <TouchableOpacity 
+                     onPress={() => { setViewMode('list'); setSelectedHazardId(null); }}
+                     style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+                   >
+                     <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
+                   </TouchableOpacity>
+                </View>
 
-            {viewMode === 'list' && (
-              <View style={styles.viewToggleContainer}>
-                 <TouchableOpacity 
-                   onPress={() => setViewMode('map')}
-                   style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
-                 >
-                   <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
-                 </TouchableOpacity>
-                 <TouchableOpacity 
-                   onPress={() => setViewMode('list')}
-                   style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
-                 >
-                   <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
-                 </TouchableOpacity>
+                <View style={styles.searchConsole}>
+                   <Lucide.Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={2.4} />
+                   <TextInput 
+                      placeholder="Search Intel..."
+                      placeholderTextColor="rgba(255,255,255,0.25)"
+                      value={searchQuery}
+                      onChangeText={handleSearch}
+                      style={styles.searchInput}
+                   />
+                </View>
               </View>
             )}
          </View>
       </View>
 
       {/* 3. TACTICAL BOTTOM OVERLAY */}
-      <View style={[styles.bottomOverlay, { paddingBottom: 0 }]}>
-         <View style={{ width: pageWidth - 32, alignSelf: 'center' }}>
-            
-            {/* VIEW TOGGLE (FLOATING ON MAP) */}
-            {viewMode === 'map' && (
-               <View style={[styles.viewToggleContainer, { marginBottom: 16, alignSelf: 'center' }]}>
-                  <TouchableOpacity 
-                    onPress={() => setViewMode('map')}
-                    style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
-                  >
-                    <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => setViewMode('list')}
-                    style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
-                  >
-                    <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
-                  </TouchableOpacity>
-               </View>
-            )}
+      <View style={[styles.bottomOverlay, { paddingBottom: Math.max(insets.bottom, 20) + 70 }]} pointerEvents="box-none">
+          <View style={{ width: pageWidth - 32, alignSelf: 'center' }}>
+             
+             {viewMode === 'map' && (
+                <View style={[styles.viewToggleContainer, { marginBottom: 16, alignSelf: 'center' }]}>
+                    <TouchableOpacity 
+                        onPress={() => setViewMode('map')}
+                        style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+                    >
+                        <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Map View</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        onPress={() => setViewMode('list')}
+                        style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+                    >
+                        <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>List View</Text>
+                    </TouchableOpacity>
+                </View>
+             )}
 
-            {/* HAZARD DATA CARD */}
+             {/* HAZARD DATA CARD */}
             <AnimatePresence>
                {selectedHazard && viewMode === 'map' && (
                  <MotiView
@@ -676,18 +852,23 @@ const HazardMapScreen = ({ navigation, route }) => {
                    style={styles.hazardDetailCard}
                  >
                     <Row justify="space-between" align="flex-start" style={{ marginBottom: 12 }}>
-                       <Row gap={12} align="center">
-                          <View style={[styles.cardIconBox, { backgroundColor: selectedAccent + '20', borderColor: selectedAccent + '40' }]}>
-                             <SelectedIcon size={22} color={selectedAccent} strokeWidth={2.5} />
-                          </View>
-                          <View>
-                             <Text style={styles.cardTitle}>{selectedHazard.type || 'Earthquake'}</Text>
-                             <Row align="center" gap={4}>
-                                <Lucide.MapPin size={10} color="rgba(255,255,255,0.4)" />
-                                <Text style={styles.cardLoc}>{selectedHazard.address || 'Cebu City'}</Text>
-                             </Row>
-                          </View>
-                       </Row>
+                        <Row gap={12} align="center" style={{ flex: 1 }}>
+                           <View style={[styles.cardIconBox, { backgroundColor: selectedAccent + "20", borderColor: selectedAccent + "40" }]}>
+                              <SelectedIcon size={22} color={selectedAccent} strokeWidth={2.5} />
+                           </View>
+                           <View style={{ flex: 1 }}>
+                              <Row justify="space-between" align="center">
+                                <Text style={styles.cardTitle}>{selectedHazard.type || "Earthquake"}</Text>
+                                <TouchableOpacity onPress={() => setSelectedHazardId(null)} style={{ padding: 4 }}>
+                                   <Lucide.X size={18} color="rgba(255,255,255,0.4)" />
+                                </TouchableOpacity>
+                              </Row>
+                              <Row align="center" gap={4}>
+                                 <Lucide.MapPin size={10} color="rgba(255,255,255,0.4)" />
+                                 <Text style={styles.cardLoc}>{selectedHazard.address || "Cebu City"}</Text>
+                              </Row>
+                           </View>
+                        </Row>
                        <Col align="flex-end">
                           <View style={[styles.ongoingBadge, { backgroundColor: (selectedHazard.severity === 'High' ? '#EF4444' : selectedHazard.severity === 'Medium' || selectedHazard.severity === 'Moderate' ? '#F59E0B' : '#10B981') + '20' }]}>
                              <View style={[styles.pulseDot, { backgroundColor: selectedHazard.severity === 'High' ? '#EF4444' : selectedHazard.severity === 'Medium' || selectedHazard.severity === 'Moderate' ? '#F59E0B' : '#10B981' }]} />
@@ -699,22 +880,54 @@ const HazardMapScreen = ({ navigation, route }) => {
                        </Col>
                     </Row>
 
-                    <View style={[styles.miniMapBox, { height: 120, marginBottom: 16 }]}>
-                       <RNImage source={{ uri: buildStaticPreview(selectedHazard) }} style={{ width: '100%', height: '100%' }} />
-                       <View style={styles.evacBanner}>
-                          <Text style={styles.evacText}>Pinned Location Intelligence</Text>
-                       </View>
+                    <View style={[styles.miniMapBox, { height: 140, marginBottom: 16 }]}>
+                        {(() => {
+                           const img = selectedHazard.media || selectedHazard.media_path || selectedHazard.photo_url;
+                           if (img) {
+                             const uri = img.startsWith('http') ? img : `${API_URL}/${img}`;
+                             return <RNImage source={{ uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />;
+                           }
+                           return <RNImage source={{ uri: buildStaticPreview(selectedHazard) }} style={{ width: '100%', height: '100%' }} />;
+                        })()}
+                        <View style={styles.evacBanner}>
+                           <Text style={styles.evacText}>{(selectedHazard.media || selectedHazard.media_path || selectedHazard.photo_url) ? 'VISUAL EVIDENCE' : 'PINNED LOCATION INTEL'}</Text>
+                        </View>
                     </View>
 
-                     <Row style={{ marginTop: 8 }}>
-                        <TouchableOpacity 
-                          onPress={() => handleMarkSafe(selectedHazard)}
-                          style={styles.safeBtn}
-                        >
-                           <Lucide.CheckCircle size={18} color="#FFF" />
-                           <Text style={styles.safeBtnText}>Mark Safe</Text>
-                        </TouchableOpacity>
-                     </Row>
+                    {selectedHazard.description && (
+                       <View style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+                          <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, lineHeight: 18, fontFamily: DS_FONT_INPUT }}>
+                             {selectedHazard.description}
+                          </Text>
+                       </View>
+                    )}
+
+                    {/* TRANSPORT PASSABILITY STATUS */}
+                    <View style={styles.transportContainer}>
+                        <Text style={styles.transportLabel}>TRANSPORT PASSABILITY STATUS</Text>
+                        <Row justify="space-between" align="center" style={{ marginTop: 10 }}>
+                            {[
+                                { id: 'Walking', icon: 'Footprints' },
+                                { id: 'Motorcycle', icon: 'Bike' },
+                                { id: 'Car', icon: 'Car' },
+                                { id: 'Truck', icon: 'Truck' }
+                            ].map((mode) => {
+                                const modesStr = String(selectedHazard.allowed_modes || '');
+                                const isPassable = modesStr.toLowerCase().includes(mode.id.toLowerCase());
+                                const color = isPassable ? '#10B981' : '#EF4444';
+                                const Icon = Lucide[mode.icon];
+                                
+                                return (
+                                    <View key={mode.id} style={styles.transportItem}>
+                                        <View style={[styles.transportIconBox, { borderColor: color + '40', backgroundColor: color + '10' }]}>
+                                            <Icon size={18} color={color} strokeWidth={2.5} />
+                                        </View>
+                                        <Text style={[styles.transportText, { color: color }]}>{mode.id}</Text>
+                                    </View>
+                                );
+                            })}
+                        </Row>
+                    </View>
                  </MotiView>
                )}
             </AnimatePresence>
@@ -722,6 +935,14 @@ const HazardMapScreen = ({ navigation, route }) => {
             {/* FLOATING ACTION BUTTONS */}
             {viewMode === 'map' && (
               <Col align="flex-end" style={{ position: 'absolute', top: -180, right: 0, gap: 12 }}>
+                 {['admin', 'coordinator', 'brgy'].includes(userRole) && (
+                   <TouchableOpacity 
+                     onPress={() => setIsAddMode(true)}
+                     style={[styles.fabBtn, { backgroundColor: '#F5B235', borderColor: '#F5B235' }]}
+                   >
+                     <Lucide.Plus size={24} color="#000" strokeWidth={2.5} />
+                   </TouchableOpacity>
+                 )}
                  <TouchableOpacity style={styles.fabBtn}><Lucide.Layers size={20} color="#FFF" /></TouchableOpacity>
                  <TouchableOpacity style={styles.fabBtn}><Lucide.Search size={20} color="#FFF" /></TouchableOpacity>
                  <TouchableOpacity 
@@ -747,11 +968,11 @@ const HazardMapScreen = ({ navigation, route }) => {
             from={{ opacity: 0, translateY: 100 }}
             animate={{ opacity: 1, translateY: 0 }}
             exit={{ opacity: 0, translateY: 100 }}
-            style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, { backgroundColor: 'transparent', paddingTop: insets.top + 180 }]}
+            style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, { backgroundColor: 'transparent', paddingTop: insets.top + 240 }]}
           >
             <ScrollView 
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ width: pageWidth, alignSelf: 'center', paddingBottom: 150 }}
+              contentContainerStyle={{ width: pageWidth, alignSelf: 'center', paddingBottom: 150, paddingHorizontal: 16 }}
             >
               <View style={{ height: 24 }} />
               {filteredHazards.map((hazard) => (
@@ -888,24 +1109,48 @@ const HazardMapScreen = ({ navigation, route }) => {
         )}
       </AnimatePresence>
 
-    </Screen>
+    </Screen>{isAddMode && (
+      <HazardAddControls 
+        onPlace={() => setAddModalVisible(true)}
+        onCancel={() => setIsAddMode(false)}
+      />
+    )}<HazardModal 
+      visible={addModalVisible}
+      onClose={() => setAddModalVisible(false)}
+      form={createForm}
+      setForm={setCreateForm}
+      onSave={handleSaveHazard}
+      saving={creating}
+    /></>
   );
 };
 
 const styles = StyleSheet.create({
   mapVignette: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
-  topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100 },
+  topOverlay: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000 },
   headerRow: { height: 56, marginBottom: 16 },
   headerBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   headerTitle: { fontSize: 20, fontWeight: '700', color: '#F4F0E8', fontFamily: DS_FONT_UI },
   searchConsole: { height: 54, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 27, marginBottom: 16, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
   searchInput: { flex: 1, marginLeft: 12, fontSize: 15, color: '#FFF', fontWeight: '500' },
-  viewToggleContainer: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 25, padding: 4, alignSelf: 'center', width: '100%', marginBottom: 16 },
-  toggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  viewToggleContainer: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(20,20,20,0.9)', 
+    borderRadius: 25, 
+    padding: 5, 
+    alignSelf: 'center', 
+    width: 280, 
+    marginBottom: 16, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.15)',
+    zIndex: 9999,
+    elevation: 10
+  },
+  toggleBtn: { flex: 1, paddingVertical: 10, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   toggleBtnActive: { backgroundColor: '#FFF' },
-  toggleText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.4)' },
+  toggleText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
   toggleTextActive: { color: '#000' },
-  bottomOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 },
+  bottomOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 5000, pointerEvents: 'box-none' },
   hazardDetailCard: { 
     backgroundColor: '#161616', 
     borderRadius: 24, 
@@ -935,8 +1180,38 @@ const styles = StyleSheet.create({
   graphBox: { flex: 1, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
   primaryBtn: { flex: 1, height: 46, backgroundColor: '#FFF', borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#2F80ED' },
   primaryBtnText: { fontSize: 13, fontWeight: '900', color: '#000', fontFamily: DS_FONT_UI },
-  safeBtn: { flex: 1, height: 46, backgroundColor: 'rgba(20,20,20,0.9)', borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)' },
   safeBtnText: { fontSize: 13, fontWeight: '800', color: '#FFF', fontFamily: DS_FONT_UI },
+  transportContainer: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  transportLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 1
+  },
+  transportItem: {
+    alignItems: 'center',
+    gap: 6,
+    flex: 1
+  },
+  transportIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  transportText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5
+  },
   fabBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(20,20,20,0.8)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   listCard: { 
     backgroundColor: 'rgba(20, 20, 20, 0.92)', 

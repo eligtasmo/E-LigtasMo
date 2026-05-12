@@ -35,7 +35,7 @@ import CustomSidebar from './src/components/Sidebar/CustomSidebar';
 import ReportIncidentScreen from './src/screens/ReportIncidentScreen';
 import AnnouncementsScreen from './src/screens/AnnouncementsScreen';
 import MapScreen from './src/screens/MapScreen';
-import ReportsScreen from './src/screens/ReportsScreen';
+
 import FloodHistoryScreen from './src/screens/FloodHistoryScreen';
 import ReportDetailsScreen from './src/screens/ReportDetailsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -240,14 +240,14 @@ function ResidentTabs() {
         }}
       />
       <Tab.Screen 
-        name="Donations" 
-        component={DonationStack}
-        options={{ tabBarLabel: 'Donations' }}
+        name="HazardMap" 
+        component={HazardMapScreen}
+        options={{ tabBarLabel: 'Intel' }}
       />
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
-        options={{ tabBarLabel: 'Profile' }}
+        options={{ tabBarLabel: 'Settings' }}
       />
     </Tab.Navigator>
   );
@@ -355,9 +355,9 @@ function CoordinatorTabs() {
         }}
       />
       <Tab.Screen 
-        name="Reports" 
-        component={ReportsScreen}
-        options={{ tabBarLabel: 'Reports', tabBarIcon: ({focused, color, size}) => <MaterialCommunityIcons name={focused ? "clipboard-list" : "clipboard-list-outline"} size={size} color={color} /> }}
+        name="MissionMap" 
+        component={HazardMapScreen}
+        options={{ tabBarLabel: 'Tactical Map', tabBarIcon: ({focused, color, size}) => <MaterialCommunityIcons name={focused ? "map-search" : "map-search-outline"} size={size} color={color} /> }}
       />
       <Tab.Screen 
         name="Profile" 
@@ -412,9 +412,9 @@ function BrgyTabs() {
         }}
       />
       <Tab.Screen 
-        name="Verify" 
-        component={ReportsScreen}
-        options={{ tabBarLabel: 'Verify' }}
+        name="MissionMap" 
+        component={HazardMapScreen}
+        options={{ tabBarLabel: 'Tactical Map' }}
       />
       <Tab.Screen 
         name="Alerts" 
@@ -467,14 +467,12 @@ const linking = {
             screens: {
               Home: 'home',
               Report: 'report',
-              Reports: 'reports',
               Dashboard: 'dashboard',
               AdminAction: 'admin-action',
               Users: 'users',
               Settings: 'settings',
               CoordinatorAction: 'coordinator-action',
               BrgyAction: 'brgy-action',
-              Verify: 'verify',
               Alerts: 'alerts',
               SafeRoutes: 'safe-routes',
               Donations: 'donations',
@@ -615,7 +613,7 @@ const NavigationContent = ({ initialNavState, linking }) => {
             <Stack.Screen name="DisasterAlerts" component={DisasterAlertsScreen} />
             <Stack.Screen name="FloodLevelList" component={FloodLevelListScreen} />
             <Stack.Screen name="LocalAreaMap" component={LocalAreaMapScreen} />
-            <Stack.Screen name="Reports" component={ReportsScreen} />
+
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="EmergencyGuides" component={EmergencyGuidesScreen} />
             <Stack.Screen name="EmergencyHotlines" component={EmergencyHotlinesScreen} />

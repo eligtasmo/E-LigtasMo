@@ -55,12 +55,12 @@ const ReportDetailsScreen = ({ navigation, route }) => {
     if (!reportId) return;
     try {
       // Try both endpoints if type is unknown
-      const res = await fetch(`${API_URL}/list-incident-reports.php?id=${reportId}`);
+      const res = await fetch(`${API_URL}/incident-reports.php?id=${reportId}`);
       const data = await res.json();
       let item = Array.isArray(data) ? data[0] : null;
       
       if (!item) {
-        const res2 = await fetch(`${API_URL}/list-incidents.php?id=${reportId}`);
+        const res2 = await fetch(`${API_URL}/incident-reports.php?official_only=true?id=${reportId}`);
         const data2 = await res2.json();
         item = data2.incidents?.[0];
       }
@@ -109,13 +109,28 @@ const ReportDetailsScreen = ({ navigation, route }) => {
         endpoint = 'update-incident-status.php';
         body.status = type === 'approve' ? 'Approved' : type === 'resolve' ? 'Resolved' : 'Rejected';
       }
-      const res = await fetch(`${API_URL}/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) { 
+      const res = await fetch(`${API_URL}/${endpoint}`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(body) 
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success !== false) { 
         let s = type === 'approve' ? (flood ? 'Verified' : 'Approved') : type === 'resolve' ? 'Resolved' : 'Rejected'; 
         setReportStatus(s); 
         Alert.alert('Protocol Updated', `Satellite intelligence synchronized. Status: ${s}`); 
+      } else {
+        const errorMsg = data.error || 'The tactical relay connection was interrupted.';
+        Alert.alert('Network Error', errorMsg);
       }
-    } catch (e) {} finally { setUpdating(false); }
+    } catch (e) {
+      console.error('[UpdateStatus] Error:', e);
+      Alert.alert('Network Error', 'Failed to synchronize with Tactical Command. Please check your connection.');
+    } finally { 
+      setUpdating(false); 
+    }
   };
 
   const region = {
@@ -128,7 +143,16 @@ const ReportDetailsScreen = ({ navigation, route }) => {
     if (list.length === 0 && (fullReport?.media_path || fullReport?.image_path)) {
        list.push(fullReport.media_path || fullReport.image_path);
     }
-    return list.map(p => p.startsWith('http') ? p : `${API_ROOT}/${p.replace(/^\/+/, '')}`);
+    // Filter out non-string/null values and trim
+    return list
+      .filter(p => typeof p === 'string' && p.trim().length > 0)
+      .map(p => {
+        const path = p.trim();
+        if (path.startsWith('http')) return path;
+        // Ensure no double slashes and correct relative pathing
+        const cleanPath = path.replace(/^\/+/, '');
+        return `${API_ROOT}/${cleanPath}`;
+      });
   }, [fullReport]);
 
   const isAdmin = currentUser && ['admin', 'coordinator', 'captain', 'brgy'].includes(currentUser.role);

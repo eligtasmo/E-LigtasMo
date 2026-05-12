@@ -430,6 +430,11 @@ const createMapHTML = (token) => `
                   }
 
                   // 2. MARKER & POV
+                  // Use host-calculated snapped location if available for precision
+                  if (isNav && data.snappedLoc) {
+                      userPos = [data.snappedLoc.lon, data.snappedLoc.lat];
+                  }
+
                   if (!window.userMarker) {
                       var el = document.createElement('div');
                       window.userMarker = new mapboxgl.Marker({ element: el, rotationAlignment: 'map', pitchAlignment: 'map' }).setLngLat(userPos).addTo(map);
@@ -452,7 +457,15 @@ const createMapHTML = (token) => `
                       }
                   }
 
-                  if (data.forceZoom) {
+                  if (data.shouldRefit) {
+                      window.manualMode = false;
+                      map.easeTo({ pitch: 0, bearing: 0, duration: 1000 });
+                      if (data.routeGeom && data.routeGeom.length > 0) {
+                          var bounds = new mapboxgl.LngLatBounds();
+                          data.routeGeom.forEach(function(c) { bounds.extend(c); });
+                          map.fitBounds(bounds, { padding: 100, duration: 1500 });
+                      }
+                  } else if (data.forceZoom) {
                       const finalCenter = data.targetLoc ? [Number(data.targetLoc.lon), Number(data.targetLoc.lat)] : userPos;
                       map.jumpTo({ center: finalCenter, zoom: data.forceZoom });
                       window.firstFixDone = true;
@@ -917,6 +930,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
   const [isNavMuted, setIsNavMuted] = useState(false);
   const [navigationData, setNavigationData] = useState({ distanceRemaining: 0, durationRemaining: 0, arrivalTimestamp: null });
   const [currentStep, setCurrentStep] = useState(null);
+  const [upcomingSteps, setUpcomingSteps] = useState([]);
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [bearing, setBearing] = useState(0);
   const [isUserInteraction, setIsUserInteraction] = useState(false);
@@ -1026,8 +1040,8 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       try {
         const [hRes, iRes, sRes, bRes] = await Promise.all([
           fetch(`${API_URL}/list-map-overlays.php`).catch(() => null),
-          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null),
-          fetch(`${API_URL}/shelters-list.php`).catch(() => null),
+          fetch(`${API_URL}/incident-reports.php?official_only=true?status=Active`).catch(() => null),
+          fetch(`${API_URL}/shelters.php`).catch(() => null),
           fetch(`${API_URL}/list-barangays.php`).catch(() => null)
         ]);
         
@@ -1036,12 +1050,15 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         if (hRes) {
           const hData = await hRes.json();
           if (hData?.success) {
-            (hData.reports || []).forEach(h => markers.push({
-              id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
-              type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
-              severity: h.severity || 'Normal',
-              is_passable: h.is_passable === undefined ? true : !!h.is_passable
-            }));
+            const allowedStats = ['ACTIVE', 'APPROVED', 'VERIFIED', 'RESOLVED'];
+            (hData.reports || [])
+              .filter(h => allowedStats.includes((h.status || '').toUpperCase()))
+              .forEach(h => markers.push({
+                id: `h${h.id}`, lat: parseFloat(h.lat), lng: parseFloat(h.lng),
+                type: (h.type || 'hazard').toLowerCase(), area_geojson: h.area_geojson,
+                severity: h.severity || 'Normal',
+                is_passable: h.is_passable === undefined ? true : !!h.is_passable
+              }));
           }
         }
 
@@ -1099,14 +1116,18 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
   const fetchHazards = async () => {
     try {
-      const res = await fetch(`${API_URL}/list-hazards.php`, {
+      const res = await fetch(`${API_URL}/hazards.php`, {
         headers: {
           'X-Role': user?.role || 'resident',
           'X-Token': user?.token || 'RESCUE_PH_TOKEN'
         }
       });
       const data = await res.json();
-      if (data.success) setActiveHazards(data.hazards);
+      if (data.success) {
+        const allowedStats = ['ACTIVE', 'APPROVED', 'VERIFIED', 'RESOLVED'];
+        const verified = data.hazards.filter(h => allowedStats.includes((h.status || 'Active').toUpperCase()));
+        setActiveHazards(verified);
+      }
     } catch(e) {}
   };
 
@@ -1300,7 +1321,21 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
         const isActuallyPassable = item.is_passable === true || item.is_passable === 1 || item.is_passable === "1";
         if (isActuallyPassable) return;
 
-        const geom = normalizeGeom(item.area_geojson, parseFloat(item.lat), parseFloat(item.lng));
+        const hLat = parseFloat(item.lat);
+        const hLon = parseFloat(item.lng || item.lon);
+        const radius = parseFloat(item.radius || 100);
+
+        // CRITICAL: If the start or end is INSIDE this hazard, we MUST exclude it from avoid_zones
+        // otherwise Mapbox will fail to find ANY route.
+        const dStart = distanceInMeters(activeStart, { lat: hLat, lon: hLon });
+        const dDest = distanceInMeters(targetDest, { lat: hLat, lon: hLon });
+
+        if (dStart <= radius + 50 || dDest <= radius + 50) {
+           console.log(`[Tactical] Point inside hazard ${item.id}, excluding from avoidance to allow escape.`);
+           return;
+        }
+
+        const geom = normalizeGeom(item.area_geojson, hLat, hLon);
         if (geom) {
           avoidZones.push({
             type: 'Feature',
@@ -1470,6 +1505,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       if (activeSearchType === 'start') {
         setStartCoords(coords);
         setStartLabel(name);
+        startLabelRef.current = name;
         if (destCoords) calculateRoute(destCoords, coords);
       } else {
         setDestCoords(coords);
@@ -1482,6 +1518,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       if (activeSearchType === 'start') {
         setStartCoords(coords);
         setStartLabel(fallbackName);
+        startLabelRef.current = fallbackName;
         if (destCoords) calculateRoute(destCoords, coords);
       } else {
         setDestCoords(coords);
@@ -1539,7 +1576,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
 
       const syncData = {
         type: 'SYNC',
-        userLoc: startCoords,
+        userLoc: userCoords,
         isNav: isNavigating,
         recenter: isNavigating && !isUserInteraction,
         tacticalMarkers: tacticalMarkersRef.current,
@@ -1551,27 +1588,59 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       if (isNavigating && route) {
         const geom = route.geometry?.coordinates || [];
         if (geom.length >= 2) {
-          let minDist = Infinity; let nearestIdx = 0;
-          geom.forEach(([ln, lt], i) => { const d = distanceInMeters(startCoords, { lat: lt, lon: ln }); if (d < minDist) { minDist = d; nearestIdx = i; } });
-          const currentPoint = geom[nearestIdx]; const nextPoint = geom[Math.min(nearestIdx + 10, geom.length - 1)];
+          let minDist = Infinity;
+          let nearestIdx = 0;
+          geom.forEach(([ln, lt], i) => {
+            const d = distanceInMeters(userCoords, { lat: lt, lon: ln });
+            if (d < minDist) {
+              minDist = d;
+              nearestIdx = i;
+            }
+          });
+
+          const currentPoint = geom[nearestIdx];
+          const nextPoint = geom[Math.min(nearestIdx + 10, geom.length - 1)];
           const currentBearing = calculateBearing({ lat: currentPoint[1], lon: currentPoint[0] }, { lat: nextPoint[1], lon: nextPoint[0] });
-          setBearing(currentBearing);
+          syncData.snappedLoc = { lat: currentPoint[1], lon: currentPoint[0] };
           syncData.bearing = currentBearing;
 
-          const distRem = computeRemainingDistance(geom, startCoords);
+          const distRem = computeRemainingDistance(geom, userCoords);
           const durRem = (distRem / (route.distMeters || 1)) * (route.totalDurationSec || 0);
-          setNavigationData({ distanceRemaining: distRem, durationRemaining: durRem, arrivalTimestamp: new Date(Date.now() + durRem * 1000) });
-          const resolved = resolveCurrentStep(route.steps, (route.distMeters - distRem));
-          if (resolved) setCurrentStep(resolved);
+
+          setNavigationData({
+            distanceRemaining: distRem,
+            durationRemaining: durRem,
+            arrivalTimestamp: new Date(Date.now() + durRem * 1000)
+          });
+
+          const currentDistAlong = Math.max(0, route.distMeters - distRem);
+          const resolved = resolveCurrentStep(route.steps, currentDistAlong);
+          if (resolved) {
+            setCurrentStep(resolved);
+            const sIdx = resolved.stepIndex;
+            if (sIdx != null && sIdx !== -1) {
+              setUpcomingSteps(route.steps.slice(sIdx + 1));
+            }
+          }
+
+          if (userCoords && userCoords.speed !== null) {
+            setCurrentSpeed(userCoords.speed * 2.237); // m/s to mph
+          }
         }
       }
 
       webviewRef.current?.postMessage(JSON.stringify(syncData));
     }, 1000);
     return () => clearInterval(interval);
-  }, [isNavigating, startCoords, route, allRoutes, isUserInteraction, destCoords]);
+  }, [isNavigating, userCoords, route, allRoutes, isUserInteraction, destCoords]);
 
-  const startNavigation = () => { if (!route) return; setIsNavigating(true); setCurrentStep(route.steps[0]); webviewRef.current?.injectJavaScript(`if(window.map){window.map.easeTo({center:[${startCoords.lon},${startCoords.lat}],pitch:65,zoom:19,duration:1000});}`); };
+  const startNavigation = () => { 
+    if (!route) return; 
+    setIsNavigating(true); 
+    setCurrentStep(route.steps[0]); 
+    setUpcomingSteps(route.steps.slice(1));
+    webviewRef.current?.injectJavaScript(`if(window.map){window.map.easeTo({center:[${userCoords?.lon || startCoords?.lon},${userCoords?.lat || startCoords?.lat}],pitch:65,zoom:19,duration:1000});}`); 
+  };
   const stopNavigation = () => {
     setIsNavigating(false);
     // Send SYNC with shouldRefit to see the whole path again
@@ -1581,7 +1650,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
       altRouteGeoms: allRoutes.filter(r => r !== route).map(r => r.geometry?.coordinates || []),
       shouldRefit: true,
       destLoc: destCoords,
-      userLoc: startCoords,
+      userLoc: userCoords || startCoords,
       isNav: false,
       recenter: true
     }));
@@ -1630,6 +1699,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
                 if (activeSearchType === 'start') {
                   setStartLabel(item.name);
                   setStartCoords({ lat: item.lat, lon: item.lon });
+                  startLabelRef.current = item.name;
                   setSuggestions([]);
                   if (destCoords) calculateRoute(destCoords, { lat: item.lat, lon: item.lon });
                 } else {
@@ -1722,6 +1792,7 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
           {isNavigating && (
             <NavigationOverlay
               currentStep={currentStep}
+              upcomingSteps={upcomingSteps}
               navigationData={navigationData}
               speed={currentSpeed}
               onStop={() => setIsNavigating(false)}
@@ -1739,7 +1810,27 @@ const RoutePlannerScreen = ({ navigation, route: navRoute }) => {
               allRoutes={allRoutes}
               selectedRouteIndex={selectedRouteIndex}
               setSelectedRouteIndex={(i) => { setSelectedRouteIndex(i); setRoute(allRoutes[i]); webviewRef.current?.postMessage(JSON.stringify({ type: 'SYNC', routeGeom: allRoutes[i]?.geometry?.coordinates || [], altRouteGeoms: allRoutes.filter((_, idx) => idx !== i).map(r => r?.geometry?.coordinates || []) })); }}
-              onStartNavigation={() => { setIsNavigating(true); setIsPlannerCollapsed(true); }}
+              onStartNavigation={() => { 
+                if (startLabel !== 'My Location' && userCoords) {
+                   Alert.alert(
+                     '🚀 START NAVIGATION',
+                     'You selected a manual starting point. Switch to your LIVE location for real-time guidance?',
+                     [
+                       { text: 'Keep Manual', onPress: () => { setIsNavigating(true); setIsPlannerCollapsed(true); } },
+                       { text: 'Use Live GPS', style: 'default', onPress: () => { 
+                         setStartCoords(userCoords); 
+                         setStartLabel('My Location'); 
+                         startLabelRef.current = 'My Location';
+                         setIsNavigating(true); 
+                         setIsPlannerCollapsed(true); 
+                       }}
+                     ]
+                   );
+                } else {
+                   setIsNavigating(true); 
+                   setIsPlannerCollapsed(true); 
+                }
+              }}
               collapsed={isPlannerCollapsed}
               onToggleCollapse={() => setIsPlannerCollapsed(!isPlannerCollapsed)}
               destinationLabel={destination}

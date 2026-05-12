@@ -28,6 +28,8 @@ export const createAtomic = (theme) => {
       selfCenter: { alignSelf: 'center' },
       justifyCenter: { justifyContent: 'center' },
       jcc: { justifyContent: 'center' },
+      justifyEnd: { justifyContent: 'flex-end' },
+      jce: { justifyContent: 'flex-end' },
       justifyBetween: { justifyContent: 'space-between' },
       jcb: { justifyContent: 'space-between' },
       justifyAround: { justifyContent: 'space-around' },
@@ -123,6 +125,7 @@ export const createAtomic = (theme) => {
       py12: { paddingVertical: 12 },
       py16: { paddingVertical: 16 },
       py20: { paddingVertical: 20 },
+      py24: { paddingVertical: 24 },
     }),
 
     // Typography

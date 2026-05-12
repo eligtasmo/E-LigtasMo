@@ -5,10 +5,10 @@ import { Platform } from 'react-native';
  * Hard-wired to Hostinger Production for seamless universal access.
  */
 export const getApiUrl = () => {
-    // FORCE PRODUCTION BACKEND (api.eligtasmo.site)
-    // This ensures that both Web and Mobile talk to Hostinger, regardless of network or build mode.
-    return 'https://api.api.eligtasmo.site'.replace('api.api', 'api'); // Just in case of typo, setting cleanly:
+    // Standard Production Backend
+    return 'https://api.eligtasmo.site';
 };
+
 
 const finalApiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api.eligtasmo.site';
 

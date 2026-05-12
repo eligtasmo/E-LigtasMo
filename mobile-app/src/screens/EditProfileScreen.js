@@ -119,7 +119,7 @@ const EditProfileScreen = ({ navigation }) => {
         return;
       }
 
-      const res = await fetch(`${API_URL}/update-user.php`, {
+      const res = await fetch(`${API_URL}/users.php`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

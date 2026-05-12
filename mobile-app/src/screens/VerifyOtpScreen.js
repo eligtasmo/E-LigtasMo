@@ -18,12 +18,21 @@ const { FONT_HEADING, FONT_INPUT } = AUTH_FONTS;
 const OTP_LENGTH = 6;
 
 const VerifyOtpScreen = ({ navigation, route }) => {
-  const { email, mode = 'signup' } = route.params || {};
+  const { email, mode = 'signup', code: initialCode } = route.params || {};
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
   const inputRefs = useRef([]);
+
+  useEffect(() => {
+    if (initialCode && initialCode.length === OTP_LENGTH) {
+      const codeArray = initialCode.split('');
+      setOtp(codeArray);
+      // Optional: Auto-verify if code is pre-filled
+      // handleVerify(codeArray.join(''));
+    }
+  }, [initialCode]);
 
   useEffect(() => {
     const interval = setInterval(() => setTimer((prev) => (prev > 0 ? prev - 1 : 0)), 1000);

@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatLi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Lucide from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
+import * as Clipboard from 'expo-clipboard';
 
 import { useTheme } from '../context/ThemeContext';
 import { Screen, Container, Card, Row, Col, Badge, Heading, PrimaryButton } from '../components/DesignSystem';
 import { API_URL } from '../config';
 import { AuthService } from '../services/AuthService';
-
-const CATEGORIES = ['All', 'Medical', 'Fire', 'Police'];
 
 const EmergencyHotlinesScreen = ({ navigation }) => {
   const { theme, isDark, atomic } = useTheme();
@@ -25,11 +25,20 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({ name: '', number: '', category: 'Medical', icon: 'HeartPulse' });
 
+  const [categories, setCategories] = useState(['All']);
+  const isAdmin = user?.role === 'admin' || user?.role === 'mmdrmo' || user?.role === 'coordinator';
+  const isBrgy = user?.role === 'brgy' || user?.role === 'brgy_chair';
+
   useEffect(() => {
     loadUser();
-    fetchHotlines();
     fetchPersonalContacts();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchHotlines();
+    }
+  }, [user]);
 
   const loadUser = async () => {
     const data = await AuthService.checkSession();
@@ -39,10 +48,14 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
   const fetchHotlines = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/hotlines-list.php`);
+      const brgy = user?.brgy_name || '';
+      const response = await fetch(`${API_URL}/hotlines-list.php?brgy=${encodeURIComponent(brgy)}`);
       const data = await response.json();
       if (data.success) {
         setHotlines(data.data);
+        if (data.categories) {
+          setCategories(['All', ...data.categories]);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -75,7 +88,15 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
     }
 
     const endpoint = editingItem ? 'hotlines-update.php' : 'hotlines-add.php';
-    const payload = editingItem ? { ...formData, id: editingItem.id } : formData;
+    
+    // Logic: Brgy officials only add to "Barangay" category
+    const finalCategory = isBrgy ? 'Barangay' : formData.category;
+    const payload = {
+        ...formData,
+        category: finalCategory,
+        brgy_name: isBrgy ? user?.brgy_name : null,
+        id: editingItem?.id
+    };
 
     try {
       const response = await fetch(`${API_URL}/${endpoint}`, {
@@ -128,7 +149,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
     return matchesSearch && matchesCategory;
   });
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'brgy_chair' || user?.role === 'mmdrmo';
+  const canManage = isAdmin || isBrgy;
 
   return (
     <Screen style={{ backgroundColor: '#191A1A' }}>
@@ -145,14 +166,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
               <Lucide.ChevronLeft size={22} color="#F4F0E8" strokeWidth={2.5} />
             </TouchableOpacity>
             <Text style={{ fontSize: 18, fontWeight: '600', color: '#F4F0E8', letterSpacing: -0.4 }}>Emergency Hotlines</Text>
-            <Row gap={10}>
-               <TouchableOpacity style={styles.headerIconBtn}>
-                  <Lucide.History size={20} color="#F4F0E8" strokeWidth={2.2} />
-               </TouchableOpacity>
-               <TouchableOpacity style={styles.sosBtn}>
-                  <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 10 }}>SOS</Text>
-               </TouchableOpacity>
-            </Row>
+            <View style={{ width: 44 }} />
           </Row>
 
           {/* Search Bar */}
@@ -170,7 +184,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
           {/* Categories */}
           <Row align="center" gap={8} style={{ marginTop: 16 }}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-              {CATEGORIES.map(cat => (
+              {categories.map(cat => (
                 <TouchableOpacity 
                   key={cat} 
                   onPress={() => setSelectedCategory(cat)}
@@ -206,7 +220,7 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
                   return (
                     <Card key={item.id} variant="none" noPadding style={styles.hotlineCard}>
                       <View style={{ padding: 12 }}>
-                        {isAdmin && (
+                        {canManage && (
                           <Row justify="flex-end" gap={8} style={{ position: 'absolute', top: 6, right: 6, zIndex: 10 }}>
                             <TouchableOpacity onPress={() => {
                               setEditingItem(item);
@@ -240,9 +254,22 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
                           </Col>
                         </Row>
                         <Row justify="space-between" align="center">
-                          <TouchableOpacity style={styles.actionBtnSmall}><Lucide.Copy size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} /></TouchableOpacity>
-                          <TouchableOpacity style={styles.actionBtnSmall}><Lucide.MessageSquare size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} /></TouchableOpacity>
-                          <TouchableOpacity style={[styles.actionBtnSmall, { backgroundColor: '#FFFFFF' }]}><Lucide.PhoneCall size={18} color="#000000" strokeWidth={2.5} /></TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              Clipboard.setStringAsync(item.number);
+                              Alert.alert('Copied', 'Number copied to clipboard');
+                            }}
+                            style={styles.actionBtnSmall}
+                          >
+                            <Lucide.Copy size={16} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={() => Linking.openURL(`tel:${item.number}`)}
+                            style={[styles.actionBtnSmall, { backgroundColor: '#FFFFFF', flex: 1, marginLeft: 10 }]}
+                          >
+                            <Lucide.PhoneCall size={18} color="#000000" strokeWidth={2.5} />
+                            <Text style={{ marginLeft: 8, fontWeight: '800', fontSize: 13, color: '#000' }}>CALL</Text>
+                          </TouchableOpacity>
                         </Row>
                       </View>
                     </Card>
@@ -254,8 +281,8 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
           </ScrollView>
         )}
 
-        {/* FAB for Admin */}
-        {isAdmin && (
+        {/* FAB for Admin/Brgy */}
+        {canManage && (
           <TouchableOpacity 
             onPress={() => {
               setEditingItem(null);
@@ -292,18 +319,22 @@ const EmergencyHotlinesScreen = ({ navigation }) => {
                 placeholderTextColor="#555"
               />
 
-              <Text style={styles.label}>Category</Text>
-              <Row gap={8} style={{ marginBottom: 20 }}>
-                {['Medical', 'Fire', 'Police'].map(cat => (
-                  <TouchableOpacity 
-                    key={cat} 
-                    onPress={() => setFormData({...formData, category: cat})}
-                    style={[styles.smallBtn, formData.category === cat && { backgroundColor: theme.primary }]}
-                  >
-                    <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 12 }}>{cat}</Text>
-                  </TouchableOpacity>
-                ))}
-              </Row>
+              {isAdmin && (
+                <>
+                  <Text style={styles.label}>Category</Text>
+                  <Row gap={8} style={{ marginBottom: 20 }}>
+                    {categories.filter(c => c !== 'All').map(cat => (
+                      <TouchableOpacity 
+                        key={cat} 
+                        onPress={() => setFormData({...formData, category: cat})}
+                        style={[styles.smallBtn, formData.category === cat && { backgroundColor: theme.primary }]}
+                      >
+                        <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 12 }}>{cat}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Row>
+                </>
+              )}
 
               <Row gap={12} justify="flex-end">
                 <TouchableOpacity onPress={() => setShowModal(false)} style={styles.cancelBtn}>

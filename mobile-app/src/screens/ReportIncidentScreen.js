@@ -396,8 +396,8 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   const fetchTacticalData = async () => {
     try {
       const [hRes, sRes, bRes] = await Promise.all([
-        fetch(`${API_URL}/list-hazards.php`),
-        fetch(`${API_URL}/shelters-list.php`),
+        fetch(`${API_URL}/hazards.php`),
+        fetch(`${API_URL}/shelters.php`),
         fetch(`${API_URL}/list-barangays.php`)
       ]);
       const [hazardsData, sheltersData, barangaysData] = await Promise.all([
@@ -485,19 +485,37 @@ const ReportIncidentScreen = ({ navigation, route }) => {
   // Filtered reports moved to Hazard Map screen
 
   useEffect(() => {
+    let isMounted = true;
     const init = async () => {
-      const u = await AuthService.checkSession();
-      setUser(u);
-      
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        setCurrentCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      try {
+        const u = await AuthService.checkSession();
+        if (isMounted) setUser(u);
+        
+        // Request permissions
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted' && isMounted) {
+          try {
+            // Set a 3-second timeout for location to prevent "stuck on loading"
+            const locPromise = Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 3000));
+            
+            const loc = await Promise.race([locPromise, timeoutPromise]);
+            if (isMounted) setCurrentCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+          } catch (locErr) {
+            console.log('[Location] Timeout or error, proceeding without GPS lock');
+          }
+        }
+        if (isMounted) {
+          await fetchTacticalData();
+        }
+      } catch (err) {
+        console.error('Init error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      fetchTacticalData();
-      setLoading(false);
     };
     init();
+    return () => { isMounted = false; };
   }, []);
 
 
@@ -540,7 +558,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       {
         text: 'Camera',
         onPress: async () => {
-          const res = await ImagePicker.launchCameraAsync({ quality: 0.6, base64: true });
+          const res = await ImagePicker.launchCameraAsync({ quality: 0.3, base64: true });
           if (!res.canceled) {
             setMediaList(prev => [...prev, { uri: res.assets[0].uri, base64: res.assets[0].base64 }]);
           }
@@ -549,7 +567,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       {
         text: 'Gallery',
         onPress: async () => {
-          const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.6, base64: true });
+          const res = await ImagePicker.launchImageLibraryAsync({ quality: 0.3, base64: true });
           if (!res.canceled) {
             setMediaList(prev => [...prev, { uri: res.assets[0].uri, base64: res.assets[0].base64 }]);
           }
@@ -568,6 +586,11 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       return;
     }
 
+    // Show confirmation modal as a REVIEW step
+    setShowConfirmation(true);
+  };
+
+  const handleFinalSubmit = async () => {
     setSubmitting(true);
     try {
       let areaGeojson = null;
@@ -599,7 +622,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
         status: (user?.role === 'resident' || !user?.role) ? 'Pending' : 'Verified'
       };
 
-      const response = await fetch(`${API_URL}/submit-incident-report.php`, {
+      const response = await fetch(`${API_URL}/incident-reports.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -607,13 +630,13 @@ const ReportIncidentScreen = ({ navigation, route }) => {
       
       const result = await response.json();
       if (result.success) {
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const timeStr = new Date().toTimeString().slice(0, 5).replace(/:/g, '');
-        const randomStr = Math.floor(10000 + Math.random() * 90000);
-        const reportId = `REPORT${dateStr}${timeStr}${randomStr}`;
-        setFinalReportId(reportId);
-        setShowConfirmation(true);
-        fetchMyReports(); // Refresh history list
+        Alert.alert('Success', 'Intelligence packet synchronized with Command Center.');
+        setShowConfirmation(false);
+        setIncidentCoords(null);
+        setPolygonPoints([]);
+        setDetails('');
+        setMediaList([]);
+        navigation.navigate('HazardMap', { refresh: true });
       } else {
         Alert.alert('Sync Error', result.error || 'Failed to submit report.');
       }
@@ -999,7 +1022,7 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                      style={styles.confMapFade} 
                    />
                    <View style={styles.confMapOverlay}>
-                      <Text style={styles.confMapTagText}>{finalReportId}</Text>
+                      <Text style={styles.confMapTagText}>PREVIEW PACKET</Text>
                    </View>
                  </View>
 
@@ -1064,17 +1087,11 @@ const ReportIncidentScreen = ({ navigation, route }) => {
                    </View>
 
                    <TouchableOpacity 
-                      onPress={() => {
-                        setShowConfirmation(false);
-                        setIncidentCoords(null);
-                        setPolygonPoints([]);
-                        setDetails('');
-                        setMediaList([]);
-                        fetchTacticalData();
-                      }}
+                      onPress={handleFinalSubmit}
+                      disabled={submitting}
                      style={[styles.confCloseBtn, { marginBottom: Math.max(insets.bottom, 24) + 20 }]}
                   >
-                    <Text style={styles.confCloseBtnText}>Acknowledge mission</Text>
+                    <Text style={styles.confCloseBtnText}>Confirm & Sync</Text>
                   </TouchableOpacity>
                  </ScrollView>
             </SafeAreaView>

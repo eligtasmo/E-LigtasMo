@@ -34,7 +34,7 @@ const CoordinatorDashboardScreen = ({ navigation, route }) => {
   const fetchDashboardData = async () => {
     try {
       // 1. Fetch Incidents
-      const incidentsRes = await fetch(`${API_URL}/list-incidents.php`);
+      const incidentsRes = await fetch(`${API_URL}/incident-reports.php?official_only=true`);
       const incidentsData = await incidentsRes.json();
       const incidentsList = incidentsData.incidents || [];
       const activeIncidents = incidentsList.filter(i => i.status !== 'Resolved' && i.status !== 'Rejected');
@@ -106,7 +106,7 @@ const CoordinatorDashboardScreen = ({ navigation, route }) => {
             <View style={[atomic.row, atomic.wrap, { gap: 12, marginBottom: 24 }]}>
                <TouchableOpacity 
                   style={[atomic.p16, { width: '48%', borderRadius: 16, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, gap: 10, elevation: 4 }]}
-                  onPress={() => navigation.navigate('Reports', { status: 'Pending' })}
+                  onPress={() => navigation.navigate('HazardMap', { status: 'Pending' })}
                >
                   <View style={[atomic.p10, atomic.roundFull, { backgroundColor: theme.error + '10' }]}>
                     <MaterialCommunityIcons name="clipboard-check" size={24} color={theme.error} />
@@ -147,7 +147,7 @@ const CoordinatorDashboardScreen = ({ navigation, route }) => {
 
             <Row justify="space-between" align="center" style={atomic.mb12}>
               <Heading size="sm" style={{ color: theme.textSecondary }}>PENDING REVIEW</Heading>
-              <TouchableOpacity onPress={() => navigation.navigate('Reports', { status: 'Pending' })}>
+              <TouchableOpacity onPress={() => navigation.navigate('HazardMap', { status: 'Pending' })}>
                 <Text style={[atomic.t.caption, atomic.t.bold, { color: theme.secondary }]}>See All</Text>
               </TouchableOpacity>
             </Row>

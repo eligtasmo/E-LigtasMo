@@ -243,377 +243,18 @@ export default function Home() {
                 const pA = priority[a.status_level?.toLowerCase()] || 0;
                 const pB = priority[b.status_level?.toLowerCase()] || 0;
                 if (pA !== pB) return pB - pA;
-                return (b.flood_depth_cm || 0) - (a.flood_depth_cm || 0);
-             });
-             setBarangayLevels(sorted);
-          }
-        }
-
-        const activeCount = incidents.filter((x: any) => String(x.status || '').toLowerCase() === 'approved').length;
-        const resolvedWithTimes = incidents.filter((x: any) => String(x.status || '').toLowerCase() === 'resolved' && x.created_at && x.reviewed_at);
-        let avgMins = 0;
-        if (resolvedWithTimes.length) {
-          const sums = resolvedWithTimes.map((x: any) => {
-            const start = new Date(x.created_at).getTime();
-            const end = new Date(x.reviewed_at).getTime();
-            return Math.max(0, end - start);
-          });
-          avgMins = Math.round((sums.reduce((a: number, b: number) => a + b, 0) / resolvedWithTimes.length) / 60000);
-        }
-
-        const activeHazards = (Array.isArray(hazards) ? hazards : []).filter((h: any) => String(h.status || '').toLowerCase() === 'active').length;
-
-        setKeyMetrics({
-          activeIncidents: { value: activeCount, trend: 0, status: 'stable' },
-          sheltersAvailable: {
-            value: shelterStats ? Math.max(0, (shelterStats.totalShelters || 0) - (shelterStats.status?.offline || 0)) : shelters.length,
-            total: shelterStats ? (shelterStats.totalShelters || 0) : shelters.length,
-            occupancy: shelterStats ? Math.round((shelterStats.capacityUtilizationPct || 0)) : 0,
-            trend: 0
-          },
-          hazardZones: { value: hazards.length, active: activeHazards, trend: 0 },
-          totalResidents: { value: totalResidents, evacuated: 0, trend: 0 },
-          responseTime: { value: avgMins, unit: 'min', trend: 0 },
-          weatherAlert: { level: 'moderate', type: 'Thunderstorms', trend: 'stable' }
-        });
-      } catch (e) {
-      } finally {
-        setLoadingIncidents(false);
-        setLoadingHazards(false);
-        setLoadingLevels(false);
-      }
-    };
-    fetchDashboardData();
-  }, []);
-
+                
   return (
     <>
       <PageMeta
-        title="Admin Command Center - E-LigtasMo"
-        description="Real-time disaster risk management and emergency response coordination dashboard."
+        title="MMDRMO Command Center"
+        description="Global Tactical Operations Dashboard."
       />
-      <div className="flex flex-col font-jetbrains">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-xl shadow-slate-900/20 border border-slate-800">
-                <FaShieldAlt className="text-white text-2xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-1">Strategic Command</h1>
-                <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">Municipal Oversight Protocol // LIVE</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="text-right mr-4 border-r border-slate-200 pr-4">
-                <div className="text-lg font-black text-slate-900 leading-none">
-                  {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                </div>
-                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Tactical Time</div>
-              </div>
-              <button className="px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase bg-blue-600 text-white shadow-lg shadow-blue-600/20 flex items-center gap-2">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                Active_Mission
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Merged Emergency Command Center & Hotlines - Single Container */}
-        {/* Merged Emergency Command Center & Hotlines - Single Contai        <div className="tactical-container mb-6 relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-red-50 opacity-30 group-hover:opacity-50 transition-opacity" />
-          
-          <div className="tactical-card-header relative z-10 p-6!">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 w-full">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg shadow-red-600/20 border border-red-500/30">
-                  <FaShieldAlt className="text-white text-2xl" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-black tracking-tighter flex items-center gap-3 text-slate-900">
-                    MDRRMO <span className="text-red-600 uppercase">Command</span>
-                  </h1>
-                  <p className="text-gray-500 font-black text-[10px] flex items-center gap-2 mt-1 uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    SYSTEM_PROTOCOL_ACTIVE // {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <div className="text-3xl font-black tracking-tighter text-slate-900">
-                    {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                    <span className="text-red-600 animate-pulse">:</span>
-                    {new Date().toLocaleTimeString('en-US', { second: '2-digit' })}
-                  </div>
-                  <div className="text-[10px] font-black text-gray-400 tracking-widest uppercase">Live Tactical Clock</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-gray-50/30 relative z-10 border-t border-gray-50">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-white text-slate-400 rounded-xl p-3 border border-gray-200 shadow-sm">
-                  <FaBullhorn className="text-lg" />
-                </div>
-                <div>
-                  <h2 className="font-black text-[11px] text-slate-900 tracking-widest uppercase">Tactical Hotlines</h2>
-                  <p className="text-gray-500 text-[10px] font-bold tracking-tight uppercase">Channel_Auth_Required</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { num: '911', label: 'NATIONAL_911', icon: <FaExclamationTriangle />, color: 'red' },
-                  { num: '143', label: 'RED_CROSS', icon: <FaAmbulance />, color: 'blue' },
-                  { num: '136', label: 'MMDA_DIRECT', icon: <FaMapMarkerAlt />, color: 'emerald' }
-                ].map(h => (
-                  <button
-                    key={h.num}
-                    onClick={() => window.open(`tel:${h.num}`, '_self')}
-                    className="tactical-container bg-white hover:bg-gray-50 p-3 transition-all group flex items-center gap-4 border-gray-100 shadow-none hover:shadow-lg"
-                  >
-                    <div className={`w-10 h-10 rounded-lg bg-${h.color}-50 flex items-center justify-center text-${h.color}-600 group-hover:bg-${h.color}-600 group-hover:text-white transition-all`}>
-                      {h.icon}
-                    </div>
-                    <div className="text-left">
-                      <div className="text-lg font-black text-slate-900 leading-none mb-1 tracking-tight">{h.num}</div>
-                      <div className="text-[9px] font-black text-gray-400 tracking-widest uppercase">{h.label.replace(/_/g, ' ')}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>  </div>
-
-        {/* Strategic Situation Ribbon */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-12 bg-slate-900 rounded-2xl flex items-center px-6 border border-slate-800 shadow-xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-transparent animate-pulse" />
-            <div className="flex items-center gap-4 relative z-10 w-full">
-              <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                <span className="text-[10px] font-black text-white tracking-widest uppercase">Protocol_Alpha</span>
-              </div>
-              <div className="flex-1">
-                <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase mr-3">Current Situation:</span>
-                <span className="text-[11px] font-black text-emerald-400 tracking-widest uppercase">System_Wide_Stability_Confirmed</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Global_Ver:</span>
-                  <span className="text-[9px] font-mono text-blue-400 font-bold">V4.2.0_STABLE</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="w-48 h-12 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center gap-3 px-4">
-            <div className="flex flex-col items-end">
-              <div className="text-[10px] font-black text-slate-900 leading-none mb-0.5">MUNICIPAL_LINK</div>
-              <div className="text-[8px] font-black text-emerald-500 tracking-widest uppercase">Uplink_Active</div>
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
-              <FiRefreshCw className="text-xs" />
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          {[
-            { 
-              label: 'INCIDENTS', 
-              value: keyMetrics.activeIncidents.value, 
-              trend: keyMetrics.activeIncidents.trend, 
-              icon: <FaFire />, 
-              color: 'red', 
-              path: '/admin/incident-reports',
-              sub: 'AWAITING_RESPONSE'
-            },
-            { 
-              label: 'SHELTERS', 
-              value: `${keyMetrics.sheltersAvailable.value}/${keyMetrics.sheltersAvailable.total}`, 
-              occupancy: keyMetrics.sheltersAvailable.occupancy, 
-              icon: <FaShieldAlt />, 
-              color: 'blue', 
-              path: '/admin/shelters',
-              sub: `${keyMetrics.sheltersAvailable.occupancy}%_LOAD`
-            },
-            { 
-              label: 'THREATS', 
-              value: keyMetrics.hazardZones.value, 
-              active: keyMetrics.hazardZones.active, 
-              icon: <FaSkullCrossbones />, 
-              color: 'orange', 
-              path: '/admin/hazards',
-              sub: `${keyMetrics.hazardZones.active}_ACTIVE_ZONES`
-            },
-            { 
-              label: 'CITIZENS', 
-              value: keyMetrics.totalResidents.value.toLocaleString(), 
-              icon: <FaUsers />, 
-              color: 'emerald', 
-              path: '/admin/user-management',
-              sub: 'SECTOR_POPULATION'
-            },
-            { 
-              label: 'LATENCY', 
-              value: `${keyMetrics.responseTime.value}m`, 
-              icon: <FiActivity />, 
-              color: 'purple', 
-              path: '/admin/analytics',
-              sub: 'AVG_TRIAGE_TIME'
-            },
-            { 
-              label: 'WEATHER', 
-              value: keyMetrics.weatherAlert.type, 
-              icon: <FaWind />, 
-              color: 'cyan', 
-              path: '/admin/weather',
-              sub: `ALERT_LVL_${keyMetrics.weatherAlert.level.toUpperCase()}`
-            }
-          ].map((m, idx) => (
-            <Link 
-              key={idx} 
-              to={m.path} 
-              className="tactical-container p-4 bg-white hover:shadow-2xl transition-all duration-500 group relative border-gray-100/50 overflow-hidden"
-            >
-              <div className={`absolute top-0 right-0 w-20 h-20 bg-${m.color}-500/5 rounded-full -mr-10 -mt-10 transition-all group-hover:scale-150`} />
-              <div className="flex items-center justify-between mb-3 relative z-10">
-                <div className={`bg-${m.color}-50 text-${m.color}-600 rounded-xl p-2 group-hover:bg-${m.color}-600 group-hover:text-white transition-all border border-${m.color}-100/30`}>
-                  {React.cloneElement(m.icon as React.ReactElement<any>, { size: 14 })}
-                </div>
-              </div>
-              <div className="text-2xl font-black text-slate-900 leading-none mb-1 tracking-tighter tabular-nums">{m.value}</div>
-              <div className="text-slate-500 text-[10px] font-black tracking-widest uppercase mb-1">{m.label}</div>
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tight truncate opacity-80">{m.sub}</div>
-              {m.occupancy !== undefined && (
-                <div className="w-full bg-slate-100 rounded-full h-1 mt-3 overflow-hidden">
-                  <div 
-                    className={`bg-${m.color}-500 h-1 rounded-full transition-all duration-700`} 
-                    style={{ width: `${m.occupancy}%` }}
-                  ></div>
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        {/* Sector Status Overview replaces the old full-width grid for better spatial flow */}
-
-        {/* Main Content Area - Enhanced Layout & Responsive */}
-        <div className="flex flex-col lg:grid lg:grid-cols-4 min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)]">
-          {/* Recent Incidents List - Enhanced */}
-          <div className="w-full lg:col-span-1 h-[400px] lg:h-full bg-white tactical-container border-y-0 border-r-0 rounded-none order-2 lg:order-2 overflow-hidden flex flex-col p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
-                <div className="bg-slate-900 text-white rounded-xl p-2.5">
-                  <FaList className="text-sm" />
-                </div>
-                Live Reports
-              </h3>
-              <Link to="/admin/incident-reports" className="text-[10px] font-black text-blue-600 tracking-widest uppercase hover:text-blue-800 transition-colors">
-                Matrix_View
-              </Link>
-            </div>
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
-              {recentIncidents.map((incident, index) => (
-                <div key={`incident-item-${incident.id || index}`} onClick={() => { setSelectedIncident(incident); setIsViewingDetails(true); }} className="group p-4 bg-slate-50 tactical-container border-transparent hover:border-slate-200 shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden">
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                    incident.type === 'Flood' ? 'bg-blue-500' :
-                    incident.type === 'Accident' ? 'bg-red-500' :
-                    incident.type === 'Fire' ? 'bg-orange-500' : 'bg-slate-400'
-                  }`} />
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-black text-slate-900 text-[11px] tracking-widest uppercase mb-1">{incident.type}</div>
-                      <div className="text-[10px] text-slate-500 mb-1 flex items-center gap-1 font-bold truncate">
-                        <FaMapMarkerAlt className="text-[10px] text-slate-400" />
-                        {incident.location}
-                      </div>
-                      <div className="text-[9px] text-slate-400 flex items-center gap-1 font-black tracking-tight">
-                        <FiClockIcon className="text-[10px]" />
-                        {incident.time.toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="text-[8px] font-black bg-white px-2.5 py-1 rounded-full text-slate-600 uppercase tracking-widest shadow-sm border border-slate-100 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                      ACTIVE
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Live Map - Centered Focus */}
-          <div className="w-full lg:col-span-3 min-h-[500px] lg:h-full tactical-container border-0 rounded-none order-1 lg:order-1 relative group bg-white">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 p-6 bg-gray-50 border-b border-gray-100">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-3">
-                <div className="bg-blue-900 text-white rounded-xl p-2.5 shadow-lg shadow-blue-900/20">
-                  <FaMapMarkerAlt className="text-sm" />
-                </div>
-                Strategic Map Interface
-              </h3>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-Time_Telemetry</span>
-                </div>
-              </div>
-            </div>
-            {/* Map Section Content continues... */}
-
-            {/* Weather Controls Overlay (Admin) */}
-            <div className="absolute top-24 left-4 z-20 flex flex-col gap-2">
-              <div className="flex bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-gray-200 shadow-xl">
-                <button 
-                  onClick={() => setShowWindyRadar(!showWindyRadar)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wide transition-all flex items-center gap-2 ${showWindyRadar ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-blue-600'}`}
-                >
-                  <FaWind className={showWindyRadar ? 'animate-spin-slow' : ''} />
-                  Windy Radar
-                </button>
-              </div>
-
-              {!showWindyRadar && (
-                <div className="flex bg-slate-900/80 backdrop-blur-xl rounded-xl p-1 border border-white/10 shadow-2xl gap-1">
-                  {[
-                    { id: 'none', label: 'OFF', icon: <FaTimes /> },
-                    { id: 'wind_new', label: 'WIND', icon: <FaWind /> },
-                    { id: 'precipitation_new', label: 'RAIN', icon: <FaWater /> },
-                    { id: 'clouds_new', label: 'CLD', icon: <FaCloudSun /> }
-                  ].map((layer) => (
-                    <button
-                      key={layer.id}
-                      onClick={() => setWeatherLayer(layer.id as any)}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[8px] font-bold tracking-wide transition-all ${weatherLayer === layer.id ? 'bg-white/10 text-white border border-white/10' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      {layer.icon}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {showWindyRadar && (
-              <div className="absolute inset-0 z-30 bg-black animate-in fade-in duration-500 rounded-2xl overflow-hidden">
-                <iframe 
-                  src={`https://embed.windy.com/embed2.html?lat=14.28&lon=121.41&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`}
-                  className="w-full h-full border-none"
-                  title="Windy Radar Admin"
-                />
-                <button 
-                  onClick={() => setShowWindyRadar(false)}
-                  className="absolute top-4 right-4 z-40 bg-red-600 text-white p-2 rounded-full shadow-2xl hover:bg-red-500 transition-all border border-white/20"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            )}
-
-            <div className="h-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-inner relative">
-              <MapboxMap
+      <div className="relative w-full h-[calc(100vh-64px)] overflow-hidden font-inter bg-slate-950 text-white flex">
+        
+        {/* Absolute Map Background */}
+        <div className="absolute inset-0 z-0 pointer-events-auto">
+          <MapboxMap
                 {...viewState}
                 onMove={(evt: any) => setViewState(evt.viewState)}
                 minZoom={DEFAULT_MAP_STATE.minZoom}
@@ -708,315 +349,183 @@ export default function Home() {
                     </React.Fragment>
                 ))}
               </MapboxMap>
-            </div>
-          </div>
         </div>
 
-        {/* Enhanced Charts Section - Responsive */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-          {/* Incidents This Week - Bar Chart */}
-        <div className="tactical-container bg-white p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-widest">
-                <div className="bg-purple-600 text-white rounded-xl p-2.5 shadow-lg shadow-purple-600/20">
-                  <FaChartBar className="text-sm" />
+        {/* Floating HUD Container */}
+        <div className="absolute inset-0 z-10 pointer-events-none flex flex-col p-4 lg:p-6 gap-4">
+          
+          {/* Top Header HUD */}
+          <div className="flex justify-between items-start">
+            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl pointer-events-auto flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 shadow-inner">
+                <FaShieldAlt className="text-blue-400 text-2xl" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  <span className="text-[10px] font-semibold tracking-wider text-emerald-400 uppercase">System Stability Confirmed</span>
                 </div>
-                Weekly Metrics
-              </h3>
-              <div className="flex items-center gap-2">
-                <select className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-[10px] font-black tracking-widest uppercase text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                  <option>MISSION_WEEK</option>
-                  <option>MISSION_MONTH</option>
-                  <option>MISSION_YEAR</option>
-                </select>
+                <h1 className="text-xl font-bold tracking-tight text-white leading-none">
+                  Strategic Command
+                </h1>
               </div>
             </div>
-            <div className="h-64 md:h-72 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-3 md:p-4">
-              <Bar data={incidentChartData} options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    display: true,
-                    position: 'top' as const,
-                    labels: {
-                      usePointStyle: true,
-                      padding: 20,
-                      font: {
-                        size: 12,
-                        weight: 500
-                      }
-                    }
-                  }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    grid: {
-                      color: 'rgba(0, 0, 0, 0.05)',
-                    },
-                    ticks: {
-                      font: {
-                        size: 11
-                      }
-                    }
-                  },
-                  x: {
-                    grid: {
-                      display: false,
-                    },
-                    ticks: {
-                      font: {
-                        size: 11
-                      }
-                    }
-                  }
-                }
-              }} />
+
+            <div className="flex flex-col items-end gap-2 pointer-events-auto">
+               <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-xl shadow-2xl flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-white leading-none">
+                      {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                    </div>
+                    <div className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-1">Local Time</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/10"></div>
+                  <TacticalCommsStatus />
+               </div>
             </div>
           </div>
 
-          {/* Incident Types - Doughnut Chart */}
-        <div className="tactical-container bg-white p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-black text-slate-900 flex items-center gap-3 uppercase tracking-widest">
-                <div className="bg-orange-600 text-white rounded-xl p-2.5 shadow-lg shadow-orange-600/20">
-                  <FaChartPie className="text-sm" />
+          {/* Main Interface Area */}
+          <div className="flex-1 flex justify-between gap-4 min-h-0 relative">
+             
+             {/* Left Sidebar: Metrics & Sector Status */}
+             <div className="w-full lg:w-[320px] flex flex-col gap-4 pointer-events-auto">
+                {/* Global Metrics Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Link to="/admin/incident-reports" className="bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-xl flex flex-col gap-2 transition-all">
+                    <div className="flex justify-between items-center"><FaFire className="text-red-400" /><span className="text-2xl font-bold text-white">{keyMetrics.activeIncidents.value}</span></div>
+                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">Active Incidents</div>
+                  </Link>
+                  <Link to="/admin/hazards" className="bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-xl flex flex-col gap-2 transition-all">
+                    <div className="flex justify-between items-center"><FaSkullCrossbones className="text-orange-400" /><span className="text-2xl font-bold text-white">{keyMetrics.hazardZones.value}</span></div>
+                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">Hazard Zones</div>
+                  </Link>
+                  <Link to="/admin/shelters" className="bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-xl flex flex-col gap-2 transition-all">
+                    <div className="flex justify-between items-center"><FaHome className="text-blue-400" /><span className="text-2xl font-bold text-white">{keyMetrics.sheltersAvailable.value}</span></div>
+                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">Shelters</div>
+                  </Link>
+                  <Link to="/admin/weather" className="bg-slate-900/60 hover:bg-slate-800/80 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-xl flex flex-col gap-2 transition-all">
+                    <div className="flex justify-between items-center"><FaWind className="text-cyan-400" /><span className="text-xl font-bold text-white truncate max-w-[50px]">{keyMetrics.weatherAlert.type}</span></div>
+                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">Weather Alert</div>
+                  </Link>
                 </div>
-                Threat Distribution
-              </h3>
-            </div>
-            <div className="h-64 md:h-72 flex items-center justify-center">
-              <div className="w-full max-w-xs">
-                <Doughnut data={incidentTypeData} options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom' as const,
-                      labels: {
-                        usePointStyle: true,
-                        padding: 15,
-                        font: {
-                          size: 11,
-                          weight: 500
-                        }
-                      }
-                    },
-                    tooltip: {
-                      callbacks: {
-                        label: function(context: any) {
-                          const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-                          const percentage = ((context.parsed / total) * 100).toFixed(1);
-                          return `${context.label}: ${context.parsed} (${percentage}%)`;
-                        }
-                      }
-                    }
-                  },
-                  cutout: '60%',
-                }} />
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="text-center text-sm text-gray-600">
-                Total incidents this month: <span className="font-bold text-gray-900">47</span>
-              </div>
-            </div>
+
+                {/* Sector Status Matrix */}
+                <div className="flex-1 flex flex-col bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+                   <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                      <h2 className="text-xs font-semibold text-white uppercase tracking-wider">Sector Matrix</h2>
+                      <span className="text-[9px] text-slate-400">Flood Levels</span>
+                   </div>
+                   <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                     {brgyLevels.length > 0 ? brgyLevels.map((b, i) => (
+                       <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg border-b border-white/5 last:border-0 transition-colors">
+                         <div className="flex items-center gap-2">
+                           <div className={`w-2 h-2 rounded-full ${b.status_level === 'critical' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' : b.status_level === 'warning' ? 'bg-orange-400' : 'bg-emerald-500'}`} />
+                           <span className="text-[11px] font-medium text-slate-200">{b.barangay_name}</span>
+                         </div>
+                         <div className="text-[10px] font-bold text-blue-300">{b.flood_depth_cm || 0}cm</div>
+                       </div>
+                     )) : (
+                       <div className="text-center p-4 text-[10px] text-slate-500">Loading Sectors...</div>
+                     )}
+                   </div>
+                </div>
+             </div>
+
+             {/* Right Sidebar: Live Reports */}
+             <div className="w-full lg:w-[360px] flex flex-col gap-4 pointer-events-auto">
+                <div className="flex-1 flex flex-col bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+                  <div className="p-5 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                     <h2 className="text-sm font-semibold flex items-center gap-2 text-white"><FaList className="text-slate-400" /> Live Feed</h2>
+                     <Link to="/admin/incident-reports" className="text-[9px] text-blue-400 hover:text-blue-300 uppercase tracking-widest font-bold transition-colors">Matrix View</Link>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                     {recentIncidents.map((incident, index) => (
+                        <div key={`${incident.source_table || 'inc'}-${incident.id || index}`} onClick={() => { setSelectedIncident(incident); setIsViewingDetails(true); }} className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-4 rounded-2xl cursor-pointer transition-all flex flex-col gap-2 relative overflow-hidden">
+                           <div className={`absolute left-0 top-0 bottom-0 w-1 ${incident.type === 'Flood' ? 'bg-blue-500' : incident.type === 'Accident' ? 'bg-orange-500' : incident.type === 'Fire' ? 'bg-red-500' : 'bg-slate-400'}`} />
+                           <div className="flex justify-between items-start pl-2">
+                              <div>
+                                 <div className="text-sm font-bold text-white flex items-center gap-1.5 mb-1">{incident.type || 'Incident'}</div>
+                                 <div className="text-[10px] text-slate-400 flex items-center gap-1"><FiMapPin className="text-slate-500 shrink-0" /> <span className="truncate max-w-[180px]">{incident.location || 'Location Unspecified'}</span></div>
+                              </div>
+                              <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase">Active</span>
+                           </div>
+                           <div className="flex justify-between items-center pl-2 pt-3 mt-1 border-t border-white/5">
+                              <div className="text-[9px] text-slate-500 flex items-center gap-1"><FiClockIcon /> {incident.time.toUpperCase()}</div>
+                              <FiChevronRight className="text-slate-500 group-hover:text-white transition-colors" />
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                </div>
+             </div>
+
           </div>
+
+          {/* Bottom Bar: Charts & Ticker */}
+          <div className="flex gap-4 pointer-events-auto h-36">
+             <div className="w-[320px] bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-center justify-center">
+                 <Doughnut 
+                  data={incidentTypeData} 
+                  options={{ 
+                    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 9 } } } }, 
+                    maintainAspectRatio: false, 
+                    cutout: '70%' 
+                  }} 
+                />
+             </div>
+             
+             <div className="flex-1 bg-blue-600/20 backdrop-blur-xl rounded-2xl p-4 shadow-2xl flex flex-col justify-center border border-blue-500/30">
+               <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-2"><FaBullhorn /> Global Broadcast Channel</div>
+               <div className="text-sm font-semibold text-blue-100">All local government units and response teams are currently on standby. Tactical dispatch matrix is fully operational.</div>
+             </div>
+
+             <div className="w-[360px] bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl flex items-center justify-center">
+                <Line 
+                  data={responseTimeData} 
+                  options={{ 
+                    plugins: { legend: { display: false } }, 
+                    scales: { x: { display: false }, y: { display: false } }, 
+                    maintainAspectRatio: false 
+                  }} 
+                />
+             </div>
+          </div>
+
         </div>
-
-        {/* Response Time Trend */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <div className="bg-green-100 text-green-600 rounded-lg p-2">
-                <FaChartLine className="text-sm" />
-              </div>
-              Response Time Trend
-            </h3>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2 text-xs md:text-sm">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-gray-600">Average Response Time</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs md:text-sm">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-600">Target Time</span>
-              </div>
+        
+        {/* Incident Detail Modal (Admin) */}
+        {isViewingDetails && selectedIncident && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto p-4">
+            <div className="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+               <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                 <span className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2"><FaList className="text-blue-400"/> Incident Overview</span>
+                 <button onClick={() => setIsViewingDetails(false)} className="text-slate-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 text-[10px] uppercase font-bold"><FaTimes className="inline mr-1"/> Close</button>
+               </div>
+               <div className="p-6 grid grid-cols-2 gap-6">
+                 <div>
+                   <h2 className="text-2xl font-bold text-white mb-2">{selectedIncident.type}</h2>
+                   <div className="text-xs text-slate-400 flex items-center gap-2 mb-4"><FiMapPin /> {selectedIncident.location}</div>
+                   <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 border-t border-white/10 pt-4">Timeline</div>
+                   <div className="text-sm font-medium text-white mb-4">{selectedIncident.time}</div>
+                 </div>
+                 <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex flex-col justify-center items-center gap-2">
+                   <FaShieldAlt className="text-3xl text-emerald-400" />
+                   <div className="text-[10px] text-slate-400 uppercase tracking-widest">Status</div>
+                   <div className="text-lg font-bold text-emerald-400">{selectedIncident.status}</div>
+                 </div>
+               </div>
+               <div className="p-4 bg-slate-950 border-t border-white/10 flex justify-end gap-3">
+                 <Link to="/admin/incident-reports" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded-xl shadow-lg transition-all uppercase tracking-wider">Manage in Matrix</Link>
+               </div>
             </div>
-          </div>
-          <div className="h-56 md:h-64 bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-3 md:p-4">
-            <Line data={responseTimeData} options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  display: false
-                },
-                tooltip: {
-                  mode: 'index',
-                  intersect: false,
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  titleColor: '#374151',
-                  bodyColor: '#6B7280',
-                  borderColor: '#E5E7EB',
-                  borderWidth: 1,
-                  cornerRadius: 8,
-                  displayColors: true,
-                  callbacks: {
-                    label: function(context: any) {
-                      return `${context.dataset.label}: ${context.parsed.y} minutes`;
-                    }
-                  }
-                }
-              },
-              scales: {
-                x: {
-                  grid: {
-                    display: false,
-                  },
-                  ticks: {
-                    font: {
-                      size: 11
-                    }
-                  }
-                },
-                y: {
-                  beginAtZero: true,
-                  grid: {
-                    color: 'rgba(0, 0, 0, 0.05)',
-                  },
-                  ticks: {
-                    font: {
-                      size: 11
-                    },
-                    callback: function(value: any) {
-                      return value + ' min';
-                    }
-                  }
-                }
-              },
-              interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-              }
-            }} />
-          </div>
-        </div>
-      </div>
-      {isViewingDetails && selectedIncident && (
-        <ReportDetailsOverlay 
-          incident={selectedIncident} 
-          onClose={() => setIsViewingDetails(false)}
-        />
-      )}
-    </>
-  );
-}
-
-const ReportDetailsOverlay = ({ incident, onClose }: any) => {
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'Critical': return 'bg-red-500 text-white';
-      case 'High': return 'bg-orange-500 text-white';
-      case 'Moderate': return 'bg-yellow-500 text-white';
-      case 'Low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Verified': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Resolved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Rejected': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] bg-white flex flex-col md:flex-row animate-in fade-in duration-300 font-jetbrains text-gray-900">
-      <button 
-        onClick={onClose}
-        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 shadow-sm z-[110] transition-all"
-      >
-        <FaTimes className="text-xl" />
-      </button>
-
-      {/* Left: Media/Visual */}
-      <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-[#1c1c1e]">
-        {incident.media ? (
-          <img src={incident.media.startsWith('data:') ? incident.media : `/uploads/${incident.media}`} alt="Evidence" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-[#3a3a3c]">
-            <FaWater className="text-[120px] mb-4 opacity-20" />
-            <span className="text-lg tracking-widest uppercase opacity-50 font-bold">NO_VISUAL_DATA</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
-        <div className="absolute bottom-12 left-12">
-          <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest border ${getStatusColor(incident.status)}`}>
-            {incident.status}
-          </span>
-          <h1 className="text-white text-5xl font-bold mt-4 tracking-tight leading-tight">{incident.type || 'Incident Report'}</h1>
-          <p className="text-[#8e8e93] text-lg mt-2 max-w-md">{incident.location || 'Active Incident Zone'}</p>
-        </div>
+
       </div>
-
-      {/* Right: Data */}
-      <div className="w-full md:w-1/2 h-1/2 md:h-full bg-[#0a0a0a] p-12 overflow-y-auto custom-scrollbar flex flex-col">
-        <div className="mb-12">
-          <h3 className="text-[#f59e0b] font-bold text-sm tracking-[0.3em] uppercase mb-8">Incident_Metrics</h3>
-          
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-[#2c2c2e]">
-              <p className="text-[#8e8e93] text-[11px] font-bold uppercase tracking-widest mb-2">Severity_Index</p>
-              <div className={`text-2xl font-bold px-4 py-1 rounded-lg inline-block ${getSeverityColor(incident.severity)}`}>
-                {incident.severity || 'Moderate'}
-              </div>
-            </div>
-            <div className="bg-[#1c1c1e] p-6 rounded-2xl border border-[#2c2c2e]">
-              <p className="text-[#8e8e93] text-[11px] font-bold uppercase tracking-widest mb-2">Report_Reference</p>
-              <p className="text-white text-2xl font-mono">INC-{incident.id?.toString().padStart(5, '0') || 'N/A'}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6 flex-grow">
-          <div className="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-[#2c2c2e]">
-            <div className="p-4 bg-[#2c2c2e]/50 border-b border-[#2c2c2e] flex justify-between items-center">
-              <span className="text-white text-[12px] font-bold tracking-widest uppercase">Field_Description</span>
-              <span className="text-[#8e8e93] text-[10px]">{incident.time}</span>
-            </div>
-            <div className="p-6">
-              <p className="text-white text-lg leading-relaxed italic">"{incident.description || 'No additional description provided by the reporter.'}"</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-             <div className="bg-[#1c1c1e] rounded-2xl p-6 border border-[#2c2c2e]">
-                <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Reporter</p>
-                <p className="text-white text-[14px] font-bold">{incident.reporter_name || 'Anonymous'}</p>
-                <p className="text-[#8e8e93] text-[10px] uppercase mt-1">{incident.reporter_role || 'Resident'}</p>
-             </div>
-             <div className="bg-[#1c1c1e] rounded-2xl p-6 border border-[#2c2c2e]">
-                <p className="text-[#8e8e93] text-[11px] uppercase tracking-widest mb-1">Location_Coord</p>
-                <p className="text-white text-[14px] font-bold">{Number(incident.lat).toFixed(4)}, {Number(incident.lng).toFixed(4)}</p>
-             </div>
-          </div>
-        </div>
-
-        <div className="mt-12 flex gap-4">
-          <button
-            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${incident.lat},${incident.lng}`, '_blank')}
-            className="w-full py-4 bg-blue-600 text-white font-black text-[12px] tracking-[0.2em] rounded-xl hover:bg-blue-700 transition-all shadow-lg"
-          >
-            DISPATCH_COORDINATES
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
+
+export default Home;

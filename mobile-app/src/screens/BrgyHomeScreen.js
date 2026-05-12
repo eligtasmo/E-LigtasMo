@@ -51,7 +51,7 @@ const BrgyHomeScreen = ({ navigation, route }) => {
           headers: { 'X-Role': 'coordinator', 'X-Token': u?.token || '' }
         }),
         fetch(`${API_URL}/weather-summary.php?lat=14.28&lon=121.41`),
-        fetch(`${API_URL}/list-incident-reports.php?barangay=${encodeURIComponent(brgyName)}&limit=5`, {
+        fetch(`${API_URL}/incident-reports.php?barangay=${encodeURIComponent(brgyName)}&limit=5`, {
           headers: { 'X-Role': 'coordinator', 'X-Token': u?.token || '' }
         })
       ]);
@@ -182,7 +182,7 @@ const BrgyHomeScreen = ({ navigation, route }) => {
                       onPress={() => {
                         if (item.id === 'hotlines') navigation.navigate('EmergencyHotlines');
                         if (item.id === 'donation') navigation.navigate('DonationDrives');
-                        if (item.id === 'reports') navigation.navigate('Reports');
+                        if (item.id === 'reports') navigation.navigate('HazardMap');
                         if (item.id === 'map') navigation.navigate('LocalMap');
                       }}
                       style={styles.quickActionBox}

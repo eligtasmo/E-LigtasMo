@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import * as Lucide from 'lucide-react-native';
@@ -38,6 +39,12 @@ const NotificationsScreen = ({ navigation }) => {
       setRefreshing(false);
     }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchNotifications();
+    }, [fetchNotifications])
+  );
 
   useEffect(() => {
     fetchNotifications();

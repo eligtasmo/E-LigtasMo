@@ -45,7 +45,7 @@ const UserManagementScreen = ({ navigation, route }) => {
       const token = currentUser?.token || null;
       setViewerRole(String(currentUser?.role || 'admin').toLowerCase());
       setViewerBrgy(currentUser?.brgy_name || '');
-      const response = await fetch(`${API_URL}/list-users.php`, {
+      const response = await fetch(`${API_URL}/users.php`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -76,7 +76,7 @@ const UserManagementScreen = ({ navigation, route }) => {
       const session = await AsyncStorage.getItem('CURRENT_USER');
       const token = session ? JSON.parse(session).token : null;
       
-      const endpoint = newStatus === 'delete' ? 'admin-delete-user.php' : 'update-user-status.php';
+      const endpoint = newStatus === 'delete' ? 'users.php' : 'users.php';
       const body = newStatus === 'delete' ? { user_id: userId } : { user_id: userId, status: newStatus };
 
       const response = await fetch(`${API_URL}/${endpoint}`, {
@@ -119,7 +119,7 @@ const UserManagementScreen = ({ navigation, route }) => {
     try {
       const session = await AsyncStorage.getItem('CURRENT_USER');
       const token = session ? JSON.parse(session).token : null;
-      const response = await fetch(`${API_URL}/admin-update-user.php`, {
+      const response = await fetch(`${API_URL}/users.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(editForm)

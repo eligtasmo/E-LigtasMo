@@ -17,7 +17,6 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 $response = curl_exec($ch);
 $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
 
 if (!$response || $status < 200 || $status >= 300) {
   http_response_code(502);

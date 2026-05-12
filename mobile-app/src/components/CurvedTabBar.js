@@ -51,7 +51,7 @@ const CurvedTabBar = ({ state, descriptors, navigation, role = 'resident' }) => 
           { route: 'Home', icon: 'LayoutGrid', label: 'Home' },
           { route: 'Report', icon: 'ShieldAlert', label: 'Report' },
           { route: 'SafeRoutes', icon: 'Route', label: 'Routes', isCenter: true },
-          { route: 'Donations', icon: 'HeartPulse', label: 'Donation' },
+          { route: 'HazardMap', icon: 'Map', label: 'Intel' },
           { route: 'Profile', icon: 'Settings2', label: 'Settings' },
         ];
         break;

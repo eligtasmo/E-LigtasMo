@@ -1,0 +1,67 @@
+<?php
+error_reporting(0);
+ini_set('display_errors', 0);
+require_once 'cors.php';
+header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+require_once 'db.php';
+require_once 'rbac.php';
+
+// Require view permission at minimum
+require_permission('users.view');
+
+function ensure_users_table($pdo) {
+    // Check if created_at exists
+    $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'created_at'");
+    if ($stmt && $stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+    }
+}
+
+ensure_users_table($pdo);
+
+$userRole = $_SESSION['role'] ?? null;
+$userBrgy = $_SESSION['brgy_name'] ?? null;
+
+// Normalize roles - treat brgy_chair as brgy for filtering purposes
+$isBrgyOfficial = in_array($userRole, ['brgy', 'brgy_chair']);
+
+// Get filters from request
+$status = $_GET['status'] ?? null;
+$brgyFilter = $_GET['brgy'] ?? null;
+
+// Enforcement logic
+if ($isBrgyOfficial) {
+    // Barangay officials are strictly locked to their own barangay
+    $brgyFilter = $userBrgy;
+}
+
+$query = "SELECT id, username, full_name, brgy_name, city, province, email, contact_number, role, status, IFNULL(created_at, NOW()) as created_at FROM users WHERE 1=1";
+$params = [];
+
+if ($status) {
+    $query .= " AND status = ?";
+    $params[] = $status;
+}
+
+if ($brgyFilter) {
+    $query .= " AND LOWER(TRIM(brgy_name)) = LOWER(TRIM(?))";
+    $params[] = $brgyFilter;
+}
+
+// If it's a brgy official, strictly show only residents to fulfill the "specific resident accounts" requirement
+if ($isBrgyOfficial) {
+    $query .= " AND role = 'resident'";
+}
+
+try {
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode(['success' => true, 'users' => $users]);
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+}
+?>

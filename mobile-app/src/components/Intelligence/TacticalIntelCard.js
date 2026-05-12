@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, useWindowDimensions, Image as RNImage } from 'react-native';
 import * as Lucide from 'lucide-react-native';
 import { DS_FONT_UI, DS_FONT_INPUT, Row, Col } from '../DesignSystem';
+import { API_URL } from '../../config';
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return 'Just now';
@@ -40,6 +41,9 @@ const HAZARD_ICONS = {
 export const TacticalIntelCard = ({ item, onPress, onZoom, variant = 'grid' }) => {
   const { width: windowWidth } = useWindowDimensions();
   
+  const rawMedia = item.media || item.media_path || item.photo_url;
+  const mediaUrl = rawMedia ? (rawMedia.startsWith('http') ? rawMedia : `${API_URL}/${rawMedia}`) : null;
+  
   const type = (item.type || item.hazard_type || 'Other').toLowerCase();
   let kind = 'Other';
   if (type.includes('flood')) kind = 'Flood';
@@ -59,28 +63,36 @@ export const TacticalIntelCard = ({ item, onPress, onZoom, variant = 'grid' }) =
   else if (severity === 'medium' || severity === 'moderate' || severity === 'warning') severityColor = '#F5B235';
 
   if (variant === 'grid') {
+
     return (
       <TouchableOpacity 
         onPress={onPress}
         activeOpacity={0.8}
         style={{ 
-          width: (windowWidth - 32 - 20) / 3,
+          width: (windowWidth - 32 - 20) / 3.01,
           backgroundColor: accent + '12',
           borderRadius: 20,
-          padding: 12,
           borderWidth: 1.5,
           borderColor: accent + '20',
           alignItems: 'center',
           justifyContent: 'space-between',
           minHeight: 115, 
+          overflow: 'hidden'
         }}
       >
-        <View style={{ alignItems: 'center', width: '100%' }}>
+        {mediaUrl && (
+          <RNImage 
+            source={{ uri: mediaUrl }} 
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.25 }} 
+            resizeMode="cover"
+          />
+        )}
+        <View style={{ alignItems: 'center', width: '100%', padding: 12 }}>
           <View style={{ 
             width: 32, 
             height: 32, 
             borderRadius: 10, 
-            backgroundColor: accent + '15', 
+            backgroundColor: mediaUrl ? 'rgba(0,0,0,0.4)' : accent + '15', 
             alignItems: 'center', 
             justifyContent: 'center', 
             marginBottom: 6,
@@ -107,7 +119,7 @@ export const TacticalIntelCard = ({ item, onPress, onZoom, variant = 'grid' }) =
           </View>
         </View>
         
-        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingTop: 6, marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+        <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingVertical: 6, backgroundColor: 'rgba(0,0,0,0.2)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
           <Lucide.Clock size={8} color="rgba(255,255,255,0.3)" />
           <Text style={{ fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.3)', fontFamily: DS_FONT_INPUT }}>
             {formatRelativeTime(item.created_at || item.time)}
@@ -116,6 +128,7 @@ export const TacticalIntelCard = ({ item, onPress, onZoom, variant = 'grid' }) =
       </TouchableOpacity>
     );
   }
+
 
   // List Variant (Wide)
   return (
@@ -155,12 +168,35 @@ export const TacticalIntelCard = ({ item, onPress, onZoom, variant = 'grid' }) =
             </Row>
           </Col>
         </Row>
-        <Col align="flex-end">
-           <View style={{ backgroundColor: severityColor + '15', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: severityColor + '25', marginBottom: 4 }}>
-              <Text style={{ fontSize: 9, fontWeight: '900', color: severityColor, textTransform: 'uppercase' }}>{severity}</Text>
-           </View>
-           <Text style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{formatRelativeTime(item.created_at || item.time)}</Text>
-        </Col>
+        <Row gap={12} align="center">
+          {mediaUrl && (
+            <RNImage 
+              source={{ uri: mediaUrl }} 
+              style={{ width: 44, height: 44, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }} 
+            />
+          )}
+          <Col align="flex-end">
+             <View style={{ backgroundColor: severityColor + '15', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: severityColor + '25', marginBottom: 4 }}>
+                <Text style={{ fontSize: 9, fontWeight: '900', color: severityColor, textTransform: 'uppercase' }}>{severity}</Text>
+             </View>
+             <View style={{ 
+               backgroundColor: (item.status === 'Verified' || item.status === 'Approved' || item.status === 'Resolved') ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)', 
+               paddingHorizontal: 6, 
+               paddingVertical: 2, 
+               borderRadius: 4, 
+               marginBottom: 4 
+             }}>
+                <Text style={{ 
+                  fontSize: 8, 
+                  fontWeight: '800', 
+                  color: (item.status === 'Verified' || item.status === 'Approved' || item.status === 'Resolved') ? '#10B981' : '#F59E0B' 
+                }}>
+                  {(item.status || 'Pending').toUpperCase()}
+                </Text>
+             </View>
+             <Text style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{formatRelativeTime(item.created_at || item.time)}</Text>
+          </Col>
+        </Row>
       </Row>
       
       {onZoom && (

@@ -31,7 +31,7 @@ const BrgyOperationsScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const brgyName = u?.barangay || user?.barangay || 'Poblacion I';
-      const res = await fetch(`${API_URL}/list-incident-reports.php?barangay=${encodeURIComponent(brgyName)}&all_time=true`);
+      const res = await fetch(`${API_URL}/incident-reports.php?barangay=${encodeURIComponent(brgyName)}&all_time=true`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setReports(data);
@@ -45,7 +45,7 @@ const BrgyOperationsScreen = ({ navigation }) => {
 
   const updateStatus = async (reportId, newStatus) => {
     try {
-      const res = await fetch(`${API_URL}/update-incident-report.php`, {
+      const res = await fetch(`${API_URL}/incident-reports.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reportId, status: newStatus })

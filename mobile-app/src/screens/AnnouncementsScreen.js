@@ -66,7 +66,7 @@ const AnnouncementsScreen = ({ navigation }) => {
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch(`${API_URL}/list-announcements.php?limit=100`, {
+      const response = await fetch(`${API_URL}/announcements.php?limit=100`, {
         headers: { 'X-Role': userRole || 'guest' }
       });
       const data = await response.json();
@@ -94,7 +94,7 @@ const AnnouncementsScreen = ({ navigation }) => {
     try {
       const session = await AsyncStorage.getItem('CURRENT_USER');
       const user = session ? JSON.parse(session) : {};
-      const endpoint = isEditing ? 'update-announcement.php' : 'create-announcement.php';
+      const endpoint = isEditing ? 'announcements.php' : 'announcements.php';
       const payload = {
         ...formData,
         id: editId,
@@ -124,7 +124,7 @@ const AnnouncementsScreen = ({ navigation }) => {
   };
 
   const handleDeleteAnnouncement = (id) => {
-    fetch(`${API_URL}/delete-announcement.php`, {
+    fetch(`${API_URL}/announcements.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id })

@@ -95,7 +95,7 @@ const QuickReportScreen = ({ navigation, route }) => {
         barangay: user.brgy_name || null
       };
 
-      let endpoint = isEditing ? 'update-incident-report.php' : 'submit-incident-report.php';
+      let endpoint = isEditing ? 'update-incident-report.php' : 'incident-reports.php';
       if (isEditing) payload.id = editReport.id;
 
       const response = await fetch(`${API_URL}/${endpoint}`, {

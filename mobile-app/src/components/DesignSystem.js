@@ -196,14 +196,14 @@ export const Container = ({ children, style, ...props }) => {
 export const Section = ({ children, title, subtitle, style, action, align = 'left', ...props }) => {
   const { theme, atomic } = useTheme();
   return (
-    <View style={[atomic.mb32, style]} {...props}>
+    <View style={[atomic.s.mb32, style]} {...props}>
       {(title || action) && (
-        <Row align="center" justify="space-between" style={atomic.mb16}>
+        <Row align="center" justify="space-between" style={atomic.s.mb16}>
           <Col style={{ flex: 1 }}>
             {title && <Heading size="sm" style={[align === 'center' && atomic.t.center]}>{title}</Heading>}
             {subtitle && <Text style={[atomic.t.caption, { marginTop: 2 }, align === 'center' && atomic.t.center]}>{subtitle}</Text>}
           </Col>
-          {action && <View style={atomic.ml12}>{action}</View>}
+          {action && <View style={atomic.s.ml12}>{action}</View>}
         </Row>
       )}
       {children}
@@ -498,7 +498,7 @@ export const Stat = ({ label, value, sub, icon: Icon, color, lucideIcon: LucideI
   const IconComponent = LucideIconName ? LucideIcons[LucideIconName] : null;
   return (
     <Col align="center" style={{ flex: 1 }}>
-      <View style={[atomic.justifyCenter, atomic.aic, { width: 48, height: 48, backgroundColor: (color || theme.primary) + '15', borderRadius: theme.radiusSm, marginBottom: 12, borderWidth: 1, borderColor: (color || theme.primary) + '20' }]}>
+      <View style={[atomic.l.justifyCenter, atomic.l.aic, { width: 48, height: 48, backgroundColor: (color || theme.primary) + '15', borderRadius: theme.radiusSm, marginBottom: 12, borderWidth: 1, borderColor: (color || theme.primary) + '20' }]}>
         {IconComponent ? (
           <IconComponent size={22} color={color || theme.primary} strokeWidth={2.5} />
         ) : Icon && (

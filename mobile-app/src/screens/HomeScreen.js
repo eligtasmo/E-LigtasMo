@@ -43,7 +43,6 @@ const LONG = 121.4167;
 const QUICK_ACTIONS = [
   { id: 'disaster', label: 'Disaster\nAlerts', icon: 'ShieldAlert' },
   { id: 'news', label: 'News &\nUpdates', icon: 'Megaphone' },
-  { id: 'donation', label: 'Donation\nDrive', icon: 'HeartPulse' },
   { id: 'hazard', label: 'Hazard\nMap', icon: 'Map' },
   { id: 'hotlines', label: 'Emergency\nHotlines', icon: 'PhoneCall' },
 ];
@@ -160,7 +159,7 @@ const HomeScreen = ({ navigation }) => {
 
   const loadVerifiedReports = async () => {
     try {
-      const res = await fetch(`${API_URL}/list-incident-reports.php?status=Verified&all_time=true`);
+      const res = await fetch(`${API_URL}/incident-reports.php?all_time=true`);
       const data = await res.json();
       if (Array.isArray(data)) setVerifiedReports(data);
     } catch (error) {
@@ -195,7 +194,7 @@ const HomeScreen = ({ navigation }) => {
       // Fetch both targeted notifications and general announcements
       const [notifRes, annRes] = await Promise.all([
         fetch(`${API_URL}/list-notifications.php?audience=${role === 'resident' ? 'residents' : 'barangay'}&user_id=${userId}&brgy=${encodeURIComponent(brgy)}`),
-        fetch(`${API_URL}/list-announcements.php?limit=10`)
+        fetch(`${API_URL}/announcements.php?limit=10`)
       ]);
       
       const notifData = await notifRes.json();
@@ -289,7 +288,6 @@ const HomeScreen = ({ navigation }) => {
   const handleQuickAction = (id) => {
     if (id === 'disaster') navigation.navigate('DisasterAlerts');
     if (id === 'news') navigation.navigate('Announcements');
-    if (id === 'donation') navigation.navigate('DonationDrives');
     if (id === 'checkin') navigation.navigate('FamilyHub');
     if (id === 'hotlines') navigation.navigate('EmergencyHotlines');
     if (id === 'hazard') navigation.navigate('HazardMap');
@@ -297,9 +295,10 @@ const HomeScreen = ({ navigation }) => {
   };
 
 
-  const floodReports = useMemo(() => {
+  const recentFloodReports = useMemo(() => {
+    const allowed = ['ACTIVE', 'APPROVED', 'VERIFIED'];
     return verifiedReports
-      .filter(r => (r.type || '').toLowerCase().includes('flood') || (r.description || '').toLowerCase().includes('baha'))
+      .filter(r => allowed.includes((r.status || 'Active').toUpperCase()))
       .slice(0, 6);
   }, [verifiedReports]);
 
@@ -340,6 +339,32 @@ const HomeScreen = ({ navigation }) => {
               hourly={weatherDisplay.hourly}
               onPress={() => navigation.navigate('Weather')}
             />
+
+            {recentFloodReports.length > 0 && (
+              <View style={styles.floodSection}>
+                <Row justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                  <Text style={styles.communityHeading}>Recent Flood Reports</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('HazardMap')}>
+                    <Text style={styles.communityLink}>View Mission History</Text>
+                  </TouchableOpacity>
+                </Row>
+                <View style={{ 
+                  flexDirection: 'row', 
+                  flexWrap: 'wrap', 
+                  gap: 10,
+                  justifyContent: 'flex-start'
+                }}>
+                  {recentFloodReports.map((item, idx) => (
+                    <TacticalIntelCard 
+                      key={item.id || idx}
+                      item={item}
+                      variant="grid"
+                      onPress={() => handleZoom(item)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
 
             <View style={styles.communitySection}>
               <Row justify="space-between" align="center" style={{ marginBottom: 14 }}>

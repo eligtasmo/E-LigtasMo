@@ -815,8 +815,8 @@ const HEREPlannerScreen = ({ navigation, route: navRoute }) => {
       try {
         const [hRes, iRes, sRes, bRes] = await Promise.all([
           fetch(`${API_URL}/list-map-overlays.php`).catch(() => null),
-          fetch(`${API_URL}/list-incidents.php?status=Active`).catch(() => null),
-          fetch(`${API_URL}/shelters-list.php`).catch(() => null),
+          fetch(`${API_URL}/incident-reports.php?official_only=true?status=Active`).catch(() => null),
+          fetch(`${API_URL}/shelters.php`).catch(() => null),
           fetch(`${API_URL}/list-barangays.php`).catch(() => null)
         ]);
         
