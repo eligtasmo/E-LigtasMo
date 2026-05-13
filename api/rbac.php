@@ -6,10 +6,7 @@ require_once __DIR__ . '/tokens.php';
 
 function get_current_user_data() {
     $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $auth = $headers['Authorization'] 
-        ?? ($headers['authorization'] 
-        ?? ($_SERVER['HTTP_AUTHORIZATION'] 
-        ?? ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '')));
+    $auth = $headers['Authorization'] ?? ($headers['authorization'] ?? '');
     
     if (stripos($auth, 'Bearer ') === 0) {
         $token = substr($auth, 7);
@@ -62,14 +59,14 @@ function has_permission_for_role($role, $permission) {
             'users.view','users.manage',
             'incident.create','incident.view',
             'dispatch.manage','sop.view','sop.update','sop.complete','activity.log',
-            'contacts.manage','alerts.manage','shelter.manage',
+            'contacts.manage','alerts.manage',
             'routes.view','invites.manage'
         ],
         'brgy' => [
             'users.view','users.manage',
             'incident.create','incident.view',
             'dispatch.manage','sop.view','sop.update','sop.complete','activity.log','alerts.manage',
-            'contacts.manage','shelter.manage',
+            'contacts.manage',
             'routes.view','invites.manage'
         ],
         'responder' => [
@@ -124,7 +121,7 @@ function require_permission($permission) {
         error_log("RBAC Denied: Role '$role' lacks permission '$permission' (Auth: $auth_type)");
         echo json_encode([
             'success' => false, 
-            'message' => 'Unauthorized access. Forbidden: insufficient permissions',
+            'message' => 'Forbidden: insufficient permissions',
             'debug' => [
                 'detected_role' => $role,
                 'permission_required' => $permission,

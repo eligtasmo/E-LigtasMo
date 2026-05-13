@@ -43,8 +43,7 @@ import {
   FaSkullCrossbones,
   FaWind,
   FaAmbulance,
-  FaFire,
-  FaHome
+  FaFire
 } from 'react-icons/fa';
 import { DEFAULT_MAP_STATE } from '../../constants/geo';
 import React, { useEffect, useState } from "react";
@@ -424,7 +423,7 @@ export default function Home() {
                     <div className="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-1">Local Time</div>
                   </div>
                   <div className="w-px h-8 bg-white/10"></div>
-                  <TacticalCommsStatus sectors={brgyLevels} />
+                  <TacticalCommsStatus />
                </div>
             </div>
           </div>
@@ -571,3 +570,5 @@ export default function Home() {
     </>
   );
 };
+
+export default Home;

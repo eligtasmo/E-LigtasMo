@@ -38,16 +38,16 @@ try {
     ];
     
     // Total today
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM incident_reports WHERE DATE(created_at) = ?");
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM incidents WHERE DATE(created_at) = ?");
     $stmt->execute([$today]);
     $incidentStats['total_today'] = (int)$stmt->fetchColumn();
 
     // Active/Open (Verified)
-    $stmt = $pdo->query("SELECT COUNT(*) FROM incident_reports WHERE status IN ('Verified', 'Approved', 'Active')");
+    $stmt = $pdo->query("SELECT COUNT(*) FROM incidents WHERE status = 'Verified'");
     $incidentStats['open'] = (int)$stmt->fetchColumn();
 
     // Pending Verification
-    $stmt = $pdo->query("SELECT COUNT(*) FROM incident_reports WHERE status = 'Pending'");
+    $stmt = $pdo->query("SELECT COUNT(*) FROM incidents WHERE status = 'Pending'");
     $incidentStats['pending_verification'] = (int)$stmt->fetchColumn();
 
     // 3. Team Stats

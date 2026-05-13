@@ -5,7 +5,7 @@ import { DEFAULT_MAP_STATE } from '../../constants/geo';
 import { apiFetch } from '../../utils/api';
 import * as turf from '@turf/turf';
 import { useGlobalMapContext } from '../../context/MapContext';
-import { FaCar, FaMotorcycle, FaWalking, FaBus, FaBicycle, FaChevronLeft, FaStar, FaExclamationTriangle, FaArrowRight, FaArrowLeft, FaArrowUp, FaMapMarkerAlt, FaFacebookF, FaSearch, FaCheckCircle } from 'react-icons/fa';
+import { FaCar, FaMotorcycle, FaWalking, FaBus, FaBicycle, FaChevronLeft, FaStar, FaExclamationTriangle, FaArrowRight, FaArrowLeft, FaArrowUp, FaMapMarkerAlt, FaFacebookF } from 'react-icons/fa';
 import TacticalMarker from '../maps/TacticalMarker';
 import { BsCircle, BsGeoAltFill, BsThreeDotsVertical } from 'react-icons/bs';
 import { LuArrowUpDown } from 'react-icons/lu';

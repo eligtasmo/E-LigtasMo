@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Roboto", sans-serif;
-  --font-jetbrains: "Roboto", sans-serif;
+  --font-sans: "Geist Sans", "Inter", sans-serif;
+  --font-jetbrains: "Geist Mono", monospace;
   --text-xs: 14px;
   --text-sm: 14px;
-  --color-gray-900: #111111;
-  --color-gray-950: #000000;
-  --color-slate-900: #111111;
-  --color-slate-950: #000000;
-  --color-black: #000000;
-  --color-gray-dark: #1e293b;
+  --color-gray-900: #0d2c1c;
+  --color-gray-950: #05150d;
+  --color-slate-900: #0d2c1c;
+  --color-slate-950: #05150d;
+  --color-black: #0d2c1c;
+  --color-gray-dark: #0d2c1c;
 
   --breakpoint-2xsm: 375px;
   --breakpoint-xsm: 425px;
@@ -32,17 +32,18 @@
   --text-title-sm: 30px;
   --text-title-sm--line-height: 38px;
 
-  --color-brand-25: #f8fafc;
-  --color-brand-50: #f0f9ff;
-  --color-brand-100: #e0f2fe;
-  --color-brand-200: #bae6fd;
-  --color-brand-300: #7dd3fc;
-  --color-brand-400: #38bdf8;
-  --color-brand-500: #0ea5e9;
-  --color-brand-600: #0284c7;
-  --color-brand-700: #0369a1;
-  --color-brand-800: #075985;
-  --color-brand-900: #0c4a6e;
+  /* Updated to Green Palette from beep-fuel.xyz */
+  --color-brand-25: #f5fff9;
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
   
   --color-success-50: #f0fdf4;
   --color-success-100: #dcfce7;
@@ -92,61 +93,64 @@
   --spacing-stack-sm: 8px;
   --spacing-stack-md: 16px;
 
-  /* Mission Control Palette */
-  --color-surface-variant: #323537;
-  --color-on-secondary-container: #b6b8bd;
+  /* Layout Variables */
+  --header-height: 64px;
+
+  /* Mission Control Palette - Green Optimized */
+  --color-surface-variant: #f0fdf4;
+  --color-on-secondary-container: #0d2c1c;
   --color-error-mc: #ffb4ab;
-  --color-primary-fixed: #e2e2e5;
-  --color-on-tertiary-fixed-variant: #43474e;
-  --color-secondary-fixed: #e1e2e7;
-  --color-surface-mc: #111416;
-  --color-surface-container-lowest: #0c0e11;
-  --color-tertiary-fixed: #dfe2eb;
-  --color-primary-mc: #c6c6c9;
-  --color-on-surface-variant: #c5c6ca;
-  --color-on-surface-mc: #e1e2e5;
-  --color-secondary-fixed-dim: #c4c6cb;
-  --color-inverse-surface: #e1e2e5;
-  --color-background-mc: #111416;
-  --color-surface-dim: #111416;
-  --color-secondary-mc: #c4c6cb;
-  --color-on-primary-container: #838486;
-  --color-on-tertiary-container: #80848c;
-  --color-tertiary-container: #181c22;
-  --color-on-background-mc: #e1e2e5;
-  --color-primary-container-mc: #1a1c1e;
-  --color-surface-container-highest: #323537;
-  --color-surface-bright: #37393c;
-  --color-outline-variant-mc: #44474a;
-  --color-on-primary-mc: #2f3133;
-  --color-surface-tint: #c6c6c9;
+  --color-primary-fixed: #dcfce7;
+  --color-on-tertiary-fixed-variant: #0d2c1c;
+  --color-secondary-fixed: #f0fdf4;
+  --color-surface-mc: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-tertiary-fixed: #f0fdf4;
+  --color-primary-mc: #16a34a;
+  --color-on-surface-variant: #0d2c1c;
+  --color-on-surface-mc: #0d2c1c;
+  --color-secondary-fixed-dim: #dcfce7;
+  --color-inverse-surface: #0d2c1c;
+  --color-background-mc: #f5fff9;
+  --color-surface-dim: #f5fff9;
+  --color-secondary-mc: #16a34a;
+  --color-on-primary-container: #0d2c1c;
+  --color-on-tertiary-container: #0d2c1c;
+  --color-tertiary-container: #f0fdf4;
+  --color-on-background-mc: #0d2c1c;
+  --color-primary-container-mc: #f0fdf4;
+  --color-surface-container-highest: #f0fdf4;
+  --color-surface-bright: #ffffff;
+  --color-outline-variant-mc: #dcfce7;
+  --color-on-primary-mc: #ffffff;
+  --color-surface-tint: #16a34a;
   --color-on-error-mc: #690005;
-  --color-inverse-primary: #5d5e61;
+  --color-inverse-primary: #16a34a;
   --color-on-error-container: #ffdad6;
-  --color-inverse-on-surface: #2e3133;
-  --color-tertiary-mc: #c3c6cf;
-  --color-on-primary-fixed: #1a1c1e;
-  --color-tertiary-fixed-dim: #c3c6cf;
-  --color-surface-container-low: #191c1e;
-  --color-on-secondary-fixed-variant: #44474b;
-  --color-secondary-container-mc: #46494d;
-  --color-surface-container-mc: #1d2022;
-  --color-on-primary-fixed-variant: #454749;
-  --color-on-secondary-mc: #2e3135;
+  --color-inverse-on-surface: #ffffff;
+  --color-tertiary-mc: #16a34a;
+  --color-on-primary-fixed: #0d2c1c;
+  --color-tertiary-fixed-dim: #16a34a;
+  --color-surface-container-low: #ffffff;
+  --color-on-secondary-fixed-variant: #0d2c1c;
+  --color-secondary-container-mc: #f0fdf4;
+  --color-surface-container-mc: #ffffff;
+  --color-on-primary-fixed-variant: #0d2c1c;
+  --color-on-secondary-mc: #ffffff;
   --color-error-container-mc: #93000a;
-  --color-outline-mc: #8f9194;
-  --color-on-tertiary-fixed: #181c22;
-  --color-on-tertiary-mc: #2d3137;
-  --color-on-secondary-fixed: #191c20;
-  --color-primary-fixed-dim: #c6c6c9;
-  --color-surface-container-high: #282a2d;
+  --color-outline-mc: #16a34a;
+  --color-on-tertiary-fixed: #0d2c1c;
+  --color-on-tertiary-mc: #ffffff;
+  --color-on-secondary-fixed: #0d2c1c;
+  --color-primary-fixed-dim: #16a34a;
+  --color-surface-container-high: #f0fdf4;
 
   /* Typography Extensions */
-  --font-body-base: "Inter", sans-serif;
-  --font-headline-md: "Inter", sans-serif;
-  --font-label-caps: "Inter", sans-serif;
-  --font-data-mono: "JetBrains Mono", monospace;
-  --font-display-lg: "Inter", sans-serif;
+  --font-body-base: "Geist Sans", sans-serif;
+  --font-headline-md: "Geist Sans", sans-serif;
+  --font-label-caps: "Geist Sans", sans-serif;
+  --font-data-mono: "Geist Mono", monospace;
+  --font-display-lg: "Geist Sans", sans-serif;
 
   /* Font Sizes */
   --text-body-base: 16px;
@@ -374,8 +378,11 @@ header [class*="CustomDropdown"] * {
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  @import url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/sans.min.css');
+  @import url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/mono.min.css');
+
   html, body, #root {
-    font-family: 'Roboto', sans-serif !important;
+    font-family: var(--font-sans) !important;
   }
   
   *,
@@ -390,7 +397,7 @@ header [class*="CustomDropdown"] * {
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-sans z-1 bg-slate-50 text-black antialiased;
+    @apply relative font-normal font-sans z-1 bg-brand-25 text-gray-900 antialiased;
     font-size: 14px;
     font-weight: 400 !important;
   }
@@ -585,7 +592,7 @@ header [class*="CustomDropdown"] * {
 }
 
 @utility tactical-btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all px-4 py-2 text-sm;
+  @apply bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg shadow-sm transition-all px-4 py-2 text-sm;
 }
 
 @utility tactical-btn-secondary {
