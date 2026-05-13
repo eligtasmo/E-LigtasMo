@@ -1,0 +1,46 @@
+/* Map positioning & Z-index fixes */
+.dropdown-overlay {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+.leaflet-container {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+[class*="CustomDropdown"] {
+  z-index: 99999 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+  overflow: visible !important;
+}
+
+/* Map specific glow effects */
+.leaflet-overlay-pane .route-glow {
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.4));
+}
+
+.leaflet-overlay-pane .heat-route {
+  filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.35)) drop-shadow(0 0 36px rgba(239, 68, 68, 0.25));
+}
+
+/* ApexCharts Theming */
+.apexcharts-legend-text {
+  @apply !text-gray-700;
+}
+
+.apexcharts-tooltip.apexcharts-theme-light {
+  @apply gap-1 !rounded-lg !border-gray-200 p-3;
+  box-shadow: var(--shadow-premium-md) !important;
+}
+
+/* Flatpickr Modernization */
+.flatpickr-calendar {
+  @apply !bg-white !rounded-2xl !border-brand-100 !p-4;
+  box-shadow: var(--shadow-premium-xl) !important;
+}
+
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+  @apply !bg-brand-600 !border-brand-600;
+}

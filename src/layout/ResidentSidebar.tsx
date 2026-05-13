@@ -12,109 +12,51 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path: string;
-  description?: string;
-  badge?: string;
 };
 
-// Core SafeRoute Tools - Primary focus for residents
 const safeRouteTools: NavItem[] = [
-  { 
-    name: "Plan Safe Route", 
-    icon: <RouteIcon size={18} />, 
-    path: "/safe-routes",
-    description: "Find the safest path to your destination"
-  },
-  { 
-    name: "Find Shelters", 
-    icon: <ShelterIcon size={18} />, 
-    path: "/shelters",
-    description: "Locate nearby evacuation centers"
-  },
-  { 
-    name: "Report Emergency", 
-    icon: <WarningIcon size={18} />, 
-    path: "/report-incident",
-    description: "Report incidents or hazards"
-  },
+  { name: "Plan Safe Route", icon: <RouteIcon size={18} />, path: "/safe-routes" },
+  { name: "Find Shelters", icon: <ShelterIcon size={18} />, path: "/shelters" },
+  { name: "Report Emergency", icon: <WarningIcon size={18} />, path: "/report-incident" },
 ];
 
-// Essential Information - Secondary tools
 const essentialInfo: NavItem[] = [
-  { 
-    name: "Weather Alerts", 
-    icon: <WeatherIcon size={18} />, 
-    path: "/weather",
-    description: "Current weather and warnings"
-  },
-  { 
-    name: "Public Announcements", 
-    icon: <FiBell size={18} />, 
-    path: "/announcements",
-    description: "Official updates and alerts"
-  },
+  { name: "Weather Alerts", icon: <WeatherIcon size={18} />, path: "/weather" },
+  { name: "Public Announcements", icon: <FiBell size={18} />, path: "/announcements" },
 ];
 
-// Support & Contacts - Tertiary tools
 const supportContacts: NavItem[] = [
-  { 
-    name: "Emergency Guides", 
-    icon: <FiPhone size={18} />, 
-    path: "/resources",
-    description: "Guides, kit, contacts"
-  },
-  { 
-    name: "Local Coordinators", 
-    icon: <FiUsers size={18} />, 
-    path: "/coordinators",
-    description: "Barangay emergency contacts"
-  },
-  { 
-    name: "Help & Guide", 
-    icon: <HelpIcon size={18} />, 
-    path: "/help",
-    description: "How to use SafeRoute"
-  },
+  { name: "Emergency Guides", icon: <FiPhone size={18} />, path: "/resources" },
+  { name: "Local Coordinators", icon: <FiUsers size={18} />, path: "/coordinators" },
+  { name: "Help & Guide", icon: <HelpIcon size={18} />, path: "/help" },
 ];
-
-const homeNav: NavItem = { 
-  name: "Home", 
-  icon: <GridIcon />, 
-  path: "/",
-  description: "Dashboard overview"
-};
 
 const ResidentSidebar: React.FC = () => {
   const { isMobileOpen, toggleMobileSidebar, isExpanded, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
+  const isActive = useCallback((path: string) => location.pathname === path, [location.pathname]);
 
   const renderLinkList = (items: NavItem[]) => (
-    <ul className="flex flex-col gap-1.5">
+    <ul className="flex flex-col gap-1.5 mb-6">
       {items.map((nav) => {
         const active = isActive(nav.path);
         return (
           <li key={nav.name}>
             <Link
               to={nav.path}
-              className={`menu-item ${active ? 'menu-item-active shadow-lg shadow-black/10' : 'menu-item-inactive'} ${
-                !isExpanded && !isHovered ? "justify-center px-0" : ""
-              }`}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
+                active 
+                  ? "bg-brand-600 text-white shadow-premium-md" 
+                  : "text-gray-600 hover:bg-brand-50 hover:text-brand-700"
+              } ${!isExpanded && !isHovered ? "justify-center px-0" : ""}`}
             >
-              <span className={`flex-shrink-0 flex items-center justify-center ${active ? 'text-white' : 'text-gray-500'}`}>
+              <span className="flex-shrink-0">
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="font-bold tracking-tight flex-1 text-left truncate font-sans">
+                <span className="text-sm font-semibold flex-1 truncate">
                   {nav.name}
-                </span>
-              )}
-              {nav.badge && (isExpanded || isHovered || isMobileOpen) && (
-                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                  {nav.badge}
                 </span>
               )}
             </Link>
@@ -126,85 +68,39 @@ const ResidentSidebar: React.FC = () => {
 
   return (
     <>
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[1100] transition-opacity lg:hidden"
-          onClick={toggleMobileSidebar}
-          aria-label="Close sidebar"
-        />
-      )}
       <aside
-        className={`fixed top-[72px] left-0 h-[calc(100vh-72px)] bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transition-all duration-300 ease-in-out z-[1200]
-          ${
-            isExpanded || isMobileOpen
-              ? "w-[280px]"
-              : isHovered
-              ? "w-[280px]"
-              : "w-[80px]"
-          }
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0`}
+        className={`h-[calc(100vh-64px)] fixed top-16 bg-white border-r border-brand-100 transition-all duration-300 z-[1200] flex flex-col shadow-premium-sm ${
+          isExpanded || isHovered || isMobileOpen ? "w-64" : "w-20"
+        } ${isMobileOpen ? "fixed inset-y-0 left-0" : "hidden lg:flex"}`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
+        <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+          <Link
+            to="/"
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 mb-6 ${
+              isActive("/") 
+                ? "bg-brand-600 text-white shadow-premium-md" 
+                : "text-gray-600 hover:bg-brand-50 hover:text-brand-700"
+            } ${!isExpanded && !isHovered ? "justify-center px-0" : ""}`}
+          >
+            <span className="flex-shrink-0">
+              <GridIcon />
+            </span>
+            {(isExpanded || isHovered || isMobileOpen) && (
+              <span className="text-sm font-semibold flex-1 truncate">Home</span>
+            )}
+          </Link>
 
-        <div className="flex flex-col h-[calc(100vh-120px)] overflow-y-auto no-scrollbar px-4 pb-10">
-          <nav className="space-y-8">
-            {/* Home Link */}
-            <div>
-              <ul className="flex flex-col">
-                <li>
-                  <Link
-                    to={homeNav.path}
-                    className={`menu-item ${isActive(homeNav.path) ? 'menu-item-active shadow-lg shadow-black/10' : 'menu-item-inactive'} ${
-                      !isExpanded && !isHovered ? "justify-center px-0" : ""
-                    }`}
-                  >
-                    <span className={`flex-shrink-0 flex items-center justify-center ${isActive(homeNav.path) ? 'text-white' : 'text-gray-500'}`}>
-                      {homeNav.icon}
-                    </span>
-                    {(isExpanded || isHovered || isMobileOpen) && (
-                      <span className="font-bold tracking-tight flex-1 text-left truncate font-sans">
-                        {homeNav.name}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Primary SafeRoute Tools */}
-            <div className="space-y-3">
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
-                  SafeRoute Tools
-                </div>
-              )}
-              {renderLinkList(safeRouteTools)}
-            </div>
-
-            {/* Essential Information */}
-            <div className="space-y-3">
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
-                  Stay Informed
-                </div>
-              )}
-              {renderLinkList(essentialInfo)}
-            </div>
-
-            {/* Support & Contacts */}
-            <div className="space-y-3">
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 font-sans">
-                  Support
-                </div>
-              )}
-              {renderLinkList(supportContacts)}
-            </div>
-          </nav>
+          {renderLinkList(safeRouteTools)}
+          {renderLinkList(essentialInfo)}
+          {renderLinkList(supportContacts)}
         </div>
       </aside>
+
+      {isMobileOpen && (
+        <div className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-[1100] lg:hidden" onClick={toggleMobileSidebar} />
+      )}
     </>
   );
 };

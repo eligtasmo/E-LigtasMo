@@ -1,36 +1,34 @@
-import { createContext, useContext, useEffect, useCallback, useMemo, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type Theme = "light"; // Only light mode is supported
+type Theme = "light" | "dark";
 
 type ThemeContextType = {
-  theme: Theme; // Always light mode
-  toggleTheme: () => void; // This will be a no-op since dark mode is disabled
+  theme: Theme;
+  toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const theme: Theme = "light"; // Always light mode
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
-  const toggleTheme = useCallback(() => {
-    // Dark mode toggle is no longer needed
-    console.warn("Dark mode is disabled, this function does nothing.");
-  }, []);
+  const toggleTheme = () => {
+    setTheme(prev => (prev === "light" ? "dark" : "light"));
+  };
 
-  // Remove any dark class on initial load
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("dark"); // Remove dark mode class if it exists
-    }
-  }, []);
-
-  const contextValue = useMemo(() => ({
-    theme,
-    toggleTheme
-  }), [theme, toggleTheme]);
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

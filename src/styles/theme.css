@@ -1,0 +1,41 @@
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-jetbrains: "JetBrains Mono", monospace;
+  
+  /* Green Brand Palette from beep-fuel.xyz */
+  --color-brand-25: #f5fff9;
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+
+  /* Neutrals & Text */
+  --color-gray-900: #0d2c1c;
+  --color-gray-950: #05150d;
+  
+  /* Semantic Colors */
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  /* Shadows */
+  --shadow-premium-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-premium-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-premium-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Layout Constants */
+  --header-height: 64px;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}

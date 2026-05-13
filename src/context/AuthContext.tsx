@@ -3,12 +3,14 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 import { useNavigate, useLocation } from "react-router-dom";  // Import useNavigate and useLocation
 import { logActivity, LogActions, ResourceTypes } from "../utils/logger";
 
-interface User {
+export interface User {
   id?: number;
   username: string;
   role: string;  // Add role to distinguish between admin and brgy
   email: string;
   full_name: string;
+  name?: string;
+  avatar?: string;
   brgy_name: string;
   brgy?: string;
   city: string;
@@ -63,6 +65,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
           email: data.email,
           full_name: data.full_name,
+          name: data.full_name, // Mapping full_name to name for UI
+          avatar: data.profile_image || undefined, // Mapping profile_image to avatar
           brgy_name: data.brgy_name,
           brgy: data.brgy ?? data.brgy_name,
           city: data.city,
@@ -139,6 +143,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: data.role,
           email: data.email,
           full_name: data.full_name,
+          name: data.full_name,
+          avatar: data.profile_image || undefined,
           brgy_name: data.brgy_name,
           brgy: data.brgy ?? data.brgy_name,
           city: data.city,

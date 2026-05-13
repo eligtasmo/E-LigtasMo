@@ -1,0 +1,22 @@
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  html, body, #root {
+    font-family: 'Inter', sans-serif !important;
+  }
+  
+  body {
+    @apply relative font-normal z-1 bg-brand-25 text-gray-900 antialiased;
+    font-size: 14px;
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 font-bold tracking-tight;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}

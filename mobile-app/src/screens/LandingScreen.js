@@ -1,12 +1,9 @@
 import React, { useEffect } from 'react';
 import { View, Text, Image as RNImage, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView, MotiText } from 'moti';
-import { ShieldCheck } from 'lucide-react-native';
-
+import { MotiView } from 'moti';
 import { AuthService } from '../services/AuthService';
-import { FONT_UI, FONT_BODY } from '../constants/typography';
+import { FONT_UI } from '../constants/typography';
 
 const LandingScreen = ({ navigation }) => {
   useEffect(() => {
@@ -32,7 +29,7 @@ const LandingScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <View style={styles.content}>
         <MotiView
@@ -45,8 +42,8 @@ const LandingScreen = ({ navigation }) => {
         </MotiView>
 
         <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          from={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'timing', duration: 800, delay: 500 }}
           style={styles.textWrap}
         >
@@ -68,7 +65,7 @@ const LandingScreen = ({ navigation }) => {
         transition={{ type: 'timing', duration: 1000, delay: 1000 }}
         style={styles.footer}
       >
-        <Text style={styles.copyright}>TACTICAL OPERATIONS ENGINE</Text>
+        <Text style={styles.copyright}>MISSION READY PLATFORM</Text>
       </MotiView>
     </View>
   );
@@ -77,7 +74,7 @@ const LandingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -85,39 +82,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoContainer: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: 100,
-    height: 100,
-    tintColor: '#FFFFFF', // Force white logo if it supports tinting
+    width: 180,
+    height: 60,
   },
   textWrap: {
-    marginTop: 24,
+    marginTop: 32,
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    color: '#FFF',
-    fontWeight: '700',
-    letterSpacing: 2,
+    fontSize: 24,
+    color: '#111827',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     fontFamily: FONT_UI,
   },
   loaderLine: {
     width: 60,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginTop: 20,
+    height: 3,
+    backgroundColor: '#F3F4F6',
+    marginTop: 24,
     overflow: 'hidden',
-    borderRadius: 1,
+    borderRadius: 2,
   },
   loaderActive: {
     width: 30,
     height: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#16A34A',
   },
   footer: {
     position: 'absolute',
@@ -125,13 +121,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   copyright: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.3)',
-    fontWeight: '700',
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '800',
     letterSpacing: 2,
     fontFamily: FONT_UI,
   },
 });
-
 
 export default LandingScreen;

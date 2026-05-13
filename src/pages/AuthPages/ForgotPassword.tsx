@@ -1,6 +1,6 @@
 import PageMeta from "../../components/common/PageMeta";
-import AuthLayout from "./AuthPageLayout";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ForgotPassword() {
   const [input, setInput] = useState("");
@@ -13,11 +13,11 @@ export default function ForgotPassword() {
     setSuccess("");
     setError("");
     setLoading(true);
-    // Simulate API call (replace with real backend call)
+    // Simulate API call
     setTimeout(() => {
       setLoading(false);
       if (input.match(/@/) || input.match(/^09\d{9}$/)) {
-        setSuccess("If an account with that email or phone exists, a recovery link/code has been sent.");
+        setSuccess("If an account exists, a recovery link has been sent.");
       } else {
         setError("Please enter a valid email or phone number.");
       }
@@ -27,49 +27,50 @@ export default function ForgotPassword() {
   return (
     <>
       <PageMeta
-        title="Forgot Password | Eligtasmo"
-        description="Reset your brgy account password via email or phone."
+        title="Forgot Password | E-LigtasMo"
+        description="Reset your account password via email or phone."
       />
-      <div className="w-full max-w-lg mx-auto">
-        <div className="w-full mt-2">
-          <form
-            className="w-full max-w-md mx-auto bg-white flex flex-col space-y-6"
-            onSubmit={handleSubmit}
-            autoComplete="off"
-          >
-            <div className="mb-5 sm:mb-8">
-              <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                Forgot Password
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Enter your brgy account email or phone number to recover your password.
-              </p>
-            </div>
-            <div>
-              <label className="block mb-2 font-medium text-gray-700">Email or Phone</label>
-              <input
-                type="text"
-                name="recovery"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="e.g. brgy@email.com or 09171234567"
-                className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:border-gray-700 dark:focus:border-brand-800"
-                required
-              />
-            </div>
-            {error && <div className="text-error-500 text-sm">{error}</div>}
-            {success && <div className="text-green-600 text-sm">{success}</div>}
-            <button
-              type="submit"
-              className="w-full px-4 py-2 bg-brand-500 text-white rounded-lg font-semibold text-sm hover:bg-brand-600 transition disabled:opacity-60"
-              disabled={loading}
-            >
-              {loading ? "Sending..." : "Send Recovery Link/Code"}
-            </button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            <a href="/signin" className="text-blue-600 hover:underline">Go back to Sign In</a>
+      <div className="flex flex-col w-full">
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-7 h-7 bg-brand-500 rounded-[10px] flex items-center justify-center text-white font-black text-lg shadow-sm">E</div>
+        </div>
+
+        <p className="text-[13px] text-[var(--color-muted)] mb-8 font-sans">
+          Reset your tactical access.
+        </p>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+              Email or Phone
+            </label>
+            <input
+              required
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="e.g. juan@example.com"
+              className="w-full px-3.5 py-3 rounded-[12px] bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] text-sm focus:outline-none focus:border-brand-500 transition-all font-sans"
+            />
           </div>
+
+          {error && <p className="text-[11px] font-bold text-red-500 text-center animate-fade-in">{error}</p>}
+          {success && <p className="text-[11px] font-bold text-brand-600 text-center animate-fade-in">{success}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-[12px] bg-[var(--color-fuel)] text-[var(--color-on-fuel)] font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            {loading ? "Sending..." : "Send recovery link →"}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <Link to="/auth/signin" className="text-[12px] text-[var(--color-muted)] hover:text-brand-500 transition-colors uppercase tracking-[0.1em] font-bold">
+            ← Back to login
+          </Link>
         </div>
       </div>
     </>

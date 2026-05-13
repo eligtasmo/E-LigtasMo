@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Lucide from 'lucide-react-native';
-import { MotiView } from 'moti';
 import { DrawerActions } from '@react-navigation/native';
 
 import { AuthService } from '../../services/AuthService';
@@ -25,24 +23,18 @@ const CustomSidebar = (props) => {
   }, []);
 
   const menuItems = [
-    { label: 'Homepage', icon: Lucide.Home, route: 'Home' },
-    { label: 'Live Hazard Map', icon: Lucide.Map, route: 'HazardMap' },
-    { label: 'Safe Route Planner', icon: Lucide.Route, route: 'RoutePlanner' },
-    { label: 'HERE Tactical Planner', icon: Lucide.Locate, route: 'HEREPlanner' },
-    { label: 'Emergency Mode', icon: Lucide.Zap, route: 'QuickReport' },
-    { label: 'Emergency Hotlines', icon: Lucide.Phone, route: 'EmergencyHotlines' },
-    { label: 'Donation Drives', icon: Lucide.Heart, route: 'DonationDrives' },
-    { label: 'Evacuation Centers', icon: Lucide.MapPin, route: 'Shelters' },
-    { label: 'Community Chat', icon: Lucide.MessageSquare, route: 'Placeholder' },
-    { label: 'Alerts & Notifications', icon: Lucide.Bell, route: 'Notifications' },
-    { label: 'Disaster News & Updates', icon: Lucide.Newspaper, route: 'Announcements' },
+    { label: 'Dashboard', icon: Lucide.LayoutDashboard, route: 'Home' },
+    { label: 'Hazard Map', icon: Lucide.Map, route: 'HazardMap' },
+    { label: 'Safe Routes', icon: Lucide.Route, route: 'RoutePlanner' },
+    { label: 'Shelters', icon: Lucide.Shield, route: 'Shelters' },
+    { label: 'Announcements', icon: Lucide.Bell, route: 'Notifications' },
+    { label: 'Emergency Guides', icon: Lucide.BookOpen, route: 'Announcements' },
   ];
 
   const activeRouteName = state.routeNames[state.index];
 
   return (
     <View style={styles.container}>
-
       <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }}>
         {/* Header Section */}
         <View style={styles.header}>
@@ -50,7 +42,7 @@ const CustomSidebar = (props) => {
             onPress={() => navigation.dispatch(DrawerActions.closeDrawer())}
             style={styles.closeBtn}
           >
-            <Lucide.X size={24} color="rgba(255,255,255,0.4)" strokeWidth={2.5} />
+            <Lucide.X size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
           <View style={styles.brandContainer}>
@@ -60,22 +52,20 @@ const CustomSidebar = (props) => {
               resizeMode="contain"
             />
             <Text style={styles.brandName}>E-LigtasMo</Text>
-            <Text style={styles.brandTagline}>Your Disaster Safety Companion</Text>
+            <Text style={styles.brandTagline}>Mission Ready Platform</Text>
           </View>
         </View>
 
         {/* User Profile Section */}
         <View style={styles.profileSection}>
-          {user?.profile_image ? (
-            <RNImage source={{ uri: user.profile_image }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-              <Lucide.User size={24} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.avatar}>
+              <Lucide.User size={20} color="#16A34A" />
             </View>
-          )}
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user?.full_name || 'Darwin Piodos'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'darwinpiodos@gmail.com'}</Text>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{user?.full_name || 'Unit Responder'}</Text>
+              <Text style={styles.userRole}>{user?.role || 'Volunteer'}</Text>
+            </View>
           </View>
         </View>
 
@@ -90,13 +80,12 @@ const CustomSidebar = (props) => {
                 key={index}
                 onPress={() => {
                   if (item.route === 'Home') {
-                    // Role-aware homepage navigation
                     const role = String(user?.role || '').toLowerCase();
                     if (role === 'admin') navigation.navigate('AdminDashboard');
                     else if (role === 'coordinator') navigation.navigate('CoordinatorDashboard');
                     else if (role === 'brgy') navigation.navigate('BrgyDashboard');
                     else navigation.navigate('Main');
-                  } else if (item.route !== 'Placeholder') {
+                  } else {
                     navigation.navigate(item.route);
                   }
                 }}
@@ -106,9 +95,7 @@ const CustomSidebar = (props) => {
                   isActive && styles.activeMenuItem
                 ]}
               >
-                <View style={[styles.iconContainer, isActive && styles.activeIconContainer]}>
-                  <Icon size={18} color={isActive ? '#2A231C' : 'rgba(242,238,232,0.6)'} strokeWidth={2.2} />
-                </View>
+                <Icon size={20} color={isActive ? '#FFFFFF' : '#4B5563'} strokeWidth={2.5} />
                 <Text style={[
                   styles.menuLabel,
                   isActive && styles.activeMenuLabel
@@ -121,14 +108,14 @@ const CustomSidebar = (props) => {
         </View>
       </DrawerContentScrollView>
 
-      {/* Footer / Settings */}
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.settingsBtn}
           onPress={() => navigation.navigate('Profile')}
         >
-          <Lucide.Settings size={20} color="rgba(255,255,255,0.4)" strokeWidth={2} />
-          <Text style={styles.settingsLabel}>Settings & Profile</Text>
+          <Lucide.Settings size={18} color="#9CA3AF" />
+          <Text style={styles.settingsLabel}>Settings</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -138,137 +125,113 @@ const CustomSidebar = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#191A1A',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   closeBtn: {
     position: 'absolute',
     top: 54,
     right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 8,
   },
   brandContainer: {
-    alignItems: 'center',
-    marginTop: 10,
+    alignItems: 'flex-start',
   },
   brandLogo: {
-    width: 52,
-    height: 52,
-    marginBottom: 10,
+    width: 140,
+    height: 40,
+    marginBottom: 12,
   },
   brandName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#F4F0E8',
-    letterSpacing: 1,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+    letterSpacing: -0.5,
   },
   brandTagline: {
-    fontSize: 9,
-    color: 'rgba(242,238,230,0.45)',
-    fontWeight: '600',
+    fontSize: 10,
+    color: '#16A34A',
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginTop: 4,
+    marginTop: 2,
   },
   profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
+    margin: 20,
     padding: 16,
-    backgroundColor: '#1C1C1E',
-    borderRadius: 22,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    marginBottom: 20,
+    borderColor: '#F3F4F6',
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   userInfo: {
-    marginLeft: 14,
-    flex: 1,
+    marginLeft: 12,
   },
   userName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: '#F5F1EA',
+    color: '#111827',
   },
-  userEmail: {
-    fontSize: 11,
-    color: 'rgba(242,238,230,0.5)',
+  userRole: {
+    fontSize: 10,
+    color: '#16A34A',
+    fontWeight: '800',
+    textTransform: 'uppercase',
     marginTop: 1,
-    fontWeight: '500',
   },
   menuList: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: 12,
     marginBottom: 4,
   },
   activeMenuItem: {
-    backgroundColor: '#F6F2EB',
-  },
-  iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  activeIconContainer: {
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
+    backgroundColor: '#16A34A',
   },
   menuLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    color: 'rgba(242,238,232,0.7)',
-    marginLeft: 14,
-    letterSpacing: -0.1,
+    color: '#4B5563',
+    marginLeft: 12,
   },
   activeMenuLabel: {
-    color: '#2A231C',
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   footer: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 40,
     borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: '#F3F4F6',
   },
   settingsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
   settingsLabel: {
-    fontSize: 12,
-    color: 'rgba(242,238,230,0.4)',
+    fontSize: 13,
+    color: '#6B7280',
     fontWeight: '700',
-    marginLeft: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
 });
 

@@ -97,3 +97,46 @@ export const BookIcon: React.FC<IconProps> = ({ className = "w-5 h-5", active })
     <path d="M8 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
+
+export const MenuIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const SearchIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+    <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const UserIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const LogoutIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export const SettingsIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M12.22 2H11.78L11 6H13L12.22 2Z" fill="currentColor" />
+    <path d="M12.22 18H11.78L11 22H13L12.22 18Z" fill="currentColor" />
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    <path d="M19.4 15L18.4 14.5M19.4 9L18.4 9.5M15 4.6L14.5 5.6M9 4.6L9.5 5.6M4.6 9L5.6 9.5M4.6 15L5.6 14.5M9 19.4L9.5 18.4M15 19.4L14.5 18.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+export const ChevronDownIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
